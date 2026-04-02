@@ -3,13 +3,14 @@ import { cn } from '@/lib/classes';
 import { TransactionItem } from '@/components/features/TransactionItem';
 import { SkeletonList } from '@/components/ui/Skeleton';
 import type { TransactionListProps } from './ITransactionList';
+import { EmptyState } from '@/components/ui/EmptyState/EmptyState';
 
 export function TransactionList({
   transactions,
   isLoading = false,
   onEdit,
   onDelete,
-  emptyMessage = 'No transactions found.',
+  emptyState,
   title,
   className,
   showActions = true,
@@ -22,10 +23,13 @@ export function TransactionList({
 
     if (transactions.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-gray-300 bg-white py-16 text-gray-400">
-          <ReceiptText size={32} />
-          <p className="text-sm">{emptyMessage}</p>
-        </div>
+        emptyState || (
+          <EmptyState
+            icon={<ReceiptText size={32} />}
+            title="Nenhuma transação registrada"
+            description="Registre sua primeira transação!"
+          />
+        )
       );
     }
 

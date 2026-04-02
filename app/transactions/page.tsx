@@ -11,6 +11,8 @@ import { useTransactionFilters } from '@/hooks';
 import type { Transaction } from '@/types';
 import { EditTransactionModal } from '@/components/features/EditTransactionModal';
 import { TransactionFormValues } from '@/components/features';
+import { EmptyState } from '@/components/ui';
+import { SearchX } from 'lucide-react';
 
 function TransactionsContent() {
   const { transactions, isLoading, deleteTransaction, updateTransaction } = useTransactions();
@@ -84,20 +86,31 @@ function TransactionsContent() {
     setPendingEdit(null);
   }
 
+  function showEmptyState() {
+    if (transactions.length > 0 && filtered.length === 0) {
+      return (
+        <EmptyState
+          icon={<SearchX size={32} />}
+          title="Nenhuma transação encontrada"
+          description="Tente ajustar seus filtros para ver mais resultados."
+        />
+      );
+    }
+  }
+
   return (
     <>
       <section aria-labelledby="transactions-heading" className="flex flex-col gap-lg h-full px-1">
         <h1 id="transactions-heading" className="heading text-content-primary text-xl">
           Transações
         </h1>
-
         <TransactionFilters value={filters} onChange={setFilters} onClear={clearFilters} />
         <TransactionList
           transactions={filtered}
           isLoading={isLoading}
           onEdit={handleEditRequest}
           onDelete={handleDeleteRequest}
-          emptyMessage="Nenhuma transação encontrada para os filtros selecionados."
+          emptyState={showEmptyState()}
           className="w-full overflow-y-auto h-full"
         />
       </section>
