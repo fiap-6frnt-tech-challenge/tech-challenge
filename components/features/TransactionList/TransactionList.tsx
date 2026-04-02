@@ -28,6 +28,7 @@ export function TransactionList({
             icon={<ReceiptText size={32} />}
             title="Nenhuma transação registrada"
             description="Registre sua primeira transação!"
+            className="border border-gray-300 bg-white"
           />
         )
       );

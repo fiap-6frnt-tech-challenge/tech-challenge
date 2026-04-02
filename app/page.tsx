@@ -3,15 +3,19 @@ import { BalanceCard } from '@/components/features/BalanceCard';
 import { NewTransaction } from '@/components/features/NewTransaction';
 import { TransactionList } from '@/components/features/TransactionList';
 import { Button } from '@/components/ui/Button/Button';
+import { ErrorState } from '@/components/ui/ErrorState/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useTransactions } from '@/context/TransactionsContext';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
 export default function Home() {
-  const { transactions, balance, isLoading } = useTransactions();
+  const { transactions, balance, isLoading, isError } = useTransactions();
   const recentTransactions = useMemo(() => transactions.slice(0, 5), [transactions]);
 
+  if (isError) {
+    return <ErrorState />;
+  }
   return (
     <div className="flex flex-col gap-lg lg:flex-row lg:items-start h-fit w-full px-1">
       <section

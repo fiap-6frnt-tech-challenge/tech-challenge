@@ -4,12 +4,12 @@ import { createContext, useContext, useState, useEffect, useMemo, type ReactNode
 import type { Transaction, NewTransaction, UpdateTransaction } from '@/types';
 import { calculateBalance, getRecent, getAll } from '@/lib/transactions';
 import { TransactionService } from '@/services';
-
 interface TransactionsContextValue {
   transactions: Transaction[];
   balance: number;
   recentTransactions: Transaction[];
   isLoading: boolean;
+  isError: boolean;
   addTransaction: (data: NewTransaction) => Promise<void>;
   updateTransaction: (id: string, data: UpdateTransaction) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
@@ -20,15 +20,19 @@ const TransactionsContext = createContext<TransactionsContextValue | null>(null)
 export function TransactionsProvider({ children }: { children: ReactNode }) {
   const [transactionsMap, setTransactionsMap] = useState<Map<string, Transaction>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   // Convert Map to array once — passed to lib helpers and exposed to consumers
   const transactions = useMemo(() => Array.from(transactionsMap.values()), [transactionsMap]);
 
   async function fetchTransactions() {
+    setIsError(false);
     try {
       await new Promise((res) => setTimeout(res, 100));
       const data = await TransactionService.getAll();
       setTransactionsMap(new Map(data.map((t) => [t.id, t])));
+    } catch {
+      setIsError(true);
     } finally {
       setIsLoading(false);
     }
@@ -67,6 +71,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         addTransaction,
         updateTransaction,
         deleteTransaction,
+        isError,
       }}
     >
       {children}

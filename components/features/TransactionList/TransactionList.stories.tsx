@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Transaction } from '@/types';
 import { TransactionList } from './TransactionList';
+import { ReceiptText } from 'lucide-react';
+import { EmptyState } from '@/components/ui/EmptyState/EmptyState';
 
 const MOCK_TRANSACTIONS: Transaction[] = [
   { id: '1', type: 'deposit', description: 'Salário mensal', amount: 5000, date: '2025-03-01' },
@@ -44,7 +46,7 @@ const meta: Meta<typeof TransactionList> = {
       description: 'Shows a skeleton placeholder while data is being fetched.',
       control: 'boolean',
     },
-    emptyMessage: {
+    emptyState: {
       description: 'Message displayed when there are no transactions.',
       control: 'text',
     },
@@ -97,7 +99,13 @@ export const EmptyWithCustomMessage: Story = {
   name: 'Empty — Custom Message',
   args: {
     transactions: [],
-    emptyMessage: 'Nenhuma transação encontrada para os filtros selecionados.',
+    emptyState: (
+      <EmptyState
+        icon={<ReceiptText size={32} />}
+        title="Nenhuma transação encontrada"
+        description="Nenhuma transação corresponde aos filtros selecionados."
+      />
+    ),
   },
   parameters: {
     docs: {

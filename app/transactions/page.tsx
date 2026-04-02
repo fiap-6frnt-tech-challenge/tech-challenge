@@ -13,9 +13,11 @@ import { EditTransactionModal } from '@/components/features/EditTransactionModal
 import { TransactionFormValues } from '@/components/features';
 import { EmptyState } from '@/components/ui';
 import { SearchX } from 'lucide-react';
+import { ErrorState } from '@/components/ui/ErrorState/ErrorState';
 
 function TransactionsContent() {
-  const { transactions, isLoading, deleteTransaction, updateTransaction } = useTransactions();
+  const { transactions, isLoading, deleteTransaction, updateTransaction, isError } =
+    useTransactions();
   const { filters, setFilters, clearFilters, filtered } = useTransactionFilters(transactions);
 
   const { showFeedback } = useFeedback();
@@ -23,6 +25,10 @@ function TransactionsContent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [pendingEdit, setPendingEdit] = useState<Transaction | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  if (isError) {
+    return <ErrorState />;
+  }
 
   function handleDeleteRequest(id: string) {
     const transaction = transactions.find((t) => t.id === id) ?? null;
