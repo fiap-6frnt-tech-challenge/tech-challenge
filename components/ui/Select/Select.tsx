@@ -3,8 +3,9 @@ import { cn } from '@/lib/classes';
 import { HelperText } from '@/components/ui/HelperText';
 import { Label } from '@/components/ui/Label';
 import type { SelectProps } from './ISelect';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { useState, useRef, useEffect, useId } from 'react';
+import { IconButton } from '../Button';
 
 export function Select({
   options,
@@ -17,6 +18,7 @@ export function Select({
   id,
   value,
   onChange,
+  onClear,
   ...props
 }: SelectProps) {
   const generatedId = useId();
@@ -121,7 +123,7 @@ export function Select({
     <div className="flex flex-col gap-sm">
       {label && <Label htmlFor={selectId}>{label}</Label>}
 
-      <div ref={containerRef} className="relative">
+      <div ref={containerRef} className="group relative">
         <button
           ref={buttonRef}
           id={selectId}
@@ -133,7 +135,7 @@ export function Select({
           onKeyDown={handleButtonKeyDown}
           onClick={() => (open ? closeDropdown() : openDropdown())}
           className={cn(
-            'w-full flex items-center justify-between',
+            'w-full flex items-center justify-between cursor-pointer',
             'bg-surface rounded-default border',
             borderColor,
             'px-lg py-md',
@@ -147,17 +149,29 @@ export function Select({
           <span className={cn(selected ? 'text-content-primary' : 'text-placeholder')}>
             {selectedLabel ?? placeholder ?? ''}
           </span>
+        </button>
 
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+          {onClear && selected && (
+            <div className="pointer-events-auto">
+              <IconButton
+                icon={<X size={16} />}
+                aria-label="Limpar campo"
+                onClick={onClear}
+                className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+              />
+            </div>
+          )}
           <ChevronDown
             size={24}
             strokeWidth={2}
             className={cn(
               iconClass,
-              'transition-transform duration-200',
+              'transition-transform duration-200 text-content-primary',
               open ? 'rotate-180' : 'rotate-0'
             )}
           />
-        </button>
+        </div>
 
         {open && (
           <ul

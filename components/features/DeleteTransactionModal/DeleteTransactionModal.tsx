@@ -19,7 +19,7 @@ export function DeleteTransactionModal({
 
       {transaction && <TransactionInfo transaction={transaction} />}
 
-      <div className="flex justify-end gap-sm">
+      <div className="flex flex-col gap-sm mt-lg sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel}>
           Cancelar
         </Button>

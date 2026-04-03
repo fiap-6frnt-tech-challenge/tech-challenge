@@ -6,6 +6,8 @@ import { getInputBorderColor } from '@/lib/input';
 import { HelperText } from '@/components/ui/HelperText';
 import { Label } from '@/components/ui/Label';
 import { useEffect, useId, useState } from 'react';
+import { IconButton } from '../Button';
+import { X } from 'lucide-react';
 
 export function CurrencyInput({
   value = 0,
@@ -16,6 +18,7 @@ export function CurrencyInput({
   error,
   disabled,
   className,
+  onClear,
   id,
   ...props
 }: CurrencyInputProps) {
@@ -47,7 +50,7 @@ export function CurrencyInput({
 
       <div
         className={cn(
-          'flex rounded-default border overflow-hidden',
+          'group relative flex items-center rounded-default border overflow-hidden',
           getInputBorderColor(error, { variant: 'focus-within' }),
           disabled && 'opacity-50 cursor-not-allowed',
           'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-primary'
@@ -86,6 +89,16 @@ export function CurrencyInput({
           )}
           {...props}
         />
+        {onClear && (
+          <div className="absolute right-3">
+            <IconButton
+              icon={<X size={16} />}
+              aria-label="Limpar campo"
+              onClick={onClear}
+              className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+            />
+          </div>
+        )}
       </div>
 
       {helperText && (

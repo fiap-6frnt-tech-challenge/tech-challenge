@@ -13,14 +13,14 @@ export function ConfirmTransactionModal({
   isSubmitting = false,
 }: ConfirmTransactionModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onCancel} title="Confirmar transação" showCloseButton={false}>
+    <Modal isOpen={isOpen} onClose={onCancel} title="Confirmar transação">
       <p className="body-default text-content-secondary mb-lg">
         Deseja confirmar a adição desta transação?
       </p>
 
       {transaction && <TransactionInfo transaction={transaction} />}
 
-      <div className="flex justify-end gap-sm">
+      <div className="flex flex-col gap-sm mt-lg sm:flex-row sm:justify-end">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
           Cancelar
         </Button>

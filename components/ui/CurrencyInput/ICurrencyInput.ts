@@ -10,4 +10,5 @@ export interface CurrencyInputProps extends Omit<
   label?: string;
   helperText?: string;
   error?: boolean;
+  onClear?: () => void;
 }

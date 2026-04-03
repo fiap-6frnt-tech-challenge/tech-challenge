@@ -1,6 +1,6 @@
 'use client';
 
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Controller, ControllerRenderProps, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -27,11 +27,12 @@ function roundAmount(amount: number): number {
 }
 
 export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormProps>(
-  function TransactionForm({ onSubmit, onCancel, initialValues, isSubmitting = false }, ref) {
+  function TransactionForm({ onSubmit, initialValues, isSubmitting = false }, ref) {
     const {
       control,
       handleSubmit,
       reset,
+      setValue,
       formState: { errors, isDirty },
     } = useForm({
       resolver: zodResolver(transactionFormSchema),
@@ -54,16 +55,16 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
       });
     };
 
-    const handleCancel = () => {
-      reset();
-      onCancel();
-    };
-
     const getSubmitButtonLabel = () => {
       if (initialValues) {
         return isSubmitting ? 'Atualizando...' : 'Atualizar transação';
       }
       return isSubmitting ? 'Concluindo...' : 'Concluir transação';
+    };
+
+    const clearField = (field: ControllerRenderProps<TransactionFormValues>) => {
+      if (!field.value) return undefined;
+      return () => setValue(field.name, '', { shouldDirty: true, shouldValidate: true });
     };
 
     return (
@@ -79,6 +80,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
                 options={TRANSACTION_TYPE_OPTIONS}
                 value={field.value}
                 onChange={field.onChange}
+                onClear={clearField(field)}
               />
             )}
           />
@@ -99,6 +101,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
                   placeholder={DEFAULT_CURRENCY_PLACEHOLDER}
                   disabled={isSubmitting}
                   error={!!errors.amount}
+                  onClear={clearField(field)}
                 />
               )}
             />
@@ -117,6 +120,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
                   disabled={isSubmitting}
                   onChange={field.onChange}
                   error={!!errors.date}
+                  onClear={clearField(field)}
                 />
               )}
             />
@@ -136,6 +140,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
                 disabled={isSubmitting}
                 error={!!errors.description}
                 maxLength={80}
+                onClear={clearField(field)}
               />
             )}
           />
@@ -152,9 +157,6 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
         </div>
 
         <div className="flex flex-col gap-sm mt-lg sm:flex-row sm:justify-end">
-          <Button type="button" variant="secondary" onClick={handleCancel} disabled={isSubmitting}>
-            Cancelar
-          </Button>
           <Button type="submit" disabled={isSubmitting || !isDirty} loading={isSubmitting}>
             {getSubmitButtonLabel()}
           </Button>

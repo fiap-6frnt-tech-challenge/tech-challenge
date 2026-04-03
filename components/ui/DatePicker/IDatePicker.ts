@@ -4,4 +4,5 @@ export interface DatePickerProps extends Omit<InputHTMLAttributes<HTMLInputEleme
   label?: string;
   helperText?: string;
   error?: boolean;
+  onClear?: () => void;
 }

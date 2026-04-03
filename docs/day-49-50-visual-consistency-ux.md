@@ -409,10 +409,10 @@ Place these at the bottom of `app/globals.css`, after the existing `:focus-visib
 
 ## Manual Testing Checklist
 
-- [ ] `TransactionList` with no transactions: `EmptyState` renders with icon and message, no gray border, no hardcoded colors
-- [ ] `TransactionList` on transactions page with all filters set to no match: same `EmptyState` renders
-- [ ] Home page when `isError = true`: `EmptyState` with alert icon renders instead of BalanceCard/list
-- [ ] Transactions page when `isError = true`: `EmptyState` renders instead of the list
+- [x] `TransactionList` with no transactions: `EmptyState` renders with icon and message, no gray border, no hardcoded colors
+- [x] `TransactionList` on transactions page with all filters set to no match: same `EmptyState` renders
+- [x] Home page when `isError = true`: `EmptyState` with alert icon renders instead of BalanceCard/list
+- [x] Transactions page when `isError = true`: `EmptyState` renders instead of the list
 - [ ] Open any modal: backdrop fades in over 150ms, panel scales + fades in over 200ms — smooth, not jarring
 - [ ] Open `FeedbackModal`: same animation
 - [ ] Tap hamburger menu on mobile: drawer slides down and fades in over 200ms

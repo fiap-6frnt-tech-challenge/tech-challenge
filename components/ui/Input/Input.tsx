@@ -4,6 +4,8 @@ import { getInputBorderColor } from '@/lib/input';
 import { HelperText } from '@/components/ui/HelperText';
 import { Label } from '@/components/ui/Label';
 import { InputProps } from './types';
+import { X } from 'lucide-react';
+import { IconButton } from '../Button';
 
 export function Input({
   label,
@@ -11,6 +13,7 @@ export function Input({
   error,
   leftAddon,
   rightAddon,
+  onClear,
   className,
   id,
   ...props
@@ -22,7 +25,7 @@ export function Input({
   return (
     <div className="flex flex-col gap-1.5">
       {label && <Label htmlFor={inputId}>{label}</Label>}
-      <div className="relative flex items-center">
+      <div className="group relative flex items-center">
         {leftAddon && <span className="absolute left-3 text-content-secondary">{leftAddon}</span>}
         <input
           id={inputId}
@@ -38,9 +41,17 @@ export function Input({
           )}
           {...props}
         />
-        {rightAddon && (
-          <span className="absolute right-3 text-content-secondary">{rightAddon}</span>
-        )}
+        <div className="absolute right-3 flex">
+          {onClear && (
+            <IconButton
+              icon={<X size={16} />}
+              aria-label="Limpar campo"
+              onClick={onClear}
+              className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+            />
+          )}
+          {rightAddon && <span className=" text-content-secondary">{rightAddon}</span>}
+        </div>
       </div>
       {helperText && (
         <HelperText id={helperId} error={error}>

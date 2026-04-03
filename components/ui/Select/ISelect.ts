@@ -14,4 +14,5 @@ export interface SelectProps extends Omit<
   error?: boolean;
   value?: string;
   onChange?: (value: string) => void;
+  onClear?: () => void;
 }

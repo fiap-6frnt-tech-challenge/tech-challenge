@@ -4,4 +4,5 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   error?: boolean;
   leftAddon?: React.ReactNode;
   rightAddon?: React.ReactNode;
+  onClear?: () => void;
 }
