@@ -41,7 +41,7 @@ export function Header({ userName = 'Joana da Silva Oliveira' }: HeaderProps) {
       {/* Mobile nav drawer */}
       {menuOpen && (
         <div
-          className="z-20 fixed inset-0 backdrop-blur-[2px] bg-content-primary/50 sm:hidden h-screen transition-all [animation:backdrop-in_200ms_ease-out]"
+          className="z-20 fixed inset-0 bg-content-primary/50 sm:hidden h-screen transition-all [animation:backdrop-in_200ms_ease-out]"
           aria-hidden="true"
           onClick={() => setMenuOpen(false)}
         >
