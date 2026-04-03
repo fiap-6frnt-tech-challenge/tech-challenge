@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <Sidebar />
                   </div>
 
-                  <main className="w-full pt-lg">{children}</main>
+                  <main className="w-full py-lg">{children}</main>
                 </div>
               </div>
             </div>
