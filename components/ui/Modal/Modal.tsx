@@ -20,7 +20,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-lg"
+      className="fixed inset-0 z-50 flex items-center justify-center px-lg [animation:backdrop-in_150ms_ease-out]"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
@@ -36,7 +36,7 @@ export function Modal({
       <div
         ref={panelRef}
         className={cn(
-          'relative z-10 w-full max-w-120 rounded-default bg-surface p-lg shadow-card',
+          'relative z-10 w-full max-w-120 rounded-default bg-surface p-lg shadow-card [animation:modal-panel-in_200ms_ease-out]',
           className
         )}
       >

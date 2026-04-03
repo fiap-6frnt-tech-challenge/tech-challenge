@@ -41,12 +41,18 @@ export function Header({ userName = 'Joana da Silva Oliveira' }: HeaderProps) {
       {/* Mobile nav drawer */}
       {menuOpen && (
         <div
-          id="mobile-nav"
-          className="fixed inset-0 top-16 z-30 bg-brand-dark sm:hidden h-fit"
-          role="dialog"
-          aria-label="Menu de navegação"
+          className="z-20 fixed inset-0 backdrop-blur-[2px] bg-content-primary/50 sm:hidden h-screen transition-all [animation:backdrop-in_200ms_ease-out]"
+          aria-hidden="true"
+          onClick={() => setMenuOpen(false)}
         >
-          <Sidebar onLinkClick={() => setMenuOpen(false)} />
+          <div
+            id="mobile-nav"
+            className="fixed inset-0 top-16 z-30 bg-brand-dark sm:hidden h-fit transition-all [animation:drawer-panel-in_200ms_ease-out]"
+            role="dialog"
+            aria-label="Menu de navegação"
+          >
+            <Sidebar onLinkClick={() => setMenuOpen(false)} />
+          </div>
         </div>
       )}
     </>
