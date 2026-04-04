@@ -117,3 +117,13 @@ body {
     top: 4rem; /* 16px (base) + 16px (header) */
   }
 }
+
+/* FILTERS */
+@keyframes filter-panel-in {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

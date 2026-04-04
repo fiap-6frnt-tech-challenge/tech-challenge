@@ -11,8 +11,8 @@ import { useTransactionFilters } from '@/hooks';
 import type { Transaction } from '@/types';
 import { EditTransactionModal } from '@/components/features/EditTransactionModal';
 import { TransactionFormValues } from '@/components/features';
-import { EmptyState } from '@/components/ui';
-import { SearchX } from 'lucide-react';
+import { EmptyState, IconButton } from '@/components/ui';
+import { Funnel, SearchX } from 'lucide-react';
 import { ErrorState } from '@/components/ui/ErrorState/ErrorState';
 
 function TransactionsContent() {
@@ -25,6 +25,7 @@ function TransactionsContent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [pendingEdit, setPendingEdit] = useState<Transaction | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   if (isError) {
     return <ErrorState />;
@@ -107,10 +108,25 @@ function TransactionsContent() {
   return (
     <>
       <section aria-labelledby="transactions-heading" className="flex flex-col gap-lg h-full px-1">
-        <h1 id="transactions-heading" className="heading text-content-primary text-xl">
-          Transações
-        </h1>
-        <TransactionFilters value={filters} onChange={setFilters} onClear={clearFilters} />
+        <div className="sticky top-0 flex flex-col overflow-hidden">
+          <h1
+            id="transactions-heading"
+            className="py-lg w-full heading text-content-primary bg-background z-20 text-xl flex justify-between items-center"
+          >
+            Transações
+            <IconButton
+              icon={<Funnel />}
+              aria-label="Adicionar filtros"
+              className="sm:hidden"
+              onClick={() => setIsFilterVisible(!isFilterVisible)}
+            />
+          </h1>
+          <div
+            className={`bg-background sm:block pb-lg [animation:filter-panel-in_0.2s_ease-out] ${isFilterVisible ? 'block filter-panel-in' : 'hidden'}`}
+          >
+            <TransactionFilters value={filters} onChange={setFilters} onClear={clearFilters} />
+          </div>
+        </div>
         <TransactionList
           transactions={filtered}
           isLoading={isLoading}
