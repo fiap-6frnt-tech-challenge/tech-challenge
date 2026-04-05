@@ -10,7 +10,7 @@ import type { BalanceCardProps } from './IBalanceCard';
 
 export function BalanceCard({ balance, owner, label = 'Conta Corrente' }: BalanceCardProps) {
   const isPositive = balance >= 0;
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
 
   return (
     <Card padding="lg" className="relative overflow-hidden mb-sm bg-brand-dark! text-text-on-bg">
