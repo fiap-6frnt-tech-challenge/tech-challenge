@@ -12,7 +12,7 @@ import type { Transaction } from '@/types';
 import { EditTransactionModal } from '@/components/features/EditTransactionModal';
 import { TransactionFormValues } from '@/components/features';
 import { EmptyState, IconButton } from '@/components/ui';
-import { Funnel, SearchX } from 'lucide-react';
+import { Funnel, ReceiptText, SearchX } from 'lucide-react';
 import { ErrorState } from '@/components/ui/ErrorState/ErrorState';
 
 function TransactionsContent() {
@@ -94,6 +94,7 @@ function TransactionsContent() {
   }
 
   function showEmptyState() {
+    // Diferenciar entre "sem transações" e "filtros não encontraram resultados"
     if (transactions.length > 0 && filtered.length === 0) {
       return (
         <EmptyState
@@ -103,6 +104,15 @@ function TransactionsContent() {
         />
       );
     }
+
+    return (
+      <EmptyState
+        icon={<ReceiptText size={32} />}
+        title="Nenhuma transação registrada"
+        description="Registre sua primeira transação!"
+        className="border border-gray-300 bg-white"
+      />
+    );
   }
 
   return (

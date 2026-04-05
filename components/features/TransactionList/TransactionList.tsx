@@ -1,9 +1,7 @@
-import { ReceiptText } from 'lucide-react';
 import { cn } from '@/lib/classes';
 import { TransactionItem } from '@/components/features/TransactionItem';
 import { SkeletonList } from '@/components/ui/Skeleton';
 import type { TransactionListProps } from './ITransactionList';
-import { EmptyState } from '@/components/ui/EmptyState/EmptyState';
 
 export function TransactionList({
   transactions,
@@ -21,17 +19,8 @@ export function TransactionList({
       return <SkeletonList lines={5} showActions={showActions} />;
     }
 
-    if (transactions.length === 0) {
-      return (
-        emptyState || (
-          <EmptyState
-            icon={<ReceiptText size={32} />}
-            title="Nenhuma transação registrada"
-            description="Registre sua primeira transação!"
-            className="border border-gray-300 bg-white"
-          />
-        )
-      );
+    if (!transactions.length) {
+      return emptyState;
     }
 
     return transactions.map((transaction) => (
