@@ -19,14 +19,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex h-dvh flex-col overflow-hidden">
               <Header />
 
-              <div className="flex-1 overflow-y-auto">
-                {/* Tablet: horizontal nav (full width, above content) */}
-                <div className="hidden sm:block lg:hidden bg-background border-b border-border h-fit">
-                  <div className="mx-auto max-w-300 h-fit">
-                    <Sidebar />
-                  </div>
+              {/* Tablet: horizontal nav (full width, above content) */}
+              <div className="hidden sm:block lg:hidden bg-background border-b border-border h-fit">
+                <div className="mx-auto max-w-300 h-fit">
+                  <Sidebar />
                 </div>
+              </div>
 
+              <div className="flex-1 overflow-y-auto">
                 {/* Desktop + content area */}
                 <div className="mx-auto flex max-w-300 flex-col lg:flex-row px-lg gap-lg w-full">
                   {/* Desktop: vertical sidebar */}

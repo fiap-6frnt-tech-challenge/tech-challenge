@@ -46,43 +46,6 @@ body {
   outline: 2px solid var(--color-focus-ring);
 }
 
-/* ======================= */
-/* SCROLLBAR */
-/* ========================= */
-
-/* Hide scrollbar on mobile and tablet */
-@media (max-width: 1023px) {
-  * {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
-  *::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
-  }
-}
-
-/* WebKit specific styles for desktop */
-@media (min-width: 1024px) {
-  *::-webkit-scrollbar {
-    width: 10px; /* Width of the vertical scrollbar */
-  }
-
-  *::-webkit-scrollbar-track {
-    background: #00000000;
-    border-radius: 0px;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    background: var(--color-content-primary);
-    border-radius: 1px;
-    border: 1px solid var(--color-content-primary); /* Creates padding around the thumb */
-  }
-
-  *::-webkit-scrollbar-thumb:hover {
-    background: var(--color-primary);
-  }
-}
-
 /* ==================== */
 /* ANIMATIONS */
 /* ==================== */
