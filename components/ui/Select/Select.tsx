@@ -197,7 +197,7 @@ export function Select({
                   'body-default text-content-primary',
                   'cursor-pointer transition-colors',
                   activeIndex === i
-                    ? 'bg-badge-transfer-bg text-brand-primary outline-none ring-2 ring-inset ring-brand-primary'
+                    ? 'bg-badge-transfer-bg text-brand-primary outline-none ring-inset ring-brand-primary'
                     : selected === opt.value
                       ? 'bg-badge-transfer-bg text-brand-primary'
                       : 'hover:bg-badge-transfer-bg'

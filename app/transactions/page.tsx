@@ -108,7 +108,7 @@ function TransactionsContent() {
   return (
     <>
       <section aria-labelledby="transactions-heading" className="flex flex-col gap-lg h-full px-1">
-        <div className="sticky top-0 flex flex-col overflow-hidden">
+        <div className="sticky top-0 flex flex-col">
           <h1
             id="transactions-heading"
             className="py-lg w-full heading text-content-primary bg-background z-20 text-xl flex justify-between items-center"
@@ -122,7 +122,7 @@ function TransactionsContent() {
             />
           </h1>
           <div
-            className={`bg-background sm:block pb-lg [animation:filter-panel-in_0.2s_ease-out] ${isFilterVisible ? 'block filter-panel-in' : 'hidden'}`}
+            className={`bg-background sm:block pb-lg ${isFilterVisible ? 'block filter-panel-in [animation:filter-panel-in_0.2s_ease-out]' : 'hidden'}`}
           >
             <TransactionFilters value={filters} onChange={setFilters} onClear={clearFilters} />
           </div>

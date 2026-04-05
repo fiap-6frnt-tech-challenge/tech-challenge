@@ -121,7 +121,7 @@ body {
 /* FILTERS */
 @keyframes filter-panel-in {
   from {
-    transform: translateY(-100%);
+    transform: translateY(-8px);
   }
   to {
     transform: translateY(0);
