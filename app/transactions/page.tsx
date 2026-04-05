@@ -93,7 +93,7 @@ function TransactionsContent() {
     setPendingEdit(null);
   }
 
-  function showEmptyState() {
+  function renderEmptyState() {
     // Diferenciar entre "sem transações" e "filtros não encontraram resultados"
     if (transactions.length > 0 && filtered.length === 0) {
       return (
@@ -142,7 +142,7 @@ function TransactionsContent() {
           isLoading={isLoading}
           onEdit={handleEditRequest}
           onDelete={handleDeleteRequest}
-          emptyState={showEmptyState()}
+          emptyState={renderEmptyState()}
           className="w-full overflow-y-auto h-full"
         />
       </section>

@@ -3,9 +3,11 @@ import { BalanceCard } from '@/components/features/BalanceCard';
 import { NewTransaction } from '@/components/features/NewTransaction';
 import { TransactionList } from '@/components/features/TransactionList';
 import { Button } from '@/components/ui/Button/Button';
+import { EmptyState } from '@/components/ui/EmptyState/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useTransactions } from '@/context/TransactionsContext';
+import { ReceiptText } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
@@ -49,6 +51,14 @@ export default function Home() {
           showActions={false}
           tooltipPosition="left"
           isLoading={isLoading}
+          emptyState={
+            <EmptyState
+              icon={<ReceiptText size={32} />}
+              title="Nenhuma transação registrada"
+              description="Registre sua primeira transação!"
+              className="border border-gray-300 bg-white"
+            />
+          }
         />
 
         <Link href="/transactions">
