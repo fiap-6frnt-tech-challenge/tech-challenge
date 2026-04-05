@@ -18,14 +18,14 @@ import { ErrorState } from '@/components/ui/ErrorState/ErrorState';
 function TransactionsContent() {
   const { transactions, isLoading, deleteTransaction, updateTransaction, isError } =
     useTransactions();
-  const { filters, setFilters, clearFilters, filtered } = useTransactionFilters(transactions);
+  const { filters, setFilters, clearFilters, filtered, isFilterVisible, setIsFilterVisible } =
+    useTransactionFilters(transactions);
 
   const { showFeedback } = useFeedback();
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [pendingEdit, setPendingEdit] = useState<Transaction | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   if (isError) {
     return <ErrorState />;
