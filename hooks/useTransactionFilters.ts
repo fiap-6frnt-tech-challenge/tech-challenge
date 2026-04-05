@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { Transaction } from '@/types';
 import { DEFAULT_FILTERS } from '@/components/features/TransactionFilters';
@@ -63,5 +63,8 @@ export function useTransactionFilters(transactions: Transaction[]) {
 
   const clearFilters = useCallback(() => setFilters(DEFAULT_FILTERS), [setFilters]);
 
-  return { filters, setFilters, clearFilters, filtered };
+  const hasActiveFilters = searchParams.toString() !== '';
+  const [isFilterVisible, setIsFilterVisible] = useState(hasActiveFilters);
+
+  return { filters, setFilters, clearFilters, filtered, isFilterVisible, setIsFilterVisible };
 }
