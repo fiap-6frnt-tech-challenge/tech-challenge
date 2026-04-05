@@ -35,6 +35,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
       setValue,
       formState: { errors, isDirty },
     } = useForm({
+      mode: 'onChange',
       resolver: zodResolver(transactionFormSchema),
       defaultValues: {
         type: initialValues?.type || TRANSACTION_TYPE.DEPOSIT,
