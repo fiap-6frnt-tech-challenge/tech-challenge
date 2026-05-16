@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -46,7 +47,6 @@ storybook-static
 
 # Turborepo
 .turbo
-**/.turbo
 
 # Build outputs
 **/dist
