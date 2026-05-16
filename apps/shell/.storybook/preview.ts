@@ -36,3 +36,4 @@ const preview: Preview = {
 };
 
 export default preview;
+const unused = 1;
