@@ -63,20 +63,24 @@ Resumo:
 
 ### 3. Extrair packages/design-system (1 dia · **dev3-ds**)
 
-- [ ] Criar `packages/design-system/package.json` (name: `@bytebank/design-system`, type: module)
-- [ ] `git mv apps/shell/src/components/ui packages/design-system/src/components`
-- [ ] `git mv apps/shell/.storybook packages/design-system/.storybook`
-- [ ] `git mv apps/shell/stories packages/design-system/stories`
-- [ ] Mover `app/tokens.css` e `app/globals.css` → criar `packages/design-system/src/styles/{tokens,globals}.css` (manter cópia compatibility no shell se necessário)
-- [ ] Criar `packages/design-system/src/index.ts` com barrel exports
-- [ ] Configurar `tsconfig.json` do package (composite, declarationMap)
-- [ ] Configurar build via `tsup` ou simplesmente `tsc` — exports `./components/*` e `./styles/*`
-- [ ] No `apps/shell/package.json`, adicionar `"@bytebank/design-system": "workspace:*"`
-- [ ] Atualizar imports do shell: `@/components/ui` → `@bytebank/design-system`
-- [ ] Mover Storybook scripts para `packages/design-system/package.json`
-- [ ] Mover `chromatic.yml` para apontar para `packages/design-system/`
+> 📋 **Passo-a-passo completo:** [sprint-0/03-extract-design-system.md](./sprint-0/03-extract-design-system.md)
 
-**Aceite:** `npm run storybook -w @bytebank/design-system` sobe em `:6006` com todos os componentes; shell consome via workspace dep.
+Resumo:
+
+- [ ] Criar `packages/design-system/{package.json, tsconfig.json, README.md}` (name: `@bytebank/design-system`, sem build step — exporta TS source via `transpilePackages`)
+- [ ] `git mv apps/shell/src/components/ui/* packages/design-system/src/components/`
+- [ ] `git mv apps/shell/.storybook/* packages/design-system/.storybook/`
+- [ ] `git mv apps/shell/stories packages/design-system/stories`
+- [ ] `git mv apps/shell/src/app/tokens.css packages/design-system/src/styles/tokens.css`
+- [ ] `git mv apps/shell/src/app/globals.css packages/design-system/src/styles/globals.css` (+ adicionar `@source "../components/**"` para Tailwind v4)
+- [ ] Criar `packages/design-system/src/index.ts` com barrel exports (incluir `ErrorState` e `ViewportFix` que estavam fora)
+- [ ] No `apps/shell/package.json`: adicionar dep `"@bytebank/design-system": "*"`; remover devDeps de storybook/chromatic + scripts correspondentes
+- [ ] No `apps/shell/next.config.ts`: adicionar `transpilePackages: ['@bytebank/design-system']`
+- [ ] Criar novo `apps/shell/src/app/globals.css` thin shim que importa do DS + `@source "../**"` para features
+- [ ] Codemod de imports no shell: `@/components/ui` → `@bytebank/design-system` (28 arquivos)
+- [ ] Atualizar `.github/workflows/chromatic.yml`: target `phase-2`, `workingDir: packages/design-system`, Node 20
+
+**Aceite:** `npm run storybook -w @bytebank/design-system` sobe em `:6006` com todos os componentes; shell consome via workspace dep; home + transactions visualmente idênticas à Fase 1.
 
 ### 4. Extrair packages/shared (0.5 dia · **dev2-backend**)
 
