@@ -1,19 +1,21 @@
-# Task 3 — Extrair `packages/design-system`
+# Task 4 — Extrair `packages/design-system`
 
-|                      |                                                                                                                                            |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Sprint**           | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                                         |
-| **Owner**            | `dev3-ds`                                                                                                                                  |
-| **Duração estimada** | 1 dia                                                                                                                                      |
-| **Branch**           | `phase-2/dev3-ds/extract-design-system` (a partir de `phase-2`)                                                                            |
-| **Depende de**       | [Bundle Tasks 1+2](./02-migrate-shell.md) mergeado em `phase-2`                                                                            |
-| **Desbloqueia**      | Tasks 6 (PoC MF — consome DS no remote), Sprint 1 (novos componentes auth nascem no DS), Sprints 2/3 (charts + filtros + FileUpload no DS) |
+|                      |                                                                                                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Sprint**           | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                                                         |
+| **Owner**            | `dev3-ds`                                                                                                                                                  |
+| **Duração estimada** | 1 dia                                                                                                                                                      |
+| **Branch**           | `phase-2/dev3-ds/extract-design-system` (a partir de `phase-2`)                                                                                            |
+| **Depende de**       | [Task 3 — Extrair shared](./03-extract-shared.md) mergeada em `phase-2` (DS importa `cn`, `getInputBorderColor`, mock `Transaction` de `@bytebank/shared`) |
+| **Desbloqueia**      | Tasks 6 (PoC MF — consome DS no remote), Sprint 1 (novos componentes auth nascem no DS), Sprints 2/3 (charts + filtros + FileUpload no DS)                 |
 
 ---
 
 ## Contexto
 
-A Task 2 deixou todos os componentes de UI em `apps/shell/src/components/ui/`. Esta task **extrai esses componentes para um package npm workspace `@bytebank/design-system`**, transformando o DS em biblioteca consumível por todos os apps do monorepo (shell, dashboard-mfe, transactions-mfe).
+A Task 2 deixou todos os componentes de UI em `apps/shell/src/components/ui/`. A Task 3 já extraiu `@bytebank/shared` com `cn`, `getInputBorderColor`, types e constants — os componentes do DS no shell **já importam de `@bytebank/shared`** (não mais de `@/lib`). Esta task **extrai esses componentes para um package npm workspace `@bytebank/design-system`**, transformando o DS em biblioteca consumível por todos os apps do monorepo (shell, dashboard-mfe, transactions-mfe).
+
+Como os imports internos dos componentes do DS já apontam para `@bytebank/shared` (graças à Task 3), esta task praticamente só **move os arquivos fisicamente** e cabeia o shell pra consumir via workspace dep — sem precisar refatorar imports dentro dos componentes do DS.
 
 ### Por que extrair agora (Sprint 0)?
 
@@ -173,6 +175,7 @@ Crie `packages/design-system/package.json`:
     "next": "^16.0.0"
   },
   "dependencies": {
+    "@bytebank/shared": "*",
     "lucide-react": "^0.577.0"
   },
   "devDependencies": {
@@ -203,7 +206,8 @@ Crie `packages/design-system/package.json`:
 **Decisões importantes:**
 
 - **`main`/`types` apontam para `.ts` source** — não há build step. Cada consumer (shell, MFEs) transpila o DS via seu próprio bundler. Simples e suporta hot reload entre packages
-- **`peerDependencies`** garante que React/Next só existam uma vez na árvore (consumer fornece)
+- **`peerDependencies`** (`react`, `react-dom`, `next`) — consumer fornece; garante uma única cópia na árvore
+- **`dependencies.@bytebank/shared`** — DS usa `cn`, `getInputBorderColor` e tipos do shared. Workspace dep via `*`
 - **`exports` field** controla o que pode ser importado: API pública (`.`), CSS (`./styles/*`)
 - **`lucide-react`** é dep direta (componentes importam ícones)
 - Storybook + Chromatic agora vivem aqui — `chromatic` script com token preservado da Fase 1

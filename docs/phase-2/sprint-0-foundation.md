@@ -61,13 +61,33 @@ Resumo:
 
 **Aceite:** shell roda no mesmo estado da Fase 1, mas agora em `apps/shell/`. Todos `npm run dev/build/lint/test/storybook -w @bytebank/shell` passam.
 
-### 3. Extrair packages/design-system (1 dia · **dev3-ds**)
+### 3. Extrair packages/shared (0.5 dia · **dev2-backend**)
 
-> 📋 **Passo-a-passo completo:** [sprint-0/03-extract-design-system.md](./sprint-0/03-extract-design-system.md)
+> 📋 **Passo-a-passo completo:** [sprint-0/03-extract-shared.md](./sprint-0/03-extract-shared.md)
+> Reordenada antes do DS porque DS depende de `cn`, `getInputBorderColor` e tipos do shared.
 
 Resumo:
 
-- [ ] Criar `packages/design-system/{package.json, tsconfig.json, README.md}` (name: `@bytebank/design-system`, sem build step — exporta TS source via `transpilePackages`)
+- [ ] Criar `packages/shared/{package.json, tsconfig.json, README.md, src/index.ts}` (name: `@bytebank/shared`, sem deps de UI ou framework)
+- [ ] `git mv apps/shell/src/types/* packages/shared/src/types/`
+- [ ] `git mv apps/shell/src/lib/* packages/shared/src/lib/` (classes, format, input, transactions)
+- [ ] `git mv apps/shell/src/shared/constants/* packages/shared/src/constants/`
+- [ ] Em `constants/transaction.ts`: remover import de `@/components/ui/Select`; inline `SelectOption` estrutural (evita ciclo)
+- [ ] Ajustar imports internos do shared (`@/types` → `../types`, etc.) para caminhos relativos
+- [ ] No `apps/shell/package.json`: adicionar dep `"@bytebank/shared": "*"`
+- [ ] No `apps/shell/next.config.ts`: adicionar `transpilePackages: ['@bytebank/shared']`
+- [ ] Codemod ~40 arquivos em `apps/shell/src/`: `@/types`, `@/lib/*`, `@/shared/constants/*` → `@bytebank/shared` (cobre tanto features quanto DS components que ainda vivem no shell)
+
+**Aceite:** `npm run build/lint -w @bytebank/shell` passa; home + transactions idênticas à Fase 1; `grep` por imports antigos retorna vazio.
+
+### 4. Extrair packages/design-system (1 dia · **dev3-ds**)
+
+> 📋 **Passo-a-passo completo:** [sprint-0/04-extract-design-system.md](./sprint-0/04-extract-design-system.md)
+> Depende de Task 3 — DS importa `cn`, `getInputBorderColor` e mock `Transaction` de `@bytebank/shared`.
+
+Resumo:
+
+- [ ] Criar `packages/design-system/{package.json, tsconfig.json, README.md}` (name: `@bytebank/design-system`, dep `@bytebank/shared: "*"`)
 - [ ] `git mv apps/shell/src/components/ui/* packages/design-system/src/components/`
 - [ ] `git mv apps/shell/.storybook/* packages/design-system/.storybook/`
 - [ ] `git mv apps/shell/stories packages/design-system/stories`
@@ -75,24 +95,12 @@ Resumo:
 - [ ] `git mv apps/shell/src/app/globals.css packages/design-system/src/styles/globals.css` (+ adicionar `@source "../components/**"` para Tailwind v4)
 - [ ] Criar `packages/design-system/src/index.ts` com barrel exports (incluir `ErrorState` e `ViewportFix` que estavam fora)
 - [ ] No `apps/shell/package.json`: adicionar dep `"@bytebank/design-system": "*"`; remover devDeps de storybook/chromatic + scripts correspondentes
-- [ ] No `apps/shell/next.config.ts`: adicionar `transpilePackages: ['@bytebank/design-system']`
+- [ ] No `apps/shell/next.config.ts`: adicionar `@bytebank/design-system` ao `transpilePackages`
 - [ ] Criar novo `apps/shell/src/app/globals.css` thin shim que importa do DS + `@source "../**"` para features
 - [ ] Codemod de imports no shell: `@/components/ui` → `@bytebank/design-system` (28 arquivos)
 - [ ] Atualizar `.github/workflows/chromatic.yml`: target `phase-2`, `workingDir: packages/design-system`, Node 20
 
 **Aceite:** `npm run storybook -w @bytebank/design-system` sobe em `:6006` com todos os componentes; shell consome via workspace dep; home + transactions visualmente idênticas à Fase 1.
-
-### 4. Extrair packages/shared (0.5 dia · **dev2-backend**)
-
-- [ ] Criar `packages/shared/package.json` (name: `@bytebank/shared`)
-- [ ] `git mv apps/shell/src/types packages/shared/src/types`
-- [ ] `git mv apps/shell/src/lib packages/shared/src/lib`
-- [ ] `git mv apps/shell/src/shared/constants packages/shared/src/constants`
-- [ ] Criar `packages/shared/src/index.ts` com barrel
-- [ ] Adicionar `"@bytebank/shared": "workspace:*"` no shell
-- [ ] Atualizar imports `@/types`, `@/lib/*`, `@/shared/constants/*` → `@bytebank/shared`
-
-**Aceite:** shell continua compilando após swap dos imports.
 
 ### 5. Criar packages/api-client e packages/stores (vazios) (0.5 dia · **dev2-backend**)
 
