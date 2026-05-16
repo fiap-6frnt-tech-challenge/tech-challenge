@@ -1,1 +1,2 @@
 npx lint-staged
+npx lint-staged --cwd apps/shell
