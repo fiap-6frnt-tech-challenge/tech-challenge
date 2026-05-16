@@ -10,7 +10,7 @@
 ## Pré-requisitos
 
 - [x] **Decisão MF: Opção A — Rsbuild + `@module-federation/enhanced`** (ver PLAN.md)
-- [ ] Branch de integração `phase-2` criada a partir de `main` (long-lived; recebe todos os PRs da fase)
+- [x] Branch de integração `phase-2` já criada e disponível em `origin` (long-lived; recebe todos os PRs da fase)
 - [ ] Cada track cria sub-branch a partir de `phase-2`: `phase-2/dev1-infra/<task>`, `phase-2/dev3-ds/<task>`, etc. — ver [Git Workflow no PLAN.md](./PLAN.md#git-workflow--fase-2)
 - [ ] Node 20+ e npm 10+ instalados em todas as máquinas
 - [ ] Acesso ao Chromatic atualizado (token `chpt_330cd685ba026e8`)
@@ -18,6 +18,8 @@
 ---
 
 ## Tasks
+
+> 🔗 **Tasks 1 e 2 são bundled num PR único atômico** ([sprint-0/README.md](./sprint-0/README.md#princípio-do-sprint-0-e-da-fase-inteira)). Task 1 isolada quebraria `phase-2` (sem deps do Next no root). As 2 saem juntas em `phase-2/dev1-infra/monorepo-migration` com 2 commits e 1 PR.
 
 ### 1. Bootstrap monorepo (1 dia · **dev1-infra**)
 
@@ -44,19 +46,20 @@
 
 ### 2. Migrar shell para apps/shell (1 dia · **dev1-infra**)
 
-- [ ] `git mv tech-challenge/app tech-challenge/apps/shell/src/app` (preserva histórico)
-- [ ] `git mv tech-challenge/public tech-challenge/apps/shell/public`
-- [ ] `git mv tech-challenge/data tech-challenge/apps/shell/data`
-- [ ] `git mv tech-challenge/hooks tech-challenge/apps/shell/src/hooks`
-- [ ] `git mv tech-challenge/context tech-challenge/apps/shell/src/context` (será removido no Sprint 1)
-- [ ] Mover `package.json`, `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs`, `next-env.d.ts`, `global.d.ts`, `vitest.config.ts`, `vitest.shims.d.ts` para `apps/shell/`
-- [ ] Renomear `apps/shell/package.json` `name` para `@bytebank/shell`
-- [ ] Atualizar `tsconfig.json` paths: `"@/*": ["./src/*"]`
-- [ ] Atualizar todos imports `@/components/...` se necessário
-- [ ] Mover `.husky/` e `.prettierrc` para raiz do monorepo
-- [ ] Verificar `npm run dev -w @bytebank/shell` sobe shell em `:3000` igual a antes
+> 📋 **Passo-a-passo completo:** [sprint-0/02-migrate-shell.md](./sprint-0/02-migrate-shell.md)
 
-**Aceite:** shell roda no mesmo estado da Fase 1, mas agora em `apps/shell/`.
+Resumo:
+
+- [ ] Mover folders de código fonte (`app/`, `components/`, `context/`, `hooks/`, `lib/`, `services/`, `shared/`, `types/`) → `apps/shell/src/`
+- [ ] Mover folders app-level (`data/`, `public/`, `stories/`, `.storybook/`) → `apps/shell/`
+- [ ] Mover config files (`next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs`, `next-env.d.ts`, `global.d.ts`, `vitest.config.ts`, `vitest.shims.d.ts`, `.env.local`) → `apps/shell/`
+- [ ] Restaurar `package.json` original (do backup `.package.json.fase1.bak` da Task 1) em `apps/shell/package.json` e renomear para `@bytebank/shell`
+- [ ] Atualizar `apps/shell/tsconfig.json` paths: `"@/*": ["./src/*"]`
+- [ ] Atualizar `apps/shell/.storybook/main.ts` para apontar `../src/components/**`
+- [ ] `.husky/` e `.prettierrc` **permanecem no root** (monorepo root = `tech-challenge/`)
+- [ ] `npm install` na raiz + `npm run dev -w @bytebank/shell` sobe shell em `:3000` igual a antes
+
+**Aceite:** shell roda no mesmo estado da Fase 1, mas agora em `apps/shell/`. Todos `npm run dev/build/lint/test/storybook -w @bytebank/shell` passam.
 
 ### 3. Extrair packages/design-system (1 dia · **dev3-ds**)
 

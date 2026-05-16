@@ -207,7 +207,9 @@ gh pr create --base phase-2 --title "feat(ds): LoginForm component"
 
 ## Próximos passos imediatos
 
-1. Criar branch `phase-2` a partir de `main` (long-lived, será a base de todas as features)
-2. Cada track cria sub-branches: `phase-2/dev1-infra/...`, `phase-2/dev3-ds/...`, etc. — ver [Git Workflow](#git-workflow--fase-2)
-3. Iniciar [sprint-0-foundation.md](./sprint-0-foundation.md) — Bootstrap monorepo + extração de packages em paralelo com PoC Rsbuild
-4. Gate dia 5: validar PoC ou acionar fallback opção D
+- [x] **Branch `phase-2` já criada** a partir de `main` e disponível em `origin` (long-lived; base de todas as features da fase)
+- [x] **Branch atual** (onde estes docs vivem) já é uma feature branch a partir de `phase-2` — exemplo do workflow
+
+1. Cada track cria suas sub-branches: `phase-2/dev1-infra/...`, `phase-2/dev3-ds/...`, etc. — ver [Git Workflow](#git-workflow--fase-2)
+2. Iniciar [sprint-0-foundation.md](./sprint-0-foundation.md) — Bootstrap monorepo + extração de packages em paralelo com PoC Rsbuild
+3. Gate dia 5: validar PoC ou acionar fallback opção D
