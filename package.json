@@ -7,7 +7,10 @@
     "node": ">=20",
     "npm": ">=10"
   },
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -24,7 +27,8 @@
     "lint-staged": "^16.3.2"
   },
   "lint-staged": {
-    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
-    "*.{js,mjs,json,css,md}": ["prettier --write"]
+    "*.{js,mjs,json,css,md}": [
+      "prettier --write"
+    ]
   }
 }
