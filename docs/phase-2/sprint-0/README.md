@@ -23,7 +23,7 @@ Cada arquivo neste diretório descreve **uma task** do [sprint-0-foundation.md](
 | 6   | PoC Module Federation (Opção A — Rsbuild)   | dev4-dashboard + dev5-transactions | 3 dias  | PR próprio                 | [06-poc-module-federation.md](./06-poc-module-federation.md) |
 | 7   | Gate decisório MF (Dia 5)                   | todo time                          | 30 min  | doc-only                   | [07-gate-decision.md](./07-gate-decision.md)                 |
 | 8   | CI atualizado                               | dev1-infra                         | 0.5 dia | PR próprio                 | [08-update-ci.md](./08-update-ci.md)                         |
-| 9   | Smoke test final                            | todo time                          | 0.5 dia | — (validação)              | _a criar_                                                    |
+| 9   | Smoke test final                            | todo time                          | 0.5 dia | doc-only                   | [09-smoke-test-final.md](./09-smoke-test-final.md)           |
 
 ## Princípio do Sprint 0 (e da fase inteira)
 

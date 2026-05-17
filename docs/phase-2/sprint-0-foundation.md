@@ -181,11 +181,19 @@ Resumo:
 
 ### 9. Smoke test final (0.5 dia · **todo time**)
 
-- [ ] Clone limpo do repo → `npm install && npm run dev` sobe shell + hello-mfe (via Turborepo)
-- [ ] `npm run storybook -w @bytebank/design-system` sobe :6006
-- [ ] `npm run build` (raiz, todos workspaces via Turbo) passa
-- [ ] `npm test` rodando (mesmo que sem testes ainda)
-- [ ] Vercel preview da branch verde com shell deployado
+> 📋 **Passo-a-passo completo:** [sprint-0/09-smoke-test-final.md](./sprint-0/09-smoke-test-final.md)
+> Última task do Sprint 0 — validação end-to-end em clone limpo + retrospectiva síncrona.
+
+Resumo:
+
+- [ ] Cada dev clona o repo em diretório novo (`git clone` + `git checkout phase-2`)
+- [ ] `npm install` resolve todos workspaces sem warnings críticos
+- [ ] Validar matriz de 18 critérios (build, lint, test, storybook, CI, Vercel preview, hot reload, git history preservado, etc.)
+- [ ] Investigar e corrigir falhas via issues label `sprint-0-blocker`
+- [ ] **Retrospectiva síncrona 1h:** o que foi bem, o que foi difícil, ajustes para Sprint 1, pontuação de saúde do time (1-5)
+- [ ] Documentar em `docs/phase-2/sprint-0/retrospective.md` com sign-off dos 5 devs
+
+**Critério final para fechar Sprint 0:** matriz 100% ✅, retrospective committed, sign-off de todos, PLAN.md atualizado com data real de fechamento.
 
 ---
 
