@@ -5,7 +5,7 @@
 | **Sprint**               | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                                        |
 | **Owners**               | `dev4-dashboard` (remote) + `dev5-transactions` (shell consumer) — em paralelo                                                            |
 | **Duração estimada**     | 3 dias (timebox rigoroso)                                                                                                                 |
-| **Branch compartilhada** | `phase-2/dev4+5/poc-module-federation` (ambos devs commitam aqui)                                                                         |
+| **Branch compartilhada** | `phase-2/team-mfe/poc` (ambos devs commitam aqui)                                                                                         |
 | **Depende de**           | [Bundle Tasks 1+2](./02-migrate-shell.md) mergeado (recomendável também ter Task 4 DS, mas não obrigatório — pode usar React puro no PoC) |
 | **Desbloqueia**          | Sprint 2 (`dashboard-mfe`) e Sprint 3 (`transactions-mfe`) — copiam o padrão validado aqui                                                |
 | **Gate de decisão**      | [Task 7 — Gate decisório](./README.md) no **dia 5 do Sprint 0**                                                                           |
@@ -78,8 +78,8 @@ Singletons compartilhados (1 instância na árvore):
 - [ ] Branch compartilhada criada (uma só, ambos devs commitam):
   ```bash
   git checkout phase-2 && git pull origin phase-2
-  git checkout -b phase-2/dev4+5/poc-module-federation
-  git push -u origin phase-2/dev4+5/poc-module-federation
+  git checkout -b phase-2/team-mfe/poc
+  git push -u origin phase-2/team-mfe/poc
   ```
 - [ ] Pair session de kickoff de 1h (dia 1 manhã) — alinhar API entre Tracks A e B
 - [ ] Daily check-ins ao fim de cada dia (3 daily standups durante o PoC)
@@ -327,6 +327,21 @@ function ensureInit() {
         lib: () => import('react-dom'),
         shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
       },
+      // Singletons de packages workspace — DEVEM espelhar o `shared` declarado no
+      // rsbuild.config.ts do remote (Phase A2). Sem isso, DS pode duplicar entre
+      // shell e remote (2x bundle size + risco de Context/state bugs).
+      '@bytebank/design-system': {
+        version: '0.1.0',
+        scope: 'default',
+        lib: () => import('@bytebank/design-system'),
+        shareConfig: { singleton: true, requiredVersion: '*' },
+      },
+      '@bytebank/shared': {
+        version: '0.1.0',
+        scope: 'default',
+        lib: () => import('@bytebank/shared'),
+        shareConfig: { singleton: true, requiredVersion: '*' },
+      },
     },
   });
 }
@@ -485,7 +500,7 @@ Salvar screenshots/logs de evidência em `docs/phase-2/sprint-0/poc-mf-evidence/
 
 ### Cenário A — PoC verde (≥14/16)
 
-1. Aprovar PR `phase-2/dev4+5/poc-module-federation` → merge em `phase-2`
+1. Aprovar PR `phase-2/team-mfe/poc` → merge em `phase-2`
 2. Atualizar [PLAN.md](../PLAN.md) marcando "Opção A confirmada via PoC"
 3. Criar `docs/phase-2/sprint-0/poc-mf-evidence/` com screenshots commitados
 4. Sprint 2 (`dev4-dashboard`) e Sprint 3 (`dev5-transactions`) copiam padrão Rsbuild + runtime API
@@ -532,7 +547,7 @@ Se PoC falhar, MFEs viram **workspace packages consumidos em build-time** pelo s
 
 1. **`@module-federation/nextjs-mf` NÃO funciona em Next 16 App Router.** Tentação grande de instalar; resista. Usar **runtime API direto** (`@module-federation/enhanced/runtime`) é o caminho.
 
-2. **Singletons mal configurados causam "two Reacts" bug.** Sintoma: hooks no Hello quebram com "Invalid hook call" ou estado não persiste. Solução: garantir `singleton: true` em ambos lados (remote `shared` config + shell `init.shared`).
+2. **Singletons mal configurados causam "two Reacts" / "two DS" bug.** Sintoma: hooks no Hello quebram com "Invalid hook call", ou bundle pesa o dobro, ou Context provider do shell não enxerga consumer do remote. Solução: declarar `singleton: true` em **ambos lados** para **todas** as deps compartilhadas — remote `shared` (rsbuild.config) E shell `init.shared` (lib/federation.ts). Os 4 must-haves: `react`, `react-dom`, `@bytebank/design-system`, `@bytebank/shared`. Validar com `npm ls react -w @bytebank/shell` mostrando 1 cópia hoisted.
 
 3. **`requiredVersion` strict pode bloquear workspace deps.** Workspace deps têm version `0.1.0` (placeholder); se `requiredVersion: '^0.1.0'` em prod, falha. Use `'*'` ou ranges abertos para deps internas.
 
@@ -555,7 +570,7 @@ Se PoC falhar, MFEs viram **workspace packages consumidos em build-time** pelo s
 > **PR único cobrindo Tracks A + B**, com commits separados por dev:
 
 ```bash
-git push origin phase-2/dev4+5/poc-module-federation
+git push origin phase-2/team-mfe/poc
 gh pr create --base phase-2 --title "feat(mfe): PoC Module Federation — Rsbuild remote + Next 16 shell consumer" \
   --body "$(cat <<'EOF'
 ## Sumário

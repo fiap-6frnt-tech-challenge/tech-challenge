@@ -13,14 +13,14 @@
 
 ## Contexto
 
-A Fase 1 tinha um único workflow CI: `chromatic.yml` rodando publicação de Storybook na raiz. Agora com monorepo Turborepo + 5 workspaces (`shell`, `shared`, `design-system`, `api-client`, `stores` — e talvez `hello-mfe` se Gate aprovou A), precisamos:
+A Fase 1 tinha `chromatic.yml`. O bundle Tasks 1+2 adicionou um `ci-minimal.yml` provisório (apenas build+lint do shell). Esta task **completa** o CI do monorepo:
 
-1. **Workflow `ci.yml` novo** — lint + build + test em todos workspaces afetados por uma PR
-2. **Workflow `chromatic.yml` atualizado** — apontar para `packages/design-system/`, rodar em `phase-2`
+1. **Workflow `ci.yml` novo** — lint + type-check + build + test em todos workspaces afetados via Turbo `--affected`. **Substitui** `ci-minimal.yml` (deletar após validar `ci.yml`).
+2. **Workflow `chromatic.yml` estendido** — Turbo Remote Cache env vars, `onlyChanged: true`, `exitZeroOnChanges` (paths + branches já foram corrigidos em [Task 4 Phase H](./04-extract-design-system.md))
 3. **Husky pre-commit hook** — `lint-staged` filtrando arquivos modificados (rápido)
 4. **Turborepo Remote Cache** (opcional mas recomendado) — compartilhar build cache entre CI e devs locais via Vercel
 
-Sem essa task: CI da Fase 1 não vai rodar nos novos workspaces, e cada `npm run build` em CI seria do zero (lento).
+Sem essa task: CI continuaria limitado ao shell (não pega regressões em DS/shared), e cada `npm run build` em CI seria do zero (lento).
 
 ### O que NÃO é objetivo
 
@@ -74,7 +74,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 2 # necessário para Turbo --affected
+          fetch-depth: 0 # full history para Turbo --affected resolver merge-base do PR
+          # Alternativa: fetch-depth: 50 (mais rápido) se PRs nunca passam de 50 commits
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -101,7 +102,7 @@ jobs:
 **Decisões:**
 
 - **`--affected`** — Turbo 2.x flag que detecta mudanças entre `HEAD` e o base ref. Reduz tempo de CI drasticamente em PRs pequenas (ex: editar 1 componente do DS roda só lint/build/test do DS, não do shell).
-- **`fetch-depth: 2`** — Turbo precisa do commit anterior para comparar. Default `1` quebra `--affected`.
+- **`fetch-depth: 0`** — Turbo `--affected` compara com merge-base do PR, que pode estar várias commits atrás. `fetch-depth: 2` (anterior) cobre só PRs single-commit; quebra silenciosamente em PRs maiores (`--affected` retorna conjunto incompleto). Trade-off: clone mais lento (~+10s); aceitável.
 - **`concurrency` group** — cancela runs antigos da mesma branch quando um novo push chega; economiza minutos GH Actions.
 - **`TURBO_TOKEN` + `TURBO_TEAM`** — habilita Remote Cache (Phase D). Se não configurar, Turbo cai pra cache local do runner (ok, só não compartilha entre runs).
 - **`!@bytebank/hello-mfe`** no lint — `hello-mfe` é descartável após o PoC; não bloqueamos CI por lint dele.
@@ -122,9 +123,11 @@ Adicionar `"type-check": "tsc --noEmit"` em `package.json` dos workspaces que ai
 
 Repetir em: `packages/shared`, `packages/design-system`, `packages/api-client`, `packages/stores`. Para `@bytebank/hello-mfe` (se Opção A), Rsbuild template já vem com `type-check`.
 
-### Phase C — Atualizar `.github/workflows/chromatic.yml`
+### Phase C — Estender `.github/workflows/chromatic.yml`
 
-A Task 4 já moveu o foco para `packages/design-system/`. Esta task garante que o workflow está alinhado:
+> **Boundary com Task 4:** [Task 4 Phase H](./04-extract-design-system.md) fez a mudança mecânica do chromatic.yml (paths + branches). Esta phase **estende** com Turbo Remote Cache env vars, `onlyChanged: true` e `exitZeroOnChanges`. Se a Task 4 ainda não mergeou quando você fizer Task 8, garanta que aplica os deltas em cima do que ela escreveu (não substituir o arquivo inteiro).
+
+Estado esperado do arquivo após esta phase:
 
 ```yaml
 name: Chromatic
@@ -252,23 +255,31 @@ export default nextConfig;
 
 Ou (mais limpo) extrair `eslint.config.mjs` para a raiz e cada workspace importa dele. Decisão de polish — pode ficar para Sprint 1 se apertar tempo.
 
-### Phase F — Validar CI
+### Phase F — Validar CI e remover ci-minimal
 
 Para testar antes de mergear:
 
 1. Push da branch `phase-2/dev1-infra/update-ci` para origin
 2. Abrir PR contra `phase-2`
 3. Verificar:
-   - [ ] Workflow `CI` aparece e roda (lint + type-check + build + test)
+   - [ ] Workflow `CI` (novo, do `ci.yml`) aparece e roda (lint + type-check + build + test)
    - [ ] Workflow `Chromatic` aparece e roda (visual diff)
+   - [ ] Workflow `CI (minimal)` (do bundle Tasks 1+2) ainda roda mas é redundante
    - [ ] Tempo total < 5 min (cold), < 2 min (cache hit)
-   - [ ] PR mostra ✅ verde em ambos checks
+   - [ ] PR mostra ✅ verde em todos checks
 4. Fazer um commit pequeno (ex: editar README) e push → confirmar que `--affected` pulou builds (deve aparecer `>>> FULL TURBO` se cache hit)
+5. **Deletar `ci-minimal.yml`** assim que `ci.yml` for validado verde:
+   ```bash
+   git rm .github/workflows/ci-minimal.yml
+   git commit -m "ci: remove minimal workflow (substituído por ci.yml completo)"
+   ```
+6. Push final + atualizar PR description marcando que removeu o workflow temporário
 
 ## Validação
 
 - [ ] `.github/workflows/ci.yml` criado e workflow aparece em Actions tab
-- [ ] `.github/workflows/chromatic.yml` aponta para `packages/design-system` e trigger inclui `phase-2`
+- [ ] `.github/workflows/ci-minimal.yml` **deletado** após validar que `ci.yml` cobre tudo
+- [ ] `.github/workflows/chromatic.yml` aponta para `packages/design-system`, inclui `phase-2`, e tem env vars Turbo
 - [ ] Secrets `TURBO_TOKEN` e variable `TURBO_TEAM` configurados (se usando Vercel Remote Cache)
 - [ ] PR de teste compila em CI sem erros
 - [ ] `npx turbo run lint --affected` localmente funciona (testa `--affected` antes de empurrar para CI)
@@ -277,7 +288,7 @@ Para testar antes de mergear:
 
 ## Gotchas
 
-1. **`fetch-depth` correto.** `ci.yml` usa `2`, `chromatic.yml` usa `0`. Não copiar entre arquivos — Chromatic precisa de history completo, Turbo só do anterior.
+1. **`fetch-depth: 0` em ambos workflows.** Turbo `--affected` precisa do merge-base do PR (que pode estar fundo no histórico), e Chromatic precisa da baseline anterior. Ambos com `0` (full history). Era `2` no draft inicial — não funciona em PRs com mais de 1 commit.
 
 2. **Turbo `--affected` exige `git` na imagem.** GitHub Actions Ubuntu já tem. Em runners customizados, conferir.
 

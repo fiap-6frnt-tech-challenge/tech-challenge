@@ -123,7 +123,7 @@ Resumo:
 
 Resumo:
 
-- [ ] Branch compartilhada `phase-2/dev4+5/poc-module-federation` (ambos devs commitam)
+- [ ] Branch compartilhada `phase-2/team-mfe/poc` (ambos devs commitam)
 - [ ] **Track A** (`dev4-dashboard`): criar `apps/hello-mfe` Rsbuild + `@module-federation/rsbuild-plugin`, expor `<Hello />` consumindo `@bytebank/design-system` e `@bytebank/shared` com `singleton: true`
 - [ ] **Track B** (`dev5-transactions`): instalar `@module-federation/enhanced` no shell, criar `src/lib/federation.ts` com runtime `init()` + `loadRemote()`, criar `<RemoteHello />` wrapper com `dynamic(...)`, rota temporária `/poc` para validar
 - [ ] **Dia 3:** integrar; preencher matriz de validação de 16 critérios (NetworkTab, React DevTools, tokens DS, hot reload, build prod, Vercel preview)
@@ -170,7 +170,8 @@ Resumo da agenda (30 min):
 
 Resumo:
 
-- [ ] Criar `.github/workflows/ci.yml` rodando `turbo run lint type-check build test --affected` com `fetch-depth: 2`
+- [ ] Criar `.github/workflows/ci.yml` rodando `turbo run lint type-check build test --affected` com `fetch-depth: 0` (full history para merge-base)
+- [ ] Deletar `.github/workflows/ci-minimal.yml` (do bundle Tasks 1+2) após validar que o novo `ci.yml` cobre
 - [ ] Atualizar `.github/workflows/chromatic.yml`: trigger inclui `phase-2`, `workingDir: packages/design-system`, `onlyChanged: true`
 - [ ] Configurar Turborepo Remote Cache (Vercel — `TURBO_TOKEN` secret + `TURBO_TEAM` variable) OU fallback GH Actions cache
 - [ ] Garantir scripts `type-check` em todos packages (`tsc --noEmit`)

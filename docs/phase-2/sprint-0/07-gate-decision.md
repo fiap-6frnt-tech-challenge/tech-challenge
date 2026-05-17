@@ -27,7 +27,7 @@ O time se compromete agora com Opção A (federação runtime) **ou** Opção D 
 
 ## Pré-requisitos da reunião
 
-- [ ] **PR da Task 6** aberto em `phase-2/dev4+5/poc-module-federation`, **não** mergeado ainda
+- [ ] **PR da Task 6** aberto em `phase-2/team-mfe/poc`, **não** mergeado ainda
 - [ ] **Matriz de validação preenchida** com ✅/❌ no corpo do PR (16 critérios da Task 6)
 - [ ] **Evidências commitadas** em `docs/phase-2/sprint-0/poc-mf-evidence/`:
   - `1-mfe-standalone.png`

@@ -263,7 +263,7 @@ gh pr create --base phase-2 --title "docs(sprint-0): retrospective" \
 - [ ] `retrospective.md` commitado em `phase-2`
 - [ ] Sign-off dos 5 devs (via reactions no Slack/Discord ou aprovação na PR do retrospective)
 - [ ] PLAN.md atualizado com data de fechamento real (pode divergir do estimado de 2026-05-19)
-- [ ] Branch `phase-2/dev4+5/poc-module-federation` em estado final (mergeada se A; arquivada se D)
+- [ ] Branch `phase-2/team-mfe/poc` em estado final (mergeada se A; arquivada se D)
 - [ ] Comunicação ao time: "Sprint 0 ✅ — Sprint 1 inicia amanhã"
 
 ## Próximo passo

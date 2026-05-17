@@ -214,7 +214,7 @@ Crie `packages/shared/package.json`:
 
 - **Sem runtime deps** — `shared` é apenas TS source com tipos e utilities puras
 - **Sem peerDependencies** — código não toca React/Next, só TS puro
-- **`exports` granulares** — permite `import { cn } from '@bytebank/shared'` (entry principal) OU `import { formatCurrency } from '@bytebank/shared/lib/format'` (subpath, tree-shake friendly)
+- **`exports` granulares disponíveis (opt-in)** — todos os consumers atuais (codemod desta task) usam entry principal `import { cn, formatCurrency } from '@bytebank/shared'`. Subpaths como `@bytebank/shared/lib/format` ficam **disponíveis** mas não usados; tree-shaking efetivo vem do bundler analisar exports do barrel `index.ts` (Next.js Turbopack faz isso bem). Decisão: simplicidade > granularidade até medirmos bundle size impact
 - **Sem `react` em devDeps** — não precisa
 
 Crie `packages/shared/tsconfig.json`:
@@ -284,12 +284,14 @@ import {
 ```
 ````
 
-Ou via subpath (tree-shake friendly):
+Subpaths disponíveis (opt-in, raramente necessário com Turbopack):
 
 ```ts
 import { formatCurrency } from '@bytebank/shared/lib/format';
 import type { Transaction } from '@bytebank/shared/types';
 ```
+
+> **Padrão recomendado:** usar entry principal (`@bytebank/shared`). Subpaths só se medirmos overhead específico no bundle.
 
 ## Convenções
 

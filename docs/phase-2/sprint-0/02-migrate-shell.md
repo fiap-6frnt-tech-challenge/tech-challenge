@@ -375,6 +375,77 @@ git log --oneline phase-2..HEAD
 #   <hash> chore(monorepo): bootstrap Turborepo + npm workspaces
 ```
 
+### Phase G — CI mínimo (commit 3/3 do bundle)
+
+> **Por que aqui:** Tasks 3-7 vão mergear em `phase-2` antes da Task 8 (que adiciona CI completo). Sem nenhum CI, ninguém pega regressões durante a semana. Adicionamos um workflow **mínimo** agora (~30 min de setup) que valida `npm install + build + lint` em todo PR. Task 8 estende com Turbo cache, Chromatic refactor, etc.
+
+Criar `.github/workflows/ci-minimal.yml`:
+
+```yaml
+name: CI (minimal)
+
+on:
+  pull_request:
+    branches:
+      - phase-2
+      - main
+  push:
+    branches:
+      - phase-2
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-shell:
+    name: Build shell
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20.18.0'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint -w @bytebank/shell
+      - run: npm run build -w @bytebank/shell
+```
+
+> **Limitações conhecidas (resolvidas em Task 8):**
+>
+> - Não usa Turbo `--affected` (builda shell inteiro toda vez, ~2 min)
+> - Não tem Remote Cache
+> - Cobre só `@bytebank/shell` — quando Tasks 3-5 mergearem novos workspaces, este workflow não roda lint/build neles
+> - Sem `type-check` separado (Next build já faz)
+>
+> Aceitável temporariamente: a meta é apenas detectar "shell quebrou em algum PR". Task 8 substitui este workflow pelo `ci.yml` completo (mesma branch trigger, mesmo nome de workflow conceitualmente — Task 8 pode renomear `ci-minimal.yml` → `ci.yml`).
+
+Commit:
+
+```bash
+git add .github/workflows/ci-minimal.yml
+git commit -m "ci(minimal): build + lint shell em PRs contra phase-2
+
+Workflow temporário para detectar regressões durante Sprint 0
+enquanto Tasks 3-7 mergeiam. Task 8 substitui pelo ci.yml completo
+com Turbo --affected e Remote Cache.
+
+Parte 3/3 do monorepo migration bundle.
+Refs: docs/phase-2/sprint-0/02-migrate-shell.md"
+```
+
+Branch agora tem **3 commits**:
+
+```bash
+git log --oneline phase-2..HEAD
+# Esperado:
+#   <hash> ci(minimal): build + lint shell em PRs contra phase-2
+#   <hash> chore(shell): migrate Next.js app to apps/shell workspace
+#   <hash> chore(monorepo): bootstrap Turborepo + npm workspaces
+```
+
 ## Estado final esperado
 
 Após esta task:
@@ -423,6 +494,8 @@ tech-challenge/
 
 ## Validação
 
+### Local (pré-merge)
+
 - [ ] `npm ls --workspaces --depth=0` lista `@bytebank/shell`
 - [ ] `npm run dev -w @bytebank/shell` sobe em `:3000` sem erros
 - [ ] `http://localhost:3000` renderiza home idêntica à Fase 1 (BalanceCard + NewTransaction + lista recente)
@@ -432,6 +505,19 @@ tech-challenge/
 - [ ] `npm run build -w @bytebank/shell` produz `.next/` em `apps/shell/.next/`
 - [ ] `npm run lint -w @bytebank/shell` passa sem erros
 - [ ] `git log --follow apps/shell/src/app/page.tsx` mostra histórico desde Fase 1 (provando que `git mv` preservou history)
+
+### Pós-merge (ação obrigatória — não opcional)
+
+- [ ] **Atualizar Vercel Project Settings** (qualquer dev com acesso admin faz **no mesmo dia do merge**):
+  - Acessar **Vercel Dashboard → seu Project → Settings → General → Root Directory**
+  - Trocar valor de `.` (ou vazio) para `apps/shell`
+  - Trocar **Build Command** se hardcoded: deixar em branco (Vercel auto-detecta Next.js) ou usar `npm run build`
+  - Trocar **Output Directory** se hardcoded: deixar em branco (Vercel detecta `.next/`)
+  - Trigger redeploy do último commit em `phase-2` para validar
+- [ ] Sanity check pós-redeploy: URL preview da `phase-2` renderiza home + transactions idênticos a local
+- [ ] Sem esse ajuste, **todos os deploys preview de `phase-2` quebram** até o final do Sprint 0
+
+> **Comunicar:** mensagem em #bytebank-eng (Slack/Discord) avisando o time que Vercel foi reajustado. Quem tem acesso admin: dev1-infra.
 
 ## Gotchas
 

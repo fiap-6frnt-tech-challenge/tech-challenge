@@ -483,6 +483,83 @@ jobs:
 ```
 
 > **Mudanças:** branch `phase-1` removida, `phase-2` adicionada. `workingDir: packages/design-system` faz a action rodar `npm run chromatic` no DS package. Node 20 ao invés de 24 (compatibilidade com Vercel/Next 16).
+>
+> **Boundary com Task 8:** Esta task faz a mudança **mecânica** (paths + branches). [Task 8](./08-update-ci.md) **estende** o mesmo workflow adicionando `TURBO_TOKEN`/`TURBO_TEAM` env vars + `onlyChanged: true`. Coordenar para evitar conflito de merge.
+
+### Phase H1 — Reparar vitest.config do shell
+
+O `apps/shell/vitest.config.ts` atual referencia `.storybook/` que acabou de sair do shell. Após Phase C deste task, `npm run test -w @bytebank/shell` falha com "ENOENT: no such file or directory '.storybook'". Esta phase resolve.
+
+**Decisão:** simplificar o vitest do shell para **não** integrar com Storybook (Storybook agora vive no DS). Shell terá seu vitest "limpo" pronto para tests que o Sprint 1 vai escrever (auth middleware, hooks, etc.).
+
+Substituir conteúdo de `apps/shell/vitest.config.ts`:
+
+```ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node', // shell roda majoritariamente em Node (API routes + server components)
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['node_modules', '.next', 'dist'],
+  },
+});
+```
+
+Atualizar `apps/shell/package.json` removendo devDeps de Storybook-Vitest integration:
+
+```diff
+   "devDependencies": {
+-    "@storybook/addon-vitest": "^10.2.16",
+-    "@vitest/browser-playwright": "^4.0.18",
+     "@vitest/coverage-v8": "^4.0.18",
++    // playwright fica para testes E2E no Sprint 4
+     "vitest": "^4.0.18"
+   }
+```
+
+> `@vitest/browser-playwright` e `@storybook/addon-vitest` migram para `packages/design-system/devDependencies` (já incluídos no `package.json` da Phase E desta task).
+
+Criar `packages/design-system/vitest.config.ts` (era do shell) na DS:
+
+```ts
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vitest/config';
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+import { playwright } from '@vitest/browser-playwright';
+
+const dirname =
+  typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        extends: true,
+        plugins: [storybookTest({ configDir: path.join(dirname, '.storybook') })],
+        test: {
+          name: 'storybook',
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright({}),
+            instances: [{ browser: 'chromium' }],
+          },
+          setupFiles: ['.storybook/vitest.setup.ts'],
+        },
+      },
+    ],
+  },
+});
+```
+
+Validar:
+
+```bash
+npm run test -w @bytebank/shell         # passa (mesmo sem testes ainda)
+npm run test -w @bytebank/design-system # roda stories como tests via storybookTest
+```
 
 ### Phase I — Instalar, validar e commit
 
@@ -606,7 +683,7 @@ tech-challenge/
 
 4. **`staticDirs` do Storybook apontando para fora do package.** Necessário enquanto `public/` (com `piggy-bank.png`) viver no shell. Alternativa cleaner: copiar assets que stories usam para `packages/design-system/static/`. Decisão: manter apontando para shell — duplicar assets binários é pior.
 
-5. **`vitest.config.ts` continua no shell.** A Task 3 não move o Vitest config porque o shell ainda tem stories (legacy) e o DS Storybook integra com `addon-vitest` internamente. Sprint 1 ou futuro pode separar — não é necessário aqui.
+5. **`vitest.config.ts` do shell tem paths quebrados após mover `.storybook/`.** O config atual referencia `path.join(dirname, '.storybook')` e `setupFiles: ['.storybook/vitest.setup.ts']` — ambos quebram após esta task. Ver [Phase J — Reparar vitest no shell](#phase-j--reparar-vitestconfig-do-shell) abaixo; resolvido nesta task, não fica para o futuro.
 
 6. **Imports legados em `components/features/`.** Os features (BalanceCard, TransactionList) importam de `@/components/ui` — o codemod no Phase F4 os pega corretamente porque o `find` cobre `apps/shell/src/` inteiro.
 
