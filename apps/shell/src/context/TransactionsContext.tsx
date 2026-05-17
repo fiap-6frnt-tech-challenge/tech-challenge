@@ -39,23 +39,21 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
   // Convert Map to array once — passed to lib helpers and exposed to consumers
   const transactions = useMemo(() => Array.from(transactionsMap.values()), [transactionsMap]);
 
-  async function fetchTransactions() {
-    setIsError(false);
-    try {
-      await new Promise((res) => setTimeout(res, 100));
-      const data = await TransactionService.getAll();
-      setTransactionsMap(new Map(data.map((t) => [t.id, t])));
-    } catch {
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
   useEffect(() => {
     if (initialFetchDone) return;
     initialFetchDone = true;
-    fetchTransactions();
+    void (async () => {
+      try {
+        await new Promise((res) => setTimeout(res, 100));
+        setIsError(false);
+        const data = await TransactionService.getAll();
+        setTransactionsMap(new Map(data.map((t) => [t.id, t])));
+      } catch {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   const addTransaction = useCallback(async (data: NewTransaction) => {
