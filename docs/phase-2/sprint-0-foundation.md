@@ -118,73 +118,23 @@ Resumo:
 
 ### 6. PoC Module Federation — Opção A (3 dias · **dev4-dashboard** [remote] + **dev5-transactions** [shell consumer] em paralelo)
 
-> **Timebox rigoroso: 3 dias. Gate no dia 5 do sprint.**
+> 📋 **Passo-a-passo completo:** [sprint-0/06-poc-module-federation.md](./sprint-0/06-poc-module-federation.md)
+> ⚠️ **Maior risco do Sprint 0.** Se PoC falhar, aciona fallback Opção D (build-time MFE via workspace packages).
 
-#### Setup do remote `hello-mfe` (Rsbuild + Rspack)
+Resumo:
 
-- [ ] `npm create rsbuild@latest apps/hello-mfe` (template React-ts)
-- [ ] `npm install @module-federation/enhanced @module-federation/rsbuild-plugin -w @bytebank/hello-mfe`
-- [ ] Configurar `apps/hello-mfe/rsbuild.config.ts`:
+- [ ] Branch compartilhada `phase-2/dev4+5/poc-module-federation` (ambos devs commitam)
+- [ ] **Track A** (`dev4-dashboard`): criar `apps/hello-mfe` Rsbuild + `@module-federation/rsbuild-plugin`, expor `<Hello />` consumindo `@bytebank/design-system` e `@bytebank/shared` com `singleton: true`
+- [ ] **Track B** (`dev5-transactions`): instalar `@module-federation/enhanced` no shell, criar `src/lib/federation.ts` com runtime `init()` + `loadRemote()`, criar `<RemoteHello />` wrapper com `dynamic(...)`, rota temporária `/poc` para validar
+- [ ] **Dia 3:** integrar; preencher matriz de validação de 16 critérios (NetworkTab, React DevTools, tokens DS, hot reload, build prod, Vercel preview)
+- [ ] Salvar evidências (screenshots + logs) em `docs/phase-2/sprint-0/poc-mf-evidence/`
 
-  ```ts
-  import { defineConfig } from '@rsbuild/core';
-  import { pluginReact } from '@rsbuild/plugin-react';
-  import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
+**Decisão técnica importante:** usamos **runtime API** (`@module-federation/enhanced/runtime`) ao invés de webpack/turbopack plugin — `@module-federation/nextjs-mf` não suporta Next 16 App Router. Runtime API bypassa o bundler do shell e funciona com Turbopack.
 
-  export default defineConfig({
-    plugins: [
-      pluginReact(),
-      pluginModuleFederation({
-        name: 'hello',
-        exposes: { './Hello': './src/Hello.tsx' },
-        shared: {
-          react: { singleton: true, requiredVersion: '^19.0.0' },
-          'react-dom': { singleton: true, requiredVersion: '^19.0.0' },
-        },
-      }),
-    ],
-    server: { port: 3001 },
-  });
-  ```
+**Aceite (Task 7 — Gate dia 5):**
 
-- [ ] Criar `apps/hello-mfe/src/Hello.tsx` simples (usa DS Button + tokens para validar consumo de workspace deps)
-
-#### Setup do shell consumindo o remote (Next 16 App Router)
-
-- [ ] `npm install @module-federation/enhanced @module-federation/nextjs-mf -w @bytebank/shell`
-- [ ] Configurar `apps/shell/next.config.ts` para registrar o remote:
-  ```ts
-  import { NextFederationPlugin } from '@module-federation/enhanced/nextjs';
-  // ... config com remotes: { hello: 'hello@http://localhost:3001/mf-manifest.json' }
-  ```
-- [ ] Criar `apps/shell/src/components/RemoteHello.tsx`:
-  ```tsx
-  'use client';
-  import dynamic from 'next/dynamic';
-  const Hello = dynamic(() => import('hello/Hello'), {
-    ssr: false,
-    loading: () => <div>Carregando MFE...</div>,
-  });
-  export { Hello as RemoteHello };
-  ```
-- [ ] Adicionar `<RemoteHello />` em uma rota temporária `/poc` do shell para validar
-- [ ] Configurar singletons compartilhados (`@bytebank/design-system`, `@bytebank/shared`)
-
-#### Validações obrigatórias do PoC
-
-- [ ] DevTools Network: `hello/mf-manifest.json` e chunks remotos carregados
-- [ ] DevTools React: árvore única (sem duplicação de React)
-- [ ] Tokens do DS aplicados corretamente no MFE (mesma cor de `--color-brand-primary`)
-- [ ] Hot reload funciona em ambos shell e MFE
-- [ ] `npm run build` em ambos passa
-- [ ] Deploy preview Vercel: shell carrega MFE deployed independentemente
-
-#### Fallback opção D (apenas se PoC falhar no Gate dia 5)
-
-- [ ] `hello-mfe` é transformado em `packages/hello-mfe` workspace package
-- [ ] Shell consome via import direto em build time
-- [ ] Documentar trade-off em `docs/phase-2/mfe-decision.md` (criar)
-- [ ] Atualizar PLAN.md marcando opção D como decisão final
+- ≥ 14/16 critérios verdes → Opção A confirmada; Sprints 2/3 copiam padrão
+- < 14/16 OU bloqueio em critérios obrigatórios → fallback Opção D (criar `docs/phase-2/sprint-0/mfe-decision.md` documentando)
 
 **Aceite:** `hello-mfe` rodando em `:3001` aparece dentro do shell em `:3000` com tokens DS aplicados (ou opção D ativada e documentada após gate).
 
