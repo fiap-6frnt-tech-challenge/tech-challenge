@@ -104,13 +104,17 @@ Resumo:
 
 ### 5. Criar packages/api-client e packages/stores (vazios) (0.5 dia · **dev2-backend**)
 
-- [ ] `packages/api-client/package.json` (deps placeholder)
-- [ ] `packages/api-client/src/index.ts` (vazio, comment: "preenchido no Sprint 1")
-- [ ] `packages/stores/package.json`
-- [ ] `packages/stores/src/index.ts` (vazio)
-- [ ] Workspace deps registradas no shell
+> 📋 **Passo-a-passo completo:** [sprint-0/05-create-empty-packages.md](./sprint-0/05-create-empty-packages.md)
+> Independente de Tasks 3 e 4 — pode rodar em paralelo. Sprint 1 preenche os stubs.
 
-**Aceite:** `npm install` resolve workspace deps sem erro.
+Resumo:
+
+- [ ] Criar `packages/api-client/{package.json, tsconfig.json, src/index.ts, README.md}` (name: `@bytebank/api-client`, sem runtime deps, `react` como peerDep)
+- [ ] Criar `packages/stores/{package.json, tsconfig.json, src/index.ts, README.md}` (name: `@bytebank/stores`, mesma estrutura)
+- [ ] `src/index.ts` em ambos com `export {}` + TODO comment apontando para Sprint 1 tasks 7 e 8
+- [ ] Em `apps/shell/package.json`: adicionar deps `"@bytebank/api-client": "*"` e `"@bytebank/stores": "*"` para validar workspace resolution
+
+**Aceite:** `npm install` resolve workspace deps sem erro; shell continua subindo idêntico.
 
 ### 6. PoC Module Federation — Opção A (3 dias · **dev4-dashboard** [remote] + **dev5-transactions** [shell consumer] em paralelo)
 
