@@ -138,12 +138,30 @@ Resumo:
 
 **Aceite:** `hello-mfe` rodando em `:3001` aparece dentro do shell em `:3000` com tokens DS aplicados (ou opção D ativada e documentada após gate).
 
-### 7. Gate decisório (Dia 5 · **todo time**)
+### 7. Gate decisório (Dia 5 · **todo time** · 30 min)
 
-- [ ] Reunião de 30 min com time + usuário
-- [ ] Demo do PoC funcionando OU declarar fallback para opção D
-- [ ] Atualizar `PLAN.md` e este arquivo com decisão final
-- [ ] Se opção D: documentar trade-off no README
+> 📋 **Passo-a-passo completo:** [sprint-0/07-gate-decision.md](./sprint-0/07-gate-decision.md)
+> Reunião decisória — sem código. Outputs: `mfe-decision.md` + atualização do PLAN.md + merge (ou não) do PR da Task 6.
+
+Resumo da agenda (30 min):
+
+- [ ] **0-10 min:** Demo Track A (hello-mfe :3001) + Demo Track B (shell :3000 → /poc)
+- [ ] **10-15 min:** Walkthrough da matriz de validação 16 itens
+- [ ] **15-20 min:** Bloqueios e dúvidas — última chance de levantar problemas
+- [ ] **20-25 min:** Votação informada (A, D, ou abster) — maioria simples decide; empate: dev1-infra desempata
+- [ ] **25-30 min:** Ação imediata — escrever `mfe-decision.md`, mergear PR (se A) ou planejar fallback (se D)
+
+**Critérios:**
+
+- ≥ 14/16 verdes (com #3, #6, #11-#13 obrigatórios) → **Opção A confirmada**
+- 10-13/16 → discussão; workaround < 1 dia vai pra A
+- < 10/16 OU bloqueio sem workaround → **Opção D acionada**
+
+**Outputs obrigatórios:**
+
+- `docs/phase-2/sprint-0/mfe-decision.md` (Decision Record com sign-off de todos os 5 devs)
+- PLAN.md atualizado com status final
+- Merge ou archive do PR da Task 6
 
 ### 8. CI atualizado (0.5 dia · **dev1-infra**)
 
