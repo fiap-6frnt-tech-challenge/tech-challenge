@@ -22,7 +22,7 @@ Cada arquivo neste diretório descreve **uma task** do [sprint-0-foundation.md](
 | 5   | Criar packages/api-client e stores (vazios) | dev2-backend                       | 0.5 dia | PR próprio                 | [05-create-empty-packages.md](./05-create-empty-packages.md) |
 | 6   | PoC Module Federation (Opção A — Rsbuild)   | dev4-dashboard + dev5-transactions | 3 dias  | PR próprio                 | [06-poc-module-federation.md](./06-poc-module-federation.md) |
 | 7   | Gate decisório MF (Dia 5)                   | todo time                          | 30 min  | doc-only                   | [07-gate-decision.md](./07-gate-decision.md)                 |
-| 8   | CI atualizado                               | dev1-infra                         | 0.5 dia | PR próprio                 | _a criar_                                                    |
+| 8   | CI atualizado                               | dev1-infra                         | 0.5 dia | PR próprio                 | [08-update-ci.md](./08-update-ci.md)                         |
 | 9   | Smoke test final                            | todo time                          | 0.5 dia | — (validação)              | _a criar_                                                    |
 
 ## Princípio do Sprint 0 (e da fase inteira)

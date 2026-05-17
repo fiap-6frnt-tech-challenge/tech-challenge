@@ -165,12 +165,19 @@ Resumo da agenda (30 min):
 
 ### 8. CI atualizado (0.5 dia · **dev1-infra**)
 
-- [ ] `.github/workflows/ci.yml` (novo): rodar `turbo run lint build test --filter=...[origin/main]`
-- [ ] Configurar Turborepo Remote Cache (Vercel ou self-hosted)
-- [ ] Atualizar `chromatic.yml` para rodar dentro de `packages/design-system/`
-- [ ] Husky hook na raiz: `lint-staged` por package
+> 📋 **Passo-a-passo completo:** [sprint-0/08-update-ci.md](./sprint-0/08-update-ci.md)
+> Depende do Gate (Task 7) — workflows divergem ligeiramente conforme Opção A ou D.
 
-**Aceite:** PR contra `phase-2/foundation` aciona CI verde.
+Resumo:
+
+- [ ] Criar `.github/workflows/ci.yml` rodando `turbo run lint type-check build test --affected` com `fetch-depth: 2`
+- [ ] Atualizar `.github/workflows/chromatic.yml`: trigger inclui `phase-2`, `workingDir: packages/design-system`, `onlyChanged: true`
+- [ ] Configurar Turborepo Remote Cache (Vercel — `TURBO_TOKEN` secret + `TURBO_TEAM` variable) OU fallback GH Actions cache
+- [ ] Garantir scripts `type-check` em todos packages (`tsc --noEmit`)
+- [ ] Husky `.husky/pre-commit` rodando `npx lint-staged` (já configurado no root `package.json` em Task 1)
+- [ ] Validar PR de teste — ambos workflows verdes, `--affected` funciona
+
+**Aceite:** PR contra `phase-2` aciona CI verde em ~5 min cold / ~2 min cache hit; Chromatic publica DS storybook.
 
 ### 9. Smoke test final (0.5 dia · **todo time**)
 
