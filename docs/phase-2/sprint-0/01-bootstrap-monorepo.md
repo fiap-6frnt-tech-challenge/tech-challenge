@@ -8,7 +8,7 @@
 | **Sprint**               | [Sprint 0 — Foundation](../sprint-0-foundation.md)               |
 | **Owner**                | `dev1-infra`                                                     |
 | **Duração estimada**     | 1 dia (parte 1 de 2 dias do bundle)                              |
-| **Branch compartilhada** | `phase-2/dev1-infra/monorepo-migration` (cobre Tasks 1 e 2)      |
+| **Branch compartilhada** | `dev1-infra/monorepo-migration` (cobre Tasks 1 e 2)              |
 | **Depende de**           | Branch `phase-2` (já existe em `origin`)                         |
 | **PR só abre**           | Após Task 2 completar e validar `npm run dev -w @bytebank/shell` |
 
@@ -39,7 +39,7 @@ A migração do código Next.js atual para `apps/shell/` é feita na [Task 2](./
   ```bash
   git checkout phase-2
   git pull origin phase-2
-  git checkout -b phase-2/dev1-infra/monorepo-migration
+  git checkout -b dev1-infra/monorepo-migration
   ```
 - [ ] Working tree limpa (`git status` zerado — sem changes pendentes)
 - [ ] Node 20+ e npm 10+ (`node -v && npm -v`)
@@ -227,7 +227,7 @@ Parte 1/2 do monorepo migration bundle (continua em Task 2).
 Refs: docs/phase-2/sprint-0/01-bootstrap-monorepo.md"
 ```
 
-> **Não rode `git push` ainda.** Mantenha o commit local; Task 2 adiciona seu commit em cima e o `git push -u origin phase-2/dev1-infra/monorepo-migration` acontece só no fim.
+> **Não rode `git push` ainda.** Mantenha o commit local; Task 2 adiciona seu commit em cima e o `git push -u origin dev1-infra/monorepo-migration` acontece só no fim.
 
 ## Validação
 
@@ -238,7 +238,7 @@ Não há validação executável nesta task — `phase-2` fica em estado interme
 - [ ] `ls -la tech-challenge/apps tech-challenge/packages` mostra ambos diretórios com `.gitkeep`
 - [ ] `grep '.turbo' tech-challenge/.gitignore` retorna match
 - [ ] `git log --oneline -1` mostra o commit "bootstrap Turborepo + npm workspaces"
-- [ ] Branch atual é `phase-2/dev1-infra/monorepo-migration`
+- [ ] Branch atual é `dev1-infra/monorepo-migration`
 - [ ] **Nada foi pushed para origin ainda**
 
 ## Gotchas
@@ -252,7 +252,7 @@ Não há validação executável nesta task — `phase-2` fica em estado interme
 
 ## Próximo passo
 
-→ **Continuar na mesma branch `phase-2/dev1-infra/monorepo-migration` com [Task 2 — Migrar shell](./02-migrate-shell.md).**
+→ **Continuar na mesma branch `dev1-infra/monorepo-migration` com [Task 2 — Migrar shell](./02-migrate-shell.md).**
 
 A Task 2 fará o segundo commit (`chore(shell): migrate Next.js app to apps/shell workspace`), validará que tudo funciona (`npm run dev -w @bytebank/shell` em `:3000`) e só **então** abrirá o PR único cobrindo as duas tasks.
 

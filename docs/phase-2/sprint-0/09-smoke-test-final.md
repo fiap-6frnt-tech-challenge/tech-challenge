@@ -230,11 +230,11 @@ PR pequeno do retrospective:
 
 ```bash
 git checkout phase-2 && git pull
-git checkout -b phase-2/dev1-infra/sprint-0-retrospective
+git checkout -b dev1-infra/sprint-0-retrospective
 # Criar docs/phase-2/sprint-0/retrospective.md
 git add docs/phase-2/sprint-0/retrospective.md
 git commit -m "docs(sprint-0): retrospective + smoke test sign-off"
-git push -u origin phase-2/dev1-infra/sprint-0-retrospective
+git push -u origin dev1-infra/sprint-0-retrospective
 gh pr create --base phase-2 --title "docs(sprint-0): retrospective" \
   --body "Fechamento formal do Sprint 0 com sign-off do time e matriz de smoke test preenchida."
 ```
@@ -263,7 +263,7 @@ gh pr create --base phase-2 --title "docs(sprint-0): retrospective" \
 - [ ] `retrospective.md` commitado em `phase-2`
 - [ ] Sign-off dos 5 devs (via reactions no Slack/Discord ou aprovação na PR do retrospective)
 - [ ] PLAN.md atualizado com data de fechamento real (pode divergir do estimado de 2026-05-19)
-- [ ] Branch `phase-2/team-mfe/poc` em estado final (mergeada se A; arquivada se D)
+- [ ] Branch `team-mfe/poc` em estado final (mergeada se A; arquivada se D)
 - [ ] Comunicação ao time: "Sprint 0 ✅ — Sprint 1 inicia amanhã"
 
 ## Próximo passo

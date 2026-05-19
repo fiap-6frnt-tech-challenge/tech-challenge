@@ -11,7 +11,7 @@
 
 - [x] **Decisão MF: Opção A — Rsbuild + `@module-federation/enhanced`** (ver PLAN.md)
 - [x] Branch de integração `phase-2` já criada e disponível em `origin` (long-lived; recebe todos os PRs da fase)
-- [ ] Cada track cria sub-branch a partir de `phase-2`: `phase-2/dev1-infra/<task>`, `phase-2/dev3-ds/<task>`, etc. — ver [Git Workflow no PLAN.md](./PLAN.md#git-workflow--fase-2)
+- [ ] Cada track cria sub-branch a partir de `phase-2`: `dev1-infra/<task>`, `dev3-ds/<task>`, etc. — ver [Git Workflow no PLAN.md](./PLAN.md#git-workflow--fase-2)
 - [ ] Node 20+ e npm 10+ instalados em todas as máquinas
 - [ ] Acesso ao Chromatic atualizado (token `chpt_330cd685ba026e8`)
 
@@ -19,7 +19,7 @@
 
 ## Tasks
 
-> 🔗 **Tasks 1 e 2 são bundled num PR único atômico** ([sprint-0/README.md](./sprint-0/README.md#princípio-do-sprint-0-e-da-fase-inteira)). Task 1 isolada quebraria `phase-2` (sem deps do Next no root). As 2 saem juntas em `phase-2/dev1-infra/monorepo-migration` com 2 commits e 1 PR.
+> 🔗 **Tasks 1 e 2 são bundled num PR único atômico** ([sprint-0/README.md](./sprint-0/README.md#princípio-do-sprint-0-e-da-fase-inteira)). Task 1 isolada quebraria `phase-2` (sem deps do Next no root). As 2 saem juntas em `dev1-infra/monorepo-migration` com 2 commits e 1 PR.
 
 ### 1. Bootstrap monorepo (1 dia · **dev1-infra**)
 
@@ -123,7 +123,7 @@ Resumo:
 
 Resumo:
 
-- [ ] Branch compartilhada `phase-2/team-mfe/poc` (ambos devs commitam)
+- [ ] Branch compartilhada `team-mfe/poc` (ambos devs commitam)
 - [ ] **Track A** (`dev4-dashboard`): criar `apps/hello-mfe` Rsbuild + `@module-federation/rsbuild-plugin`, expor `<Hello />` consumindo `@bytebank/design-system` e `@bytebank/shared` com `singleton: true`
 - [ ] **Track B** (`dev5-transactions`): instalar `@module-federation/enhanced` no shell, criar `src/lib/federation.ts` com runtime `init()` + `loadRemote()`, criar `<RemoteHello />` wrapper com `dynamic(...)`, rota temporária `/poc` para validar
 - [ ] **Dia 3:** integrar; preencher matriz de validação de 16 critérios (NetworkTab, React DevTools, tokens DS, hot reload, build prod, Vercel preview)

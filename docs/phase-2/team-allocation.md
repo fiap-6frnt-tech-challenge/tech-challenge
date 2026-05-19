@@ -206,7 +206,7 @@
 2. **Backend antes de UI.** dev2-backend finaliza endpoints e schemas na primeira metade do sprint; dev4-dashboard/dev5-transactions integram na segunda.
 3. **Mocks contra schemas.** Se dev2-backend atrasa, dev4-dashboard/dev5-transactions mockam contra o schema acordado (zod). Schemas viram contratos.
 4. **Daily standup focada em bloqueios.** 10 min, cada um diz: "Estou bloqueando alguém? Estou bloqueado por alguém?"
-5. **Branch por track, base sempre `phase-2`.** Padrão: `phase-2/<dev-handle>/<task>` (ex: `phase-2/dev3-ds/login-form`). PRs apontam para `phase-2`. Rebase diário contra `phase-2` para evitar conflitos grandes. Ver [Git Workflow no PLAN.md](./PLAN.md#git-workflow--fase-2).
+5. **Branch por track, base sempre `phase-2`.** Padrão: `phase-2/<dev-handle>/<task>` (ex: `dev3-ds/login-form`). PRs apontam para `phase-2`. Rebase diário contra `phase-2` para evitar conflitos grandes. Ver [Git Workflow no PLAN.md](./PLAN.md#git-workflow--fase-2).
 6. **PR pequeno e frequente.** Cada componente DS = 1 PR. Cada endpoint = 1 PR. Cada integração = 1 PR.
 7. **Pair em mudanças que tocam múltiplos tracks.** Ex.: migration de Context (dev5-transactions) com revisão por dev4-dashboard (que conhece os hooks).
 

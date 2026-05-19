@@ -5,7 +5,7 @@
 | **Sprint**               | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                                        |
 | **Owners**               | `dev4-dashboard` (remote) + `dev5-transactions` (shell consumer) — em paralelo                                                            |
 | **Duração estimada**     | 3 dias (timebox rigoroso)                                                                                                                 |
-| **Branch compartilhada** | `phase-2/team-mfe/poc` (ambos devs commitam aqui)                                                                                         |
+| **Branch compartilhada** | `team-mfe/poc` (ambos devs commitam aqui)                                                                                                 |
 | **Depende de**           | [Bundle Tasks 1+2](./02-migrate-shell.md) mergeado (recomendável também ter Task 4 DS, mas não obrigatório — pode usar React puro no PoC) |
 | **Desbloqueia**          | Sprint 2 (`dashboard-mfe`) e Sprint 3 (`transactions-mfe`) — copiam o padrão validado aqui                                                |
 | **Gate de decisão**      | [Task 7 — Gate decisório](./README.md) no **dia 5 do Sprint 0**                                                                           |
@@ -78,8 +78,8 @@ Singletons compartilhados (1 instância na árvore):
 - [ ] Branch compartilhada criada (uma só, ambos devs commitam):
   ```bash
   git checkout phase-2 && git pull origin phase-2
-  git checkout -b phase-2/team-mfe/poc
-  git push -u origin phase-2/team-mfe/poc
+  git checkout -b team-mfe/poc
+  git push -u origin team-mfe/poc
   ```
 - [ ] Pair session de kickoff de 1h (dia 1 manhã) — alinhar API entre Tracks A e B
 - [ ] Daily check-ins ao fim de cada dia (3 daily standups durante o PoC)
@@ -572,7 +572,7 @@ Salvar screenshots/logs de evidência em `docs/phase-2/sprint-0/poc-mf-evidence/
 
 ### Cenário A — PoC verde (≥14/16)
 
-1. Aprovar PR `phase-2/team-mfe/poc` → merge em `phase-2`
+1. Aprovar PR `team-mfe/poc` → merge em `phase-2`
 2. Atualizar [PLAN.md](../PLAN.md) marcando "Opção A confirmada via PoC"
 3. Criar `docs/phase-2/sprint-0/poc-mf-evidence/` com screenshots commitados
 4. Sprint 2 (`dev4-dashboard`) e Sprint 3 (`dev5-transactions`) copiam padrão Rsbuild + runtime API
@@ -664,7 +664,7 @@ Se PoC falhar, MFEs viram **workspace packages consumidos em build-time** pelo s
 > **PR único cobrindo Tracks A + B**, com commits separados por dev:
 
 ```bash
-git push origin phase-2/team-mfe/poc
+git push origin team-mfe/poc
 gh pr create --base phase-2 --title "feat(mfe): PoC Module Federation — Rsbuild remote + Next 16 shell consumer" \
   --body "$(cat <<'EOF'
 ## Sumário

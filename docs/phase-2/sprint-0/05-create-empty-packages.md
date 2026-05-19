@@ -5,7 +5,7 @@
 | **Sprint**           | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                     |
 | **Owner**            | `dev2-backend`                                                                                                         |
 | **Duração estimada** | 0.5 dia                                                                                                                |
-| **Branch**           | `phase-2/dev2-backend/empty-packages` (a partir de `phase-2`)                                                          |
+| **Branch**           | `dev2-backend/empty-packages` (a partir de `phase-2`)                                                                  |
 | **Depende de**       | [Bundle Tasks 1+2](./02-migrate-shell.md) mergeado em `phase-2` (independente de Tasks 3 e 4 — pode rodar em paralelo) |
 | **Desbloqueia**      | Sprint 1 (api-client recebe hooks TanStack Query; stores recebe Zustand stores)                                        |
 
@@ -57,7 +57,7 @@ tech-challenge/packages/
 - [ ] Feature branch criada:
   ```bash
   git checkout phase-2 && git pull origin phase-2
-  git checkout -b phase-2/dev2-backend/empty-packages
+  git checkout -b dev2-backend/empty-packages
   ```
 - [ ] Working tree limpa
 
@@ -381,7 +381,7 @@ Refs: docs/phase-2/sprint-0/05-create-empty-packages.md"
 ## Pull Request
 
 ```bash
-git push -u origin phase-2/dev2-backend/empty-packages
+git push -u origin dev2-backend/empty-packages
 gh pr create --base phase-2 --title "feat(monorepo): scaffold @bytebank/api-client and @bytebank/stores" \
   --body "$(cat <<'EOF'
 ## Sumário
