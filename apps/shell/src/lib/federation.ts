@@ -1,5 +1,7 @@
 'use client';
 
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { createInstance, getInstance } from '@module-federation/enhanced/runtime';
 
 type MFInstance = ReturnType<typeof createInstance>;
@@ -12,6 +14,11 @@ let mfInstance: MFInstance | undefined;
  * Padrão: tenta reusar instância global (resiliente a HMR / re-eval de módulo
  * em dev) antes de criar uma nova. Em prod, módulo é avaliado uma vez e o
  * cache local em `mfInstance` é suficiente.
+ *
+ * IMPORTANTE — `lib: () => React` (síncrono, retorna o módulo já importado),
+ * NÃO `lib: () => import('react')` (assíncrono, retorna Promise). A runtime
+ * API do MF espera o módulo direto; passar uma Promise causa duplicação de
+ * React e bugs internos tipo "Cannot read 'recentlyCreatedOwnerStacks'".
  */
 function ensureInstance(): MFInstance {
   if (mfInstance) return mfInstance;
@@ -30,13 +37,13 @@ function ensureInstance(): MFInstance {
         react: {
           version: '19.2.3',
           scope: 'default',
-          lib: () => import('react'),
+          lib: () => React,
           shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
         },
         'react-dom': {
           version: '19.2.3',
           scope: 'default',
-          lib: () => import('react-dom'),
+          lib: () => ReactDOM,
           shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
         },
         // TODO (Task 6 dia 2, após Tasks 3+4 mergearem):
