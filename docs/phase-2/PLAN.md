@@ -61,9 +61,9 @@
 
 ---
 
-## Decisão Module Federation — Opção A (final)
+## Decisão Module Federation — Opção A (validada via PoC)
 
-✅ **Decisão tomada:** Shell Next.js 16 App Router + remotes Rsbuild/Rspack com `@module-federation/enhanced`.
+✅ **Decisão tomada e VALIDADA pelo PoC (2026-05-19):** Shell Next.js 16 App Router + remotes Rsbuild/Rspack com `@module-federation/enhanced` runtime API. PoC em [team-mfe/poc](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/tree/team-mfe/poc) renderiza componente federado de `apps/hello-mfe` (Rsbuild :3001) dentro do shell (`apps/shell` Next 16 :3000/poc) com singletons React unificados. Ver [docs/phase-2/sprint-0/mfe-decision.md](./sprint-0/mfe-decision.md) para o ADR completo.
 
 **Como isso atende a spec:**
 

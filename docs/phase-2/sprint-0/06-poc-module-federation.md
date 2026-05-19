@@ -202,18 +202,12 @@ export default defineConfig({
   ],
   server: {
     port: 3001,
-  },
-  // CORS para o shell consumir em dev
-  dev: {
-    setupMiddlewares: [
-      (middlewares) => {
-        middlewares.unshift((_req, res, next) => {
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Access-Control-Allow-Headers', '*');
-          next();
-        });
-      },
-    ],
+    // CORS para o shell consumir em dev (origin :3000 → remote :3001).
+    // Em prod, configurar via headers da plataforma (Vercel/nginx) com allowlist.
+    // ⚠️ Não usar dev.setupMiddlewares — deprecado no Rsbuild 2.x.
+    cors: {
+      origin: ['http://localhost:3000'],
+    },
   },
 });
 ```
@@ -299,56 +293,80 @@ npm install @module-federation/enhanced -w @bytebank/shell
 ```ts
 'use client';
 
-import { init, loadRemote } from '@module-federation/enhanced/runtime';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import { createInstance, getInstance } from '@module-federation/enhanced/runtime';
 
-let initialized = false;
+type MFInstance = ReturnType<typeof createInstance>;
 
-function ensureInit() {
-  if (initialized) return;
-  initialized = true;
-  init({
-    name: '@bytebank/shell',
-    remotes: [
-      {
-        name: 'hello',
-        entry: process.env.NEXT_PUBLIC_HELLO_MFE_URL ?? 'http://localhost:3001/mf-manifest.json',
+let mfInstance: MFInstance | undefined;
+
+/**
+ * Garante uma única instância Module Federation viva no shell.
+ *
+ * Padrão: tenta reusar instância global (resiliente a HMR / re-eval de módulo
+ * em dev) antes de criar uma nova. Em prod, módulo é avaliado uma vez e o
+ * cache local em `mfInstance` é suficiente.
+ *
+ * ⚠️ IMPORTANTE — `lib: () => React` (síncrono, retorna módulo já importado),
+ * NÃO `lib: () => import('react')` (assíncrono, retorna Promise). A runtime
+ * API do MF espera o módulo direto; passar Promise causa duplicação de React
+ * e bug interno tipo "Cannot read 'recentlyCreatedOwnerStacks'" no React 19.
+ */
+function ensureInstance(): MFInstance {
+  if (mfInstance) return mfInstance;
+
+  mfInstance =
+    getInstance() ??
+    createInstance({
+      name: '@bytebank/shell',
+      remotes: [
+        {
+          name: 'hello',
+          entry: process.env.NEXT_PUBLIC_HELLO_MFE_URL ?? 'http://localhost:3001/mf-manifest.json',
+        },
+      ],
+      shared: {
+        react: {
+          version: '19.2.3',
+          scope: 'default',
+          lib: () => React,
+          shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
+        },
+        'react-dom': {
+          version: '19.2.3',
+          scope: 'default',
+          lib: () => ReactDOM,
+          shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
+        },
+        // Singletons de packages workspace — DEVEM espelhar o `shared` declarado no
+        // rsbuild.config.ts do remote (Phase A2). Sem isso, DS pode duplicar entre
+        // shell e remote (2x bundle size + risco de Context/state bugs).
+        // Mesma regra: importar eagerly no topo + lib síncrono.
+        // Habilitar após Tasks 3+4 mergearem com:
+        //   import * as DS from '@bytebank/design-system';
+        //   import * as Shared from '@bytebank/shared';
+        // '@bytebank/design-system': {
+        //   version: '0.1.0',
+        //   scope: 'default',
+        //   lib: () => DS,
+        //   shareConfig: { singleton: true, requiredVersion: '*' },
+        // },
+        // '@bytebank/shared': {
+        //   version: '0.1.0',
+        //   scope: 'default',
+        //   lib: () => Shared,
+        //   shareConfig: { singleton: true, requiredVersion: '*' },
+        // },
       },
-    ],
-    shared: {
-      react: {
-        version: '19.2.3',
-        scope: 'default',
-        lib: () => import('react'),
-        shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
-      },
-      'react-dom': {
-        version: '19.2.3',
-        scope: 'default',
-        lib: () => import('react-dom'),
-        shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
-      },
-      // Singletons de packages workspace — DEVEM espelhar o `shared` declarado no
-      // rsbuild.config.ts do remote (Phase A2). Sem isso, DS pode duplicar entre
-      // shell e remote (2x bundle size + risco de Context/state bugs).
-      '@bytebank/design-system': {
-        version: '0.1.0',
-        scope: 'default',
-        lib: () => import('@bytebank/design-system'),
-        shareConfig: { singleton: true, requiredVersion: '*' },
-      },
-      '@bytebank/shared': {
-        version: '0.1.0',
-        scope: 'default',
-        lib: () => import('@bytebank/shared'),
-        shareConfig: { singleton: true, requiredVersion: '*' },
-      },
-    },
-  });
+    });
+
+  return mfInstance;
 }
 
 export async function loadHello() {
-  ensureInit();
-  const mod = await loadRemote<{ default: React.ComponentType }>('hello/Hello');
+  const mf = ensureInstance();
+  const mod = await mf.loadRemote<{ default: React.ComponentType }>('hello/Hello');
   if (!mod) throw new Error('Failed to load remote hello/Hello');
   return mod.default;
 }
@@ -358,16 +376,20 @@ export async function loadHello() {
 
 - **Não depende de webpack/turbopack plugin** — funciona em qualquer bundler
 - **App Router compatible** — runtime é puro client-side, integra com `dynamic(..., { ssr: false })`
-- **Singletons declarados explicitamente** — React/ReactDOM do shell são compartilhados via `lib: () => import(...)`
+- **Singletons declarados explicitamente** com `lib: () => React` (sync) — runtime identifica o React já carregado do shell e não duplica no remote
+- **`createInstance` + `getInstance`** (não o deprecado `init`) — pattern atual recomendado da `@module-federation/enhanced` v2+; resiliente a HMR
 
 ### B3. Criar wrapper `apps/shell/src/components/RemoteHello.tsx`
+
+> ⚠️ **Error boundary é OBRIGATÓRIO.** Quando o remote falha (offline, manifest 404, chunk corrompido, etc.) o `dynamic` propaga a exceção. Sem boundary, Next dev mostra overlay full-screen e **em produção a página inteira crasha**. Esta versão envolve o `dynamic` em `<MFErrorBoundary>` que mostra UI inline ("MFE indisponível") + log estruturado para observabilidade.
 
 ```tsx
 'use client';
 
 import dynamic from 'next/dynamic';
+import { Component, type ReactNode } from 'react';
 
-const RemoteHello = dynamic(
+const HelloRemote = dynamic(
   async () => {
     const { loadHello } = await import('@/lib/federation');
     const Hello = await loadHello();
@@ -379,8 +401,58 @@ const RemoteHello = dynamic(
   }
 );
 
-export { RemoteHello };
+interface MFErrorBoundaryState {
+  error: Error | null;
+}
+
+class MFErrorBoundary extends Component<{ children: ReactNode }, MFErrorBoundaryState> {
+  state: MFErrorBoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: Error): MFErrorBoundaryState {
+    return { error };
+  }
+
+  componentDidCatch(error: Error) {
+    // Em prod, plugar Sentry/Datadog aqui
+    console.error('[RemoteHello] Failed to load MFE:', error);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div role="alert" className="p-lg border border-feedback-danger rounded-default bg-surface">
+          <p className="body-semibold text-feedback-danger">MFE indisponível</p>
+          <p className="body-default mt-sm">
+            Não foi possível carregar o componente <code>hello/Hello</code> do remote em{' '}
+            <code>:3001</code>. Confirme que o app <code>hello-mfe</code> está rodando (Track A do
+            PoC).
+          </p>
+          <details className="mt-sm label-default text-content-secondary">
+            <summary>Detalhes técnicos</summary>
+            <pre className="mt-xs overflow-x-auto">{this.state.error.message}</pre>
+          </details>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export function RemoteHello() {
+  return (
+    <MFErrorBoundary>
+      <HelloRemote />
+    </MFErrorBoundary>
+  );
+}
 ```
+
+**Por quê:**
+
+- **`<details>`** colapsa stack trace por padrão — não polui a UI mas permite debug
+- **`role="alert"`** anuncia o erro para screen readers
+- **`console.error` em `componentDidCatch`** — em dev aparece no Next overlay (útil); em prod, plugar Sentry/Datadog
+- **Tokens DS** (`border-feedback-danger`, `bg-surface`, etc.) — mesma identidade visual do app
 
 ### B4. Criar rota temporária `/poc` no shell
 
@@ -545,25 +617,47 @@ Se PoC falhar, MFEs viram **workspace packages consumidos em build-time** pelo s
 
 ## Gotchas
 
+> **Marcadas com 🔥 lições aprendidas durante o PoC real (2026-05-19).** Não pule — gastamos horas em cada uma.
+
 1. **`@module-federation/nextjs-mf` NÃO funciona em Next 16 App Router.** Tentação grande de instalar; resista. Usar **runtime API direto** (`@module-federation/enhanced/runtime`) é o caminho.
 
-2. **Singletons mal configurados causam "two Reacts" / "two DS" bug.** Sintoma: hooks no Hello quebram com "Invalid hook call", ou bundle pesa o dobro, ou Context provider do shell não enxerga consumer do remote. Solução: declarar `singleton: true` em **ambos lados** para **todas** as deps compartilhadas — remote `shared` (rsbuild.config) E shell `init.shared` (lib/federation.ts). Os 4 must-haves: `react`, `react-dom`, `@bytebank/design-system`, `@bytebank/shared`. Validar com `npm ls react -w @bytebank/shell` mostrando 1 cópia hoisted.
+2. 🔥 **`init()` é DEPRECADO em `@module-federation/enhanced` v2+.** Usar `createInstance` + `getInstance` (descobertos durante o PoC). TS dispara warning de deprecação. Pattern correto:
 
-3. **`requiredVersion` strict pode bloquear workspace deps.** Workspace deps têm version `0.1.0` (placeholder); se `requiredVersion: '^0.1.0'` em prod, falha. Use `'*'` ou ranges abertos para deps internas.
+   ```ts
+   import { createInstance, getInstance } from '@module-federation/enhanced/runtime';
+   const mf = getInstance() ?? createInstance({...});
+   await mf.loadRemote('hello/Hello');
+   ```
 
-4. **CORS em dev:** Rsbuild dev server NÃO envia `Access-Control-Allow-Origin: *` por padrão. O shell em `:3000` falha ao fetchar manifest. **Solução:** middleware em `rsbuild.config.ts` (incluído no exemplo A2) OU usar `chrome://flags/#block-insecure-private-network-requests` desabilitado (não recomendado).
+   `getInstance() ??` resilência a HMR (dev re-avalia módulo mas instância global persiste).
 
-5. **Turbopack + dynamic remote:** Next 16 usa Turbopack por default. Funciona com `loadRemote` runtime, mas chunks lazy podem ter behavior diferente de webpack. Se ver problemas, force `next dev --webpack` (deprecated mas ainda funciona em Next 16) durante o PoC e depois investigar.
+3. 🔥 **`lib: () => React` (SÍNCRONO), não `() => import('react')` (async).** Esse foi o bug mais sutil do PoC. Runtime API espera factory síncrona retornando o módulo já carregado. Async com Promise causa duplicação:
+   - **Sintoma:** `TypeError: Cannot read properties of undefined (reading 'recentlyCreatedOwnerStacks')` ao primeiro render do componente federado
+   - **Causa raiz:** React 19 detecta dessincronização de owner stacks entre duas instâncias React coexistindo
+   - **Correção:** importar eagerly no topo (`import * as React from 'react'`), passar `lib: () => React` (devolve a referência já resolvida)
 
-6. **`'use client'` no `lib/federation.ts` é OBRIGATÓRIO.** Runtime do MF acessa `window` e usa `document`. Sem `'use client'`, Next tenta SSR e falha.
+4. 🔥 **Error boundary é OBRIGATÓRIO ao redor de `<RemoteHello />`** ou qualquer dynamic federation import. Sem ele:
+   - Em dev: Next dispara overlay full-screen no primeiro fetch falhado
+   - Em prod: página inteira crash (white screen)
+   - Solução: `MFErrorBoundary` (ver B3) capturando + UI inline "MFE indisponível" + `role="alert"` + `<details>` com stack
 
-7. **Tailwind do remote precisa achar os sources do DS.** Rsbuild não usa o `@source` do shell. Configure PostCSS no `apps/hello-mfe/` com Tailwind v4 + `@source` apontando para `node_modules/@bytebank/design-system/src/**/*.{ts,tsx}` (ou tools/scripts auto-detectam).
+5. **Singletons mal configurados causam "two Reacts" / "two DS" bug.** Sintoma: hooks no Hello quebram com "Invalid hook call", ou bundle pesa o dobro, ou Context provider do shell não enxerga consumer do remote. Solução: declarar `singleton: true` em **ambos lados** para **todas** as deps compartilhadas — remote `shared` (rsbuild.config) E shell `init.shared` (lib/federation.ts). Os 4 must-haves: `react`, `react-dom`, `@bytebank/design-system`, `@bytebank/shared`. Validar com `npm ls react -w @bytebank/shell` mostrando 1 cópia hoisted.
 
-8. **Dependency hoisting em workspaces:** `npm install` na raiz hoista as deps. `@module-federation/enhanced` deve aparecer só uma vez em `node_modules/`. Validar com `npm ls @module-federation/enhanced`.
+6. **`requiredVersion` strict pode bloquear workspace deps.** Workspace deps têm version `0.1.0` (placeholder); se `requiredVersion: '^0.1.0'` em prod, falha. Use `'*'` ou ranges abertos para deps internas.
 
-9. **Build de produção do hello-mfe gera `dist/`** com sourcemap, JS chunks, e `mf-manifest.json`. Para Vercel preview, configurar Output Directory = `apps/hello-mfe/dist` e Build Command = `npm run build -w @bytebank/hello-mfe`.
+7. **CORS em dev:** Rsbuild dev server NÃO envia `Access-Control-Allow-Origin: *` por padrão. O shell em `:3000` falha ao fetchar manifest. **Solução:** usar `server.cors` no `rsbuild.config.ts` (incluído no exemplo A2 com allowlist `['http://localhost:3000']`). **Não usar `dev.setupMiddlewares`** — deprecado no Rsbuild 2.x e emite warning.
 
-10. **Hot reload entre apps:** `@bytebank/design-system` editado deve refletir nos 2 apps. Funciona se `transpilePackages` no shell + `source.include` no Rsbuild apontam para o package. Se quebrar, fallback é `npm run dev` em ambos.
+8. **Turbopack + dynamic remote:** Next 16 usa Turbopack por default. Funciona com `loadRemote` runtime, mas chunks lazy podem ter behavior diferente de webpack. Se ver problemas, force `next dev --webpack` (deprecated mas ainda funciona em Next 16) durante o PoC e depois investigar.
+
+9. **`'use client'` no `lib/federation.ts` é OBRIGATÓRIO.** Runtime do MF acessa `window` e usa `document`. Sem `'use client'`, Next tenta SSR e falha.
+
+10. **Tailwind do remote precisa achar os sources do DS.** Rsbuild não usa o `@source` do shell. Configure PostCSS no `apps/hello-mfe/` com Tailwind v4 + `@source` apontando para `node_modules/@bytebank/design-system/src/**/*.{ts,tsx}` (ou tools/scripts auto-detectam).
+
+11. **Dependency hoisting em workspaces:** `npm install` na raiz hoista as deps. `@module-federation/enhanced` deve aparecer só uma vez em `node_modules/`. Validar com `npm ls @module-federation/enhanced`.
+
+12. **Build de produção do hello-mfe gera `dist/`** com sourcemap, JS chunks, e `mf-manifest.json`. Para Vercel preview, configurar Output Directory = `apps/hello-mfe/dist` e Build Command = `npm run build -w @bytebank/hello-mfe`.
+
+13. **Hot reload entre apps:** `@bytebank/design-system` editado deve refletir nos 2 apps. Funciona se `transpilePackages` no shell + `source.include` no Rsbuild apontam para o package. Se quebrar, fallback é `npm run dev` em ambos.
 
 ## Pull Request
 
