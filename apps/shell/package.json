@@ -1,0 +1,60 @@
+{
+  "name": "@bytebank/shell",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "chromatic": "npx chromatic --project-token=chpt_330cd685ba026e8",
+    "test": "vitest"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions"
+  ],
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "lucide-react": "^0.577.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-hook-form": "^7.72.0",
+    "zod": "^4.3.6"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": ["eslint --fix", "prettier --write"]
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "~5.0.1",
+    "@storybook/addon-a11y": "~10.2.16",
+    "@storybook/addon-docs": "~10.2.16",
+    "@storybook/addon-onboarding": "~10.2.16",
+    "@storybook/addon-vitest": "~10.2.16",
+    "@storybook/nextjs-vite": "~10.2.16",
+    "@storybook/test-runner": "~0.24.3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/browser-playwright": "^4.0.18",
+    "@vitest/coverage-v8": "^4.0.18",
+    "chromatic": "^16.1.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-storybook": "~10.2.16",
+    "playwright": "^1.58.2",
+    "prettier": "^3.8.1",
+    "storybook": "~10.2.16",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  }
+}

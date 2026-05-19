@@ -9,7 +9,7 @@ import {
   EDIT_DEPOSIT_TRANSACTION,
   EDIT_LONG_DESCRIPTION_TRANSACTION,
   EDIT_WITHDRAWAL_TRANSACTION,
-} from '../../../stories/mocks/transactions';
+} from '../../../../stories/mocks/transactions';
 
 const meta: Meta<typeof EditTransactionModal> = {
   title: 'Features/EditTransactionModal',

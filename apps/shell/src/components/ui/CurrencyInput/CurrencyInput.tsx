@@ -5,7 +5,7 @@ import type { CurrencyInputProps } from './ICurrencyInput';
 import { getInputBorderColor } from '@/lib/input';
 import { HelperText } from '@/components/ui/HelperText';
 import { Label } from '@/components/ui/Label';
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import { IconButton } from '../Button';
 import { X } from 'lucide-react';
 
@@ -27,10 +27,12 @@ export function CurrencyInput({
   const helperId = helperText ? `${inputId}-helper` : undefined;
 
   const [valueInCents, setValueInCents] = useState(Math.round(value * 100));
+  const [prevValue, setPrevValue] = useState(value);
 
-  useEffect(() => {
+  if (prevValue !== value) {
+    setPrevValue(value);
     setValueInCents(Math.round(value * 100));
-  }, [value]);
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, '');

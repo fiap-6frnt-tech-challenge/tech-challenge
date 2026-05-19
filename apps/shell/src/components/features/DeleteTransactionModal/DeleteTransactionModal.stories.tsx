@@ -9,7 +9,7 @@ import {
   DELETE_LONG_DESCRIPTION_TRANSACTION,
   DELETE_TRANSFER_TRANSACTION,
   DELETE_WITHDRAWAL_TRANSACTION,
-} from '../../../stories/mocks/transactions';
+} from '../../../../stories/mocks/transactions';
 
 const meta: Meta<typeof DeleteTransactionModal> = {
   title: 'Features/DeleteTransactionModal',
