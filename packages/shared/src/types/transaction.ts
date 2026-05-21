@@ -1,4 +1,4 @@
-import { TRANSACTION_TYPE } from '@/shared/constants/transaction';
+import { TRANSACTION_TYPE } from '../constants/transaction';
 
 export type TransactionType = (typeof TRANSACTION_TYPE)[keyof typeof TRANSACTION_TYPE];
 
