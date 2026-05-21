@@ -1,4 +1,4 @@
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import type { IconButtonProps } from './types';
 
 export function IconButton({ icon, className, disabled, ...props }: IconButtonProps) {

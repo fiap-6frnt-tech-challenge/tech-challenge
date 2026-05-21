@@ -2,7 +2,7 @@
 
 import type { TransactionFiltersValue } from '@/components/features/TransactionFilters';
 import { TransactionService } from '@/services';
-import type { Transaction } from '@/types';
+import type { Transaction } from '@bytebank/shared';
 import { useCallback, useEffect, useState } from 'react';
 
 interface PaginatedState {

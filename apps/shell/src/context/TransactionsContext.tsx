@@ -1,8 +1,8 @@
 'use client';
 
-import { calculateBalance, getAll } from '@/lib/transactions';
+import { calculateBalance, getAll } from '@bytebank/shared';
 import { TransactionService } from '@/services';
-import type { NewTransaction, Transaction, UpdateTransaction } from '@/types';
+import type { NewTransaction, Transaction, UpdateTransaction } from '@bytebank/shared';
 import {
   createContext,
   useCallback,

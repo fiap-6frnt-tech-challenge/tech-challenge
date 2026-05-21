@@ -9,7 +9,7 @@ import { DatePicker } from '@/components/ui/DatePicker';
 import { Input } from '@/components/ui/Input';
 import { HelperText } from '@/components/ui/HelperText';
 import { Select } from '@/components/ui/Select';
-import { TRANSACTION_TYPE, TRANSACTION_TYPE_OPTIONS } from '@/shared/constants/transaction';
+import { TRANSACTION_TYPE, TRANSACTION_TYPE_OPTIONS } from '@bytebank/shared';
 import { transactionFormSchema } from './schema';
 import type {
   TransactionFormProps,

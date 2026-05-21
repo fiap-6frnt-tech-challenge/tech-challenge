@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 
 type FoundationSectionProps = {
   title: string;

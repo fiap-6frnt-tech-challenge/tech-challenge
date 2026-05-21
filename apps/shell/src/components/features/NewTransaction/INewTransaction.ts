@@ -1,4 +1,4 @@
-import type { TransactionType } from '@/types';
+import type { TransactionType } from '@bytebank/shared';
 
 export interface NewTransactionData {
   type: TransactionType;

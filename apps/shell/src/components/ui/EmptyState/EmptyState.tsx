@@ -1,4 +1,4 @@
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import type { EmptyStateProps } from './IEmptyState';
 
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {

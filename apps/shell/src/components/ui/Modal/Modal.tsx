@@ -2,7 +2,7 @@
 
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import { useFocusTrap } from '@/hooks';
 import type { ModalProps } from './IModal';
 

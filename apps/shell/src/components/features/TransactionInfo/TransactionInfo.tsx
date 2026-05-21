@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { Tooltip } from '@/components/ui/Tooltip';
-import { formatCurrency, formatDate } from '@/lib/format';
-import { BADGE_LABEL_MAP, BADGE_VARIANT_MAP } from '@/shared/constants/transaction';
+import { formatCurrency, formatDate } from '@bytebank/shared';
+import { BADGE_LABEL_MAP, BADGE_VARIANT_MAP } from '@bytebank/shared';
 import type { TransactionInfoProps } from './ITransactionInfo';
 
 export function TransactionInfo({ transaction }: TransactionInfoProps) {

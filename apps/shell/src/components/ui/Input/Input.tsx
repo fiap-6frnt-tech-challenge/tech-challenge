@@ -1,6 +1,6 @@
 import { useId } from 'react';
-import { cn } from '@/lib/classes';
-import { getInputBorderColor } from '@/lib/input';
+import { cn } from '@bytebank/shared';
+import { getInputBorderColor } from '@bytebank/shared';
 import { HelperText } from '@/components/ui/HelperText';
 import { Label } from '@/components/ui/Label';
 import { InputProps } from './types';

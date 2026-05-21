@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { PaginationProps } from './IPagination';
 

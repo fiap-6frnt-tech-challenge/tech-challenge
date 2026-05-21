@@ -1,4 +1,4 @@
-import type { NewTransaction } from '@/types';
+import type { NewTransaction } from '@bytebank/shared';
 
 export type TransactionFormValues = Omit<NewTransaction, 'id'>;
 export interface TransactionFormProps {

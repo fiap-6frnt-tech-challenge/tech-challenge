@@ -1,4 +1,4 @@
-import type { Transaction, NewTransaction, UpdateTransaction } from '@/types';
+import type { Transaction, NewTransaction, UpdateTransaction } from '@bytebank/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api';
 

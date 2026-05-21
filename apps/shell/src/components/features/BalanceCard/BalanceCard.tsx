@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { formatCurrencyExact, formatTodayDate } from '@/lib/format';
+import { formatCurrencyExact, formatTodayDate } from '@bytebank/shared';
 import { Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';

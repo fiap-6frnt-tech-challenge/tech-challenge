@@ -1,4 +1,4 @@
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import { CardProps } from './types';
 
 const paddingStyles = {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 
 import { FoundationSection } from './_shared/foundation-section';
 import { FoundationsPage } from './_shared/foundations-page';

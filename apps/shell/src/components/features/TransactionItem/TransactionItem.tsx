@@ -1,9 +1,9 @@
 'use client';
 
 import { Pencil, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/classes';
-import { BADGE_LABEL_MAP, BADGE_VARIANT_MAP } from '@/shared/constants/transaction';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { cn } from '@bytebank/shared';
+import { BADGE_LABEL_MAP, BADGE_VARIANT_MAP } from '@bytebank/shared';
+import { formatCurrency, formatDate } from '@bytebank/shared';
 import type { TransactionItemProps } from './ITransactionItem';
 import { Badge } from '@/components/ui/Badge';
 import { Tooltip } from '@/components/ui/Tooltip';

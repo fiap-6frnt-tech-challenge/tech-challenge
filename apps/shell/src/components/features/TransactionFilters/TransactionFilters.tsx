@@ -3,7 +3,7 @@
 import { Select } from '@/components/ui/Select';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { Button } from '@/components/ui/Button';
-import { TRANSACTION_TYPE_OPTIONS } from '@/shared/constants/transaction';
+import { TRANSACTION_TYPE_OPTIONS } from '@bytebank/shared';
 import type { TransactionFiltersProps } from './ITransactionFilters';
 
 const TYPE_OPTIONS = [{ label: 'Todos', value: 'all' }, ...TRANSACTION_TYPE_OPTIONS];
