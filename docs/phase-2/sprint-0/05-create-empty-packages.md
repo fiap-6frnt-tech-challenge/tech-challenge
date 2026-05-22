@@ -1,5 +1,7 @@
 # Task 5 — Criar `packages/api-client` e `packages/stores` (vazios)
 
+> ✅ **Status: Done** — [PR #44](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/44) mergeado em `phase-2` em 2026-05-22.
+
 |                      |                                                                                                                        |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | **Sprint**           | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                     |
