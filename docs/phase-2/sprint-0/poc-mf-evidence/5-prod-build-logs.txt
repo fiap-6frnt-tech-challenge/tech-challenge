@@ -1,0 +1,63 @@
+===== hello-mfe build (criterion #11) =====
+
+> @bytebank/hello-mfe@0.1.0 build
+> rsbuild build
+
+Rsbuild v2.0.7
+
+info    build started...
+[ Module Federation DTS ] Federated types created correctly
+ready   built in 2.88 s
+
+File (web)                                                     Size       Gzip   
+dist/index.html                                                0.31 kB    0.22 kB
+dist/@mf-types.zip                                             0.77 kB 
+dist/mf-manifest.json                                          1.7 kB     0.47 kB
+dist/mf-manifest-stats.json                                    1.8 kB     0.50 kB
+dist/static/js/async/__federation_expose_Hello.fda4660050.js   1.9 kB     1.0 kB
+dist/static/js/async/70.b3597d52c5.js                          3.6 kB     1.4 kB
+dist/static/js/async/689.e343ef8e25.js                         3.6 kB     1.4 kB
+dist/static/js/async/466.3e6a98e59b.js                         7.5 kB     2.9 kB
+dist/static/js/hello.37b4cd5d34.js                             112.1 kB   31.7 kB
+dist/static/js/index.9c0eea3aa0.js                             113.8 kB   32.7 kB
+dist/static/js/486.c0f9e7cf68.js                               178.1 kB   56.4 kB
+
+                                                      Total:   425.2 kB   129.4 kB
+
+Exit code: 0
+
+===== shell build (criterion #12) =====
+
+> @bytebank/shell@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1429.1ms
+  Running TypeScript ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/8) ...
+  Generating static pages using 11 workers (2/8) 
+  Generating static pages using 11 workers (4/8) 
+  Generating static pages using 11 workers (6/8) 
+✓ Generating static pages using 11 workers (8/8) in 225.4ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/transactions
+├ ƒ /api/transactions/[id]
+├ ○ /poc
+├ ○ /robots.txt
+└ ○ /transactions
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+Exit code: 0
