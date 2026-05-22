@@ -27,6 +27,7 @@ export default defineConfig([
       },
       parserOptions: {
         ecmaFeatures: { jsx: true },
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
