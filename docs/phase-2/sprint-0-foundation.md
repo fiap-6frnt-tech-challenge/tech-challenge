@@ -11,7 +11,7 @@
 
 - [x] **Decisão MF: Opção A — Rsbuild + `@module-federation/enhanced`** (ver PLAN.md)
 - [x] Branch de integração `phase-2` já criada e disponível em `origin` (long-lived; recebe todos os PRs da fase)
-- [ ] Cada track cria sub-branch a partir de `phase-2`: `phase-2/dev1-infra/<task>`, `phase-2/dev3-ds/<task>`, etc. — ver [Git Workflow no PLAN.md](./PLAN.md#git-workflow--fase-2)
+- [ ] Cada track cria sub-branch a partir de `phase-2`: `dev1-infra/<task>`, `dev3-ds/<task>`, etc. — ver [Git Workflow no PLAN.md](./PLAN.md#git-workflow--fase-2)
 - [ ] Node 20+ e npm 10+ instalados em todas as máquinas
 - [ ] Acesso ao Chromatic atualizado (token `chpt_330cd685ba026e8`)
 
@@ -19,9 +19,9 @@
 
 ## Tasks
 
-> 🔗 **Tasks 1 e 2 são bundled num PR único atômico** ([sprint-0/README.md](./sprint-0/README.md#princípio-do-sprint-0-e-da-fase-inteira)). Task 1 isolada quebraria `phase-2` (sem deps do Next no root). As 2 saem juntas em `phase-2/dev1-infra/monorepo-migration` com 2 commits e 1 PR.
+> 🔗 **Tasks 1 e 2 são bundled num PR único atômico** ([sprint-0/README.md](./sprint-0/README.md#princípio-do-sprint-0-e-da-fase-inteira)). Task 1 isolada quebraria `phase-2` (sem deps do Next no root). As 2 saem juntas em `dev1-infra/monorepo-migration` com 2 commits e 1 PR.
 
-### 1. Bootstrap monorepo (1 dia · **dev1-infra**)
+### 1. ✅ Bootstrap monorepo (1 dia · **dev1-infra**) — [PR #40](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/40) merged 2026-05-19
 
 - [ ] Criar `tech-challenge/package.json` workspace root (private, no deps) com:
   ```json
@@ -44,7 +44,7 @@
 
 **Aceite:** `npm install` na raiz hidrata `node_modules` para todos os futuros packages (hoisting nativo do npm).
 
-### 2. Migrar shell para apps/shell (1 dia · **dev1-infra**)
+### 2. ✅ Migrar shell para apps/shell (1 dia · **dev1-infra**) — [PR #40](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/40) merged 2026-05-19
 
 > 📋 **Passo-a-passo completo:** [sprint-0/02-migrate-shell.md](./sprint-0/02-migrate-shell.md)
 
@@ -61,7 +61,7 @@ Resumo:
 
 **Aceite:** shell roda no mesmo estado da Fase 1, mas agora em `apps/shell/`. Todos `npm run dev/build/lint/test/storybook -w @bytebank/shell` passam.
 
-### 3. Extrair packages/shared (0.5 dia · **dev2-backend**)
+### 3. ✅ Extrair packages/shared (0.5 dia · **dev2-backend**) — [PR #43](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/43) merged 2026-05-22
 
 > 📋 **Passo-a-passo completo:** [sprint-0/03-extract-shared.md](./sprint-0/03-extract-shared.md)
 > Reordenada antes do DS porque DS depende de `cn`, `getInputBorderColor` e tipos do shared.
@@ -116,14 +116,14 @@ Resumo:
 
 **Aceite:** `npm install` resolve workspace deps sem erro; shell continua subindo idêntico.
 
-### 6. PoC Module Federation — Opção A (3 dias · **dev4-dashboard** [remote] + **dev5-transactions** [shell consumer] em paralelo)
+### 6. 🟢 PoC Module Federation — Opção A (3 dias · **dev4-dashboard** [remote] + **dev5-transactions** [shell consumer] em paralelo) — PoC verde na branch `team-mfe/poc`, aguarda Gate (Task 7)
 
 > 📋 **Passo-a-passo completo:** [sprint-0/06-poc-module-federation.md](./sprint-0/06-poc-module-federation.md)
 > ⚠️ **Maior risco do Sprint 0.** Se PoC falhar, aciona fallback Opção D (build-time MFE via workspace packages).
 
 Resumo:
 
-- [ ] Branch compartilhada `phase-2/team-mfe/poc` (ambos devs commitam)
+- [ ] Branch compartilhada `team-mfe/poc` (ambos devs commitam)
 - [ ] **Track A** (`dev4-dashboard`): criar `apps/hello-mfe` Rsbuild + `@module-federation/rsbuild-plugin`, expor `<Hello />` consumindo `@bytebank/design-system` e `@bytebank/shared` com `singleton: true`
 - [ ] **Track B** (`dev5-transactions`): instalar `@module-federation/enhanced` no shell, criar `src/lib/federation.ts` com runtime `init()` + `loadRemote()`, criar `<RemoteHello />` wrapper com `dynamic(...)`, rota temporária `/poc` para validar
 - [ ] **Dia 3:** integrar; preencher matriz de validação de 16 critérios (NetworkTab, React DevTools, tokens DS, hot reload, build prod, Vercel preview)
@@ -200,12 +200,12 @@ Resumo:
 
 ## Critério de aceite do sprint
 
-- [x] Monorepo Turborepo + npm workspaces funcional dentro de `tech-challenge/`
-- [x] Shell consome `@bytebank/design-system` e `@bytebank/shared` via workspace deps
-- [x] Storybook + Chromatic vivendo em `packages/design-system/`
-- [x] PoC MF verde (Opção A — Rsbuild + `@module-federation/enhanced`) OU fallback para opção D documentado
-- [x] CI verde (lint + build + test em todos packages)
-- [x] Vercel preview do shell renderiza igual à Fase 1
+- [x] Monorepo Turborepo + npm workspaces funcional dentro de `tech-challenge/` _(PR #40)_
+- [ ] Shell consome `@bytebank/design-system` e `@bytebank/shared` via workspace deps _(shared ✅ PR #43; DS pendente Task 4)_
+- [ ] Storybook + Chromatic vivendo em `packages/design-system/` _(pendente Task 4)_
+- [x] PoC MF verde (Opção A — Rsbuild + `@module-federation/enhanced`) OU fallback para opção D documentado _(🟢 validado em `team-mfe/poc`, aguarda Gate)_
+- [ ] CI verde (lint + build + test em todos packages) _(pendente Task 8)_
+- [ ] Vercel preview do shell renderiza igual à Fase 1 _(válido para Fase 1; revalidar após Task 4)_
 
 ## Riscos do sprint
 

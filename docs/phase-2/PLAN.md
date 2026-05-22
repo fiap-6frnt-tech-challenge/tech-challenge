@@ -61,9 +61,9 @@
 
 ---
 
-## Decisão Module Federation — Opção A (final)
+## Decisão Module Federation — Opção A (validada via PoC)
 
-✅ **Decisão tomada:** Shell Next.js 16 App Router + remotes Rsbuild/Rspack com `@module-federation/enhanced`.
+✅ **Decisão tomada e VALIDADA pelo PoC (2026-05-19):** Shell Next.js 16 App Router + remotes Rsbuild/Rspack com `@module-federation/enhanced` runtime API. PoC em [team-mfe/poc](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/tree/team-mfe/poc) renderiza componente federado de `apps/hello-mfe` (Rsbuild :3001) dentro do shell (`apps/shell` Next 16 :3000/poc) com singletons React unificados. Ver [docs/phase-2/sprint-0/mfe-decision.md](./sprint-0/mfe-decision.md) para o ADR completo.
 
 **Como isso atende a spec:**
 
@@ -154,11 +154,13 @@ W1   W2   W3   W4   W5   W6   W7   W8 W9
 
 **Branch de integração:** `phase-2`. Durante os 60 dias da fase, **todas as branches** de feature/track partem de `phase-2` e **todos os PRs** apontam para `phase-2`. `main` só recebe um único merge final no fim do Sprint 4.
 
+> ⚠️ **Nomes de branch SEM prefixo `phase-2/`.** Git não permite criar `phase-2/algo` porque já existe ref `phase-2` (refs são paths no filesystem). Descoberto durante PoC do Task 6 (2026-05-19). Branches usam só `<dev-handle>/<task>`.
+
 ```bash
 # Criar nova branch para uma task
 git checkout phase-2
 git pull origin phase-2
-git checkout -b phase-2/<dev-handle>/<task>   # ex: phase-2/dev3-ds/login-form
+git checkout -b dev3-ds/login-form   # SEM prefixo phase-2/
 
 # Abrir PR contra phase-2
 gh pr create --base phase-2 --title "feat(ds): LoginForm component"
@@ -166,11 +168,11 @@ gh pr create --base phase-2 --title "feat(ds): LoginForm component"
 
 **Convenção de nomenclatura (handles em [team-allocation.md](./team-allocation.md)):**
 
-- `phase-2/dev1-infra/<task>` — Track Infra & Build
-- `phase-2/dev2-backend/<task>` — Track Backend & Auth
-- `phase-2/dev3-ds/<task>` — Track Design System
-- `phase-2/dev4-dashboard/<task>` — Track Dashboard MFE
-- `phase-2/dev5-transactions/<task>` — Track Transactions MFE
+- `dev1-infra/<task>` — Track Infra & Build
+- `dev2-backend/<task>` — Track Backend & Auth
+- `dev3-ds/<task>` — Track Design System
+- `dev4-dashboard/<task>` — Track Dashboard MFE
+- `dev5-transactions/<task>` — Track Transactions MFE
 
 **Regras de merge:**
 
@@ -210,6 +212,6 @@ gh pr create --base phase-2 --title "feat(ds): LoginForm component"
 - [x] **Branch `phase-2` já criada** a partir de `main` e disponível em `origin` (long-lived; base de todas as features da fase)
 - [x] **Branch atual** (onde estes docs vivem) já é uma feature branch a partir de `phase-2` — exemplo do workflow
 
-1. Cada track cria suas sub-branches: `phase-2/dev1-infra/...`, `phase-2/dev3-ds/...`, etc. — ver [Git Workflow](#git-workflow--fase-2)
+1. Cada track cria suas sub-branches: `dev1-infra/...`, `dev3-ds/...`, etc. — ver [Git Workflow](#git-workflow--fase-2)
 2. Iniciar [sprint-0-foundation.md](./sprint-0-foundation.md) — Bootstrap monorepo + extração de packages em paralelo com PoC Rsbuild
 3. Gate dia 5: validar PoC ou acionar fallback opção D

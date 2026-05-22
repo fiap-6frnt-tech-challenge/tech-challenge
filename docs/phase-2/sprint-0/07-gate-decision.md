@@ -27,7 +27,7 @@ O time se compromete agora com Opção A (federação runtime) **ou** Opção D 
 
 ## Pré-requisitos da reunião
 
-- [ ] **PR da Task 6** aberto em `phase-2/team-mfe/poc`, **não** mergeado ainda
+- [ ] **PR da Task 6** aberto em `team-mfe/poc`, **não** mergeado ainda
 - [ ] **Matriz de validação preenchida** com ✅/❌ no corpo do PR (16 critérios da Task 6)
 - [ ] **Evidências commitadas** em `docs/phase-2/sprint-0/poc-mf-evidence/`:
   - `1-mfe-standalone.png`
@@ -218,7 +218,7 @@ Esta task **não tem PR de código**. Os outputs são:
 - Merge (ou não) do PR da Task 6
 - Mensagem no canal do time
 
-Esse pequeno commit de decisão pode ir direto pra `phase-2` via PR mínima `phase-2/dev1-infra/mfe-decision-record` — 2 arquivos, 5 min de review.
+Esse pequeno commit de decisão pode ir direto pra `phase-2` via PR mínima `dev1-infra/mfe-decision-record` — 2 arquivos, 5 min de review.
 
 ## Próximo passo
 

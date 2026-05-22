@@ -1,11 +1,13 @@
 # Task 3 — Extrair `packages/shared`
 
+> ✅ **Status: Done** — [PR #43](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/43) mergeado em `phase-2` em 2026-05-22.
+
 |                      |                                                                                                                                                  |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Sprint**           | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                                               |
 | **Owner**            | `dev2-backend`                                                                                                                                   |
 | **Duração estimada** | 0.5 dia                                                                                                                                          |
-| **Branch**           | `phase-2/dev2-backend/extract-shared` (a partir de `phase-2`)                                                                                    |
+| **Branch**           | `dev2-backend/extract-shared` (a partir de `phase-2`)                                                                                            |
 | **Depende de**       | [Bundle Tasks 1+2](./02-migrate-shell.md) mergeado em `phase-2`                                                                                  |
 | **Desbloqueia**      | [Task 4 — Extract DS](./04-extract-design-system.md) (DS consome `cn`, `getInputBorderColor`, types e constants de `@bytebank/shared`); Tasks 5+ |
 
@@ -103,7 +105,7 @@ export const TRANSACTION_TYPE_OPTIONS: SelectOption[] = [ ... ];
 - [ ] Feature branch criada:
   ```bash
   git checkout phase-2 && git pull origin phase-2
-  git checkout -b phase-2/dev2-backend/extract-shared
+  git checkout -b dev2-backend/extract-shared
   ```
 - [ ] Working tree limpa
 
@@ -468,7 +470,7 @@ tech-challenge/
 ## Pull Request
 
 ```bash
-git push -u origin phase-2/dev2-backend/extract-shared
+git push -u origin dev2-backend/extract-shared
 gh pr create --base phase-2 --title "feat(shared): extract types, lib utils and constants to @bytebank/shared" \
   --body "$(cat <<'EOF'
 ## Sumário

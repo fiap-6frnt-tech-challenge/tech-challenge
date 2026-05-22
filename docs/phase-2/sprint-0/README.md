@@ -13,17 +13,19 @@ Cada arquivo neste diretório descreve **uma task** do [sprint-0-foundation.md](
 
 ## Ordem de execução
 
-| #   | Task                                        | Owner                              | Duração | PR                         | Arquivo                                                      |
-| --- | ------------------------------------------- | ---------------------------------- | ------- | -------------------------- | ------------------------------------------------------------ |
-| 1   | Bootstrap monorepo                          | dev1-infra                         | 1 dia   | 🔗 **PR único** com Task 2 | [01-bootstrap-monorepo.md](./01-bootstrap-monorepo.md)       |
-| 2   | Migrar shell para apps/shell                | dev1-infra                         | 1 dia   | 🔗 **PR único** com Task 1 | [02-migrate-shell.md](./02-migrate-shell.md)                 |
-| 3   | Extrair packages/shared                     | dev2-backend                       | 0.5 dia | PR próprio                 | [03-extract-shared.md](./03-extract-shared.md)               |
-| 4   | Extrair packages/design-system              | dev3-ds                            | 1 dia   | PR próprio                 | [04-extract-design-system.md](./04-extract-design-system.md) |
-| 5   | Criar packages/api-client e stores (vazios) | dev2-backend                       | 0.5 dia | PR próprio                 | [05-create-empty-packages.md](./05-create-empty-packages.md) |
-| 6   | PoC Module Federation (Opção A — Rsbuild)   | dev4-dashboard + dev5-transactions | 3 dias  | PR próprio                 | [06-poc-module-federation.md](./06-poc-module-federation.md) |
-| 7   | Gate decisório MF (Dia 5)                   | todo time                          | 30 min  | doc-only                   | [07-gate-decision.md](./07-gate-decision.md)                 |
-| 8   | CI atualizado                               | dev1-infra                         | 0.5 dia | PR próprio                 | [08-update-ci.md](./08-update-ci.md)                         |
-| 9   | Smoke test final                            | todo time                          | 0.5 dia | doc-only                   | [09-smoke-test-final.md](./09-smoke-test-final.md)           |
+| #   | Status | Task                                        | Owner                              | Duração | PR                                                                                | Arquivo                                                      |
+| --- | ------ | ------------------------------------------- | ---------------------------------- | ------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 1   | ✅     | Bootstrap monorepo                          | dev1-infra                         | 1 dia   | [#40](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/40) merged | [01-bootstrap-monorepo.md](./01-bootstrap-monorepo.md)       |
+| 2   | ✅     | Migrar shell para apps/shell                | dev1-infra                         | 1 dia   | [#40](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/40) merged | [02-migrate-shell.md](./02-migrate-shell.md)                 |
+| 3   | ✅     | Extrair packages/shared                     | dev2-backend                       | 0.5 dia | [#43](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/43) merged | [03-extract-shared.md](./03-extract-shared.md)               |
+| 4   | ⏳     | Extrair packages/design-system              | dev3-ds                            | 1 dia   | pending                                                                           | [04-extract-design-system.md](./04-extract-design-system.md) |
+| 5   | ⏳     | Criar packages/api-client e stores (vazios) | dev2-backend                       | 0.5 dia | pending                                                                           | [05-create-empty-packages.md](./05-create-empty-packages.md) |
+| 6   | 🟢     | PoC Module Federation (Opção A — Rsbuild)   | dev4-dashboard + dev5-transactions | 3 dias  | draft (`team-mfe/poc`) — PoC verde                                                | [06-poc-module-federation.md](./06-poc-module-federation.md) |
+| 7   | ⏳     | Gate decisório MF (Dia 5)                   | todo time                          | 30 min  | reunião pendente                                                                  | [07-gate-decision.md](./07-gate-decision.md)                 |
+| 8   | ⏳     | CI atualizado                               | dev1-infra                         | 0.5 dia | pending                                                                           | [08-update-ci.md](./08-update-ci.md)                         |
+| 9   | ⏳     | Smoke test final                            | todo time                          | 0.5 dia | pending                                                                           | [09-smoke-test-final.md](./09-smoke-test-final.md)           |
+
+**Legenda:** ✅ mergeada · 🟢 implementada (validada, aguarda merge/Gate) · ⏳ pendente
 
 ## Princípio do Sprint 0 (e da fase inteira)
 

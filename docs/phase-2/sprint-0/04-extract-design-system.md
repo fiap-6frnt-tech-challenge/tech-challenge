@@ -5,7 +5,7 @@
 | **Sprint**           | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                                                         |
 | **Owner**            | `dev3-ds`                                                                                                                                                  |
 | **Duração estimada** | 1 dia                                                                                                                                                      |
-| **Branch**           | `phase-2/dev3-ds/extract-design-system` (a partir de `phase-2`)                                                                                            |
+| **Branch**           | `dev3-ds/extract-design-system` (a partir de `phase-2`)                                                                                                    |
 | **Depende de**       | [Task 3 — Extrair shared](./03-extract-shared.md) mergeada em `phase-2` (DS importa `cn`, `getInputBorderColor`, mock `Transaction` de `@bytebank/shared`) |
 | **Desbloqueia**      | Tasks 6 (PoC MF — consome DS no remote), Sprint 1 (novos componentes auth nascem no DS), Sprints 2/3 (charts + filtros + FileUpload no DS)                 |
 
@@ -71,7 +71,7 @@ Todo `from '@/components/ui'` (e variantes `'@/components/ui/Button'`) vira `fro
 - [ ] Feature branch criada:
   ```bash
   git checkout phase-2 && git pull origin phase-2
-  git checkout -b phase-2/dev3-ds/extract-design-system
+  git checkout -b dev3-ds/extract-design-system
   ```
 - [ ] Working tree limpa
 
@@ -698,7 +698,7 @@ tech-challenge/
 ## Pull Request
 
 ```bash
-git push -u origin phase-2/dev3-ds/extract-design-system
+git push -u origin dev3-ds/extract-design-system
 gh pr create --base phase-2 --title "feat(design-system): extract UI components to @bytebank/design-system" \
   --body "$(cat <<'EOF'
 ## Sumário

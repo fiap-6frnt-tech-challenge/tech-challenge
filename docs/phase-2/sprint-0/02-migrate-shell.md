@@ -1,14 +1,16 @@
 # Task 2 — Migrar shell para `apps/shell/`
 
+> ✅ **Status: Done** — bundled com Task 1 em [PR #40](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/40), mergeado em `phase-2` em 2026-05-19.
+
 > 🔗 **Esta task é bundled com [Task 1 — Bootstrap monorepo](./01-bootstrap-monorepo.md) num único PR atômico.**
-> Razão: Task 1 isolada deixa `phase-2` quebrada (sem deps do Next no root). Esta task fecha a transição e valida que tudo funciona antes de pushar. Use a mesma branch (`phase-2/dev1-infra/monorepo-migration`) que a Task 1 deixou com o commit local.
+> Razão: Task 1 isolada deixa `phase-2` quebrada (sem deps do Next no root). Esta task fecha a transição e valida que tudo funciona antes de pushar. Use a mesma branch (`dev1-infra/monorepo-migration`) que a Task 1 deixou com o commit local.
 
 |                          |                                                                                                                                       |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **Sprint**               | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                                    |
 | **Owner**                | `dev1-infra`                                                                                                                          |
 | **Duração estimada**     | 1 dia (parte 2 de 2 dias do bundle)                                                                                                   |
-| **Branch compartilhada** | `phase-2/dev1-infra/monorepo-migration` (mesma da Task 1, com commit 1/2 já feito)                                                    |
+| **Branch compartilhada** | `dev1-infra/monorepo-migration` (mesma da Task 1, com commit 1/2 já feito)                                                            |
 | **Depende de**           | [Task 1 — Bootstrap monorepo](./01-bootstrap-monorepo.md) commit local feito (NÃO mergeada — ainda não foi pushada)                   |
 | **Desbloqueia**          | Task 3 (extract DS), Task 4 (extract shared), Task 5 (empty packages), Task 6 (PoC MF) — todas após o PR atômico mergear em `phase-2` |
 
@@ -72,10 +74,10 @@ Esta task não extrai nada para `packages/` ainda — isso fica para Tasks 3 e 4
 
 ## Pré-condições
 
-- [x] [Task 1](./01-bootstrap-monorepo.md) com commit local **na mesma branch** `phase-2/dev1-infra/monorepo-migration` (NÃO mergeada em `phase-2` ainda — PR único sai daqui)
+- [x] [Task 1](./01-bootstrap-monorepo.md) com commit local **na mesma branch** `dev1-infra/monorepo-migration` (NÃO mergeada em `phase-2` ainda — PR único sai daqui)
 - [ ] Você continua na mesma branch — confirme com:
   ```bash
-  git branch --show-current   # deve mostrar: phase-2/dev1-infra/monorepo-migration
+  git branch --show-current   # deve mostrar: dev1-infra/monorepo-migration
   git log --oneline -1        # deve mostrar o commit "chore(monorepo): bootstrap Turborepo..."
   ```
 - [ ] Working tree limpa (`git status` zerado)
@@ -330,7 +332,7 @@ Se algum passo falhar, ver [Gotchas](#gotchas) abaixo.
 
 ### Phase F — Commit (commit 2/2 do bundle)
 
-Este é o **segundo commit** na mesma branch `phase-2/dev1-infra/monorepo-migration` (o primeiro é o da Task 1 — "bootstrap Turborepo + npm workspaces"). Os dois saem juntos no PR único.
+Este é o **segundo commit** na mesma branch `dev1-infra/monorepo-migration` (o primeiro é o da Task 1 — "bootstrap Turborepo + npm workspaces"). Os dois saem juntos no PR único.
 
 ```bash
 git add .
@@ -544,7 +546,7 @@ tech-challenge/
 Este é o **único PR** do bundle. Ele agrega os 2 commits (Task 1 + Task 2) e só abre agora, com `phase-2` em estado funcional validado.
 
 ```bash
-git push -u origin phase-2/dev1-infra/monorepo-migration
+git push -u origin dev1-infra/monorepo-migration
 gh pr create --base phase-2 --title "chore(monorepo): migrate to Turborepo workspaces with apps/shell" \
   --body "$(cat <<'EOF'
 ## Sumário

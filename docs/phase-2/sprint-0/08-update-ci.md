@@ -5,7 +5,7 @@
 | **Sprint**           | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                               |
 | **Owner**            | `dev1-infra`                                                                                                                     |
 | **Duração estimada** | 0.5 dia                                                                                                                          |
-| **Branch**           | `phase-2/dev1-infra/update-ci` (a partir de `phase-2`)                                                                           |
+| **Branch**           | `dev1-infra/update-ci` (a partir de `phase-2`)                                                                                   |
 | **Depende de**       | Tasks 1-5 mergeadas (monorepo + 4 packages) + [Task 7 — Gate](./07-gate-decision.md) decidiu (A ou D) — afeta workflows dos MFEs |
 | **Desbloqueia**      | [Task 9 — Smoke test final](./README.md) — valida CI no clone limpo; demais sprints dependem de CI verde                         |
 
@@ -38,7 +38,7 @@ Sem essa task: CI continuaria limitado ao shell (não pega regressões em DS/sha
 - [ ] Feature branch:
   ```bash
   git checkout phase-2 && git pull origin phase-2
-  git checkout -b phase-2/dev1-infra/update-ci
+  git checkout -b dev1-infra/update-ci
   ```
 
 ## Implementação passo-a-passo
@@ -259,7 +259,7 @@ Ou (mais limpo) extrair `eslint.config.mjs` para a raiz e cada workspace importa
 
 Para testar antes de mergear:
 
-1. Push da branch `phase-2/dev1-infra/update-ci` para origin
+1. Push da branch `dev1-infra/update-ci` para origin
 2. Abrir PR contra `phase-2`
 3. Verificar:
    - [ ] Workflow `CI` (novo, do `ci.yml`) aparece e roda (lint + type-check + build + test)
@@ -311,7 +311,7 @@ Para testar antes de mergear:
 ## Pull Request
 
 ```bash
-git push -u origin phase-2/dev1-infra/update-ci
+git push -u origin dev1-infra/update-ci
 gh pr create --base phase-2 --title "ci: monorepo CI workflow with Turbo --affected + Remote Cache" \
   --body "$(cat <<'EOF'
 ## Sumário
