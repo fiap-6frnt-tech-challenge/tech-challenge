@@ -102,7 +102,7 @@ Resumo:
 
 **Aceite:** `npm run storybook -w @bytebank/design-system` sobe em `:6006` com todos os componentes; shell consome via workspace dep; home + transactions visualmente idênticas à Fase 1.
 
-### 5. Criar packages/api-client e packages/stores (vazios) (0.5 dia · **dev2-backend**)
+### 5. ✅ Criar packages/api-client e packages/stores (vazios) (0.5 dia · **dev2-backend**) — [PR #44](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/44) merged 2026-05-22
 
 > 📋 **Passo-a-passo completo:** [sprint-0/05-create-empty-packages.md](./sprint-0/05-create-empty-packages.md)
 > Independente de Tasks 3 e 4 — pode rodar em paralelo. Sprint 1 preenche os stubs.
