@@ -1,5 +1,7 @@
 # Task 1 — Bootstrap monorepo (Turborepo + npm workspaces)
 
+> ✅ **Status: Done** — bundled com Task 2 em [PR #40](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/40), mergeado em `phase-2` em 2026-05-19.
+
 > 🔗 **Esta task é bundled com [Task 2 — Migrar shell](./02-migrate-shell.md) num único PR atômico.**
 > Razão: Task 1 isolada deixa `phase-2` em estado quebrado (sem deps do Next no root). Task 2 conclui a transição. As duas commits separadas, mas o PR é único — abre apenas no fim da Task 2.
 

@@ -1,5 +1,7 @@
 # Task 3 — Extrair `packages/shared`
 
+> ✅ **Status: Done** — [PR #43](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/43) mergeado em `phase-2` em 2026-05-22.
+
 |                      |                                                                                                                                                  |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Sprint**           | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                                               |

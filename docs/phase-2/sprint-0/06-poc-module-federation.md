@@ -1,5 +1,7 @@
 # Task 6 — PoC Module Federation (Opção A: Rsbuild + `@module-federation/enhanced`)
 
+> 🟢 **Status: PoC verde** — implementação validada na branch `team-mfe/poc` (≥14/16 critérios ✅). Aguarda merge após Gate (Task 7). Decisão registrada em [mfe-decision.md](./mfe-decision.md).
+
 |                          |                                                                                                                                           |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | **Sprint**               | [Sprint 0 — Foundation](../sprint-0-foundation.md)                                                                                        |

@@ -1,5 +1,7 @@
 # Task 2 — Migrar shell para `apps/shell/`
 
+> ✅ **Status: Done** — bundled com Task 1 em [PR #40](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/40), mergeado em `phase-2` em 2026-05-19.
+
 > 🔗 **Esta task é bundled com [Task 1 — Bootstrap monorepo](./01-bootstrap-monorepo.md) num único PR atômico.**
 > Razão: Task 1 isolada deixa `phase-2` quebrada (sem deps do Next no root). Esta task fecha a transição e valida que tudo funciona antes de pushar. Use a mesma branch (`dev1-infra/monorepo-migration`) que a Task 1 deixou com o commit local.
 
