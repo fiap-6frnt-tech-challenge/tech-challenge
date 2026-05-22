@@ -1,5 +1,5 @@
-import type { Transaction } from '@/types';
-import { TRANSACTION_TYPE } from '@/shared/constants/transaction';
+import type { Transaction } from '../types';
+import { TRANSACTION_TYPE } from '../constants/transaction';
 
 export function getAll(transactions: Transaction[]): Transaction[] {
   return [...transactions].sort((a, b) => (a.date < b.date ? 1 : -1));

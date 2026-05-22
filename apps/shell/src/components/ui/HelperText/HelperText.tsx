@@ -1,4 +1,4 @@
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 
 interface HelperTextProps {
   children: React.ReactNode;

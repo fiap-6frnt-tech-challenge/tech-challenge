@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Transaction } from '@/types';
+import type { Transaction } from '@bytebank/shared';
 import * as store from './store';
 
 export async function GET(req: NextRequest) {

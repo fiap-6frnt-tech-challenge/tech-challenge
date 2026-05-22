@@ -1,5 +1,6 @@
-import { SelectOption } from '@/components/ui/Select';
-import { TransactionType } from '@/types';
+import type { TransactionType } from '../types';
+
+type SelectOption = { label: string; value: string };
 
 export const TRANSACTION_TYPE = {
   DEPOSIT: 'deposit',

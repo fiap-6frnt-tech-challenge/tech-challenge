@@ -1,4 +1,4 @@
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import { TransactionItem } from '@/components/features/TransactionItem';
 import { SkeletonList } from '@/components/ui/Skeleton';
 import type { TransactionListProps } from './ITransactionList';

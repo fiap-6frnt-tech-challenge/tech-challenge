@@ -1,4 +1,4 @@
-import type { Transaction } from '@/types';
+import type { Transaction } from '@bytebank/shared';
 import type { TransactionFormValues } from '../TransactionForm/ITransactionForm';
 
 export interface EditTransactionModalProps {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { fn } from 'storybook/test';
-import type { Transaction } from '@/types';
+import type { Transaction } from '@bytebank/shared';
 import { TransactionList } from './TransactionList';
 import { ReceiptText } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState/EmptyState';

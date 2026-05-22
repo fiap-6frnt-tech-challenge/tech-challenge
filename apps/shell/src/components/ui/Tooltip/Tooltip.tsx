@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import { useCallback, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { TooltipCoords, TooltipProps } from './ITooltip';

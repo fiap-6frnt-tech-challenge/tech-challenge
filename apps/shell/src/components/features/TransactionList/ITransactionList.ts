@@ -1,5 +1,5 @@
 import { TooltipPosition } from '@/components/ui';
-import type { Transaction } from '@/types';
+import type { Transaction } from '@bytebank/shared';
 import { ReactNode } from 'react';
 
 export interface TransactionListProps {

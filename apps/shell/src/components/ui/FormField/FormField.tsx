@@ -1,4 +1,4 @@
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import { Label } from '@/components/ui/Label';
 import type { FormFieldProps } from './IFormField';
 

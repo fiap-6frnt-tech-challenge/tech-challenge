@@ -1,8 +1,8 @@
 'use client';
 
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import type { CurrencyInputProps } from './ICurrencyInput';
-import { getInputBorderColor } from '@/lib/input';
+import { getInputBorderColor } from '@bytebank/shared';
 import { HelperText } from '@/components/ui/HelperText';
 import { Label } from '@/components/ui/Label';
 import { useId, useState } from 'react';

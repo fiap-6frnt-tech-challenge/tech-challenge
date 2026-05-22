@@ -1,4 +1,4 @@
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import { Loader2 } from 'lucide-react';
 import { ButtonProps } from './types';
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import type { SidebarProps } from './ISidebar';
 
 const navLinks = [

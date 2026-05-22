@@ -10,7 +10,7 @@ import { useFeedback } from '@/context/FeedbackContext';
 import { useTransactions } from '@/context/TransactionsContext';
 import { usePaginatedTransactions, useTransactionFilters } from '@/hooks';
 import { DEFAULT_FILTERS } from '@/components/features/TransactionFilters';
-import type { Transaction } from '@/types';
+import type { Transaction } from '@bytebank/shared';
 import { Funnel, ReceiptText, SearchX } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Suspense, useState } from 'react';

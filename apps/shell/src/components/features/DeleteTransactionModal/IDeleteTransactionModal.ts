@@ -1,4 +1,4 @@
-import type { Transaction } from '@/types';
+import type { Transaction } from '@bytebank/shared';
 
 export interface DeleteTransactionModalProps {
   transaction: Transaction | null;

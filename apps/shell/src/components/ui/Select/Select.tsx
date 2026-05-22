@@ -1,5 +1,4 @@
-import { getInputBorderColor } from '@/lib/input';
-import { cn } from '@/lib/classes';
+import { getInputBorderColor, cn } from '@bytebank/shared';
 import { HelperText } from '@/components/ui/HelperText';
 import { Label } from '@/components/ui/Label';
 import type { SelectProps } from './ISelect';

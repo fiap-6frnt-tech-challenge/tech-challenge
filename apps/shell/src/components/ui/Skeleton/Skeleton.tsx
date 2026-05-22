@@ -1,4 +1,4 @@
-import { cn } from '@/lib/classes';
+import { cn } from '@bytebank/shared';
 import type { SkeletonProps, SkeletonListProps } from './ISkeleton';
 
 export function Skeleton({ className }: SkeletonProps) {

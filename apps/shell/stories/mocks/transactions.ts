@@ -1,4 +1,4 @@
-import type { Transaction } from '@/types';
+import type { Transaction } from '@bytebank/shared';
 
 export const DELETE_DEPOSIT_TRANSACTION: Transaction = {
   id: '1',

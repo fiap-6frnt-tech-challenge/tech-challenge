@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TRANSACTION_TYPE } from '@/shared/constants/transaction';
+import { TRANSACTION_TYPE } from '@bytebank/shared';
 
 const TRANSACTION_TYPES = [
   TRANSACTION_TYPE.DEPOSIT,

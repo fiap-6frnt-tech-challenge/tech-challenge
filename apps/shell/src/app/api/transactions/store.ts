@@ -1,4 +1,4 @@
-import type { Transaction, NewTransaction } from '@/types';
+import type { Transaction, NewTransaction } from '@bytebank/shared';
 
 // Mutations are in-memory only — they reset on serverless cold starts.
 const store: Transaction[] = [];
