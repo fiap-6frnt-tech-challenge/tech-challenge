@@ -3,9 +3,9 @@
 import { TransactionFilters } from '@/components/features/TransactionFilters';
 import type { TransactionFormValues } from '@/components/features/TransactionForm/ITransactionForm';
 import { TransactionList } from '@/components/features/TransactionList';
-import { EmptyState, IconButton, Pagination } from '@/components/ui';
-import { ErrorState } from '@/components/ui/ErrorState/ErrorState';
-import { SkeletonList } from '@/components/ui/Skeleton';
+import { EmptyState, IconButton, Pagination } from '@bytebank/design-system';
+import { ErrorState } from '@bytebank/design-system';
+import { SkeletonList } from '@bytebank/design-system';
 import { useFeedback } from '@/context/FeedbackContext';
 import { useTransactions } from '@/context/TransactionsContext';
 import { usePaginatedTransactions, useTransactionFilters } from '@/hooks';

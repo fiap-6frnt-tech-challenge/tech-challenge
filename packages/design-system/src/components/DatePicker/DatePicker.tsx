@@ -2,8 +2,8 @@
 
 import { cn } from '@bytebank/shared';
 import { getInputBorderColor } from '@bytebank/shared';
-import { HelperText } from '@/components/ui/HelperText';
-import { Label } from '@/components/ui/Label';
+import { HelperText } from '../HelperText';
+import { Label } from '../Label';
 import type { DatePickerProps } from './IDatePicker';
 import { forwardRef, useId } from 'react';
 import { IconButton } from '../Button';

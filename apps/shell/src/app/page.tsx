@@ -1,9 +1,9 @@
 'use client';
 import { BalanceCard } from '@/components/features/BalanceCard';
 import { TransactionList } from '@/components/features/TransactionList';
-import { Button } from '@/components/ui/Button/Button';
-import { EmptyState } from '@/components/ui/EmptyState/EmptyState';
-import { ErrorState } from '@/components/ui/ErrorState/ErrorState';
+import { Button } from '@bytebank/design-system';
+import { EmptyState } from '@bytebank/design-system';
+import { ErrorState } from '@bytebank/design-system';
 import { useTransactions } from '@/context/TransactionsContext';
 import { ReceiptText } from 'lucide-react';
 import dynamic from 'next/dynamic';

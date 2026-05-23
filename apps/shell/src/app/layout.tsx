@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { TransactionsProvider } from '@/context/TransactionsContext';
 import { FeedbackProvider } from '@/context/FeedbackContext';
-import { Header } from '@/components/ui/Header';
-import { Sidebar } from '@/components/ui/Sidebar';
-import { ViewportFix } from '@/components/ui/ViewportFix/ViewportFix';
+import { Header } from '@bytebank/design-system';
+import { Sidebar } from '@bytebank/design-system';
+import { ViewportFix } from '@bytebank/design-system';
 import './globals.css';
 
 export const metadata: Metadata = {

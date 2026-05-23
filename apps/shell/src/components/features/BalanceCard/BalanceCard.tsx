@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Button } from '@bytebank/design-system';
+import { Card } from '@bytebank/design-system';
+import { Skeleton } from '@bytebank/design-system';
 import { formatCurrencyExact, formatTodayDate } from '@bytebank/shared';
 import { Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';

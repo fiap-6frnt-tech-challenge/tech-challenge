@@ -1,5 +1,5 @@
-import { Badge } from '@/components/ui/Badge';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Badge } from '@bytebank/design-system';
+import { Tooltip } from '@bytebank/design-system';
 import { formatCurrency, formatDate } from '@bytebank/shared';
 import { BADGE_LABEL_MAP, BADGE_VARIANT_MAP } from '@bytebank/shared';
 import type { TransactionInfoProps } from './ITransactionInfo';

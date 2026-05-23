@@ -1,6 +1,8 @@
+'use client';
+
 import { getInputBorderColor, cn } from '@bytebank/shared';
-import { HelperText } from '@/components/ui/HelperText';
-import { Label } from '@/components/ui/Label';
+import { HelperText } from '../HelperText';
+import { Label } from '../Label';
 import type { SelectProps } from './ISelect';
 import { ChevronDown, X } from 'lucide-react';
 import { useState, useRef, useEffect, useId } from 'react';

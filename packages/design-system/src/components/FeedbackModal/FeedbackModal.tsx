@@ -2,7 +2,7 @@
 
 import { createPortal } from 'react-dom';
 import { CheckCircle, XCircle, Info, X } from 'lucide-react';
-import { useFocusTrap } from '@/hooks';
+import { useFocusTrap } from '../../hooks';
 import type { FeedbackModalProps, FeedbackType } from './IFeedbackModal';
 
 const closeLabel: Record<FeedbackType, string> = {

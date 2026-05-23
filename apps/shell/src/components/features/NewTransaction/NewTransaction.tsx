@@ -1,7 +1,7 @@
 'use client';
 
 import { ConfirmTransactionModal } from '@/components/features/ConfirmTransactionModal';
-import { Card } from '@/components/ui/Card';
+import { Card } from '@bytebank/design-system';
 import { useFeedback } from '@/context/FeedbackContext';
 import { useTransactions } from '@/context/TransactionsContext';
 import type { ReactElement } from 'react';

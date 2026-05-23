@@ -1,4 +1,4 @@
-import { TooltipPosition } from '@/components/ui';
+import { TooltipPosition } from '@bytebank/design-system';
 import type { Transaction } from '@bytebank/shared';
 import { ReactNode } from 'react';
 

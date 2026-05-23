@@ -1,6 +1,6 @@
 'use client';
 
-import { Modal } from '@/components/ui';
+import { Modal } from '@bytebank/design-system';
 import { EditTransactionModalProps } from './IEditTransactionModal';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
 
