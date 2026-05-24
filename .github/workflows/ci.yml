@@ -22,16 +22,25 @@ jobs:
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      # Fornece o base ref explicitamente para Turbo --affected.
+      # Em PRs usa o branch de destino; em pushes usa o commit anterior.
+      TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+      TURBO_SCM_HEAD: HEAD
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0 # full history para Turbo --affected resolver merge-base do PR
 
+      - name: Fetch base branch
+        # Garante que origin/<base> existe como ref local para o Turbo resolver
+        if: github.event_name == 'pull_request'
+        run: git fetch origin ${{ github.base_ref }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20.18.0'
+          node-version: '22' # Rspack exige >=20.19 ou >=22.12; Node 22 LTS satisfaz ambos
           cache: 'npm'
 
       - name: Restore Turbo cache
