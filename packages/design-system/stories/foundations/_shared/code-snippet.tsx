@@ -8,7 +8,7 @@ const partClassNameByKind: Record<SnippetPart['kind'], string> = {
   punctuation: 'text-neutral-400/70',
   tag: 'text-pink-700',
   attr: 'text-cyan-800',
-  value: 'text-amber-700/90',
+  value: 'text-amber-800',
   content: 'text-content-secondary',
 };
 
