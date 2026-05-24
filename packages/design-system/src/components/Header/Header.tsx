@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Menu, X, UserCircle } from 'lucide-react';
-import { Sidebar } from '@/components/ui/Sidebar';
+import { Sidebar } from '../Sidebar';
 import type { HeaderProps } from './IHeader';
 
 export function Header({ userName = 'Joana da Silva Oliveira' }: HeaderProps) {

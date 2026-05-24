@@ -14,6 +14,6 @@ const config: StorybookConfig = {
     '@storybook/addon-onboarding',
   ],
   framework: '@storybook/nextjs-vite',
-  staticDirs: ['../public'],
+  staticDirs: ['../../../apps/shell/public'],
 };
 export default config;

@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@/components/ui/Button';
-import { Modal } from '@/components/ui/Modal';
+import { Button } from '@bytebank/design-system';
+import { Modal } from '@bytebank/design-system';
 import { TransactionInfo } from '@/components/features/TransactionInfo';
 import type { ConfirmTransactionModalProps } from './IConfirmTransactionModal';
 

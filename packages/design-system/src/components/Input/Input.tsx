@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import { cn, getInputBorderColor } from '@bytebank/shared';
-import { HelperText } from '@/components/ui/HelperText';
-import { Label } from '@/components/ui/Label';
+import { HelperText } from '../HelperText';
+import { Label } from '../Label';
 import { InputProps } from './types';
 import { X } from 'lucide-react';
 import { IconButton } from '../Button';

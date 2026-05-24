@@ -3,8 +3,8 @@
 import { cn } from '@bytebank/shared';
 import type { CurrencyInputProps } from './ICurrencyInput';
 import { getInputBorderColor } from '@bytebank/shared';
-import { HelperText } from '@/components/ui/HelperText';
-import { Label } from '@/components/ui/Label';
+import { HelperText } from '../HelperText';
+import { Label } from '../Label';
 import { useId, useState } from 'react';
 import { IconButton } from '../Button';
 import { X } from 'lucide-react';

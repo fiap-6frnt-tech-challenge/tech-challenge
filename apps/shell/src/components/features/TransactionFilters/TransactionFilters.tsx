@@ -1,8 +1,8 @@
 'use client';
 
-import { Select } from '@/components/ui/Select';
-import { DatePicker } from '@/components/ui/DatePicker';
-import { Button } from '@/components/ui/Button';
+import { Select } from '@bytebank/design-system';
+import { DatePicker } from '@bytebank/design-system';
+import { Button } from '@bytebank/design-system';
 import { TRANSACTION_TYPE_OPTIONS } from '@bytebank/shared';
 import type { TransactionFiltersProps } from './ITransactionFilters';
 

@@ -1,8 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { FeedbackModal } from '@/components/ui/FeedbackModal';
-import type { FeedbackType } from '@/components/ui/FeedbackModal';
+import { FeedbackModal } from '@bytebank/design-system';
+import type { FeedbackType } from '@bytebank/design-system';
 
 interface ShowFeedbackOptions {
   type: FeedbackType;

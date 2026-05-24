@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import type { Transaction } from '@bytebank/shared';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@bytebank/design-system';
 import { DeleteTransactionModal } from './DeleteTransactionModal';
 import {
   DELETE_DEPOSIT_TRANSACTION,

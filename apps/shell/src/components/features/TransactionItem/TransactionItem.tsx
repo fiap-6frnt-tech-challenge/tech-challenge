@@ -5,9 +5,9 @@ import { cn } from '@bytebank/shared';
 import { BADGE_LABEL_MAP, BADGE_VARIANT_MAP } from '@bytebank/shared';
 import { formatCurrency, formatDate } from '@bytebank/shared';
 import type { TransactionItemProps } from './ITransactionItem';
-import { Badge } from '@/components/ui/Badge';
-import { Tooltip } from '@/components/ui/Tooltip';
-import { IconButton } from '@/components/ui/Button';
+import { Badge } from '@bytebank/design-system';
+import { Tooltip } from '@bytebank/design-system';
+import { IconButton } from '@bytebank/design-system';
 
 export function TransactionItem({
   transaction,

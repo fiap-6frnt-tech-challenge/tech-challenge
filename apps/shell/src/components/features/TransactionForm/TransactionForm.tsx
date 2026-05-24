@@ -3,12 +3,12 @@
 import { Controller, ControllerRenderProps, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { forwardRef, useImperativeHandle } from 'react';
-import { Button } from '@/components/ui/Button';
-import { CurrencyInput } from '@/components/ui/CurrencyInput';
-import { DatePicker } from '@/components/ui/DatePicker';
-import { Input } from '@/components/ui/Input';
-import { HelperText } from '@/components/ui/HelperText';
-import { Select } from '@/components/ui/Select';
+import { Button } from '@bytebank/design-system';
+import { CurrencyInput } from '@bytebank/design-system';
+import { DatePicker } from '@bytebank/design-system';
+import { Input } from '@bytebank/design-system';
+import { HelperText } from '@bytebank/design-system';
+import { Select } from '@bytebank/design-system';
 import { TRANSACTION_TYPE, TRANSACTION_TYPE_OPTIONS } from '@bytebank/shared';
 import { transactionFormSchema } from './schema';
 import type {

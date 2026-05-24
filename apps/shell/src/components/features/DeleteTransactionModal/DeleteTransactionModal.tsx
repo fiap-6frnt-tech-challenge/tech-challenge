@@ -1,7 +1,7 @@
 'use client';
 
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
+import { Modal } from '@bytebank/design-system';
+import { Button } from '@bytebank/design-system';
 import { TransactionInfo } from '@/components/features/TransactionInfo';
 import type { DeleteTransactionModalProps } from './IDeleteTransactionModal';
 

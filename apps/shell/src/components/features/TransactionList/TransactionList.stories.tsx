@@ -3,7 +3,7 @@ import { fn } from 'storybook/test';
 import type { Transaction } from '@bytebank/shared';
 import { TransactionList } from './TransactionList';
 import { ReceiptText } from 'lucide-react';
-import { EmptyState } from '@/components/ui/EmptyState/EmptyState';
+import { EmptyState } from '@bytebank/design-system';
 
 const MOCK_TRANSACTIONS: Transaction[] = [
   { id: '1', type: 'deposit', description: 'Salário mensal', amount: 5000, date: '2025-03-01' },
