@@ -55,6 +55,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        # Necessário para @bytebank/design-system rodar stories via @vitest/browser-playwright.
+        # `--with-deps` instala libs do sistema (apt) para Chromium headless.
+        # Idempotente: pula download se o binário já está no cache.
+        run: npx playwright install --with-deps chromium
+
       - name: Lint
         run: npx turbo run lint --affected --filter='!@bytebank/hello-mfe'
 
