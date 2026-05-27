@@ -5,26 +5,24 @@
 |                        |                                                                                                      |
 | ---------------------- | ---------------------------------------------------------------------------------------------------- |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)                                       |
-| **Owner**              | `dev5-transactions`                                                                                  |
+| **Owner**              | `Dev 2`                                                                                              |
 | **Duração estimada**   | 1 dia                                                                                                |
-| **Branch recomendada** | `dev5-transactions/auth-pages`                                                                       |
+| **Branch recomendada** | `dev2/auth-pages`                                                                                    |
 | **Depende de**         | [Task 5 — Componentes no Design System](./05-ds-auth-components.md)                                  |
 | **PR só abre**         | Após login funcionar visualmente redirecionando para a Dashboard e a página de erro renderizar do DS |
 
 ---
 
-## Contexto
+## Dependências
 
-Com o NextAuth v5 configurado em nível de API no servidor (Task 3) e os componentes de formulários construídos no Design System (Task 5), agora devemos expor as páginas visuais no Host App (`apps/shell`). Esta tarefa envolve a criação de:
-
-- `/login`: A tela principal onde o usuário escolhe entre login tradicional de credenciais ou OAuth com Google.
-- `/auth/error`: Página de fallback caso ocorram erros durante a validação da sessão (ex: acessos bloqueados ou tokens expirados).
+- **O que bloqueia esta tarefa**: Bloqueada pela **Task 5 (Componentes DS)**, entregue pelo próprio Dev 2. É indispensável ter os componentes `LoginForm` e `GoogleAuthButton` exportados pelo Design System para poder usá-los na página de login do shell.
+- **O que esta tarefa desbloqueia**: Desbloqueia a **Task 9 (Migração Context)** no frontend, visto que com a página de login funcionando, a interface está pronta para receber a substituição de estado global e refatorações no Context API.
 
 ---
 
 ## Pré-condições
 
-- Estar na branch `dev5-transactions/auth-pages`.
+- Estar na branch `dev2/auth-pages`.
 - Garantir que as dependências `@bytebank/design-system` e `@bytebank/shared` estão linkadas no shell.
 
 ---

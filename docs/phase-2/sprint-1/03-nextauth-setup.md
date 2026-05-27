@@ -5,11 +5,18 @@
 |                        |                                                                   |
 | ---------------------- | ----------------------------------------------------------------- |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)    |
-| **Owner**              | `dev2-backend`                                                    |
+| **Owner**              | `Dev 2`                                                           |
 | **Duração estimada**   | 2 dias                                                            |
-| **Branch recomendada** | `dev2-backend/nextauth-setup`                                     |
+| **Branch recomendada** | `dev2/nextauth-setup`                                             |
 | **Depende de**         | [Task 6 — Schema de Transação Evoluído](./06-evolved-schema.md)   |
 | **PR só abre**         | Após login com credentials e Google funcionar localmente no shell |
+
+---
+
+## Dependências
+
+- **O que bloqueia esta tarefa**: Depende da entrega da **Task 6 (Schema Evoluído)** pelo Dev 1. É necessário ter os novos campos como `userId` estabilizados nos tipos do `packages/shared` para sincronizar o mock e as callbacks do NextAuth de forma adequada.
+- **O que esta tarefa desbloqueia**: Desbloqueia as stores Zustand (**Task 7**) e os testes de infra/CI (**Task 10**), visto que estes necessitam ler a sessão e interceptar as rotas protegidas pelo middleware em ambiente de teste.
 
 ---
 

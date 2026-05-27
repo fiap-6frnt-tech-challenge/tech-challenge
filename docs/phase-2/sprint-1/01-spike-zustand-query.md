@@ -5,11 +5,18 @@
 |                        |                                                                |
 | ---------------------- | -------------------------------------------------------------- |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md) |
-| **Owner**              | `dev1-infra` (lidera, todo o time participa)                   |
+| **Owner**              | `Dev 1` (lidera, todos participam)                             |
 | **Duração estimada**   | 1 dia                                                          |
-| **Branch recomendada** | `dev1-infra/state-spike` (sandbox descartável)                 |
-| **Depende de**         | —                                                              |
+| **Branch recomendada** | `dev1/state-spike` (sandbox descartável)                       |
+| **Depende de**         | — (Sem bloqueios de código)                                    |
 | **PR só abre**         | Não abre PR (estudo/sandbox descartável). Fechamento via daily |
+
+---
+
+## Dependências
+
+- **O que bloqueia esta tarefa**: Nada. Ela é o ponto de partida conceitual da Sprint 1.
+- **O que esta tarefa desbloqueia**: Todas as tarefas subsequentes da Sprint 1 (**Tasks 2 a 11**), visto que alinha os padrões estáticos e dinâmicos de estado antes do time escrever código de produção.
 
 ---
 

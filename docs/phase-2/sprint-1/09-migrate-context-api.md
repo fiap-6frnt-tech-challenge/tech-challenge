@@ -5,28 +5,24 @@
 |                        |                                                                                                        |
 | ---------------------- | ------------------------------------------------------------------------------------------------------ |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)                                         |
-| **Owner**              | `dev5-transactions` (auxiliado por `dev4-dashboard` em pair)                                           |
+| **Owner**              | `Dev 3`                                                                                                |
 | **Duração estimada**   | 2.5 dias                                                                                               |
-| **Branch recomendada** | `dev5-transactions/migrate-context-api`                                                                |
+| **Branch recomendada** | `dev3/migrate-context-api`                                                                             |
 | **Depende de**         | [Task 7 — Criar stores](./07-packages-stores.md) e [Task 8 — Criar hooks](./08-packages-api-client.md) |
 | **PR só abre**         | Após `grep` confirmar a total ausência de useContext para contextos internos                           |
 
 ---
 
-## Contexto
+## Dependências
 
-Agora que temos as stores Zustand (`@bytebank/stores`) e os hooks de servidor da TanStack Query (`@bytebank/api-client`) prontos, podemos remover os contextos legados que gerenciavam o estado em memória no shell:
-
-- `FeedbackContext.tsx`: Controlava modais de sucesso ou erro.
-- `TransactionsContext.tsx`: Carregava, criava e filtrava transações na memória.
-
-Esta task limpará o código morto, removerá os providers redundantes no layout e adaptará todos os componentes que consumiam essas dependências.
+- **O que bloqueia esta tarefa**: Bloqueada em conjunto pelas tarefas **Task 7 (Zustand Stores)** e **Task 8 (Query Hooks)**. Como vamos remover os arquivos de context que proviam dados e feedbacks, é necessário que tenhamos as stores de Zustand e os custom hooks prontos para substituirmos todas as chamadas.
+- **O que esta tarefa desbloqueia**: Desbloqueia a **Task 11 (Smoke Test Final)**, pois ela representa a consolidação da migração do estado na UI da aplicação e unifica o funcionamento do front-end.
 
 ---
 
 ## Pré-condições
 
-- Estar na branch `dev5-transactions/migrate-context-api`.
+- Estar na branch `dev3/migrate-context-api`.
 - Garantir que as tarefas 7 e 8 foram concluídas e mergeadas na branch de integração `phase-2` (ou traga o rebase delas para a sua branch).
 
 ---

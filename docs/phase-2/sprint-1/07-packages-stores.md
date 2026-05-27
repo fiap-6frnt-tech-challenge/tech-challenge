@@ -5,9 +5,9 @@
 |                        |                                                                                         |
 | ---------------------- | --------------------------------------------------------------------------------------- |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)                          |
-| **Owner**              | `dev4-dashboard`                                                                        |
+| **Owner**              | `Dev 3`                                                                                 |
 | **Duração estimada**   | 1 dia                                                                                   |
-| **Branch recomendada** | `dev4-dashboard/packages-stores`                                                        |
+| **Branch recomendada** | `dev3/packages-stores`                                                                  |
 | **Depende de**         | [Task 3 — NextAuth Setup](./03-nextauth-setup.md)                                       |
 | **PR só abre**         | Após todos os testes unitários do Vitest para as duas stores passarem com sucesso em CI |
 
@@ -21,9 +21,16 @@ Essas stores viverão no pacote compartilhado `@bytebank/stores`, garantindo tip
 
 ---
 
+## Dependências
+
+- **O que bloqueia esta tarefa**: Bloqueada pela **Task 3 (NextAuth Setup)** entregue pelo Dev 2. A store `useAuthStore` necessita importar callbacks e estruturas de sessão do NextAuth local para sincronizar e disparar o `signOut`.
+- **O que esta tarefa desbloqueia**: Desbloqueia a **Task 9 (Migração Context)**, pois a remoção do `FeedbackContext` depende diretamente da importação do `useUIStore` fornecido por este pacote.
+
+---
+
 ## Pré-condições
 
-- Estar na branch `dev4-dashboard/packages-stores`.
+- Estar na branch `dev3/packages-stores`.
 - Instalar as dependências de execução e testes em `packages/stores`:
   ```bash
   npm install zustand -w @bytebank/stores

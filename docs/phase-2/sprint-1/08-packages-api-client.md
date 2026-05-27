@@ -5,23 +5,24 @@
 |                        |                                                                 |
 | ---------------------- | --------------------------------------------------------------- |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)  |
-| **Owner**              | `dev4-dashboard`                                                |
+| **Owner**              | `Dev 3`                                                         |
 | **Duração estimada**   | 2 dias                                                          |
-| **Branch recomendada** | `dev4-dashboard/packages-api-client`                            |
+| **Branch recomendada** | `dev3/packages-api-client`                                      |
 | **Depende de**         | [Task 6 — Schema de Transação Evoluído](./06-evolved-schema.md) |
 | **PR só abre**         | Após todos os hooks passarem no mock unitário do Vitest local   |
 
 ---
 
-## Contexto
+## Dependências
 
-As chamadas HTTP diretas da Context API serão substituídas pelo **TanStack Query** (React Query). Para centralizar as chaves de cache, os comportamentos de refetch e simplificar o consumo no shell e nos futuros remotes, os hooks customizados de transações e a lógica de optimistic updates serão expostos através do pacote compartilhado `@bytebank/api-client`.
+- **O que bloqueia esta tarefa**: Bloqueada pela **Task 6 (Schema Evoluído)** entregue pelo Dev 1. É mandatório que o tipo `Transaction` do `@bytebank/shared` contenha os novos campos de `userId` e `category` para que as chaves de query e os payloads das mutations do TanStack Query compilem de forma correta.
+- **O que esta tarefa desbloqueia**: Desbloqueia diretamente a **Task 9 (Migração Context)**, pois a Context API das transações será substituída pelos custom hooks (`useTransactions`, `useCreateTransaction`) criados aqui.
 
 ---
 
 ## Pré-condições
 
-- Estar na branch `dev4-dashboard/packages-api-client`.
+- Estar na branch `dev3/packages-api-client`.
 - Instalar as dependências necessárias no pacote:
   ```bash
   npm install @tanstack/react-query @bytebank/shared -w @bytebank/api-client

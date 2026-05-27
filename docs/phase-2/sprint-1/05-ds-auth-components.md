@@ -5,30 +5,24 @@
 |                        |                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------ |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)                                   |
-| **Owner**              | `dev3-ds`                                                                                        |
+| **Owner**              | `Dev 2`                                                                                          |
 | **Duração estimada**   | 2 dias                                                                                           |
-| **Branch recomendada** | `dev3-ds/ds-auth-components`                                                                     |
-| **Depende de**         | — (Independente, pode começar em paralelo no dia 1)                                              |
+| **Branch recomendada** | `dev2/ds-auth-components`                                                                        |
+| **Depende de**         | — (Pode iniciar em paralelo após a Task 1)                                                       |
 | **PR só abre**         | Após todos os novos componentes possuírem Stories e passarem no teste local de a11y do Storybook |
 
 ---
 
-## Contexto
+## Dependências
 
-Para suprir o fluxo de login e o controle de perfil do usuário logado, o Design System deve fornecer quatro blocos fundamentais de interface reutilizáveis. Esses componentes devem seguir o padrão estrito de styling do DS, acessibilidade (WCAG AA) e possuir cobertura de testes visuais via Chromatic (através de Stories).
-
-Os componentes são:
-
-1. `LoginForm`: Formulário acessível de login por e-mail/senha.
-2. `GoogleAuthButton`: Botão com a marca e o logo do Google.
-3. `UserMenu`: Dropdown com avatar, informações do usuário logado e opção de logout.
-4. `AuthGuard`: Componente wrapper client que lida com estados de carregamento da sessão.
+- **O que bloqueia esta tarefa**: Bloqueada temporariamente apenas pela **Task 1 (Spike Técnico)** para garantir o entendimento geral das diretrizes de estado que impactam o `AuthGuard`.
+- **O que esta tarefa desbloqueia**: Desbloqueia diretamente a **Task 4 (Páginas de Auth)** no host/shell, permitindo que a interface de login seja renderizada com os componentes e estilos aprovados no DS.
 
 ---
 
 ## Pré-condições
 
-- Estar na branch `dev3-ds/ds-auth-components`.
+- Estar na branch `dev2/ds-auth-components`.
 - Garantir que o Storybook roda no local: `npm run storybook -w @bytebank/design-system` na porta `:6006`.
 
 ---

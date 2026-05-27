@@ -5,11 +5,18 @@
 |                        |                                                                |
 | ---------------------- | -------------------------------------------------------------- |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md) |
-| **Owner**              | Todo o time                                                    |
+| **Owner**              | Todos (`Dev 1`, `Dev 2`, `Dev 3`)                              |
 | **Duração estimada**   | 0.5 dia                                                        |
 | **Branch recomendada** | — (Executado direto na branch de integração `phase-2`)         |
 | **Depende de**         | Conclusão de todas as tarefas de 1 a 10 da Sprint 1            |
 | **PR só abre**         | Não abre PR. É o fechamento oficial da Sprint 1                |
+
+---
+
+## Dependências
+
+- **O que bloqueia esta tarefa**: Bloqueada por todas as tarefas da Sprint 1 (**Tasks 1 a 10**). O smoke test deve ser a última atividade executada, operando sobre o código integrado final de todas as frentes de trabalho.
+- **O que esta tarefa desbloqueia**: Desbloqueia o início oficial da **Sprint 2 (Dashboard MFE)**, atestando que a fundação de segurança e estado da aplicação está completamente estável.
 
 ---
 
@@ -59,7 +66,7 @@ Marque cada item à medida que validar em sua máquina local ou em ambiente de h
 
 ## Diretrizes para a Gravação do Vídeo Demo (2 minutos)
 
-A entrega da sprint exige um vídeo demonstrativo gravado pela equipe (com preferência de gravação pelo `dev4-dashboard` e edição/revisão pelo `dev5-transactions`).
+A entrega da sprint exige um vídeo demonstrativo gravado pela equipe (com preferência de gravação pelo `Dev 3` e edição/revisão pelo `Dev 2`).
 
 ### Roteiro Recomendado:
 
@@ -72,7 +79,7 @@ A entrega da sprint exige um vídeo demonstrativo gravado pela equipe (com prefe
 
 ## Retrospectiva da Sprint
 
-Antes de iniciar a Sprint 2, os 5 membros do time devem se reunir por 45 minutos para alinhar:
+Antes de iniciar a Sprint 2, os 3 membros do time devem se reunir por 45 minutos para alinhar:
 
 - **O que funcionou bem?** (Ex: o spike inicial ajudou a alinhar o uso do Zustand?).
 - **O que foi difícil?** (Ex: concorrência no git, problemas com cookies locais do NextAuth).

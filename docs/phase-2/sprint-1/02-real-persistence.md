@@ -5,11 +5,18 @@
 |                        |                                                                    |
 | ---------------------- | ------------------------------------------------------------------ |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)     |
-| **Owner**              | `dev2-backend`                                                     |
+| **Owner**              | `Dev 1`                                                            |
 | **Duração estimada**   | 2 dias                                                             |
-| **Branch recomendada** | `dev2-backend/real-persistence`                                    |
+| **Branch recomendada** | `dev1/real-persistence`                                            |
 | **Depende de**         | [Task 1 — Spike Zustand/Query](./01-spike-zustand-query.md)        |
 | **PR só abre**         | Após validar criação, leitura, update e delete via HTTP REST local |
+
+---
+
+## Dependências
+
+- **O que bloqueia esta tarefa**: Bloqueada pela **Task 1 (Spike Técnico)**, que alinha os padrões das libs antes de iniciarmos qualquer persistência real.
+- **O que esta tarefa desbloqueia**: Desbloqueia a **Task 6 (Schema Evoluído)**, visto que é preciso ter um banco de dados real configurado para que possamos adicionar as novas tabelas e colunas (anexos, categorias, userId).
 
 ---
 

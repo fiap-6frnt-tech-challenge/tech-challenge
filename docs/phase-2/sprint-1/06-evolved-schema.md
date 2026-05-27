@@ -5,29 +5,24 @@
 |                        |                                                                        |
 | ---------------------- | ---------------------------------------------------------------------- |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)         |
-| **Owner**              | `dev2-backend`                                                         |
+| **Owner**              | `Dev 1`                                                                |
 | **Duração estimada**   | 1.5 dia (incluindo migração de seed e do DB)                           |
-| **Branch recomendada** | `dev2-backend/evolved-schema`                                          |
+| **Branch recomendada** | `dev1/evolved-schema`                                                  |
 | **Depende de**         | [Task 2 — Persistência Real](./02-real-persistence.md)                 |
 | **PR só abre**         | Após todos os tipos TypeScript compilarem sem erros em todo o monorepo |
 
 ---
 
-## Contexto
+## Dependências
 
-Para as futuras sprints, a aplicação precisa dar suporte a:
-
-1. **Multi-usuários**: Cada transação deve pertencer a um usuário logado (`userId`).
-2. **Categorização**: Toda transação deve possuir uma categoria associada (`category`).
-3. **Anexos**: A possibilidade de upload de comprovantes fiscais (`attachments`).
-
-Esta task envolve a evolução do tipo TypeScript no pacote compartilhado `@bytebank/shared`, a migração do arquivo de sementes mockadas em `apps/shell/data/transactions.json` para possuir estes campos e a atualização do banco de dados de produção (KV ou Postgres).
+- **O que bloqueia esta tarefa**: Bloqueada pela **Task 2 (Persistência Real)**. Não é possível rodar migrações ou estruturar a gravação do novo payload de transações no banco se as conexões e os stubs do ORM ou do banco KV não estiverem prontificados.
+- **O que esta tarefa desbloqueia**: Desbloqueia os hooks de Query (**Task 8**) do Dev 3, as páginas do shell (**Task 4**) do Dev 2 e a Context API migration (**Task 9**), porque todas elas precisam dos tipos TypeScript atualizados no `@bytebank/shared` contendo `userId` e `category`.
 
 ---
 
 ## Pré-condições
 
-- Estar na branch `dev2-backend/evolved-schema`.
+- Estar na branch `dev1/evolved-schema`.
 - Ter rodado `npm install` e garantir que o monorepo compila antes de iniciar as modificações.
 
 ---

@@ -5,29 +5,24 @@
 |                        |                                                                                                                                                           |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)                                                                                            |
-| **Owner**              | `dev1-infra`                                                                                                                                              |
+| **Owner**              | `Dev 1`                                                                                                                                                   |
 | **Duração estimada**   | 1.5 dia                                                                                                                                                   |
-| **Branch recomendada** | `dev1-infra/vitest-ci-setup`                                                                                                                              |
+| **Branch recomendada** | `dev1/vitest-ci-setup`                                                                                                                                    |
 | **Depende de**         | [Task 3 — NextAuth Setup](./03-nextauth-setup.md), [Task 7 — Criar stores](./07-packages-stores.md) e [Task 8 — Criar hooks](./08-packages-api-client.md) |
 | **PR só abre**         | Após todos os testes de middleware passarem localmente e o CI rodar com caching                                                                           |
 
 ---
 
-## Contexto
+## Dependências
 
-Com a lógica de autenticação integrada no core da aplicação host via NextAuth e Middleware, e o gerenciamento de estados migrado para stores/hooks externos, precisamos garantir a estabilidade do fluxo por meio de testes automatizados executados na pipeline de Integração Contínua (CI).
-
-Esta task engloba:
-
-1. Escrita de testes para o `middleware.ts` do shell (validando redirects seguros).
-2. Integração das suítes de teste de todos os pacotes (`stores`, `api-client` e `shell`) no workflow do GitHub Actions.
-3. Sincronização e documentação das variáveis de ambiente necessárias no painel da Vercel.
+- **O que bloqueia esta tarefa**: Bloqueada pelas tarefas **Task 3 (NextAuth Setup)**, **Task 7 (Stores)** e **Task 8 (API Hooks)**. Como os testes unitários do middleware do shell requerem o mock do NextAuth funcionando, e a pipeline de CI rodará testes unitários de todos os pacotes, esses recursos devem estar consolidados.
+- **O que esta tarefa desbloqueia**: Desbloqueia a **Task 11 (Smoke Test Final)** ao garantir que o monorepo possua testes de integração estáveis e variáveis de ambiente configuradas na Vercel para deploys de pré-visualização.
 
 ---
 
 ## Pré-condições
 
-- Estar na branch `dev1-infra/vitest-ci-setup`.
+- Estar na branch `dev1/vitest-ci-setup`.
 - Garantir que a infraestrutura básica do Vitest do shell está funcional.
 
 ---
