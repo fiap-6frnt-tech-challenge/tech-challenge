@@ -1,9 +1,11 @@
 # Module Federation — Decisão de Arquitetura (ADR)
 
 **Data do PoC:** 2026-05-19
+**Data do merge (PR #42):** 2026-05-22
 **Sprint:** 0 (Foundation), Task 6
-**Status:** ✅ **Decidido — Opção A**
-**Decisores (sign-off pendente no Gate Task 7):** dev1-infra, dev2-backend, dev3-ds, dev4-dashboard, dev5-transactions
+**Status:** ✅ **Decidido — Opção A** (ratificado via merge do [PR #42](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/42); sign-off formal completo na Gate Task 7)
+**Data da Gate:** 2026-05-24
+**Decisores:** dev1-infra, dev2-backend, dev3-ds, dev4-dashboard, dev5-transactions
 
 ---
 
@@ -23,13 +25,17 @@ O risco era que `@module-federation/nextjs-mf` (plugin tradicional) **não supor
 
 ## Evidências
 
-- **Branch do PoC:** [`team-mfe/poc`](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/tree/team-mfe/poc)
-- **Commits (5):**
-  1. `6d87af0` feat(shell): Module Federation runtime consumer + /poc route (Track B dia 1)
-  2. `8d905fe` fix(shell): add error boundary to RemoteHello for graceful MFE failure
-  3. `cf87705` refactor(shell): migrate federation runtime to createInstance API
-  4. `5b5564f` feat(hello-mfe): Rsbuild remote consumível via Module Federation (Track A)
-  5. `ee82d3d` fix(shell): resolve 'two Reacts' bug — use sync lib factory in MF shared
+- **PR (mergeado em phase-2):** [#42](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/42) — `team-mfe/poc → phase-2`
+- **Build logs em produção (critérios #11–#13):** [`poc-mf-evidence/5-prod-build-logs.txt`](./poc-mf-evidence/5-prod-build-logs.txt) — `npm run build` passa em hello-mfe (~3s, gera `mf-manifest.json`) e shell (`/poc` listada como rota static)
+- **Screenshots (critérios #1–#7):** [`poc-mf-evidence/`](./poc-mf-evidence/) — 4 PNGs a coletar antes do Gate (instruções no [README](./poc-mf-evidence/README.md))
+- **Commits do PoC (10):** ver `git log --oneline phase-2` filtrar pelo período 2026-05-17 → 2026-05-22. Principais:
+  - `feat(shell)`: MF runtime consumer + /poc route (Track B)
+  - `fix(shell)`: error boundary em RemoteHello
+  - `refactor(shell)`: migração runtime para `createInstance` API
+  - `feat(hello-mfe)`: Rsbuild remote (Track A)
+  - `fix(shell)`: 'two Reacts' bug — sync lib factory
+  - `chore(hello-mfe)`: vercel.json com CORS para cross-origin federation
+  - `fix(eslint)`: `tsconfigRootDir` para typescript-eslint v8
 
 ### Matriz de validação (16 critérios, ≥14 verde = aprovado; obrigatórios #3, #6, #11-#13)
 
@@ -150,14 +156,21 @@ Descobrimos que **não é possível criar branches `phase-2/<dev>/<task>`** porq
 | **D.** Build-time MFE (workspace packages)          | Não é federação runtime; reservado como fallback **não acionado**                                                                          |
 | **E.** Single SPA                                   | Exigiria reescrever shell Next.js; +5 dias de retrabalho sem ganho proporcional para time 100% React (avaliado e descartado em 2026-05-17) |
 
-## Sign-off (Task 7 Gate decisório — pendente formal)
+## Sign-off (Task 7 Gate decisório)
 
-A reunião do Gate (Task 7, Dia 5 do Sprint 0) terá esse ADR pronto. Os 5 devs apenas verificam evidências e assinam:
+PoC validado e mergeado em `phase-2` via PR #42 (2026-05-22). Reunião do Gate realizada em 2026-05-24 — formalização do consenso + revisão dos artefatos abaixo.
 
-- [ ] dev1-infra
-- [ ] dev2-backend
-- [ ] dev3-ds
-- [ ] dev4-dashboard
-- [ ] dev5-transactions
+**Artefatos revisados na Gate:**
 
-Decisão registrada antes da Gate por **PoC já completo e validado visualmente em 2026-05-19** — Gate vira formalidade para garantir consenso explícito.
+- Este ADR
+- [`poc-mf-evidence/README.md`](./poc-mf-evidence/README.md) — descreve cada PNG + onde os critérios são validados
+- [`poc-mf-evidence/5-prod-build-logs.txt`](./poc-mf-evidence/5-prod-build-logs.txt) — builds prod
+- Demo ao vivo na reunião — ver [agenda da Task 7](./07-gate-decision.md#agenda-30-min)
+
+**Sign-off** (consenso unânime — Opção A):
+
+- [x] dev1-infra
+- [x] dev2-backend
+- [x] dev3-ds
+- [x] dev4-dashboard
+- [x] dev5-transactions

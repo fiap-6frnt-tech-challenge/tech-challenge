@@ -15,12 +15,12 @@ export default defineConfig({
         react: {
           singleton: true,
           requiredVersion: '^19.0.0',
-          eager: false,
+          eager: true,
         },
         'react-dom': {
           singleton: true,
           requiredVersion: '^19.0.0',
-          eager: false,
+          eager: true,
         },
         // TODO (Track A dia 2, após Tasks 3+4 mergearem):
         // Adicionar @bytebank/design-system e @bytebank/shared como shared singletons.

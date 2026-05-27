@@ -25,6 +25,9 @@
     "build-storybook": {
       "dependsOn": ["^build"],
       "outputs": ["storybook-static/**"]
+    },
+    "type-check": {
+      "dependsOn": ["^build"]
     }
   }
 }
