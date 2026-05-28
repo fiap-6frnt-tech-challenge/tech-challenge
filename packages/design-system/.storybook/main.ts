@@ -15,5 +15,17 @@ const config: StorybookConfig = {
   ],
   framework: '@storybook/nextjs-vite',
   staticDirs: ['../../../apps/shell/public'],
+  viteFinal: async (config) => ({
+    ...config,
+    optimizeDeps: {
+      ...config.optimizeDeps,
+      include: [
+        ...(config.optimizeDeps?.include ?? []),
+        '@hookform/resolvers/zod',
+        'react-hook-form',
+        'zod',
+      ],
+    },
+  }),
 };
 export default config;

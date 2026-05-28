@@ -18,3 +18,4 @@ export * from './Card';
 export * from './Pagination';
 export * from './ViewportFix';
 export * from './ErrorState';
+export * from './LoginForm';
