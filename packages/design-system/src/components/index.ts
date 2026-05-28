@@ -21,3 +21,4 @@ export * from './ErrorState';
 export * from './LoginForm';
 export * from './GoogleAuthButton';
 export * from './UserMenu';
+export * from './AuthGuard';
