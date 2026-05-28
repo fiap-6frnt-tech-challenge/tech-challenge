@@ -20,3 +20,4 @@ export * from './ViewportFix';
 export * from './ErrorState';
 export * from './LoginForm';
 export * from './GoogleAuthButton';
+export * from './UserMenu';
