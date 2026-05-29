@@ -16,7 +16,7 @@ Cada arquivo neste diretório descreve **uma task** do [sprint-1-auth-state.md](
 
 | #   | Status | Task                                                          | Owner | Duração  | PR      | Arquivo                                                  |
 | --- | ------ | ------------------------------------------------------------- | ----- | -------- | ------- | -------------------------------------------------------- |
-| 1   | ⏳     | Spike: Zustand + TanStack Query                               | Dev 1 | 1 dia    | pending | [01-spike-zustand-query.md](./01-spike-zustand-query.md) |
+| 1   | 🟢     | Spike: Zustand + TanStack Query                               | Dev 1 | 1 dia    | pending | [01-spike-zustand-query.md](./01-spike-zustand-query.md) |
 | 2   | ⏳     | Persistência real (Vercel KV ou Postgres)                     | Dev 1 | 2 dias   | pending | [02-real-persistence.md](./02-real-persistence.md)       |
 | 3   | ⏳     | Schema de Transação Evoluído & Seed                           | Dev 1 | 1.5 dia  | pending | [06-evolved-schema.md](./06-evolved-schema.md)           |
 | 4   | ⏳     | NextAuth v5 Setup no Shell & Middleware                       | Dev 2 | 2 dias   | pending | [03-nextauth-setup.md](./03-nextauth-setup.md)           |

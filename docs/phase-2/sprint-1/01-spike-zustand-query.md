@@ -1,6 +1,8 @@
 # Task 1 — Spike: Zustand + TanStack Query
 
-> ⏳ **Status: Pending**
+> 🟢 **Status: Implementada** — sandbox em [/sandbox](../../../apps/shell/src/app/sandbox) e onboarding em [state-onboarding.md](./state-onboarding.md).
+
+> 📝 **Ressalva:** a reunião de pair programming (passo 1 abaixo) foi **substituída** por um documento auto-ditata para devs jr: [state-onboarding.md](./state-onboarding.md). O conteúdo cobre os mesmos pontos da agenda original (Zustand vs TanStack Query, seletores, query keys, mutations e optimistic updates) com exemplos e exercícios autoguiados no sandbox.
 
 |                        |                                                                |
 | ---------------------- | -------------------------------------------------------------- |
