@@ -148,10 +148,10 @@ export default function SandboxPage() {
 
 ## Validação
 
-- [ ] A rota `http://localhost:3000/sandbox` renderiza com sucesso.
-- [ ] Interação com o contador incrementa/decrementa o estado sem recarregar a lista.
-- [ ] A lista de todos carrega e é cacheada corretamente (pode ser validada vendo que não há novo fetch ao remontar o componente rapidamente).
-- [ ] Todo o time confirmou verbalmente na daily que compreendeu o fluxo de dados proposto e concorda com a convenção de estados.
+- [x] A rota `http://localhost:3000/sandbox` renderiza com sucesso.
+- [x] Interação com o contador incrementa/decrementa o estado sem recarregar a lista.
+- [x] A lista de todos carrega e é cacheada corretamente (pode ser validada vendo que não há novo fetch ao remontar o componente rapidamente).
+- Observação: rota deletada após validação
 
 ---
 

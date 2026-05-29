@@ -263,21 +263,3 @@ apps/shell/src/            <- consome os hooks, sem Context
 Os packages já existem como esqueleto (criados na Sprint 0). O conteúdo é implementado pelo Dev 3 nas [Tasks 7 e 8](./README.md).
 
 ---
-
-## 7. Rodando o sandbox
-
-O sandbox vive em [apps/shell/src/app/sandbox](../../../apps/shell/src/app/sandbox). Use-o para experimentar antes de tocar código real.
-
-### Subir o servidor
-
-```bash
-npm run dev -w @bytebank/shell
-```
-
-Acesse: http://localhost:3000/sandbox
-
-### O que você verá
-
-- Contador com Zustand — botões `+`, `-` e Reset.
-- Lista de todos com TanStack Query — 5 itens de `jsonplaceholder.typicode.com`.
-- Painel do TanStack Devtools no canto inferior direito.
