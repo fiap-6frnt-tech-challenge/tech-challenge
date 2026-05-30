@@ -53,7 +53,7 @@
 
 | Tarefa                                                                  | Owner                                 | Dias | Depende de                                  |
 | ----------------------------------------------------------------------- | ------------------------------------- | ---- | ------------------------------------------- |
-| Spike: pair session Zustand + TanStack Query                            | dev1-infra (lidera, todos participam) | 1    | —                                           |
+| Spike: pair session Redux Toolkit + TanStack Query                      | dev1-infra (lidera, todos participam) | 1    | —                                           |
 | Persistência real (Vercel KV ou Postgres) + migrar `store.ts`           | dev2-backend                          | 2    | —                                           |
 | Schema da `Transaction` evoluído (`userId`, `category`, `attachments?`) | dev2-backend                          | 1    | persistência decidida                       |
 | Migration do seed `data/transactions.json`                              | dev2-backend                          | 0.5  | schema evoluído                             |
@@ -62,11 +62,11 @@
 | DS: `GoogleAuthButton` + Storybook                                      | dev3-ds                               | 0.5  | —                                           |
 | DS: `UserMenu` + Storybook                                              | dev3-ds                               | 0.5  | —                                           |
 | DS: `AuthGuard` + Storybook                                             | dev3-ds                               | 0.5  | —                                           |
-| `packages/stores`: `useAuthStore` + `useUIStore` + Vitest               | dev4-dashboard                        | 1    | NextAuth session shape (dev2-backend dia 4) |
+| `packages/stores`: `authSlice` + `uiSlice` (Redux Toolkit) + Vitest     | dev4-dashboard                        | 1    | NextAuth session shape (dev2-backend dia 4) |
 | `packages/api-client`: TanStack Query hooks transações                  | dev4-dashboard                        | 2    | schema evoluído (dev2-backend dia 3)        |
 | Pages `/login` + `/auth/error`                                          | dev5-transactions                     | 1    | DS components prontos (dev3-ds dia 3)       |
 | Migração: remover `TransactionsContext` + adaptar todos consumidores    | dev5-transactions                     | 2    | api-client pronto (dev4-dashboard dia 8)    |
-| Migração: remover `FeedbackContext` + adaptar                           | dev5-transactions                     | 0.5  | useUIStore pronto (dev4-dashboard dia 6)    |
+| Migração: remover `FeedbackContext` + adaptar                           | dev5-transactions                     | 0.5  | uiSlice pronto (dev4-dashboard dia 6)       |
 | Configurar env vars Vercel (preview + prod)                             | dev1-infra                            | 0.5  | NextAuth setup                              |
 | Testes Vitest middleware + integração CI                                | dev1-infra                            | 1    | tudo acima                                  |
 | Smoke test + vídeo curto demo                                           | Todo time                             | 0.5  | tudo                                        |

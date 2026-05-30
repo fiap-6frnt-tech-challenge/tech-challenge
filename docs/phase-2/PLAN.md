@@ -33,7 +33,7 @@
 - **Microfrontends** (Module Federation ou Single SPA)
 - **Docker + Docker Compose / Kubernetes**
 - **Cloud deploy** (Vercel/AWS/Azure) + auth/autorização
-- **State management** (Redux/Recoil/NgRx) — escolha: **Zustand + TanStack Query**
+- **State management** (Redux/Recoil/NgRx) — escolha: **Redux Toolkit + TanStack Query**
 - **TypeScript** ✓ (já temos)
 - **SSR/SSG** para performance e SEO
 
@@ -47,17 +47,17 @@
 
 ## Decisões arquiteturais (alinhadas com o usuário)
 
-| Decisão          | Escolha                                             | Justificativa                                               |
-| ---------------- | --------------------------------------------------- | ----------------------------------------------------------- |
-| Time             | 2-4 devs                                            | Frentes paralelas por sprint                                |
-| MFE Framework    | Next.js/React (sem Angular)                         | Stack atual mantida; menos atrito                           |
-| **MFE Tooling**  | **Rsbuild remotes + `@module-federation/enhanced`** | Federação runtime real + stack moderno (ver decisão abaixo) |
-| State global     | Zustand + TanStack Query                            | Cobre cliente + servidor; leve; cross-MFE friendly          |
-| Auth             | NextAuth (Credentials + JWT + **Google Provider**)  | Padrão Next.js; vive no shell                               |
-| Storage anexos   | Vercel Blob                                         | Zero-config na Vercel; 1GB free tier                        |
-| Charts           | Recharts                                            | Declarativo; aceita tokens DS via props                     |
-| Estrutura `app/` | Move para `src/`                                    | Convenção Next.js padrão                                    |
-| Monorepo tool    | Turborepo + npm workspaces                          | Cache CI + workspaces nativos do npm 7+                     |
+| Decisão          | Escolha                                             | Justificativa                                                                                                         |
+| ---------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Time             | 2-4 devs                                            | Frentes paralelas por sprint                                                                                          |
+| MFE Framework    | Next.js/React (sem Angular)                         | Stack atual mantida; menos atrito                                                                                     |
+| **MFE Tooling**  | **Rsbuild remotes + `@module-federation/enhanced`** | Federação runtime real + stack moderno (ver decisão abaixo)                                                           |
+| State global     | Redux Toolkit + TanStack Query                      | Redux Toolkit (estado cliente) atende a lista da spec; TanStack Query cobre estado servidor; ambos cross-MFE friendly |
+| Auth             | NextAuth (Credentials + JWT + **Google Provider**)  | Padrão Next.js; vive no shell                                                                                         |
+| Storage anexos   | Vercel Blob                                         | Zero-config na Vercel; 1GB free tier                                                                                  |
+| Charts           | Recharts                                            | Declarativo; aceita tokens DS via props                                                                               |
+| Estrutura `app/` | Move para `src/`                                    | Convenção Next.js padrão                                                                                              |
+| Monorepo tool    | Turborepo + npm workspaces                          | Cache CI + workspaces nativos do npm 7+                                                                               |
 
 ---
 
@@ -104,7 +104,7 @@ tech-challenge/                   ← raiz do git repo
 ├── packages/
 │   ├── design-system/            ← UI components + tokens + Storybook + Chromatic
 │   ├── api-client/               ← TanStack Query hooks + fetchers
-│   ├── stores/                   ← Zustand stores compartilhadas
+│   ├── stores/                   ← Redux Toolkit store + slices compartilhados
 │   └── shared/                   ← Types, zod schemas, utils, categorias
 ├── docs/
 │   └── phase-2/                  ← este diretório
@@ -124,7 +124,7 @@ NextAuth no shell. Shell envolve mount points dos remotes em `<SessionProvider>`
 
 ### State
 
-- **Zustand:** estado cliente global (auth user, UI: filter panel, modais)
+- **Redux Toolkit:** estado cliente global (auth user, UI: filter panel, modais) — slices + `configureStore` + hooks tipados
 - **TanStack Query:** estado servidor (transações, summaries, anexos) com cache + optimistic updates
 - Remover `context/TransactionsContext.tsx` e `context/FeedbackContext.tsx` no Sprint 1
 
@@ -182,15 +182,15 @@ gh pr create --base phase-2 --title "feat(ds): LoginForm component"
 
 ## Riscos & mitigações
 
-| Risco                                   | Mitigação                                                              |
-| --------------------------------------- | ---------------------------------------------------------------------- |
-| PoC Rsbuild MF + Next 16 falha          | Gate dia 5 + fallback automático para opção D (build-time packages)    |
-| Vercel KV/Blob limites no free tier     | Documentar; cleanup script de anexos órfãos                            |
-| Time não conhece Zustand/TanStack Query | Spike 1 dia no Sprint 1 antes de migrar                                |
-| Singletons React quebram em runtime     | `singleton: true, strictVersion: true` + E2E "session presente em MFE" |
-| Recharts hydration warnings             | `dynamic(..., { ssr: false })` em todos charts                         |
-| Categoria sugestão erra                 | Heurística keyword + override manual + testes                          |
-| Scope creep no S3                       | Priorizar anexos+categorias; dropar scroll infinito se necessário      |
+| Risco                                         | Mitigação                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------------- |
+| PoC Rsbuild MF + Next 16 falha                | Gate dia 5 + fallback automático para opção D (build-time packages)    |
+| Vercel KV/Blob limites no free tier           | Documentar; cleanup script de anexos órfãos                            |
+| Time não conhece Redux Toolkit/TanStack Query | Spike 1 dia no Sprint 1 antes de migrar                                |
+| Singletons React quebram em runtime           | `singleton: true, strictVersion: true` + E2E "session presente em MFE" |
+| Recharts hydration warnings                   | `dynamic(..., { ssr: false })` em todos charts                         |
+| Categoria sugestão erra                       | Heurística keyword + override manual + testes                          |
+| Scope creep no S3                             | Priorizar anexos+categorias; dropar scroll infinito se necessário      |
 
 ## Verificação end-to-end (final)
 

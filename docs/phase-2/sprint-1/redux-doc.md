@@ -1,4 +1,4 @@
-# Documentação — Zustand + TanStack Query
+# Documentação — Redux Toolkit + TanStack Query
 
 ## 1. Por que estamos mudando
 
@@ -17,10 +17,12 @@ Funciona, mas causa três problemas:
 
 A substituição:
 
-- **Zustand** para estado client-side: UI, preferências, sessão derivada.
+- **Redux Toolkit** para estado client-side: UI, preferências, sessão derivada.
 - **TanStack Query** para estado de servidor: cache, refetch, mutations.
 
 As duas bibliotecas convivem. Cada uma resolve um problema diferente.
+
+> **Por que Redux Toolkit?** A spec do Tech Challenge lista "Redux, Recoil ou NgRx". Adotamos **Redux Toolkit**, a forma oficial e moderna do Redux: `createSlice` + Immer eliminam o boilerplate clássico de actions/reducers, e o store compartilhado como singleton via Module Federation funciona bem entre MFEs.
 
 ---
 
@@ -32,76 +34,104 @@ O dado vem de um endpoint HTTP?
  │           Ex.: lista de transações, detalhe por id, perfil do usuário
  │
  └── Não  →  É compartilhado entre componentes distantes ou entre MFEs?
-              ├── Sim  →  Zustand store
+              ├── Sim  →  slice Redux Toolkit
               │           Ex.: sidebar aberta/fechada, tema, feedback global
               │
               └── Não  →  React useState / useReducer local
                           Ex.: input controlado dentro de um form
 ```
 
-Anti-padrão a evitar: copiar dados do servidor para uma store Zustand "para deixar global". O TanStack Query é o dono dos dados do servidor. Zustand guarda apenas estado client-side.
+Anti-padrão a evitar: copiar dados do servidor para um slice Redux "para deixar global". O TanStack Query é o dono dos dados do servidor. O Redux guarda apenas estado client-side.
 
 ---
 
-## 3. Zustand
+## 3. Redux Toolkit
 
 ### 3.1. Conceito
 
-Zustand é um gerenciador de estado minúsculo (~1KB). Você cria uma store (objeto com state + funções) e qualquer componente se inscreve via hook.
+Redux Toolkit (RTK) é a abordagem oficial recomendada do Redux. Você define **slices** (`createSlice`), que agrupam o estado inicial, os reducers e geram as actions automaticamente. Graças ao Immer embutido, os reducers podem "mutar" o estado diretamente — o RTK produz a atualização imutável por baixo. O `configureStore` junta os slices num store, exposto à árvore via `<Provider>`.
 
-Não há `Provider`, `dispatch` nem `reducer`. Só a função `create`.
-
-### 3.2. Estrutura de uma store
+### 3.2. Estrutura de um slice
 
 ```typescript
-import { create } from 'zustand';
+import { createSlice, configureStore, type PayloadAction } from '@reduxjs/toolkit';
 
 interface CounterState {
   count: number;
 }
 
-interface CounterActions {
-  increment: () => void;
-  decrement: () => void;
-  reset: () => void;
-}
+const initialState: CounterState = { count: 0 };
 
-type CounterStore = CounterState & CounterActions;
+const counterSlice = createSlice({
+  name: 'counter',
+  initialState,
+  reducers: {
+    increment: (state) => {
+      state.count += 1;
+    },
+    decrement: (state) => {
+      state.count -= 1;
+    },
+    reset: (state) => {
+      state.count = 0;
+    },
+    incrementBy: (state, action: PayloadAction<number>) => {
+      state.count += action.payload;
+    },
+  },
+});
 
-export const useCounterStore = create<CounterStore>((set) => ({
-  count: 0,
-  increment: () => set((state) => ({ count: state.count + 1 })),
-  decrement: () => set((state) => ({ count: state.count - 1 })),
-  reset: () => set({ count: 0 }),
-}));
+export const { increment, decrement, reset, incrementBy } = counterSlice.actions;
+
+export const store = configureStore({
+  reducer: { counter: counterSlice.reducer },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 ```
 
-Consumindo em um componente:
+Consumindo em um componente (com hooks tipados `useAppSelector`/`useAppDispatch`):
 
 ```tsx
 function Counter() {
-  const count = useCounterStore((state) => state.count);
-  const increment = useCounterStore((state) => state.increment);
+  const count = useAppSelector((state) => state.counter.count);
+  const dispatch = useAppDispatch();
 
-  return <button onClick={increment}>{count}</button>;
+  return <button onClick={() => dispatch(increment())}>{count}</button>;
 }
 ```
 
-### 3.3. Use seletores — sempre
+### 3.3. Use seletores enxutos — sempre
 
-Sem seletor, o componente re-renderiza a cada mudança em qualquer propriedade da store:
+Selecione a menor fatia possível do estado para evitar re-renderizações desnecessárias:
 
 ```typescript
-// Ruim — re-renderiza se qualquer coisa na store mudar
-const { count } = useCounterStore();
+// Ruim — seleciona o objeto inteiro; re-renderiza se qualquer campo de counter mudar
+const counter = useAppSelector((state) => state.counter);
 
 // Correto — só re-renderiza se `count` mudar
-const count = useCounterStore((state) => state.count);
+const count = useAppSelector((state) => state.counter.count);
 ```
 
-Acesse uma propriedade por chamada. Se precisar de duas, use dois `useCounterStore`.
+Para seletores derivados/custosos, use `createSelector` (Reselect, reexportado pelo RTK) para memoizar. Essa granularidade é a principal vantagem sobre a Context API: você assina apenas o pedaço que importa, sem re-renderizar o restante da árvore.
 
-Essa é a principal vantagem sobre a Context API: você assina apenas o pedaço que importa, sem re-renderizar o restante da árvore.
+### 3.4. Provider na raiz
+
+```tsx
+import { Provider } from 'react-redux';
+import { store } from '@bytebank/stores';
+
+export function App() {
+  return (
+    <Provider store={store}>
+      <SuaApp />
+    </Provider>
+  );
+}
+```
+
+No monorepo, o shell instancia o `<Provider store={store}>` e compartilha o store com os MFEs como singleton via Module Federation.
 
 ---
 
@@ -230,13 +260,13 @@ Detalhes em [state-conventions.md §3.4](../state-conventions.md).
 
 ## 5. Resumo comparativo
 
-|                      | Zustand                       | TanStack Query                      |
+|                      | Redux Toolkit                 | TanStack Query                      |
 | -------------------- | ----------------------------- | ----------------------------------- |
 | Origem dos dados     | Cliente (UI, sessão derivada) | Servidor (HTTP)                     |
-| Dono da verdade      | A store                       | A API (o cache espelha)             |
+| Dono da verdade      | O store                       | A API (o cache espelha)             |
 | Cache                | Não                           | Sim, com TTL, invalidação e refetch |
-| Precisa de Provider  | Não                           | Sim (`QueryClientProvider`)         |
-| Evita re-renders com | Seletores                     | Automático por queryKey             |
+| Precisa de Provider  | Sim (`<Provider store>`)      | Sim (`QueryClientProvider`)         |
+| Evita re-renders com | Seletores enxutos             | Automático por queryKey             |
 | Exemplos no Bytebank | Feedback modal, sidebar       | Transações, mutations CRUD          |
 
 ---
@@ -255,7 +285,7 @@ packages/api-client/       <- esqueleto vazio
 Após a Sprint 1:
 
 ```
-packages/stores/src/       <- useAuthStore, useUIStore (Zustand)
+packages/stores/src/       <- authSlice, uiSlice, store, hooks tipados (Redux Toolkit)
 packages/api-client/src/   <- useTransactions, useCreateTransaction etc. (TanStack Query)
 apps/shell/src/            <- consome os hooks, sem Context
 ```

@@ -248,7 +248,7 @@
 - [x] **Docker + docker-compose** ✓ (esta sprint)
 - [x] **Cloud deploy + auth/autorização** ✓ (Sprint 1 + esta)
 - [x] **Microfrontends** ✓ (Sprint 0-3)
-- [x] **State management (Zustand + TanStack)** ✓ (Sprint 1)
+- [x] **State management (Redux Toolkit + TanStack Query)** ✓ (Sprint 1)
 - [x] **TypeScript** ✓
 - [x] **SSR/SSG** ✓ (Sprint 2)
 - [x] **Acessibilidade** ✓ (esta sprint)

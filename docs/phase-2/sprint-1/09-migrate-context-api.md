@@ -15,7 +15,7 @@
 
 ## Dependências
 
-- **O que bloqueia esta tarefa**: Bloqueada em conjunto pelas tarefas **Task 7 (Zustand Stores)** e **Task 8 (Query Hooks)**. Como vamos remover os arquivos de context que proviam dados e feedbacks, é necessário que tenhamos as stores de Zustand e os custom hooks prontos para substituirmos todas as chamadas.
+- **O que bloqueia esta tarefa**: Bloqueada em conjunto pelas tarefas **Task 7 (Slices Redux Toolkit)** e **Task 8 (Query Hooks)**. Como vamos remover os arquivos de context que proviam dados e feedbacks, é necessário que tenhamos os slices Redux e os custom hooks prontos para substituirmos todas as chamadas.
 - **O que esta tarefa desbloqueia**: Desbloqueia a **Task 11 (Smoke Test Final)**, pois ela representa a consolidação da migração do estado na UI da aplicação e unifica o funcionamento do front-end.
 
 ---
@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ---
 
-### 3. Substituir Consumidores de `FeedbackContext` por `useUIStore`
+### 3. Substituir Consumidores de `FeedbackContext` pelo `uiSlice` (Redux)
 
 Em componentes como o modal de mensagens (`FeedbackModal.tsx`):
 
@@ -76,20 +76,24 @@ Em componentes como o modal de mensagens (`FeedbackModal.tsx`):
 - **Depois**:
 
   ```typescript
-  import { useUIStore } from '@bytebank/stores';
+  import { useAppSelector, useAppDispatch, hideFeedback } from '@bytebank/stores';
 
-  const feedback = useUIStore((state) => state.feedback);
-  const hideFeedback = useUIStore((state) => state.hideFeedback);
+  const feedback = useAppSelector((state) => state.ui.feedback);
+  const dispatch = useAppDispatch();
+  // dispatch(hideFeedback()) para fechar
   ```
 
 Substitua também todos os disparadores de alertas (ex: ao criar transação ou falhar no login):
 
 - **Antes**: `showFeedback('Erro', 'Mensagem', 'error');`
 - **Depois**:
+
   ```typescript
-  const showFeedback = useUIStore((state) => state.showFeedback);
+  import { useAppDispatch, showFeedback } from '@bytebank/stores';
+
+  const dispatch = useAppDispatch();
   // ...
-  showFeedback({ type: 'error', title: 'Erro', message: 'Mensagem' });
+  dispatch(showFeedback({ type: 'error', title: 'Erro', message: 'Mensagem' }));
   ```
 
 ---
@@ -126,7 +130,7 @@ Lembre-se de tratar os estados de `isLoading` de forma acessível e visualmente 
 
 ## Gotchas
 
-1. **Hydration Warning no NextJS**: Como o Zustand é importado do package e o TanStack Query gerencia o estado no client, evite renderizações parciais condicionadas a variáveis globais logo no primeiro render do Server Component do Next.js. Certifique-se de envolver componentes dinâmicos no cliente.
+1. **Hydration Warning no NextJS**: Como o store Redux é provido no client (`<Provider>`) e o TanStack Query gerencia o estado no client, evite renderizações parciais condicionadas a variáveis globais logo no primeiro render do Server Component do Next.js. Certifique-se de envolver componentes dinâmicos no cliente.
 2. **Prop Drilling de Callbacks**: Com a remoção do context, evite cair no erro de passar o hook de transações por múltiplos níveis de propriedades. Se um componente filho precisa das transações, invoque o hook `useTransactions()` diretamente dentro dele, pois o cache do TanStack Query garante que nenhuma chamada de rede redundante seja feita.
 
 ---

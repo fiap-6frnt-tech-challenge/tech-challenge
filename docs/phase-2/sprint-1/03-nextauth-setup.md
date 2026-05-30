@@ -16,7 +16,7 @@
 ## Dependências
 
 - **O que bloqueia esta tarefa**: Depende da entrega da **Task 6 (Schema Evoluído)** pelo Dev 1. É necessário ter os novos campos como `userId` estabilizados nos tipos do `packages/shared` para sincronizar o mock e as callbacks do NextAuth de forma adequada.
-- **O que esta tarefa desbloqueia**: Desbloqueia as stores Zustand (**Task 7**) e os testes de infra/CI (**Task 10**), visto que estes necessitam ler a sessão e interceptar as rotas protegidas pelo middleware em ambiente de teste.
+- **O que esta tarefa desbloqueia**: Desbloqueia os slices Redux Toolkit (**Task 7**) e os testes de infra/CI (**Task 10**), visto que estes necessitam ler a sessão e interceptar as rotas protegidas pelo middleware em ambiente de teste.
 
 ---
 
