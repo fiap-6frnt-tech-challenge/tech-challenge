@@ -207,15 +207,19 @@ useMutation({
 
   onMutate: async (idToDelete) => {
     await queryClient.cancelQueries({ queryKey: transactionKeys.all });
-    const previous = queryClient.getQueryData(transactionKeys.all);
+    const previousLists = queryClient.getQueriesData({ queryKey: transactionKeys.lists() });
 
-    queryClient.setQueryData(transactionKeys.all, (old) => old.filter((t) => t.id !== idToDelete));
+    queryClient.setQueriesData({ queryKey: transactionKeys.lists() }, (old) =>
+      Array.isArray(old) ? old.filter((t) => t.id !== idToDelete) : old
+    );
 
-    return { previous };
+    return { previousLists };
   },
 
   onError: (_err, _id, context) => {
-    queryClient.setQueryData(transactionKeys.all, context.previous);
+    context?.previousLists?.forEach(([queryKey, data]) => {
+      queryClient.setQueryData(queryKey, data);
+    });
   },
 
   onSettled: () => {
