@@ -16,12 +16,12 @@ Cada arquivo neste diretório descreve **uma task** do [sprint-1-auth-state.md](
 
 | #   | Status | Task                                                          | Owner | Duração  | PR      | Arquivo                                                  |
 | --- | ------ | ------------------------------------------------------------- | ----- | -------- | ------- | -------------------------------------------------------- |
-| 1   | ⏳     | Spike: Zustand + TanStack Query                               | Dev 1 | 1 dia    | pending | [01-spike-zustand-query.md](./01-spike-zustand-query.md) |
+| 1   | 🟢     | Spike: Redux Toolkit + TanStack Query                         | Dev 1 | 1 dia    | pending | [01-spike-redux-query.md](./01-spike-redux-query.md)     |
 | 2   | ⏳     | Persistência real (Vercel KV ou Postgres)                     | Dev 1 | 2 dias   | pending | [02-real-persistence.md](./02-real-persistence.md)       |
 | 3   | ⏳     | Schema de Transação Evoluído & Seed                           | Dev 1 | 1.5 dia  | pending | [06-evolved-schema.md](./06-evolved-schema.md)           |
 | 4   | ⏳     | NextAuth v5 Setup no Shell & Middleware                       | Dev 2 | 2 dias   | pending | [03-nextauth-setup.md](./03-nextauth-setup.md)           |
 | 5   | ⏳     | Componentes de Autenticação no Design System                  | Dev 2 | 2 dias   | pending | [05-ds-auth-components.md](./05-ds-auth-components.md)   |
-| 6   | ⏳     | Criar stores Zustand em `packages/stores`                     | Dev 3 | 1 dia    | pending | [07-packages-stores.md](./07-packages-stores.md)         |
+| 6   | ⏳     | Criar slices Redux Toolkit em `packages/stores`               | Dev 3 | 1 dia    | pending | [07-packages-stores.md](./07-packages-stores.md)         |
 | 7   | ⏳     | Criar hooks TanStack Query em `packages/api-client`           | Dev 3 | 2 dias   | pending | [08-packages-api-client.md](./08-packages-api-client.md) |
 | 8   | ⏳     | Páginas `/login` e `/auth/error` no Shell                     | Dev 2 | 1 dia    | pending | [04-auth-pages.md](./04-auth-pages.md)                   |
 | 9   | ⏳     | Migração: Remover Context API (Transactions + Feedback)       | Dev 3 | 2.5 dias | pending | [09-migrate-context-api.md](./09-migrate-context-api.md) |
@@ -35,7 +35,7 @@ Cada arquivo neste diretório descreve **uma task** do [sprint-1-auth-state.md](
 ## Dependências entre tasks
 
 ```
-[Task 1: Spike Zustand/Query] (Todos)
+[Task 1: Spike Redux Toolkit/Query] (Todos)
    │
    ├──→ Task 2: Persistência (Dev 1) ──→ Task 6: Schema Evoluído (Dev 1)
    │                                                 │

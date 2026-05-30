@@ -8,7 +8,7 @@
 | **Owner**              | `Dev 1`                                                            |
 | **Duração estimada**   | 2 dias                                                             |
 | **Branch recomendada** | `dev1/real-persistence`                                            |
-| **Depende de**         | [Task 1 — Spike Zustand/Query](./01-spike-zustand-query.md)        |
+| **Depende de**         | [Task 1 — Spike Redux Toolkit/Query](./01-spike-redux-query.md)    |
 | **PR só abre**         | Após validar criação, leitura, update e delete via HTTP REST local |
 
 ---

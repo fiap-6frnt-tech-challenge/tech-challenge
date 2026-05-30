@@ -1,10 +1,12 @@
-# Convenções de Gerenciamento de Estado (Zustand + TanStack Query)
+# Convenções de Gerenciamento de Estado (Redux Toolkit + TanStack Query)
 
-Este documento estabelece os padrões e boas práticas para o gerenciamento de estado cliente (global e UI) com **Zustand** e o estado de servidor (cache e sincronização) com **TanStack Query** no projeto.
+Este documento estabelece os padrões e boas práticas para o gerenciamento de estado cliente (global e UI) com **Redux Toolkit** e o estado de servidor (cache e sincronização) com **TanStack Query** no projeto.
+
+> **Por que Redux Toolkit + TanStack Query?** A spec do Tech Challenge lista "Redux, Recoil ou NgRx" para gestão de estado complexa — adotamos **Redux Toolkit** (a abordagem oficial e moderna do Redux, com `createSlice` + Immer, eliminando o boilerplate clássico de actions/reducers). Para estado de servidor (cache, refetch, optimistic updates), mantemos **TanStack Query**, que é especializado nisso e evita guardar dados de requisição no store global.
 
 ---
 
-## 1. Zustand vs TanStack Query vs Local State
+## 1. Redux Toolkit vs TanStack Query vs Local State
 
 Para cada nova peça de estado, siga a seguinte árvore de decisão:
 
@@ -13,63 +15,97 @@ O estado vem do servidor?
  ├── Sim ──→ Use TanStack Query (useQuery / useMutation)
  └── Não
       ├── É compartilhado por múltiplos componentes distantes ou MFEs?
-      │    ├── Sim ──→ Use Zustand Store (ex: auth, tema, global UI notifications)
+      │    ├── Sim ──→ Use um slice Redux Toolkit (ex: auth, tema, global UI notifications)
       │    └── Não ──→ Use React useState / useReducer local (estado encapsulado)
 ```
 
-> **Regra de Ouro:** Não duplique dados de requisições no Zustand. Se o dado vem de um endpoint, o TanStack Query é o dono da verdade. O Zustand armazena apenas estados puramente client-side.
+> **Regra de Ouro:** Não duplique dados de requisições no Redux. Se o dado vem de um endpoint, o TanStack Query é o dono da verdade. O store Redux armazena apenas estados puramente client-side.
 
 ---
 
-## 2. Padrões do Zustand
+## 2. Padrões do Redux Toolkit
 
-### 2.1. Estrutura de uma Store
+### 2.1. Estrutura de um Slice
 
-As stores do Zustand devem viver em `packages/stores` e seguir esta estrutura típica:
+Os slices do Redux Toolkit devem viver em `packages/stores` e seguir esta estrutura típica. Graças ao Immer (embutido no `createSlice`), os reducers podem "mutar" o estado diretamente — o RTK produz a atualização imutável por baixo:
 
 ```typescript
-import { create } from 'zustand';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 interface UIState {
   isSidebarOpen: boolean;
   theme: 'light' | 'dark';
 }
 
-interface UIActions {
-  toggleSidebar: () => void;
-  setTheme: (theme: 'light' | 'dark') => void;
-}
-
-// Junta State e Actions em um único tipo
-export type UIStore = UIState & UIActions;
-
-export const useUIStore = create<UIStore>((set) => ({
-  // 1. State inicial
+const initialState: UIState = {
   isSidebarOpen: false,
   theme: 'light',
+};
 
-  // 2. Actions (mutadores de estado)
-  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
-  setTheme: (theme) => set({ theme }),
-}));
+export const uiSlice = createSlice({
+  name: 'ui',
+  initialState,
+  reducers: {
+    // "Mutação" segura via Immer
+    toggleSidebar: (state) => {
+      state.isSidebarOpen = !state.isSidebarOpen;
+    },
+    setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
+      state.theme = action.payload;
+    },
+  },
+});
+
+export const { toggleSidebar, setTheme } = uiSlice.actions;
+export default uiSlice.reducer;
 ```
 
-### 2.2. Acesso ao Estado via Seletores (Performance)
-
-Para evitar re-renderizações desnecessárias em consumidores de stores amplos, **sempre acesse o estado por meio de seletores específicos**:
+O store raiz combina os slices via `configureStore` e exporta os tipos `RootState`/`AppDispatch`:
 
 ```typescript
-// ❌ RUIM: Renderiza sempre que qualquer propriedade na store mudar
-const { theme } = useUIStore();
+import { configureStore } from '@reduxjs/toolkit';
+import uiReducer from './uiSlice';
+import authReducer from './authSlice';
 
-// ✅ BOM: Só renderiza se a propriedade 'theme' mudar
-const theme = useUIStore((state) => state.theme);
-const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+export const store = configureStore({
+  reducer: {
+    ui: uiReducer,
+    auth: authReducer,
+  },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 ```
 
-### 2.3. Persistência
+### 2.2. Hooks tipados + Acesso via Seletores (Performance)
 
-Use o middleware `persist` apenas quando estritamente necessário (ex: preferências locais do usuário como o tema, ou tokens de auth locais que não usem cookies seguros). Nunca persista dados transacionais.
+Exporte hooks tipados em vez de usar `useDispatch`/`useSelector` crus, e **sempre selecione a menor fatia de estado possível** para evitar re-renderizações desnecessárias:
+
+```typescript
+// packages/stores/src/hooks.ts
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState, AppDispatch } from './store';
+
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector = useSelector.withTypes<RootState>();
+```
+
+```typescript
+// ❌ RUIM: seleciona o objeto inteiro — renderiza a cada mudança em qualquer campo de ui
+const ui = useAppSelector((state) => state.ui);
+
+// ✅ BOM: só renderiza se 'theme' mudar
+const theme = useAppSelector((state) => state.ui.theme);
+const dispatch = useAppDispatch();
+dispatch(toggleSidebar());
+```
+
+> Para seletores derivados/custosos, use `createSelector` do Reselect (reexportado pelo RTK) para memoizar.
+
+### 2.3. Provider e Persistência
+
+O `<Provider store={store}>` (de `react-redux`) envolve a aplicação no shell, e o shell expõe o store aos MFEs como singleton compartilhado. Use `redux-persist` apenas quando estritamente necessário (ex: preferências locais do usuário como o tema, ou tokens de auth locais que não usem cookies seguros). Nunca persista dados transacionais.
 
 ---
 

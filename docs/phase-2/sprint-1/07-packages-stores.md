@@ -1,4 +1,4 @@
-# Task 7 — Criar stores Zustand em packages/stores
+# Task 7 — Criar slices Redux Toolkit em packages/stores
 
 > ⏳ **Status: Pending**
 
@@ -9,22 +9,24 @@
 | **Duração estimada**   | 1 dia                                                                                   |
 | **Branch recomendada** | `dev3/packages-stores`                                                                  |
 | **Depende de**         | [Task 3 — NextAuth Setup](./03-nextauth-setup.md)                                       |
-| **PR só abre**         | Após todos os testes unitários do Vitest para as duas stores passarem com sucesso em CI |
+| **PR só abre**         | Após todos os testes unitários do Vitest para os dois slices passarem com sucesso em CI |
 
 ---
 
 ## Contexto
 
-Para desacoplar as regras de estado puramente cliente da UI e garantir que os Microfrontends possam ler/escrever em dados comuns, migraremos o estado de autenticação (vindo do NextAuth) e o estado global de componentes da interface (como o painel de filtros e os modais de feedback) para o **Zustand**.
+Para desacoplar as regras de estado puramente cliente da UI e garantir que os Microfrontends possam ler/escrever em dados comuns, migraremos o estado de autenticação (vindo do NextAuth) e o estado global de componentes da interface (como o painel de filtros e os modais de feedback) para o **Redux Toolkit**.
 
-Essas stores viverão no pacote compartilhado `@bytebank/stores`, garantindo tipagem consistente em todo o monorepo.
+Esses slices viverão no pacote compartilhado `@bytebank/stores`, garantindo tipagem consistente em todo o monorepo. O shell instancia o `store` (`configureStore`) e envolve a aplicação em `<Provider store={store}>`; os MFEs consomem o mesmo store como singleton compartilhado via Module Federation.
+
+> Convenções de uso (slices, seletores, hooks tipados) em [state-conventions.md](../state-conventions.md).
 
 ---
 
 ## Dependências
 
-- **O que bloqueia esta tarefa**: Bloqueada pela **Task 3 (NextAuth Setup)** entregue pelo Dev 2. A store `useAuthStore` necessita importar callbacks e estruturas de sessão do NextAuth local para sincronizar e disparar o `signOut`.
-- **O que esta tarefa desbloqueia**: Desbloqueia a **Task 9 (Migração Context)**, pois a remoção do `FeedbackContext` depende diretamente da importação do `useUIStore` fornecido por este pacote.
+- **O que bloqueia esta tarefa**: Bloqueada pela **Task 3 (NextAuth Setup)** entregue pelo Dev 2. O `authSlice` necessita importar callbacks e estruturas de sessão do NextAuth local para sincronizar e disparar o `signOut`.
+- **O que esta tarefa desbloqueia**: Desbloqueia a **Task 9 (Migração Context)**, pois a remoção do `FeedbackContext` depende diretamente da importação do `uiSlice` e dos hooks tipados fornecidos por este pacote.
 
 ---
 
@@ -33,7 +35,7 @@ Essas stores viverão no pacote compartilhado `@bytebank/stores`, garantindo tip
 - Estar na branch `dev3/packages-stores`.
 - Instalar as dependências de execução e testes em `packages/stores`:
   ```bash
-  npm install zustand -w @bytebank/stores
+  npm install @reduxjs/toolkit react-redux -w @bytebank/stores
   npm install -D vitest @testing-library/react -w @bytebank/stores
   ```
 
@@ -41,12 +43,12 @@ Essas stores viverão no pacote compartilhado `@bytebank/stores`, garantindo tip
 
 ## Implementação passo-a-passo
 
-### 1. Criar `useAuthStore` (`packages/stores/src/useAuthStore.ts`)
+### 1. Criar `authSlice` (`packages/stores/src/authSlice.ts`)
 
-Esta store sincroniza a sessão do NextAuth com o estado cliente e disponibiliza utilitários de logout:
+Este slice sincroniza a sessão do NextAuth com o estado cliente e disponibiliza utilitários de logout. Como `signOut` é uma operação assíncrona, ela é modelada como um `createAsyncThunk`; a limpeza síncrona do estado fica no reducer `clearSession`:
 
 ```typescript
-import { create } from 'zustand';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { signOut } from 'next-auth/react';
 
 export interface UserSession {
@@ -61,39 +63,54 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-interface AuthActions {
-  setSession: (user: UserSession | null) => void;
-  logout: () => Promise<void>;
-}
-
-export type AuthStore = AuthState & AuthActions;
-
-export const useAuthStore = create<AuthStore>((set) => ({
+const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
+};
 
-  setSession: (user) =>
-    set({
-      user,
-      isAuthenticated: !!user,
-    }),
+// Invalida cookies no NextAuth e redireciona para /login
+export const logout = createAsyncThunk('auth/logout', async () => {
+  await signOut({ callbackUrl: '/login' });
+});
 
-  logout: async () => {
-    set({ user: null, isAuthenticated: false });
-    // Executa a invalidação de cookies no NextAuth
-    await signOut({ callbackUrl: '/login' });
+export const authSlice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {
+    setSession: (state, action: PayloadAction<UserSession | null>) => {
+      state.user = action.payload;
+      state.isAuthenticated = !!action.payload;
+    },
+    clearSession: (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
+    },
   },
-}));
+  extraReducers: (builder) => {
+    builder.addCase(logout.fulfilled, (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
+    });
+  },
+});
+
+export const { setSession, clearSession } = authSlice.actions;
+
+// Selectors
+export const selectUser = (state: { auth: AuthState }) => state.auth.user;
+export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
+
+export default authSlice.reducer;
 ```
 
 ---
 
-### 2. Criar `useUIStore` (`packages/stores/src/useUIStore.ts`)
+### 2. Criar `uiSlice` (`packages/stores/src/uiSlice.ts`)
 
-Esta store controla a exibição de barras de controle, painéis laterais de filtro e o sistema global de alertas/erros:
+Este slice controla a exibição de barras de controle, painéis laterais de filtro e o sistema global de alertas/erros:
 
 ```typescript
-import { create } from 'zustand';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export interface FeedbackMessage {
   type: 'success' | 'error' | 'info';
@@ -106,77 +123,125 @@ interface UIState {
   feedback: FeedbackMessage | null;
 }
 
-interface UIActions {
-  setFilterPanelOpen: (open: boolean) => void;
-  toggleFilterPanel: () => void;
-  showFeedback: (feedback: FeedbackMessage) => void;
-  hideFeedback: () => void;
-}
-
-export type UIStore = UIState & UIActions;
-
-export const useUIStore = create<UIStore>((set) => ({
+const initialState: UIState = {
   filterPanelOpen: false,
   feedback: null,
+};
 
-  setFilterPanelOpen: (open) => set({ filterPanelOpen: open }),
-  toggleFilterPanel: () => set((state) => ({ filterPanelOpen: !state.filterPanelOpen })),
-  showFeedback: (feedback) => set({ feedback }),
-  hideFeedback: () => set({ feedback: null }),
-}));
+export const uiSlice = createSlice({
+  name: 'ui',
+  initialState,
+  reducers: {
+    setFilterPanelOpen: (state, action: PayloadAction<boolean>) => {
+      state.filterPanelOpen = action.payload;
+    },
+    toggleFilterPanel: (state) => {
+      state.filterPanelOpen = !state.filterPanelOpen;
+    },
+    showFeedback: (state, action: PayloadAction<FeedbackMessage>) => {
+      state.feedback = action.payload;
+    },
+    hideFeedback: (state) => {
+      state.feedback = null;
+    },
+  },
+});
+
+export const { setFilterPanelOpen, toggleFilterPanel, showFeedback, hideFeedback } =
+  uiSlice.actions;
+
+// Selectors
+export const selectFilterPanelOpen = (state: { ui: UIState }) => state.ui.filterPanelOpen;
+export const selectFeedback = (state: { ui: UIState }) => state.ui.feedback;
+
+export default uiSlice.reducer;
 ```
 
 ---
 
-### 3. Configurar exports em `packages/stores/src/index.ts`
+### 3. Configurar o store (`packages/stores/src/store.ts`)
+
+Combine os reducers via `configureStore` e exporte os tipos `RootState`/`AppDispatch`:
+
+```typescript
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from './authSlice';
+import uiReducer from './uiSlice';
+
+export const store = configureStore({
+  reducer: {
+    auth: authReducer,
+    ui: uiReducer,
+  },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+```
+
+### 4. Hooks tipados (`packages/stores/src/hooks.ts`)
+
+```typescript
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState, AppDispatch } from './store';
+
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector = useSelector.withTypes<RootState>();
+```
+
+### 5. Configurar exports em `packages/stores/src/index.ts`
 
 Substitua o stub existente no barrel export pelo conteúdo:
 
 ```typescript
-export * from './useAuthStore';
-export * from './useUIStore';
+export * from './authSlice';
+export * from './uiSlice';
+export * from './store';
+export * from './hooks';
 ```
 
 ---
 
-### 4. Escrever Testes Unitários
+### 6. Escrever Testes Unitários
 
-Crie a pasta de testes para validar o funcionamento estático das stores usando Vitest:
+Como reducers do Redux Toolkit são funções puras (`(state, action) => newState`), os testes não precisam montar componente nem provider — basta importar o reducer e as actions:
 
-##### `packages/stores/src/useUIStore.test.ts`
+##### `packages/stores/src/uiSlice.test.ts`
 
 ```typescript
-import { describe, it, expect, beforeEach } from 'vitest';
-import { useUIStore } from './useUIStore';
+import { describe, it, expect } from 'vitest';
+import uiReducer, {
+  setFilterPanelOpen,
+  toggleFilterPanel,
+  showFeedback,
+  hideFeedback,
+} from './uiSlice';
 
-describe('useUIStore', () => {
-  beforeEach(() => {
-    // Reset da store antes de cada teste
-    useUIStore.setState({ filterPanelOpen: false, feedback: null });
-  });
+const initialState = { filterPanelOpen: false, feedback: null };
 
+describe('uiSlice', () => {
   it('deve inicializar com valores padrão', () => {
-    const state = useUIStore.getState();
+    const state = uiReducer(undefined, { type: '@@INIT' });
     expect(state.filterPanelOpen).toBe(false);
     expect(state.feedback).toBeNull();
   });
 
   it('deve alternar o painel de filtros', () => {
-    useUIStore.getState().toggleFilterPanel();
-    expect(useUIStore.getState().filterPanelOpen).toBe(true);
+    let state = uiReducer(initialState, toggleFilterPanel());
+    expect(state.filterPanelOpen).toBe(true);
 
-    useUIStore.getState().setFilterPanelOpen(false);
-    expect(useUIStore.getState().filterPanelOpen).toBe(false);
+    state = uiReducer(state, setFilterPanelOpen(false));
+    expect(state.filterPanelOpen).toBe(false);
   });
 
   it('deve gerenciar feedbacks com sucesso', () => {
     const feedbackPayload = { type: 'success' as const, title: 'Sucesso', message: 'Tudo OK' };
 
-    useUIStore.getState().showFeedback(feedbackPayload);
-    expect(useUIStore.getState().feedback).toEqual(feedbackPayload);
+    let state = uiReducer(initialState, showFeedback(feedbackPayload));
+    expect(state.feedback).toEqual(feedbackPayload);
 
-    useUIStore.getState().hideFeedback();
-    expect(useUIStore.getState().feedback).toBeNull();
+    state = uiReducer(state, hideFeedback());
+    expect(state.feedback).toBeNull();
   });
 });
 ```
@@ -206,8 +271,9 @@ npm run test -w @bytebank/stores
 
 ## Gotchas
 
-1. **Testes do NextAuth no Vitest**: Ao testar a `useAuthStore` que importa `signOut` de `next-auth/react`, o Vitest pode dar erro de importação devido a restrições de ESM. Mockerize a dependência no topo do teste usando `vi.mock('next-auth/react', () => ({ signOut: vi.fn() }))`.
-2. **Estado Compartilhado (State Leaks)**: O Zustand mantém o estado em singleton em memória. Sempre limpe o estado no `beforeEach` dos arquivos de teste para evitar vazamentos de testes que afetam asserções subsequentes.
+1. **Testes do NextAuth no Vitest**: Ao testar o `logout` thunk que importa `signOut` de `next-auth/react`, o Vitest pode dar erro de importação devido a restrições de ESM. Mockerize a dependência no topo do teste usando `vi.mock('next-auth/react', () => ({ signOut: vi.fn() }))`.
+2. **Store singleton entre MFEs**: O `store` do Redux é um singleton em memória. Garanta que o pacote `@reduxjs/toolkit`/`react-redux` seja compartilhado como `singleton: true` na config de Module Federation, para que shell e MFEs compartilhem a MESMA instância de store (e não cópias divergentes).
+3. **Reducers são puros — teste-os direto**: Não monte componentes nem `<Provider>` para testar reducers; chame `reducer(state, action)` diretamente. Isso mantém os testes rápidos e isolados, sem risco de vazamento de estado entre casos.
 
 ---
 

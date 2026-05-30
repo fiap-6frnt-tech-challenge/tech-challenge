@@ -186,7 +186,7 @@ Não há necessidade de migrar DDL físico, mas garanta que a leitura/escrita no
 
 ## Gotchas
 
-1. **Quebra temporária nos formulários**: Ao adicionar `userId` e `category` como campos obrigatórios no tipo `Transaction`, o frontend antigo no shell (que consome `NewTransaction` ou `Transaction`) pode apresentar erros de compilação em locais onde cria transações novas. Corrija-os passando valores Mock temporários (ex: `userId: 'joana'`, `category: 'default'`) até que a integração com NextAuth e as stores Zustand/Query esteja concluída.
+1. **Quebra temporária nos formulários**: Ao adicionar `userId` e `category` como campos obrigatórios no tipo `Transaction`, o frontend antigo no shell (que consome `NewTransaction` ou `Transaction`) pode apresentar erros de compilação em locais onde cria transações novas. Corrija-os passando valores Mock temporários (ex: `userId: 'joana'`, `category: 'default'`) até que a integração com NextAuth e os slices Redux Toolkit/Query esteja concluída.
 
 ---
 

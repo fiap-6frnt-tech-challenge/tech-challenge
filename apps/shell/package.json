@@ -20,17 +20,21 @@
     "last 2 Edge versions"
   ],
   "dependencies": {
-    "@bytebank/design-system": "*",
     "@bytebank/api-client": "*",
+    "@bytebank/design-system": "*",
     "@bytebank/shared": "*",
     "@bytebank/stores": "*",
     "@hookform/resolvers": "^5.2.2",
     "@module-federation/enhanced": "^2.4.0",
+    "@reduxjs/toolkit": "^2.12.0",
+    "@tanstack/react-query": "^5.100.14",
+    "@tanstack/react-query-devtools": "^5.100.14",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.72.0",
+    "react-redux": "^9.3.0",
     "zod": "^4.3.6"
   },
   "lint-staged": {

@@ -9,18 +9,18 @@
 | **Duração estimada** | 0.5 dia                                                                                                                |
 | **Branch**           | `dev2-backend/empty-packages` (a partir de `phase-2`)                                                                  |
 | **Depende de**       | [Bundle Tasks 1+2](./02-migrate-shell.md) mergeado em `phase-2` (independente de Tasks 3 e 4 — pode rodar em paralelo) |
-| **Desbloqueia**      | Sprint 1 (api-client recebe hooks TanStack Query; stores recebe Zustand stores)                                        |
+| **Desbloqueia**      | Sprint 1 (api-client recebe hooks TanStack Query; stores recebe slices Redux Toolkit)                                  |
 
 ---
 
 ## Contexto
 
-Sprint 1 vai introduzir **Zustand + TanStack Query** como gestão de estado (migrando do Context API atual). Para que o Sprint 1 possa começar **sem fricção de infra**, esta task cria os **skeletons vazios** dos dois packages que receberão essa lógica:
+Sprint 1 vai introduzir **Redux Toolkit + TanStack Query** como gestão de estado (migrando do Context API atual). Para que o Sprint 1 possa começar **sem fricção de infra**, esta task cria os **skeletons vazios** dos dois packages que receberão essa lógica:
 
 - `@bytebank/api-client` — hooks TanStack Query, fetchers HTTP, tipos de resposta (preenchido em Sprint 1)
-- `@bytebank/stores` — Zustand stores (`useAuthStore`, `useUIStore`, preenchido em Sprint 1)
+- `@bytebank/stores` — store + slices Redux Toolkit (`authSlice`, `uiSlice`, preenchido em Sprint 1)
 
-Esta task é **puramente estrutural**: cria `package.json`, `tsconfig.json`, `README.md`, e `src/index.ts` vazio em cada package. Nenhuma dep runtime é adicionada — Sprint 1 instala `zustand`, `@tanstack/react-query` etc. quando for usar.
+Esta task é **puramente estrutural**: cria `package.json`, `tsconfig.json`, `README.md`, e `src/index.ts` vazio em cada package. Nenhuma dep runtime é adicionada — Sprint 1 instala `@reduxjs/toolkit`, `react-redux`, `@tanstack/react-query` etc. quando for usar.
 
 ### Por que criar agora (Sprint 0)?
 
@@ -31,7 +31,7 @@ Esta task é **puramente estrutural**: cria `package.json`, `tsconfig.json`, `RE
 
 ### O que NÃO é objetivo
 
-- Instalar `zustand`, `@tanstack/react-query` ou qualquer runtime dep — fica para Sprint 1
+- Instalar `@reduxjs/toolkit`, `react-redux`, `@tanstack/react-query` ou qualquer runtime dep — fica para Sprint 1
 - Implementar nenhum store ou hook — fica para Sprint 1
 - Configurar `<QueryClientProvider>` no shell — Sprint 1 faz quando criar o primeiro hook
 
@@ -192,7 +192,7 @@ const { mutate } = useCreateTransaction();
   "name": "@bytebank/stores",
   "version": "0.1.0",
   "private": true,
-  "description": "Bytebank — Zustand stores compartilhadas (auth, UI)",
+  "description": "Bytebank — store + slices Redux Toolkit compartilhados (auth, UI)",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -247,11 +247,13 @@ const { mutate } = useCreateTransaction();
 `packages/stores/src/index.ts`:
 
 ```ts
-// TODO (Sprint 1, dev4-dashboard): Zustand stores compartilhadas
+// TODO (Sprint 1, dev4-dashboard): store + slices Redux Toolkit compartilhados
 //
 // Planned exports:
-// - useAuthStore — sessão NextAuth, user, logout()
-// - useUIStore — filter panel open, modais, feedback toast state
+// - authSlice — sessão NextAuth, user, isAuthenticated
+// - uiSlice — filter panel open, modais, feedback toast state
+// - store (configureStore), RootState, AppDispatch
+// - useAppDispatch, useAppSelector (hooks tipados)
 //
 // See: docs/phase-2/sprint-1-auth-state.md task 7
 
@@ -263,15 +265,17 @@ export {};
 ```markdown
 # @bytebank/stores
 
-Zustand stores globais compartilhadas entre todos os apps do monorepo.
+Store + slices Redux Toolkit globais compartilhados entre todos os apps do monorepo.
 
 ## Uso (após Sprint 1)
 
 \`\`\`ts
-import { useAuthStore, useUIStore } from '@bytebank/stores';
+import { useAppSelector, useAppDispatch, setFilterPanelOpen } from '@bytebank/stores';
 
-const user = useAuthStore((state) => state.user);
-const showFilters = useUIStore((state) => state.filterPanelOpen);
+const user = useAppSelector((state) => state.auth.user);
+const showFilters = useAppSelector((state) => state.ui.filterPanelOpen);
+const dispatch = useAppDispatch();
+dispatch(setFilterPanelOpen(true));
 \`\`\`
 
 ## Status atual
@@ -348,7 +352,7 @@ git commit -m "feat(monorepo): scaffold @bytebank/api-client and @bytebank/store
 - Add @bytebank/api-client and @bytebank/stores as workspace deps in apps/shell
 - React listed as peerDep in both packages (hooks/stores use React)
 
-Sprint 1 will fill these in (TanStack Query hooks, Zustand stores).
+Sprint 1 will fill these in (TanStack Query hooks, Redux Toolkit slices).
 
 Refs: docs/phase-2/sprint-0/05-create-empty-packages.md"
 ```
@@ -371,7 +375,7 @@ Refs: docs/phase-2/sprint-0/05-create-empty-packages.md"
 
 3. **Sem `@bytebank/shared` como dep ainda.** Adicionar quando Sprint 1 importar tipos (`Transaction`, etc.). Manter limpo agora.
 
-4. **Não adicionar `zustand`, `@tanstack/react-query` agora.** Tentação grande de "já adianta install", mas:
+4. **Não adicionar `@reduxjs/toolkit`, `react-redux`, `@tanstack/react-query` agora.** Tentação grande de "já adianta install", mas:
    - Atrasa a install em CI por nada (deps grandes)
    - Sprint 1 pode reconsiderar versões/alternativas
    - Esta task é estrutural; runtime fica para quem implementa
@@ -391,7 +395,7 @@ gh pr create --base phase-2 --title "feat(monorepo): scaffold @bytebank/api-clie
 Cria skeletons vazios de dois novos workspace packages que serão preenchidos em Sprint 1:
 
 - **`@bytebank/api-client`** — TanStack Query hooks + HTTP fetchers
-- **`@bytebank/stores`** — Zustand stores (auth, UI)
+- **`@bytebank/stores`** — store + slices Redux Toolkit (auth, UI)
 
 Esta task é **puramente estrutural** — nenhuma lógica de runtime, nenhuma dep nova (além de TypeScript/Vitest dev). Sprint 1 (dev4-dashboard) implementa hooks e stores.
 

@@ -163,4 +163,4 @@ export default function AuthErrorPage() {
 
 ## Próximo passo
 
-→ **Estruturar os estados globais do cliente em Zustand com a [Task 7 — Criar stores em packages/stores](./07-packages-stores.md).**
+→ **Estruturar os estados globais do cliente em Redux Toolkit com a [Task 7 — Criar slices em packages/stores](./07-packages-stores.md).**
