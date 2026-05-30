@@ -43,28 +43,50 @@ rm FeedbackContext.tsx TransactionsContext.tsx index.ts
 
 ### 2. Atualizar o Layout Principal do Shell (`apps/shell/src/app/layout.tsx`)
 
-Remova os imports dos Providers deletados e limpe a árvore de componentes. Ela deve ficar assim (envolvida agora por `QueryClientProvider` e `SessionProvider`):
+Remova os imports dos Providers deletados e limpe a árvore de componentes. Ela deve ficar envolvida agora por **três** providers: `<Provider store>` (Redux), `SessionProvider` (NextAuth) e `QueryClientProvider` (TanStack Query).
+
+> ⚠️ **Os três são Client Components.** No App Router do Next, providers com contexto não podem ser instanciados direto num Server Component (e o `queryClient`/`store` não são serializáveis). Crie um wrapper `'use client'` e use-o no `layout.tsx`.
+
+`apps/shell/src/app/providers.tsx`:
 
 ```typescript
+'use client';
+
+import { Provider } from 'react-redux';
 import { SessionProvider } from 'next-auth/react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from '@bytebank/api-client'; // Importe do pacote api-client
+import { store } from '@bytebank/stores';
+import { queryClient } from '@bytebank/api-client';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <Provider store={store}>
+      <SessionProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </SessionProvider>
+    </Provider>
+  );
+}
+```
+
+`apps/shell/src/app/layout.tsx` (Server Component) apenas consome o wrapper:
+
+```typescript
+import { Providers } from './providers';
 import '@bytebank/design-system/styles/globals.css';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
       <body>
-        <SessionProvider>
-          <QueryClientProvider client={queryClient}>
-            {children}
-          </QueryClientProvider>
-        </SessionProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
 ```
+
+> Sem o `<Provider store>` envolvendo a árvore, qualquer `useAppSelector`/`useAppDispatch` (seção 3) lança erro em runtime ("could not find react-redux context").
 
 ---
 
