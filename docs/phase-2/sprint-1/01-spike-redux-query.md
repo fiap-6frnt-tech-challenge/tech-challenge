@@ -11,7 +11,7 @@
 | **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md) |
 | **Owner**              | `Dev 1` (lidera, todos participam)                             |
 | **Duração estimada**   | 1 dia                                                          |
-| **Branch recomendada** | `dev1/state-spike` (sandbox descartável)                       |
+| **Branch recomendada** | `dev1/state-redux` (sandbox descartável)                       |
 | **Depende de**         | — (Sem bloqueios de código)                                    |
 | **PR só abre**         | Não abre PR (estudo/sandbox descartável). Fechamento via daily |
 
