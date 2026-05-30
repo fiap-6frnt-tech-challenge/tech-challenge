@@ -4,7 +4,7 @@
 
 > 📝 **Ressalva:** a reunião de pair programming (passo 1 abaixo) foi **substituída** pela documentação em [state-conventions.md](../state-conventions.md), que cobre os mesmos pontos da agenda original (Redux Toolkit vs TanStack Query, seletores/hooks tipados, query keys, mutations e optimistic updates).
 >
-> 🔁 **Atualização de decisão:** a gestão de estado cliente foi definida como **Redux Toolkit** (antes prototipada com outra lib), para alinhar com a lista da spec do Tech Challenge ("Redux, Recoil ou NgRx"). Os exemplos abaixo refletem Redux Toolkit; se o sandbox original foi feito com outra lib, revalide rapidamente com RTK antes de fechar a task.
+> 🔁 **Atualização de decisão:** a gestão de estado cliente foi definida como **Redux Toolkit** (antes prototipada com Zustand), para alinhar com a lista da spec do Tech Challenge ("Redux, Recoil ou NgRx"). Os exemplos abaixo refletem Redux Toolkit e foram **revalidados com RTK** em 2026-05-30 (ver [Validação](#validação)).
 
 |                        |                                                                |
 | ---------------------- | -------------------------------------------------------------- |
@@ -163,10 +163,12 @@ export default function SandboxPage() {
 
 ## Validação
 
-- [x] A rota `http://localhost:3000/sandbox` renderiza com sucesso.
-- [x] Interação com o contador incrementa/decrementa o estado sem recarregar a lista.
-- [x] A lista de todos carrega e é cacheada corretamente (pode ser validada vendo que não há novo fetch ao remontar o componente rapidamente).
-- Observação: rota deletada após validação
+**Revalidado com Redux Toolkit em 2026-05-30** (Next 16.1.6 + React 19.2.3, shell `@bytebank/shell`). Deps `@reduxjs/toolkit` + `react-redux` instaladas no shell; rota `/sandbox` recriada com o código acima.
+
+- [x] A rota `http://localhost:3000/sandbox` renderiza com sucesso — `next dev` compilou a rota sem erros e respondeu `GET /sandbox 200`.
+- [x] O `<Provider store>` + `useSelector` ligam o componente ao slice: o `CounterUI` renderiza o valor do store no SSR (store/seletor corretamente cabeados); `dispatch(increment/decrement)` é o fluxo padrão do react-redux.
+- [x] A camada TanStack Query funciona sob o mesmo provider: a seção de dados renderiza o estado `isLoading` ("Carregando todos") e resolve a query no cliente.
+- Observação: rota e arquivos do sandbox deletados após a validação (descartável). Deps `@reduxjs/toolkit`/`react-redux` permaneceram no shell (serão usadas pelo `<Provider>` do layout na Task 9).
 
 ---
 
