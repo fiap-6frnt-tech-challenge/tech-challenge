@@ -119,8 +119,8 @@ NextAuth no shell. Shell envolve mount points dos remotes em `<SessionProvider>`
 
 ### Persistência
 
-- **Transações:** migrar `app/api/transactions/store.ts` (in-memory) para Vercel KV/Postgres
-- **Anexos:** Vercel Blob com signed URLs, atrás de interface `StorageProvider`
+- **Transações:** Integrar com o **Backend Oficial da Pós** (repositório `israelmeinert/tech-challenge-2`), usando rotas de API no Next.js do shell como BFF (Proxy seguro) conectadas ao container do backend.
+- **Anexos:** Armazenar os recibos no Vercel Blob e salvar a URL resultante no campo `anexo` (string) fornecido pela API oficial da pós.
 
 ### State
 

@@ -12,7 +12,7 @@
 
 - [ ] Sprint 0 fechado (monorepo + DS + PoC MF)
 - [ ] Google Cloud Console: OAuth Client criado (Web Application, Authorized redirect: `http://localhost:3000/api/auth/callback/google` + prod)
-- [ ] Decidida persistência: Vercel KV (Redis) **ou** Postgres (Neon/Supabase) — usuário valida no início do sprint
+- [ ] Backend oficial rodando localmente (via Docker Compose do repositório `israelmeinert/tech-challenge-2`) ou URL de produção disponível.
 
 ---
 
@@ -26,27 +26,20 @@
 
 **Aceite:** time todo confortável com a API antes de tocar código real.
 
-### 2. Persistência real do backend (2 dias · **dev2-backend**)
+### 2. Integração com o Backend Oficial da Pós (2 dias · **dev2-backend**)
 
-#### Opção A: Vercel KV (Redis)
+- [ ] Clonar e subir o backend oficial em container Docker localmente.
+- [ ] Configurar a variável de ambiente `NEXT_PUBLIC_BACKEND_API_URL` no shell do Next.js (default: `http://localhost:3000`).
+- [ ] Configurar rotas BFF no shell Next.js (`apps/shell/src/app/api/transactions/*` e `/api/user/*`) atuando como proxy seguro.
+- [ ] O BFF deve anexar o cabeçalho `Authorization: Bearer <JWT>` em todas as requisições repassadas ao backend da pós.
+- [ ] Mapear e implementar os endpoints do BFF:
+  - `POST /api/user` -> proxy para `POST ${BACKEND_API_URL}/user` (cadastro)
+  - `GET /api/account` -> proxy para `GET ${BACKEND_API_URL}/account` (retorna conta, transações e cartões)
+  - `POST /api/transactions` -> proxy para `POST ${BACKEND_API_URL}/account/transaction` (cria transação)
+  - `GET /api/transactions/statement` -> proxy para `GET ${BACKEND_API_URL}/account/{accountId}/statement` (extrato)
+- [ ] Garantir que o BFF trate os formatos de resposta do backend oficial (como campos `accountId`, `type`, `value`, `from`, `to`, `anexo`) para manter compatibilidade com o frontend.
 
-- [ ] Instalar `@vercel/kv` em `apps/shell`
-- [ ] Configurar env vars `KV_URL`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`
-- [ ] Reescrever `apps/shell/src/app/api/transactions/store.ts` para usar `kv.set/get/zrange`
-- [ ] Estrutura: `user:{userId}:transactions` (sorted set por timestamp)
-
-#### Opção B: Postgres (Neon)
-
-- [ ] Provisionar DB em Neon free tier
-- [ ] Instalar `drizzle-orm` + `drizzle-kit`
-- [ ] Schema: `users`, `transactions`, `attachments`, `categories`
-- [ ] Migrations + seed com `data/transactions.json` existente
-- [ ] Reescrever store para usar Drizzle
-
-- [ ] Atualizar `apps/shell/src/app/api/transactions/route.ts` e `[id]/route.ts`
-- [ ] Manter shape de resposta paginada compatível com frontend atual
-
-**Aceite:** transação criada persiste após cold start; `GET /api/transactions` retorna do DB.
+**Aceite:** BFF respondendo em `/api/*` e repassando transações criadas e consultadas com sucesso no MongoDB do backend oficial.
 
 ### 3. NextAuth setup no shell (2 dias · **dev2-backend**)
 
@@ -57,21 +50,20 @@
   Credentials({
     name: 'credentials',
     credentials: { email, password },
-    async authorize(creds) { ... validate against KV/Postgres ... }
-  }),
-  Google({
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  })
+    async authorize(creds) {
+      // POST para ${BACKEND_API_URL}/user/auth
+      // Se sucesso, retorna o usuário + insere o token JWT retornado no payload
+    },
+  });
   ```
 - [ ] Session strategy: `jwt`, maxAge 7 dias, cookie httpOnly + secure em prod
-- [ ] Callbacks: `jwt` adiciona `userId` ao token, `session` expõe ao cliente
+- [ ] Callbacks: `jwt` salva o Bearer Token recebido do backend oficial na sessão do NextAuth (acessível no servidor BFF) e expõe dados mínimos do usuário.
 - [ ] Página de erro `/auth/error` (DS-styled)
 - [ ] `apps/shell/middleware.ts` protege todas rotas exceto `/login`, `/api/auth/*`, `/_next/*`
-- [ ] Env vars: `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- [ ] Env vars: `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `NEXT_PUBLIC_BACKEND_API_URL`
 - [ ] `apps/shell/src/app/layout.tsx`: wrap em `<SessionProvider>`
 
-**Aceite:** `/login` redireciona para Google ou aceita credentials; após login, `/` acessível; logout funciona.
+**Aceite:** `/login` autentica chamando a API do backend da pós; o token JWT é guardado com segurança na sessão; logout funciona.
 
 ### 4. Páginas de auth (1 dia · **dev5-transactions**)
 
@@ -99,32 +91,23 @@
 
 ### 6. Schema de transação evoluído (1 dia · **dev2-backend**)
 
-- [ ] Em `packages/shared/src/types/transaction.ts`:
+- [ ] Em `packages/shared/src/types/transaction.ts`, adaptar a assinatura para corresponder à API da pós:
   ```ts
   export interface Transaction {
     id: string;
-    userId: string; // NOVO
-    type: TransactionType;
-    category: string; // NOVO (sprint 3 enche com sugestão)
-    amount: number;
+    accountId: string;
+    type: 'Credit' | 'Debit';
+    value: number; // Negativo para Debit, Positivo para Credit
+    from?: string;
+    to?: string;
+    anexo?: string; // URL do comprovante (Vercel Blob)
     date: string;
-    description: string;
-    attachments?: Attachment[]; // NOVO
-    createdAt: string;
-    updatedAt: string;
-  }
-  export interface Attachment {
-    id: string;
-    url: string;
-    name: string;
-    size: number;
-    mimeType: string;
   }
   ```
-- [ ] Migration no backend (KV: tipo de chave nova; Postgres: ALTER TABLE)
-- [ ] `data/transactions.json` enriquecido com `userId='joana'` e `category='default'` em todos seeds
+- [ ] Atualizar os schemas de validação Zod no shared (`packages/shared/src/schemas/transaction.ts`) para suportar esses campos e restrições.
+- [ ] Atualizar o arquivo de mock de dados local `data/transactions.json` para bater com a nova estrutura, garantindo que o frontend renderize corretamente em modo dev offline.
 
-**Aceite:** todos os 24 seeds aparecem após migração com novos campos preenchidos.
+**Aceite:** Todos os tipos TypeScript e schemas de validação atualizados e exportados com sucesso; mock de dados local ajustado.
 
 ### 7. packages/stores — Redux Toolkit (1 dia · **dev4-dashboard**)
 
@@ -184,12 +167,11 @@
 
 ## Critério de aceite do sprint
 
-- [x] Login Google funciona local + Vercel preview
-- [x] Login com credentials (email/password fake) funciona
+- [x] Login com credentials (autenticando contra POST /user/auth do backend oficial da pós) funciona
 - [x] Logout funciona; sessão expira após 7 dias
 - [x] Rotas protegidas: `/`, `/transactions` redirecionam para `/login` se anônimo
-- [x] Transação criada persiste após `vercel dev` restart
-- [x] Schema da transação tem `userId`, `category`, `attachments?`
+- [x] Transação criada persiste no banco de dados oficial (MongoDB do backend) após restarts
+- [x] Schema da transação tem `accountId`, `type`, `value`, `from`, `to`, `anexo`, `date`
 - [x] `useContext(TransactionsContext)` removido de todo o código
 - [x] FeedbackModal controlado por Redux Toolkit (`uiSlice`)
 - [x] 4 novos componentes no DS publicados no Chromatic com stories

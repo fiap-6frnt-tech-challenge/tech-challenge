@@ -1,282 +1,153 @@
-# Task 2 — Persistência Real do Backend
+# Task 2 — Integração com o Backend Oficial da Pós
 
 > ⏳ **Status: Pending**
 
-|                        |                                                                    |
-| ---------------------- | ------------------------------------------------------------------ |
-| **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)     |
-| **Owner**              | `Dev 1`                                                            |
-| **Duração estimada**   | 2 dias                                                             |
-| **Branch recomendada** | `dev1/real-persistence`                                            |
-| **Depende de**         | [Task 1 — Spike Redux Toolkit/Query](./01-spike-redux-query.md)    |
-| **PR só abre**         | Após validar criação, leitura, update e delete via HTTP REST local |
+|                        |                                                                       |
+| ---------------------- | --------------------------------------------------------------------- |
+| **Sprint**             | [Sprint 1 — Auth + State Migration](../sprint-1-auth-state.md)        |
+| **Owner**              | `Dev 1`                                                               |
+| **Duração estimada**   | 2 dias                                                                |
+| **Branch recomendada** | `dev1/backend-integration`                                            |
+| **Depende de**         | [Task 1 — Spike Redux Toolkit/Query](./01-spike-redux-query.md)       |
+| **PR só abre**         | Após validar o fluxo de proxy BFF de usuários e transações localmente |
 
 ---
 
 ## Dependências
 
-- **O que bloqueia esta tarefa**: Bloqueada pela **Task 1 (Spike Técnico)**, que alinha os padrões das libs antes de iniciarmos qualquer persistência real.
-- **O que esta tarefa desbloqueia**: Desbloqueia a **Task 6 (Schema Evoluído)**, visto que é preciso ter um banco de dados real configurado para que possamos adicionar as novas tabelas e colunas (anexos, categorias, userId).
+- **O que bloqueia esta tarefa**: Bloqueada pela **Task 1 (Spike Técnico)**.
+- **O que esta tarefa desbloqueia**: Desbloqueia a **Task 6 (Schema Evoluído)** e fornece as rotas do BFF para a **Task 3 (NextAuth Setup)**.
 
 ---
 
 ## Contexto
 
-Atualmente, `apps/shell/src/app/api/transactions/store.ts` mantém os dados de transações em um array na memória (`const store: Transaction[] = []`). Isso significa que a cada restart do servidor local, ou a cada cold-start do servidor serverless na Vercel, todos os dados são apagados.
+A pós-tech disponibilizou o repositório [israelmeinert/tech-challenge-2](https://github.com/israelmeinert/tech-challenge-2) contendo o backend oficial em Node/Express com persistência no MongoDB, suportando cadastro, autenticação JWT, busca de transações por conta e criação de transações.
 
-O objetivo desta tarefa é migrar essa camada in-memory para uma persistência real persistente. O usuário deve escolher qual das opções será usada na reunião de planejamento. Abaixo, detalhamos o passo-a-passo para ambas as opções:
-
-- **Opção A**: Vercel KV (Redis) — Excelente para velocidade e simplicidade key-value.
-- **Opção B**: Postgres (Neon) com Drizzle ORM — Excelente se desejarmos modelagem relacional robusta.
+Para evitar CORS, simplificar o roteamento e manter o token de acesso seguro no servidor, usaremos o **Next.js Shell como BFF (Backend-For-Frontend)**. Esta tarefa consiste em configurar a execução do backend (localmente via Docker) e implementar as rotas BFF Proxy locais no shell Next.js (`apps/shell/src/app/api/*`).
 
 ---
 
 ## Pré-condições
 
-- Estar na branch `dev2-backend/real-persistence`.
-- Obter os tokens/credenciais de conexão da conta do serviço escolhido (Vercel KV ou Neon) criados para a equipe.
+- Estar na branch `dev1/backend-integration`.
+- Ter o Docker instalado localmente na máquina de desenvolvimento.
+- Clonar o repositório do backend: `git clone https://github.com/israelmeinert/tech-challenge-2.git`.
 
 ---
 
 ## Implementação passo-a-passo
 
-### Opção A: Vercel KV (Redis)
+### 1. Executar o Backend da Pós Localmente
 
-#### 1. Instalar dependências no shell
+No diretório onde o backend oficial foi clonado, execute:
 
 ```bash
-npm install @vercel/kv -w @bytebank/shell
+# Via Docker
+docker build -t tech-challenge-backend .
+docker run -d -p 3000:3000 --name bytebank-backend tech-challenge-backend
 ```
 
-#### 2. Configurar variáveis de ambiente
+_(Nota: Certifique-se de que a porta 3000 está livre ou mapeie para outra porta e configure no env. Caso execute sem docker, rode `npm install` e `npm run dev` após subir uma instância local do MongoDB)._
 
-No arquivo `apps/shell/.env.local` (crie se não existir), adicione:
+### 2. Configurar Variáveis de Ambiente no Shell
+
+No arquivo `apps/shell/.env.local`, configure a URL base do backend oficial:
 
 ```env
-KV_URL="rediss://default:seu_token@seu_host.kv.vercel-storage.com:25000"
-KV_REST_API_URL="https://seu_host.kv.vercel-storage.com"
-KV_REST_API_TOKEN="seu_token"
+NEXT_PUBLIC_BACKEND_API_URL="http://localhost:3000"
 ```
 
-#### 3. Reescrever a store (`apps/shell/src/app/api/transactions/store.ts`)
+### 3. Implementar as Rotas BFF Proxy no Shell Next.js
 
-Como a API do KV é assíncrona, altere as assinaturas de `store.ts` para retornar `Promise`:
+As rotas da API local do shell (`apps/shell/src/app/api/*`) devem encaminhar as requisições para o backend da pós anexando o JWT da sessão do usuário logado.
 
-```typescript
-import { kv } from '@vercel/kv';
-import type { Transaction, NewTransaction } from '@bytebank/shared';
-
-// Chave base provisória enquanto a autenticação não está totalmente implementada
-const KEY_PREFIX = 'user:default:transactions';
-
-export async function getAll(): Promise<Transaction[]> {
-  const transactions = await kv.hvals<Transaction>(KEY_PREFIX);
-  return transactions
-    ? transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    : [];
-}
-
-export async function getById(id: string): Promise<Transaction | null> {
-  return await kv.hget<Transaction>(KEY_PREFIX, id);
-}
-
-export async function create(data: NewTransaction): Promise<Transaction> {
-  const id = crypto.randomUUID();
-  const transaction: Transaction = { id, ...data };
-  await kv.hset(KEY_PREFIX, { [id]: transaction });
-  return transaction;
-}
-
-export async function update(
-  id: string,
-  data: Partial<NewTransaction>
-): Promise<Transaction | null> {
-  const current = await getById(id);
-  if (!current) return null;
-
-  const updated: Transaction = { ...current, ...data };
-  await kv.hset(KEY_PREFIX, { [id]: updated });
-  return updated;
-}
-
-export async function remove(id: string): Promise<boolean> {
-  const deletedCount = await kv.hdel(KEY_PREFIX, id);
-  return deletedCount > 0;
-}
-```
-
----
-
-### Opção B: Postgres (Neon) com Drizzle ORM
-
-#### 1. Instalar dependências de DB e Drizzle
-
-```bash
-# Dependências de execução
-npm install drizzle-orm @neondatabase/serverless -w @bytebank/shell
-
-# Dependências de desenvolvimento (root ou workspace devDeps)
-npm install -D drizzle-kit dotenv -w @bytebank/shell
-```
-
-#### 2. Configurar variáveis de ambiente
-
-No arquivo `apps/shell/.env.local`:
-
-```env
-DATABASE_URL="postgres://usuario:senha@seu-host-neon.neon.tech/neondb?sslmode=require"
-```
-
-#### 3. Definir Schema e Configuração do Drizzle
-
-Crie a pasta `apps/shell/src/db` e adicione os seguintes arquivos:
-
-##### `apps/shell/src/db/schema.ts`
-
-```typescript
-import { pgTable, text, timestamp, doublePrecision } from 'drizzle-orm/pg-core';
-
-export const transactions = pgTable('transactions', {
-  id: text('id').primaryKey(),
-  type: text('type', { enum: ['deposito', 'transferencia'] }).notNull(),
-  amount: doublePrecision('amount').notNull(),
-  date: text('date').notNull(), // manter string compatível com o schema atual
-  description: text('description').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-```
-
-##### `apps/shell/drizzle.config.ts`
-
-```typescript
-import { defineConfig } from 'drizzle-kit';
-
-export default defineConfig({
-  schema: './src/db/schema.ts',
-  out: './drizzle',
-  dialect: 'postgresql',
-  dbCredentials: {
-    url: process.env.DATABASE_URL!,
-  },
-});
-```
-
-##### `apps/shell/src/db/index.ts`
-
-```typescript
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { neon } from '@neondatabase/serverless';
-import * as schema from './schema';
-
-const sql = neon(process.env.DATABASE_URL!);
-export const db = drizzle(sql, { schema });
-```
-
-#### 4. Rodar Migrações Iniciais
-
-Adicione comandos ao `package.json` de `apps/shell`:
-
-```json
-"scripts": {
-  "db:generate": "drizzle-kit generate",
-  "db:migrate": "drizzle-kit migrate"
-}
-```
-
-Execute localmente:
-
-```bash
-npm run db:generate -w @bytebank/shell
-npm run db:migrate -w @bytebank/shell
-```
-
-#### 5. Reescrever a store (`apps/shell/src/app/api/transactions/store.ts`)
-
-```typescript
-import { db } from '../../../db';
-import { transactions } from '../../../db/schema';
-import { eq, desc } from 'drizzle-orm';
-import type { Transaction, NewTransaction } from '@bytebank/shared';
-
-export async function getAll(): Promise<Transaction[]> {
-  const result = await db.query.transactions.findMany({
-    orderBy: [desc(transactions.date)],
-  });
-  // Cast estrutural para bater com o tipo de retorno esperado
-  return result as unknown as Transaction[];
-}
-
-export async function getById(id: string): Promise<Transaction | null> {
-  const result = await db.query.transactions.findFirst({
-    where: eq(transactions.id, id),
-  });
-  return (result as unknown as Transaction) || null;
-}
-
-export async function create(data: NewTransaction): Promise<Transaction> {
-  const id = crypto.randomUUID();
-  const [inserted] = await db
-    .insert(transactions)
-    .values({
-      id,
-      type: data.type,
-      amount: data.amount,
-      date: data.date,
-      description: data.description,
-    })
-    .returning();
-
-  return inserted as unknown as Transaction;
-}
-
-export async function update(
-  id: string,
-  data: Partial<NewTransaction>
-): Promise<Transaction | null> {
-  const [updated] = await db
-    .update(transactions)
-    .set({
-      type: data.type,
-      amount: data.amount,
-      date: data.date,
-      description: data.description,
-      updatedAt: new Date(),
-    })
-    .where(eq(transactions.id, id))
-    .returning();
-
-  return (updated as unknown as Transaction) || null;
-}
-
-export async function remove(id: string): Promise<boolean> {
-  const result = await db.delete(transactions).where(eq(transactions.id, id)).returning();
-
-  return result.length > 0;
-}
-```
-
----
-
-### Ajustar os Handlers da API (`apps/shell/src/app/api/transactions/route.ts` e `[id]/route.ts`)
-
-Como a store agora possui métodos assíncronos, ajuste os métodos `GET`, `POST`, `PUT`, `DELETE` nas rotas do Next.js para utilizar `await`:
-
-Exemplo em `route.ts`:
+#### 3.1. BFF de Cadastro de Usuário (`apps/shell/src/app/api/user/route.ts`)
 
 ```typescript
 import { NextResponse } from 'next/server';
-import * as store from './store';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL ?? 'http://localhost:3000';
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const res = await fetch(`${BACKEND_URL}/user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch (error) {
+    return NextResponse.json({ message: 'Erro ao conectar ao backend' }, { status: 500 });
+  }
+}
+```
+
+#### 3.2. BFF de Transações (`apps/shell/src/app/api/transactions/route.ts`)
+
+```typescript
+import { NextResponse } from 'next/server';
+import { auth } from '@/auth'; // NextAuth v5 helper para ler sessão no servidor
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL ?? 'http://localhost:3000';
 
 export async function GET() {
-  const transactions = await store.getAll();
-  return NextResponse.json(transactions);
+  try {
+    const session = await auth();
+    if (!session?.accessToken) {
+      return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    }
+
+    // Busca a conta e transações associadas
+    const res = await fetch(`${BACKEND_URL}/account`, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    });
+
+    const data = await res.json();
+    // O backend retorna as transações dentro do result.transactions
+    const transactions = data.result?.transactions ?? [];
+
+    return NextResponse.json(transactions, { status: res.status });
+  } catch (error) {
+    return NextResponse.json({ message: 'Erro ao buscar transações' }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const newTx = await store.create(body);
-  return NextResponse.json(newTx, { status: 201 });
+  try {
+    const session = await auth();
+    if (!session?.accessToken) {
+      return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    // Envia a transação vinculando a conta do usuário
+    const res = await fetch(`${BACKEND_URL}/account/transaction`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+      body: JSON.stringify({
+        accountId: session.user.accountId, // Adicionado no token JWT no login
+        type: body.type, // 'Credit' | 'Debit'
+        value: body.value, // Negativo para Debit, Positivo para Credit
+        from: body.from ?? 'default',
+        to: body.to ?? 'default',
+        anexo: body.anexo ?? '', // URL do anexo no Vercel Blob
+      }),
+    });
+
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch (error) {
+    return NextResponse.json({ message: 'Erro ao criar transação' }, { status: 500 });
+  }
 }
 ```
 
@@ -284,18 +155,19 @@ export async function POST(request: Request) {
 
 ## Validação
 
-- [ ] Execute `npm run dev -w @bytebank/shell` e valide que requisições HTTP REST usando Insomnia/Postman/cURL persistem dados mesmo reiniciando o terminal do Next.js:
-  - `GET http://localhost:3000/api/transactions`
-  - `POST http://localhost:3000/api/transactions` com payload
-- [ ] O app shell local renderiza dados da lista do banco de dados na UI.
-- [ ] Nenhum tipo TypeScript está quebrado.
+- [ ] Execute o container do backend da pós: `docker ps` mostra o container ativo na porta 3000.
+- [ ] Execute `npm run dev -w @bytebank/shell` e valide as rotas do BFF usando ferramentas HTTP (Postman/cURL):
+  - Criar um usuário via `POST http://localhost:3000/user` (direto) ou pelo BFF `POST http://localhost:3000/api/user`.
+  - Simular o login obtendo o token JWT.
+  - Chamar `GET http://localhost:3000/api/transactions` passando a sessão mockada (ou autenticado no navegador) e verificar se retorna a lista de transações corretamente do MongoDB da pós.
+- [ ] Tipos TypeScript definidos em `@bytebank/shared` estão sincronizados com a resposta da API oficial.
 
 ---
 
 ## Gotchas
 
-1. **Acesso SSL ao Postgres**: Certifique-se de usar `?sslmode=require` na URL do banco se usar Neon, Supabase ou ElephantSQL para evitar erros de handshake seguro.
-2. **Cold Starts do KV/Drizzle**: Chamadas iniciais podem demorar ligeiramente em ambiente Serverless. Certifique-se de inicializar clientes fora do escopo do handler.
+1. **Formatos de Valor**: No backend oficial, valores de débito devem ser criados e retornados como números negativos (ex: `-200`), e depósitos/créditos como positivos (ex: `200`). Garanta que os inputs e a UI lidem corretamente com esse padrão.
+2. **CORS no Backend**: Como o shell Next.js realiza as chamadas a partir de seu código de servidor (Server Components ou API Routes/BFF), não há bloqueios de CORS do browser ao bater no backend da pós.
 
 ---
 

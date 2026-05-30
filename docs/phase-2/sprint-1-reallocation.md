@@ -1,77 +1,92 @@
-# Plano de Ação — Redistribuição da Sprint 1 para 3 Desenvolvedores
+# Plano de Ação — Redistribuição da Sprint 1 para 3 Desenvolvedores (Redux + Backend Pós)
 
-Devido à redução da equipe para **3 integrantes**, este documento oficializa a reestruturação dos papéis, cronograma de entregas e o grafo de dependências das tarefas da **Sprint 1 (Auth + State Migration)**.
+Devido à redução da equipe para **3 integrantes**, este documento oficializa a reestruturação dos papéis, o esforço e a sequência de execução das tarefas da **Sprint 1 (Auth + State Migration)** com o backend oficial da pós e o Redux Toolkit.
 
 ---
 
 ## 1. Reestruturação de Tracks (3 Papéis)
 
-Os 5 tracks originais da Fase 2 foram fundidos em 3 papéis principais para evitar overlaps e balancear a carga técnica:
+Os 5 tracks originais da Fase 2 foram fundidos em 3 papéis principais para balancear a carga técnica e evitar overlaps:
 
-| Papel                           | Foco Principal                           | Responsabilidades na Sprint 1                                                                                                                 |
-| :------------------------------ | :--------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Dev 1 (Infra & Backend)**     | Infra, Banco de Dados e Testes           | Persistência real (KV/Postgres), schema de transação, migração de seeds, configurações de CI/CD, testes do middleware e deploy.               |
-| **Dev 2 (DS & UI Pages)**       | UI Components e Páginas do Host          | Componentes de autenticação do Design System (LoginForm, GoogleAuthButton, UserMenu, AuthGuard), NextAuth v5 setup e telas de login/erro.     |
-| **Dev 3 (State & Integration)** | Redux Toolkit, React Query e Refatoração | Configuração de `@bytebank/stores` (Redux Toolkit slices), `@bytebank/api-client` (Query hooks) e migração/remoção completa das Context APIs. |
-
----
-
-## 2. Alocação Equivalente de Esforço (Duração Estimada)
-
-A carga de trabalho total estimada para a Sprint 1 é de **17.5 dev-days**. Com a redistribuição, o esforço foi balanceado de maneira equivalente entre os 3 membros da equipe:
-
-| Dev       | Tarefas Atribuídas                                                                                      | Duração      |
-| :-------- | :------------------------------------------------------------------------------------------------------ | :----------- |
-| **Dev 1** | Spike (1d) + Persistência (2d) + Schema Evoluído (1.5d) + Vitest/CI & Env (1.5d) + Smoke Test (0.5d)    | **6.5 dias** |
-| **Dev 2** | Spike (1d) + NextAuth Setup (2d) + Componentes DS (2d) + Páginas Auth (1d) + Smoke Test (0.5d)          | **6.5 dias** |
-| **Dev 3** | Spike (1d) + Slices Redux Toolkit (1d) + Hooks Query (2d) + Migração Context (2.5d) + Smoke Test (0.5d) | **7.0 dias** |
+| Papel                           | Foco Principal                     | Responsabilidades na Sprint 1                                                                                                                |
+| :------------------------------ | :--------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dev 1 (Infra, BFF & Testes)** | Infra, BFF e Testes                | Subir container do backend oficial, criar BFF no shell do Next.js (proxy seguro de APIs), adaptar schema de transação, CI/CD e testes.       |
+| **Dev 2 (DS & UI Pages)**       | UI Components e Páginas do Host    | Componentes de autenticação do Design System (LoginForm, UserMenu, AuthGuard), NextAuth v5 setup conectado ao backend e telas de login/erro. |
+| **Dev 3 (State & Integration)** | Redux Toolkit, Query e Refatoração | Configuração do package `@bytebank/stores` (slices do Redux), `@bytebank/api-client` (Query hooks) e migração completa das Context APIs.     |
 
 ---
 
-## 3. Matriz de Dependências Críticas
+## 2. Alocação Equivalente de Esforço (Estimativas)
 
-Para evitar que desenvolvedores fiquem bloqueados, o time deve seguir a seguinte ordem de prioridades e dependências:
+A carga de trabalho total estimada para a Sprint 1 é de **~17.5 dev-days**. Com a redistribuição, o esforço foi balanceado de maneira equivalente entre os 3 membros da equipe:
 
-1. **Dia 1 (Todos)**: Spike de alinhamento em Redux Toolkit + TanStack Query (**Task 1**).
-2. **Dias 2 e 3 (Dev 1 & Dev 2)**:
-   - **Dev 1** inicia a persistência real (**Task 2**) para desbloquear o schema.
-   - **Dev 2** inicia os componentes do Design System (**Task 5**).
-3. **Dias 4 e 5 (Dev 1, Dev 2 & Dev 3)**:
-   - **Dev 1** entrega o schema de transação evoluído (**Task 6**), o que **desbloqueia o Dev 3** nos hooks de API (**Task 8**).
-   - **Dev 2** finaliza os componentes do DS (**Task 5**), o que **desbloqueia as suas próprias páginas de Auth** (**Task 4**).
-   - **Dev 3** cria os slices Redux Toolkit (**Task 7**).
-4. **Dias 6 a 8 (Dev 2 & Dev 3)**:
-   - **Dev 2** realiza o setup do NextAuth (**Task 3**) no servidor e desenvolve as páginas `/login` e `/auth/error` (**Task 4**), o que **desbloqueia a store de auth** do Dev 3.
-   - **Dev 3** escreve os hooks de Query (**Task 8**).
-5. **Dias 9 a 11 (Dev 3)**:
-   - **Dev 3** realiza a migração massiva da Context API (**Task 9**), dependendo dos hooks (**Task 8**) e das stores (**Task 7**).
-6. **Dias 12 e 13 (Dev 1)**:
-   - **Dev 1** finaliza os testes do middleware e a pipeline de CI/CD (**Task 10**).
-7. **Dia 14 (Todos)**:
-   - Validação final do smoke test em clone limpo e gravação da demo (**Task 11**).
+| Dev       | Tarefas Atribuídas                                                                                             | Duração      |
+| :-------- | :------------------------------------------------------------------------------------------------------------- | :----------- |
+| **Dev 1** | Spike (1d) + Integração Backend Pós (2d) + Schema Evoluído (1.5d) + Vitest/CI & Env (1.5d) + Smoke Test (0.5d) | **6.5 dias** |
+| **Dev 2** | Spike (1d) + NextAuth Setup (2d) + Componentes DS (2d) + Páginas Auth (1d) + Smoke Test (0.5d)                 | **6.5 dias** |
+| **Dev 3** | Spike (1d) + Slices Redux (1d) + Hooks Query (2d) + Migração Context (2.5d) + Smoke Test (0.5d)                | **7.0 dias** |
+
+---
+
+## 3. Sequência Lógica de Execução (Fases e Dependências)
+
+As tarefas devem ser executadas respeitando a seguinte ordem de prioridade técnica. Não há separação por dias — cada tarefa começa assim que seus pré-requisitos estiverem disponíveis:
+
+### Fase 1 — Alinhamento (Todos)
+
+- **Task 1: Spike Redux Toolkit + TanStack Query** — Ponto de partida. Sem bloqueios. Desbloqueia toda a sprint.
+
+### Fase 2 — Fundação e Contratos (Dev 1 e Dev 2 em paralelo)
+
+- **Task 2: Integração Backend Pós (BFF)** `[Dev 1]` — Inicia logo após Task 1. Desbloqueia o desenvolvimento das rotas.
+- **Task 5: Componentes DS** `[Dev 2]` — Inicia logo após Task 1. Pode correr em paralelo com Task 2.
+- **Task 6: Schema de Transação** `[Dev 1]` — Adaptação dos contratos para a assinatura da pós. **Principal gargalo da sprint**: desbloqueia as Tasks 3 e 8.
+
+### Fase 3 — Autenticação e Telas (Dev 2)
+
+- **Task 3: NextAuth Setup** `[Dev 2]` — Conecta o NextAuth ao backend da pós (`POST /user/auth`). Bloqueada pela Task 6 (precisa do formato do token).
+- **Task 4: Páginas de Auth** `[Dev 2]` — Implementa `/login` e `/auth/error` usando componentes do DS. Bloqueada pelas Tasks 3 e 5.
+
+### Fase 4 — Slices e Hooks (Dev 3)
+
+- **Task 7: Slices Redux Toolkit** `[Dev 3]` — Cria as stores compartilhadas. Bloqueada pela Task 3 (precisa da session structure).
+- **Task 8: Hooks TanStack Query** `[Dev 3]` — Hooks de fetching apontando para o BFF. Bloqueada pela Task 6.
+
+### Fase 5 — Integração e Testes (Dev 1 e Dev 3)
+
+- **Task 9: Migração Context API** `[Dev 3]` — Substituição total do Context pelo Redux + Query. Bloqueada pelas Tasks 7, 8 e 4.
+- **Task 10: Vitest, CI e Env Vars** `[Dev 1]` — Testes unitários do BFF, slices e middlewares. Bloqueada pelas Tasks 3, 7 e 8.
+
+### Fase 6 — Validação Final (Todos)
+
+- **Task 11: Smoke Test & Vídeo Demo** — Bloqueada por todas as tarefas anteriores. Encerra a Sprint 1.
 
 ---
 
 ## 4. Visualização do Grafo de Dependências
 
 ```
-   [Task 1: Spike Técnico] (Todos no Dia 1)
-             │
-             ├──→ [Task 2: Persistência] (Dev 1) ──→ [Task 6: Schema Evoluído] (Dev 1)
-             │                                                 │
-             │                                                 ├──→ [Task 8: Query Hooks] (Dev 3) ──┐
-             │                                                 │                                    │
-             │                                                 └──→ [Task 3: NextAuth] (Dev 2)      │
-             │                                                           │                          │
-             │                                                           ├──→ [Task 7: Stores] (Dev 3)
-             │                                                           │                          │
-             ├──→ [Task 5: Componentes DS] (Dev 2) ──→ [Task 4: Páginas] (Dev 2)                     │
-             │                                                           │                          │
-             └───────────────────────────────────────────────────────────┴──────────────────────────┼─→ [Task 9: Migração Context] (Dev 3)
-                                                                                                    │            │
-                                                                       [Task 10: Vitest/CI] (Dev 1) ┘            │
-                                                                                                                 ↓
-                                                                                                      [Task 11: Smoke Test & Demo] (Todos)
+[Task 1: Spike] (Todos)
+         │
+         ├──→ [Task 2: Integração Backend Pós (BFF)] (Dev 1)
+         │              │
+         │              └──→ [Task 6: Schema Evoluído] (Dev 1) ← GARGALO
+         │                              │
+         │                             ├──→ [Task 3: NextAuth] (Dev 2)
+         │                             │              │
+         │                             │              └──→ [Task 7: Slices Redux] (Dev 3) ──┐
+         │                             │                                                     │
+         │                             └──→ [Task 8: Query Hooks] (Dev 3) ──────────────────┤
+         │                                                                                   │
+         ├──→ [Task 5: Componentes DS] (Dev 2)                                              │
+         │              │                                                                    │
+         │              └──→ [Task 4: Páginas Auth] (Dev 2) ────────────────────────────────┤
+         │                                                                                   │
+         └───────────────────────────────────────────────────────────────────────────────────┼─→ [Task 9: Migração Context] (Dev 3)
+                                                                                             │            │
+                                                                 [Task 10: Vitest/CI] (Dev 1)┘            │
+                                                                                                          ↓
+                                                                                               [Task 11: Smoke Test] (Todos)
 ```
 
-> **Atenção (Mitigação de Riscos)**: O Dev 2 e o Dev 1 devem trabalhar em estreita colaboração nos dias 4 e 5. A entrega do NextAuth Setup pelo Dev 2 é necessária para que o Dev 3 consiga conectar o slice de autenticação (`authSlice`) ao estado real do NextAuth. Caso ocorram atrasos, o Dev 3 deve programar mocks para as sessões e continuar a implementação.
+> **Atenção**: O Schema de Transação (Task 6) é o gargalo imediato. O Dev 3 pode adiantar a estrutura inicial das stores no package `@bytebank/stores` com mocks de dados durante o desenvolvimento da integração de banco.

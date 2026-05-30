@@ -49,15 +49,12 @@ Crie o arquivo de configurações centralizado em `apps/shell/src/auth.ts`:
 
 ```typescript
 import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL ?? 'http://localhost:3000';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    GoogleProvider({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-    }),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -67,17 +64,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        // Mock temporário para validação local: aceita qualquer login se senha for "senha123"
-        // Em um cenário real, você faria uma query no Postgres/KV aqui.
-        if (credentials.password === 'senha123') {
+        try {
+          // Bate na API da pós para autenticar
+          const res = await fetch(`${BACKEND_URL}/user/auth`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
+
+          if (!res.ok) return null;
+
+          const data = await res.json();
+          const token = data.result?.token;
+
+          if (!token) return null;
+
+          // Busca dados da conta associada
+          const accountRes = await fetch(`${BACKEND_URL}/account`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const accountData = await accountRes.json();
+          const accountId = accountData.result?.account?.[0]?.id;
+
           return {
-            id: 'joana', // Garantindo o userId igual ao do seed das transações
-            name: 'Joana da Silva',
+            id: credentials.email as string, // Usamos o email como id local
             email: credentials.email as string,
-            image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+            token, // Retorna o JWT da pós no objeto do usuário
+            accountId, // Adiciona o accountId retornado da conta
           };
+        } catch (error) {
+          return null;
         }
-        return null;
       },
     }),
   ],
@@ -92,13 +112,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.userId = user.id;
+        token.accessToken = (user as any).token;
+        token.accountId = (user as any).accountId;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.userId as string;
+        (session as any).accessToken = token.accessToken as string;
+        (session as any).user.accountId = token.accountId as string;
       }
       return session;
     },

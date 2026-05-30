@@ -9,18 +9,17 @@
 
 ## Tracks (donos sugeridos)
 
-| Handle                | Track                | Foco                                                          | Skills demandadas                          |
-| --------------------- | -------------------- | ------------------------------------------------------------- | ------------------------------------------ |
-| **dev1-infra**        | **Infra & Build**    | Monorepo, MF tooling, CI/CD, Docker, deploy, perf             | Turbo, Rsbuild, Docker, Vercel, Lighthouse |
-| **dev2-backend**      | **Backend & Auth**   | NextAuth, API Routes, persistência (KV/Postgres), Vercel Blob | Node, REST, DB, OAuth flows                |
-| **dev3-ds**           | **Design System**    | Componentes DS, Storybook, Chromatic, A11y, tokens            | React, Tailwind v4, ARIA, WCAG             |
-| **dev4-dashboard**    | **Dashboard MFE**    | dashboard-mfe, charts, agregações, KPIs                       | React, data viz, Recharts                  |
-| **dev5-transactions** | **Transactions MFE** | transactions-mfe, filtros, busca, scroll infinito, anexos     | React, UX patterns, forms, RHF             |
+| Handle                | Track                | Foco                                                      | Skills demandadas                        |
+| --------------------- | -------------------- | --------------------------------------------------------- | ---------------------------------------- | ---------------- | ------------------ | ------------------------------------------------------------ | --------------------------- |
+| **dev1-infra**        | **Infra & Build**    | Monorepo, MF tooling, CI/CD, Docker, deploy, perf         | Turbo, Rsbuild, Docker, Vercel, Lighthou | **dev2-backend** | **Backend & Auth** | NextAuth, API Routes, integração backend da pós, Vercel Blob | Node, REST, DB, OAuth flows |
+| **dev3-ds**           | **Design System**    | Componentes DS, Storybook, Chromatic, A11y, tokens        | React, Tailwind v4, ARIA, WCAG           |
+| **dev4-dashboard**    | **Dashboard MFE**    | dashboard-mfe, charts, agregações, KPIs                   | React, data viz, Recharts                |
+| **dev5-transactions** | **Transactions MFE** | transactions-mfe, filtros, busca, scroll infinito, anexos | React, UX patterns, forms, RHF           |
 
 **Princípios:**
 
 1. **Cada dev tem 1 track principal**, mas pode pegar tarefas auxiliares de outro track quando estiver sem dependências
-2. **Dependências marcadas explicitamente** (`⇐ depende de`) para que o time saiba o que sequenciar
+2. **Dependências marcadas explicitamente** (`le depende de`) para que o time saiba o que sequenciar
 3. **DS-first:** dev3-ds entrega componentes nos primeiros dias do sprint para desbloquear dev4-dashboard/dev5-transactions
 4. **Backend-first:** dev2-backend entrega endpoints/schemas cedo para desbloquear dev4-dashboard/dev5-transactions
 5. **Smoke test sempre no fim do sprint** — todo time
@@ -51,25 +50,25 @@
 
 ## Sprint 1 — Auth + State Migration (14 dias)
 
-| Tarefa                                                                  | Owner                                 | Dias | Depende de                                  |
-| ----------------------------------------------------------------------- | ------------------------------------- | ---- | ------------------------------------------- |
-| Spike: pair session Redux Toolkit + TanStack Query                      | dev1-infra (lidera, todos participam) | 1    | —                                           |
-| Persistência real (Vercel KV ou Postgres) + migrar `store.ts`           | dev2-backend                          | 2    | —                                           |
-| Schema da `Transaction` evoluído (`userId`, `category`, `attachments?`) | dev2-backend                          | 1    | persistência decidida                       |
-| Migration do seed `data/transactions.json`                              | dev2-backend                          | 0.5  | schema evoluído                             |
-| NextAuth setup (Credentials + Google) + middleware                      | dev2-backend                          | 2    | schema evoluído                             |
-| DS: `LoginForm` + Storybook                                             | dev3-ds                               | 0.5  | —                                           |
-| DS: `GoogleAuthButton` + Storybook                                      | dev3-ds                               | 0.5  | —                                           |
-| DS: `UserMenu` + Storybook                                              | dev3-ds                               | 0.5  | —                                           |
-| DS: `AuthGuard` + Storybook                                             | dev3-ds                               | 0.5  | —                                           |
-| `packages/stores`: `authSlice` + `uiSlice` (Redux Toolkit) + Vitest     | dev4-dashboard                        | 1    | NextAuth session shape (dev2-backend dia 4) |
-| `packages/api-client`: TanStack Query hooks transações                  | dev4-dashboard                        | 2    | schema evoluído (dev2-backend dia 3)        |
-| Pages `/login` + `/auth/error`                                          | dev5-transactions                     | 1    | DS components prontos (dev3-ds dia 3)       |
-| Migração: remover `TransactionsContext` + adaptar todos consumidores    | dev5-transactions                     | 2    | api-client pronto (dev4-dashboard dia 8)    |
-| Migração: remover `FeedbackContext` + adaptar                           | dev5-transactions                     | 0.5  | uiSlice pronto (dev4-dashboard dia 6)       |
-| Configurar env vars Vercel (preview + prod)                             | dev1-infra                            | 0.5  | NextAuth setup                              |
-| Testes Vitest middleware + integração CI                                | dev1-infra                            | 1    | tudo acima                                  |
-| Smoke test + vídeo curto demo                                           | Todo time                             | 0.5  | tudo                                        |
+| Tarefa                                                               | Owner                                 | Dias | Depende de                                  |
+| -------------------------------------------------------------------- | ------------------------------------- | ---- | ------------------------------------------- |
+| Spike: pair session Redux Toolkit + TanStack Query                   | dev1-infra (lidera, todos participam) | 1    | —                                           |
+| Integração backend da pós e BFF proxy no shell                       | dev2-backend                          | 2    | —                                           |
+| Schema da `Transaction` evoluído (adequado à API da pós)             | dev2-backend                          | 1    | integração backend da pós                   |
+| Migration do seed `data/transactions.json`                           | dev2-backend                          | 0.5  | schema evoluído                             |
+| NextAuth setup (Credentials + Google) + middleware                   | dev2-backend                          | 2    | schema evoluído                             |
+| DS: `LoginForm` + Storybook                                          | dev3-ds                               | 0.5  | —                                           |
+| DS: `GoogleAuthButton` + Storybook                                   | dev3-ds                               | 0.5  | —                                           |
+| DS: `UserMenu` + Storybook                                           | dev3-ds                               | 0.5  | —                                           |
+| DS: `AuthGuard` + Storybook                                          | dev3-ds                               | 0.5  | —                                           |
+| `packages/stores`: `authSlice` + `uiSlice` (Redux Toolkit) + Vitest  | dev4-dashboard                        | 1    | NextAuth session shape (dev2-backend dia 4) |
+| `packages/api-client`: TanStack Query hooks transações               | dev4-dashboard                        | 2    | schema evoluído (dev2-backend dia 3)        |
+| Pages `/login` + `/auth/error`                                       | dev5-transactions                     | 1    | DS components prontos (dev3-ds dia 3)       |
+| Migração: remover `TransactionsContext` + adaptar todos consumidores | dev5-transactions                     | 2    | api-client pronto (dev4-dashboard dia 8)    |
+| Migração: remover `FeedbackContext` + adaptar                        | dev5-transactions                     | 0.5  | uiSlice pronto (dev4-dashboard dia 6)       |
+| Configurar env vars Vercel (preview + prod)                          | dev1-infra                            | 0.5  | NextAuth setup                              |
+| Testes Vitest middleware + integração CI                             | dev1-infra                            | 1    | tudo acima                                  |
+| Smoke test + vídeo curto demo                                        | Todo time                             | 0.5  | tudo                                        |
 
 **Capacidade:** 70 dev-days. Alocados: ~17. Devs com folga (especialmente dev1-infra e dev3-ds após dia 5) podem adiantar Sprint 2: dev3-ds começa research/protótipo de charts; dev1-infra começa setup Rsbuild para `dashboard-mfe`.
 
