@@ -22,6 +22,8 @@ const ERROR_FEEDBACK = {
   title: 'Erro ao adicionar transação',
   message: 'Tente novamente',
 };
+const DEFAULT_USER_ID = 'joana';
+const DEFAULT_CATEGORY = 'default';
 
 export function NewTransaction(): ReactElement {
   const { addTransaction } = useTransactions();
@@ -41,7 +43,12 @@ export function NewTransaction(): ReactElement {
     setIsSubmitting(true);
 
     try {
-      await addTransaction(pendingData);
+      await addTransaction({
+        ...pendingData,
+        userId: DEFAULT_USER_ID,
+        category: DEFAULT_CATEGORY,
+        attachments: [],
+      });
       setPendingData(null);
       formRef.current?.reset();
       showFeedback(SUCCESS_FEEDBACK);

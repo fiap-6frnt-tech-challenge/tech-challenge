@@ -1,5 +1,7 @@
-import type { NewTransaction } from '@bytebank/shared';
+import type { Transaction } from '@bytebank/shared';
+
+export type TransactionInfoValue = Pick<Transaction, 'type' | 'amount' | 'date' | 'description'>;
 
 export interface TransactionInfoProps {
-  transaction: NewTransaction;
+  transaction: TransactionInfoValue;
 }

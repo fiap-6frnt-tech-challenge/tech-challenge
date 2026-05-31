@@ -2,171 +2,243 @@
   "transactions": [
     {
       "id": "txn-001",
+      "userId": "joana",
       "type": "deposit",
       "amount": 5000,
       "date": "2026-01-05",
-      "description": "January salary"
+      "description": "January salary",
+      "category": "Salário",
+      "attachments": []
     },
     {
       "id": "txn-002",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 120.5,
       "date": "2026-01-07",
-      "description": "Supermarket"
+      "description": "Supermarket",
+      "category": "Alimentação",
+      "attachments": []
     },
     {
       "id": "txn-003",
+      "userId": "joana",
       "type": "transfer",
       "amount": 800,
       "date": "2026-01-10",
-      "description": "Rent payment"
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
     },
     {
       "id": "txn-004",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 45,
       "date": "2026-01-12",
-      "description": "Streaming services"
+      "description": "Streaming services",
+      "category": "Entretenimento",
+      "attachments": []
     },
     {
       "id": "txn-005",
+      "userId": "joana",
       "type": "deposit",
       "amount": 350,
       "date": "2026-01-15",
-      "description": "Freelance project"
+      "description": "Freelance project",
+      "category": "Freelance",
+      "attachments": []
     },
     {
       "id": "txn-006",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 200,
       "date": "2026-01-18",
-      "description": "Electricity bill"
+      "description": "Electricity bill",
+      "category": "Contas",
+      "attachments": []
     },
     {
       "id": "txn-007",
+      "userId": "joana",
       "type": "transfer",
       "amount": 500,
       "date": "2026-01-20",
-      "description": "Transfer to savings"
+      "description": "Transfer to savings",
+      "category": "Investimentos",
+      "attachments": []
     },
     {
       "id": "txn-008",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 89.9,
       "date": "2026-01-22",
-      "description": "Pharmacy"
+      "description": "Pharmacy",
+      "category": "Saúde",
+      "attachments": []
     },
     {
       "id": "txn-009",
+      "userId": "joana",
       "type": "deposit",
       "amount": 150,
       "date": "2026-01-25",
-      "description": "Refund received"
+      "description": "Refund received",
+      "category": "Reembolso",
+      "attachments": []
     },
     {
       "id": "txn-010",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 310,
       "date": "2026-01-28",
-      "description": "Internet + phone bill"
+      "description": "Internet + phone bill",
+      "category": "Contas",
+      "attachments": []
     },
     {
       "id": "txn-011",
+      "userId": "joana",
       "type": "deposit",
       "amount": 5000,
       "date": "2026-02-05",
-      "description": "February salary"
+      "description": "February salary",
+      "category": "Salário",
+      "attachments": []
     },
     {
       "id": "txn-012",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 75,
       "date": "2026-02-08",
-      "description": "Restaurant"
+      "description": "Restaurant",
+      "category": "Alimentação",
+      "attachments": []
     },
     {
       "id": "txn-013",
+      "userId": "joana",
       "type": "transfer",
       "amount": 800,
       "date": "2026-02-10",
-      "description": "Rent payment"
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
     },
     {
       "id": "txn-014",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 430,
       "date": "2026-02-13",
-      "description": "Clothing store"
+      "description": "Clothing store",
+      "category": "Vestuário",
+      "attachments": []
     },
     {
       "id": "txn-015",
+      "userId": "joana",
       "type": "deposit",
       "amount": 200,
       "date": "2026-02-16",
-      "description": "Cash gift"
+      "description": "Cash gift",
+      "category": "Presentes",
+      "attachments": []
     },
     {
       "id": "txn-016",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 60,
       "date": "2026-02-19",
-      "description": "Fuel"
+      "description": "Fuel",
+      "category": "Transporte",
+      "attachments": []
     },
     {
       "id": "txn-017",
+      "userId": "joana",
       "type": "transfer",
       "amount": 1000,
       "date": "2026-02-21",
-      "description": "Emergency fund"
+      "description": "Emergency fund",
+      "category": "Reserva",
+      "attachments": []
     },
     {
       "id": "txn-018",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 190,
       "date": "2026-02-24",
-      "description": "Gym membership"
+      "description": "Gym membership",
+      "category": "Saúde",
+      "attachments": []
     },
     {
       "id": "txn-019",
+      "userId": "joana",
       "type": "deposit",
       "amount": 420,
       "date": "2026-02-27",
-      "description": "Sold old equipment"
+      "description": "Sold old equipment",
+      "category": "Venda",
+      "attachments": []
     },
     {
       "id": "txn-020",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 55,
       "date": "2026-02-28",
-      "description": "Books"
+      "description": "Books",
+      "category": "Educação",
+      "attachments": []
     },
     {
       "id": "txn-021",
+      "userId": "joana",
       "type": "deposit",
       "amount": 5000,
       "date": "2026-03-05",
-      "description": "March salary"
+      "description": "March salary",
+      "category": "Salário",
+      "attachments": []
     },
     {
       "id": "txn-022",
+      "userId": "joana",
       "type": "withdrawal",
       "amount": 140,
       "date": "2026-03-08",
-      "description": "Dental appointment"
+      "description": "Dental appointment",
+      "category": "Saúde",
+      "attachments": []
     },
     {
       "id": "txn-023",
+      "userId": "joana",
       "type": "transfer",
       "amount": 800,
       "date": "2026-03-10",
-      "description": "Rent payment"
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
     },
     {
       "id": "c9a0",
+      "userId": "joana",
       "type": "deposit",
       "amount": 200,
       "date": "2026-03-18",
-      "description": "asdasd"
+      "description": "asdasd",
+      "category": "default",
+      "attachments": []
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
