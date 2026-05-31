@@ -22,6 +22,8 @@ async function seed() {
   await db.insert(transactions).values(
     rows.map((t) => ({
       id: t.id,
+      userId: t.userId,
+      category: t.category,
       type: t.type,
       amount: t.amount,
       date: t.date,

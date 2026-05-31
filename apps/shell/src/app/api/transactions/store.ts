@@ -72,6 +72,7 @@ export async function create(data: NewTransaction): Promise<Transaction> {
       await tx.insert(attachments).values(
         data.attachments.map((attachment) => ({
           ...attachment,
+          id: attachment.id || crypto.randomUUID(),
           transactionId: id,
         }))
       );
@@ -107,13 +108,11 @@ export async function update(
         await tx.insert(attachments).values(
           data.attachments.map((attachment) => ({
             ...attachment,
+            id: attachment.id || crypto.randomUUID(),
             transactionId: id,
           }))
         );
       }
-    }
-
-    if (data.attachments !== undefined) {
       return toTransaction(row, data.attachments);
     }
 
