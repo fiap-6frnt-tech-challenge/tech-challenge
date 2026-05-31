@@ -3,7 +3,6 @@ import type { Transaction, NewTransaction, TransactionType } from '@bytebank/sha
 import { db } from '@/db';
 import { transactions, type TransactionRow } from '@/db/schema';
 
-// Mapeia a linha do banco (com created_at/updated_at) para o tipo de domínio `Transaction`.
 function toTransaction(row: TransactionRow): Transaction {
   return {
     id: row.id,
@@ -42,7 +41,6 @@ export async function update(
   id: string,
   data: Partial<NewTransaction>
 ): Promise<Transaction | null> {
-  // Só atualiza os campos efetivamente enviados (evita sobrescrever colunas com undefined).
   const patch: Partial<TransactionRow> = { updatedAt: new Date() };
   if (data.type !== undefined) patch.type = data.type;
   if (data.amount !== undefined) patch.amount = data.amount;

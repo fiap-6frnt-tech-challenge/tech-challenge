@@ -1,7 +1,6 @@
 import { defineConfig } from 'drizzle-kit';
 import { config } from 'dotenv';
 
-// Carrega as vars do .env.local (gitignored) para os comandos drizzle-kit (generate/migrate)
 config({ path: '.env.local' });
 
 export default defineConfig({

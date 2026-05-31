@@ -3,9 +3,6 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Transaction } from '@bytebank/shared';
 
-// Carrega DATABASE_URL do .env.local ANTES de importar o client do banco.
-// O `./index` cria o Pool do pg na avaliação do módulo, então ele precisa ser
-// importado dinamicamente após o dotenv rodar.
 config({ path: '.env.local' });
 
 async function seed() {
@@ -21,7 +18,6 @@ async function seed() {
     return;
   }
 
-  // Idempotente: limpa e reinsere o seed.
   await db.delete(transactions);
   await db.insert(transactions).values(
     rows.map((t) => ({
