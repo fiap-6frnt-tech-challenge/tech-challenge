@@ -22,8 +22,10 @@ export async function GET(req: NextRequest) {
     const desc = sort.startsWith('-');
     const field = (desc ? sort.slice(1) : sort) as keyof Transaction;
     transactions = [...transactions].sort((a, b) => {
-      if (a[field] < b[field]) return desc ? 1 : -1;
-      if (a[field] > b[field]) return desc ? -1 : 1;
+      const aVal = a[field] ?? '';
+      const bVal = b[field] ?? '';
+      if (aVal < bVal) return desc ? 1 : -1;
+      if (aVal > bVal) return desc ? -1 : 1;
       return 0;
     });
   }

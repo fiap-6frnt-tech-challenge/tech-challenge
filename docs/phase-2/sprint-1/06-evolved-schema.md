@@ -1,6 +1,6 @@
 # Task 6 — Schema de Transação Evoluído & Seed
 
-> ⏳ **Status: Pending**
+> 🟢 **Status: Implementada no código e validada**
 
 |                        |                                                                        |
 | ---------------------- | ---------------------------------------------------------------------- |
@@ -179,8 +179,8 @@ Não há necessidade de migrar DDL físico, mas garanta que a leitura/escrita no
 
 ## Validação
 
-- [ ] Execute `npm run build` na raiz do monorepo e certifique-se de que nenhuma compilação falhe devido aos novos campos obrigatórios nas assinaturas de transação.
-- [ ] Ao chamar a API `GET /api/transactions` localmente, o JSON de retorno deve listar os novos campos (`userId`, `category`, `attachments` vazio) em todos os itens retornados.
+- [x] Execute `npm run build` na raiz do monorepo e certifique-se de que nenhuma compilação falhe devido aos novos campos obrigatórios nas assinaturas de transação.
+- [x] Ao chamar a API `GET /api/transactions` localmente, o JSON de retorno deve listar os novos campos (`userId`, `category`, `attachments` vazio) em todos os itens retornados.
 
 ---
 
