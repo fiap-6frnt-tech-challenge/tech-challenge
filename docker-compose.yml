@@ -1,0 +1,29 @@
+# Postgres local para desenvolvimento/validação da persistência (Sprint 1, Task 2).
+# Sprint 4 estende este arquivo com os serviços shell + MFEs.
+#
+#   docker compose up -d db
+#   npm run db:migrate -w @bytebank/shell
+#   npm run db:seed -w @bytebank/shell
+#
+# Conexão: postgres://bytebank:bytebank@localhost:5432/bytebank
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: bytebank-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bytebank
+      POSTGRES_PASSWORD: bytebank
+      POSTGRES_DB: bytebank
+    ports:
+      - '5432:5432'
+    volumes:
+      - bytebank-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bytebank -d bytebank']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  bytebank-pgdata:
