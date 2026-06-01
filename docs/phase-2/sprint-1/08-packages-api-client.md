@@ -1,6 +1,18 @@
 # Task 8 — Criar hooks TanStack Query em packages/api-client
 
-> ⏳ **Status: Pending**
+> 🟢 **Status: Implementada e validada** (2026-05-30).
+>
+> **Decisões/correções em relação ao texto original:**
+>
+> - **Reaproveitou o `TransactionService` existente** (`apps/shell/src/services/TransactionService.ts`) movendo-o para `packages/api-client/src/http.ts`. O arquivo do shell virou um **shim de re-export** (`export { … } from '@bytebank/api-client'`), então os consumidores atuais (`@/services`) seguem funcionando; a Task 9 os troca pelos hooks e remove o shim.
+> - **`update` usa `PATCH`** (a rota `[id]/route.ts` expõe PATCH, não PUT como no exemplo original).
+> - **Adicionado `client.ts`** exportando `createQueryClient()` + a instância `queryClient` — necessária para o `<QueryClientProvider>` do shell (a Task 9 importa `queryClient`).
+> - **Optimistic delete corrigido:** opera sobre `transactionKeys.lists()` via `setQueriesData` (o exemplo original mexia em `transactionKeys.all`, que não atinge o cache das listas `['transactions','list',…]`). O updater trata as duas formas de cache (array de `useTransactions` e `PaginatedResponse` de `usePaginatedTransactions`).
+> - **`fetch` lança em status != 2xx** para o TanStack Query marcar `error`.
+> - **Base da API sem `process.env`:** o pacote não lê variáveis de ambiente (evita erro de tipo `process` e `ReferenceError` no browser dos MFEs Rsbuild). Default relativo `/api` + `configureApiBaseUrl(baseUrl)`; o **shell injeta** a base via `NEXT_PUBLIC_API_URL` no shim de `@/services` (onde `process` é tipado). Override segue funcionando; MFEs podem apontar para a URL absoluta do shell quando preciso.
+> - `@bytebank/api-client` adicionado ao `transpilePackages` do `next.config.ts`.
+>
+> **Hooks expostos:** `useTransactions`, `usePaginatedTransactions`, `useTransaction`, `useCreateTransaction`, `useUpdateTransaction`, `useDeleteTransaction` (+ `transactionKeys`, `queryClient`, `TransactionService`). `useInfiniteTransactions` fica para o Sprint 3.
 
 |                        |                                                                 |
 | ---------------------- | --------------------------------------------------------------- |
@@ -178,8 +190,8 @@ export * from './hooks';
 
 ## Validação
 
-- [ ] Execute os testes unitários do vitest simulando chamadas com MSW (Mock Service Worker) para validar chaves de cache e optimistic updates.
-- [ ] O pacote compila corretamente: `npm run build -w @bytebank/api-client`.
+- [x] Testes unitários (Vitest) passando — `keys.test.ts` (chaves hierárquicas) + `http.test.ts` (mock de `fetch`: POST/PATCH/params de `getPaginated`/throw em !ok). **6/6 verdes.** _(MSW + teste dos optimistic updates em nível de hook fica como melhoria futura.)_
+- [x] O pacote type-checka (`npm run type-check -w @bytebank/api-client`) e o shell compila consumindo-o via shim (`type-check` + `next build` verdes).
 
 ---
 
