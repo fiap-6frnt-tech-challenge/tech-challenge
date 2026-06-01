@@ -81,8 +81,9 @@ export function useDeleteTransaction() {
       });
     },
 
-    onSettled: () => {
+    onSettled: (_data, _error, idToDelete) => {
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: transactionKeys.detail(idToDelete) });
     },
   });
 }
