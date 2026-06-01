@@ -31,7 +31,7 @@ export function usePaginatedTransactions(params: GetPaginatedParams) {
   };
 
   return useQuery({
-    queryKey: transactionKeys.list(normalizedParams),
+    queryKey: transactionKeys.list({ ...normalizedParams }),
     queryFn: () => TransactionService.getPaginated(normalizedParams),
     placeholderData: (prev) => prev,
   });
