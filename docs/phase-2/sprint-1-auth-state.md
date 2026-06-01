@@ -68,7 +68,7 @@
 - [ ] Callbacks: `jwt` adiciona `userId` ao token, `session` expõe ao cliente
 - [ ] Página de erro `/auth/error` (DS-styled)
 - [ ] `apps/shell/src/proxy.ts` protege todas rotas exceto `/login`, `/api/auth/*`, `/_next/*`
-- [ ] Env vars: `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- [ ] Env vars: `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`
 - [ ] `apps/shell/src/app/layout.tsx`: wrap em `<SessionProvider>`
 
 **Aceite:** `/login` redireciona para Google ou aceita credentials; após login, `/` acessível; logout funciona.
