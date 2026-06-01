@@ -69,6 +69,7 @@ export function UserMenu({ user, onLogout, className }: UserMenuProps) {
         onClick={() => setIsOpen((current) => !current)}
         onKeyDown={handleTriggerKeyDown}
         className={cn(
+          'cursor-pointer',
           'flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-border bg-surface',
           'label-semibold text-content-primary transition-colors hover:bg-surface-hover',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'
@@ -82,34 +83,43 @@ export function UserMenu({ user, onLogout, className }: UserMenuProps) {
       </button>
 
       {isOpen && (
-        <div
-          id={menuId}
-          role="menu"
-          aria-label="Menu do usuário"
-          onKeyDown={handleMenuKeyDown}
-          className={cn(
-            'absolute right-0 top-full z-20 mt-sm flex w-72 flex-col gap-sm rounded-default border border-border bg-surface p-sm shadow-card'
-          )}
-        >
-          <div className="border-b border-border pb-sm" role="none">
-            <p className="body-semibold text-content-primary">{user.name}</p>
-            <p className="label-default break-all text-content-secondary">{user.email}</p>
-          </div>
-
+        <>
           <button
-            ref={logoutRef}
             type="button"
-            role="menuitem"
-            onClick={onLogout}
+            aria-label="Fechar menu do usuário"
+            className="fixed inset-0 z-10 cursor-default bg-transparent"
+            onClick={closeMenu}
+          />
+
+          <div
+            id={menuId}
+            role="menu"
+            aria-label="Menu do usuário"
+            onKeyDown={handleMenuKeyDown}
             className={cn(
-              'flex w-full items-center gap-sm rounded-default px-sm py-sm text-left label-semibold text-content-primary',
-              'transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'
+              'absolute right-0 top-full z-20 mt-sm flex w-72 flex-col gap-sm rounded-default border border-border bg-surface p-sm shadow-card'
             )}
           >
-            <LogOut aria-hidden="true" size={16} />
-            Sair
-          </button>
-        </div>
+            <div className="border-b border-border pb-sm" role="none">
+              <p className="body-semibold text-content-primary">{user.name}</p>
+              <p className="label-default break-all text-content-secondary">{user.email}</p>
+            </div>
+
+            <button
+              ref={logoutRef}
+              type="button"
+              role="menuitem"
+              onClick={onLogout}
+              className={cn(
+                'flex w-full items-center gap-sm rounded-default px-sm py-sm text-left label-semibold text-content-primary',
+                'transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'
+              )}
+            >
+              <LogOut aria-hidden="true" size={16} />
+              Sair
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

@@ -71,3 +71,16 @@ export const KeyboardNavigation: Story = {
     await expect(trigger).toHaveFocus();
   },
 };
+
+export const BackdropClose: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: /abrir menu do usuário/i });
+
+    await userEvent.click(trigger);
+    await expect(canvas.getByRole('menu')).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole('button', { name: /fechar menu do usuário/i }));
+    await expect(canvas.queryByRole('menu')).not.toBeInTheDocument();
+  },
+};
