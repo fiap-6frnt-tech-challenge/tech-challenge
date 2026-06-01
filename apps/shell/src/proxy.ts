@@ -1,6 +1,6 @@
 import { auth } from './auth';
 
-export default auth((req) => {
+export const proxy = auth((req) => {
   const isLoggedIn = !!req.auth;
   const { nextUrl } = req;
 
@@ -19,6 +19,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  // Protege todas as rotas exceto assets, favicon, _next e rotas públicas
   matcher: ['/((?!api/auth|_next/static|_next/image|favicon.ico).*)'],
 };
