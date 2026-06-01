@@ -19,9 +19,20 @@ export function useTransactions() {
 }
 
 export function usePaginatedTransactions(params: GetPaginatedParams) {
+  // Normalize params so the cache key matches the actual request (defaults + omitting "all"/empty filters).
+  const normalizedParams: GetPaginatedParams = {
+    page: params.page,
+    perPage: params.perPage ?? 10,
+    sortBy: params.sortBy ?? 'date',
+    sortOrder: params.sortOrder ?? 'desc',
+    ...(params.type && params.type !== 'all' ? { type: params.type } : {}),
+    ...(params.dateFrom ? { dateFrom: params.dateFrom } : {}),
+    ...(params.dateTo ? { dateTo: params.dateTo } : {}),
+  };
+
   return useQuery({
-    queryKey: transactionKeys.list(params),
-    queryFn: () => TransactionService.getPaginated(params),
+    queryKey: transactionKeys.list(normalizedParams),
+    queryFn: () => TransactionService.getPaginated(normalizedParams),
     placeholderData: (prev) => prev,
   });
 }
