@@ -17,6 +17,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        // IMPORTANTE: nunca permitir este mock em produção
+        if (process.env.NODE_ENV === 'production') return null;
+
         // Mock temporário para validação local: aceita qualquer login se senha for "senha123"
         // Em um cenário real, você faria uma query no Postgres/KV aqui.
         if (credentials.password === 'senha123') {
