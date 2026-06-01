@@ -52,6 +52,11 @@ export function UserMenu({ user, onLogout, className }: UserMenuProps) {
     if (event.key === 'Escape') {
       event.preventDefault();
       closeMenu();
+      return;
+    }
+
+    if (event.key === 'Tab') {
+      setIsOpen(false);
     }
   };
 
@@ -84,11 +89,10 @@ export function UserMenu({ user, onLogout, className }: UserMenuProps) {
 
       {isOpen && (
         <>
-          <button
-            type="button"
-            aria-label="Fechar menu do usuário"
+          <div
             className="fixed inset-0 z-10 cursor-default bg-transparent"
             onClick={closeMenu}
+            aria-hidden="true"
           />
 
           <div

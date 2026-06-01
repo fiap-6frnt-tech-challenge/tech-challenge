@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@bytebank/shared';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import type { LoginFormFields, LoginFormProps } from './ILoginForm';
@@ -10,7 +10,7 @@ import { loginFormSchema, type LoginFormSchemaValues } from './schema';
 
 export function LoginForm({ onSubmit, isLoading = false, className }: LoginFormProps) {
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormSchemaValues>({
@@ -33,26 +33,46 @@ export function LoginForm({ onSubmit, isLoading = false, className }: LoginFormP
 
   return (
     <form onSubmit={handleSubmit(submit)} className={cn('flex flex-col gap-md', className)}>
-      <Input
-        label="Email"
-        type="email"
-        autoComplete="email"
-        placeholder="voce@email.com"
-        disabled={isLoading}
-        error={!!errors.email}
-        helperText={errors.email?.message}
-        {...register('email')}
+      <Controller
+        name="email"
+        control={control}
+        render={({ field }) => {
+          const { ...fieldProps } = field;
+
+          return (
+            <Input
+              label="Email"
+              type="email"
+              autoComplete="email"
+              placeholder="voce@email.com"
+              disabled={isLoading}
+              error={!!errors.email}
+              helperText={errors.email?.message}
+              {...fieldProps}
+            />
+          );
+        }}
       />
 
-      <Input
-        label="Senha"
-        type="password"
-        autoComplete="current-password"
-        placeholder="Digite sua senha"
-        disabled={isLoading}
-        error={!!errors.password}
-        helperText={errors.password?.message}
-        {...register('password')}
+      <Controller
+        name="password"
+        control={control}
+        render={({ field }) => {
+          const { ...fieldProps } = field;
+
+          return (
+            <Input
+              label="Senha"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Digite sua senha"
+              disabled={isLoading}
+              error={!!errors.password}
+              helperText={errors.password?.message}
+              {...fieldProps}
+            />
+          );
+        }}
       />
 
       <Button type="submit" fullWidth loading={isLoading} disabled={isLoading}>
