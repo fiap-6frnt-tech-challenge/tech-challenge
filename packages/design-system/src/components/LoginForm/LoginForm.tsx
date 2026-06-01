@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@bytebank/shared';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import type { LoginFormFields, LoginFormProps } from './ILoginForm';
@@ -10,7 +10,7 @@ import { loginFormSchema, type LoginFormSchemaValues } from './schema';
 
 export function LoginForm({ onSubmit, isLoading = false, className }: LoginFormProps) {
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormSchemaValues>({
