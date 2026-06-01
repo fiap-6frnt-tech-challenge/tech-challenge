@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const dateTo = searchParams.get('date_lte');
   const sort = searchParams.get('_sort');
 
-  let transactions = store.getAll();
+  let transactions = await store.getAll();
 
   if (type) transactions = transactions.filter((t) => t.type === type);
   if (dateFrom) transactions = transactions.filter((t) => t.date >= dateFrom);
@@ -22,8 +22,10 @@ export async function GET(req: NextRequest) {
     const desc = sort.startsWith('-');
     const field = (desc ? sort.slice(1) : sort) as keyof Transaction;
     transactions = [...transactions].sort((a, b) => {
-      if (a[field] < b[field]) return desc ? 1 : -1;
-      if (a[field] > b[field]) return desc ? -1 : 1;
+      const aVal = a[field] ?? '';
+      const bVal = b[field] ?? '';
+      if (aVal < bVal) return desc ? 1 : -1;
+      if (aVal > bVal) return desc ? -1 : 1;
       return 0;
     });
   }
@@ -43,6 +45,6 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const transaction = store.create(body);
+  const transaction = await store.create(body);
   return NextResponse.json(transaction, { status: 201 });
 }

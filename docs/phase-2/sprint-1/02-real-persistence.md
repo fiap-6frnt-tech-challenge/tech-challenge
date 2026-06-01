@@ -1,6 +1,16 @@
 # Task 2 — Persistência Real do Backend
 
-> ⏳ **Status: Pending**
+> 🟢 **Status: Implementada e validada** (2026-05-30) — **Opção B: Postgres + Drizzle**.
+>
+> **Decisões/desvios em relação ao texto original:**
+>
+> - **Driver:** usei **`pg` (node-postgres) + `drizzle-orm/node-postgres`** em vez de `@neondatabase/serverless`. Motivo: o driver serverless da Neon não conecta a um Postgres local (Docker); o `pg` é portátil — funciona local **e** contra Neon/Supabase via connection string. Trocar para o driver serverless em produção (Sprint 4) é uma mudança localizada em `src/db/index.ts`.
+> - **Enum corrigido:** o exemplo original usava `['deposito','transferencia']`; o tipo real é `deposit | withdrawal | transfer` (`TRANSACTION_TYPE` do `@bytebank/shared`). O schema deriva o enum dessa constante.
+> - **Seed:** adicionado `npm run db:seed` (carrega `data/transactions.json` → 24 transações) para satisfazer "UI renderiza dados do banco". Era pré-requisito implícito da validação.
+> - **Pool reaproveitado** via `global` para não vazar conexões no hot-reload do Next.
+> - **Docker:** `docker-compose.yml` na raiz sobe Postgres 16 local (Sprint 4 estende com shell + MFEs).
+>
+> **Como rodar:** `docker compose up -d db` → `npm run db:migrate -w @bytebank/shell` → `npm run db:seed -w @bytebank/shell` → `npm run dev -w @bytebank/shell`.
 
 |                        |                                                                    |
 | ---------------------- | ------------------------------------------------------------------ |
@@ -8,7 +18,7 @@
 | **Owner**              | `Dev 1`                                                            |
 | **Duração estimada**   | 2 dias                                                             |
 | **Branch recomendada** | `dev1/real-persistence`                                            |
-| **Depende de**         | [Task 1 — Spike Zustand/Query](./01-spike-zustand-query.md)        |
+| **Depende de**         | [Task 1 — Spike Redux Toolkit/Query](./01-spike-redux-query.md)    |
 | **PR só abre**         | Após validar criação, leitura, update e delete via HTTP REST local |
 
 ---
@@ -284,11 +294,12 @@ export async function POST(request: Request) {
 
 ## Validação
 
-- [ ] Execute `npm run dev -w @bytebank/shell` e valide que requisições HTTP REST usando Insomnia/Postman/cURL persistem dados mesmo reiniciando o terminal do Next.js:
-  - `GET http://localhost:3000/api/transactions`
-  - `POST http://localhost:3000/api/transactions` com payload
-- [ ] O app shell local renderiza dados da lista do banco de dados na UI.
-- [ ] Nenhum tipo TypeScript está quebrado.
+- [x] Requisições HTTP REST persistem dados (validado 2026-05-30 contra Postgres local):
+  - `GET /api/transactions` → 24 itens do seed; paginado mantém shape `{data, pages, items}`
+  - `POST` → 201 e linha confirmada via `psql`; `PATCH` → 200 e update confirmado; `DELETE` → 204
+  - Persistência comprovada: linhas físicas no Postgres (sobrevivem a restart do processo Node)
+- [x] O app shell local renderiza dados da lista do banco de dados na UI (API serve os 24 itens persistidos).
+- [x] Nenhum tipo TypeScript está quebrado (`type-check` e `next build` verdes).
 
 ---
 

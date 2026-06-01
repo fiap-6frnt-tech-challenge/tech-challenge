@@ -1,6 +1,7 @@
 import type { NewTransaction } from '@bytebank/shared';
+import type { TransactionFormSchemaValues } from './schema';
 
-export type TransactionFormValues = Omit<NewTransaction, 'id'>;
+export type TransactionFormValues = TransactionFormSchemaValues;
 export interface TransactionFormProps {
   onSubmit: (data: TransactionFormValues) => void;
   onCancel?: () => void;

@@ -32,7 +32,6 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
       control,
       handleSubmit,
       reset,
-      setValue,
       formState: { errors, isDirty },
     } = useForm({
       mode: 'onChange',
@@ -65,7 +64,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
 
     const clearField = (field: ControllerRenderProps<TransactionFormValues>) => {
       if (!field.value) return undefined;
-      return () => setValue(field.name, '', { shouldDirty: true, shouldValidate: true });
+      return () => field.onChange(field.name === 'amount' ? 0 : '');
     };
 
     return (

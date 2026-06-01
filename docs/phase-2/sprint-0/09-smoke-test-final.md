@@ -204,7 +204,7 @@ Cada dev pontua individualmente, dev1-infra calcula a média:
 
 - Module Federation: [Opção A | D] (ver `mfe-decision.md`)
 - Monorepo tool: Turborepo + npm workspaces
-- State management: Zustand + TanStack Query (a usar em Sprint 1)
+- State management: Redux Toolkit + TanStack Query (a usar em Sprint 1)
 - Auth: NextAuth Credentials + Google (a usar em Sprint 1)
 
 ## Sign-off
@@ -268,12 +268,12 @@ gh pr create --base phase-2 --title "docs(sprint-0): retrospective" \
 
 ## Próximo passo
 
-→ **Sprint 1** ([sprint-1-auth-state.md](../sprint-1-auth-state.md)) — Auth (NextAuth + Google) + State migration (Zustand + TanStack Query) + persistência real. Inicia em 2026-05-20.
+→ **Sprint 1** ([sprint-1-auth-state.md](../sprint-1-auth-state.md)) — Auth (NextAuth + Google) + State migration (Redux Toolkit + TanStack Query) + persistência real. Inicia em 2026-05-20.
 
 Todos os 5 devs começam tracks novos:
 
-- `dev1-infra`: spike Zustand+TanStack + CI tweaks
+- `dev1-infra`: spike Redux Toolkit+TanStack + CI tweaks
 - `dev2-backend`: persistência (Vercel KV/Postgres) + NextAuth + schema evolved
 - `dev3-ds`: 4 novos componentes auth no DS (LoginForm, UserMenu, GoogleAuthButton, AuthGuard)
 - `dev4-dashboard`: preenche `@bytebank/stores` e `@bytebank/api-client`
-- `dev5-transactions`: pages `/login` + migração Context → Zustand/TanStack
+- `dev5-transactions`: pages `/login` + migração Context → Redux Toolkit/TanStack

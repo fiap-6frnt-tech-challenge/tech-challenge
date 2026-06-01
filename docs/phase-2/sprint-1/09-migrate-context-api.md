@@ -15,7 +15,7 @@
 
 ## Dependências
 
-- **O que bloqueia esta tarefa**: Bloqueada em conjunto pelas tarefas **Task 7 (Zustand Stores)** e **Task 8 (Query Hooks)**. Como vamos remover os arquivos de context que proviam dados e feedbacks, é necessário que tenhamos as stores de Zustand e os custom hooks prontos para substituirmos todas as chamadas.
+- **O que bloqueia esta tarefa**: Bloqueada em conjunto pelas tarefas **Task 7 (Slices Redux Toolkit)** e **Task 8 (Query Hooks)**. Como vamos remover os arquivos de context que proviam dados e feedbacks, é necessário que tenhamos os slices Redux e os custom hooks prontos para substituirmos todas as chamadas.
 - **O que esta tarefa desbloqueia**: Desbloqueia a **Task 11 (Smoke Test Final)**, pois ela representa a consolidação da migração do estado na UI da aplicação e unifica o funcionamento do front-end.
 
 ---
@@ -43,32 +43,54 @@ rm FeedbackContext.tsx TransactionsContext.tsx index.ts
 
 ### 2. Atualizar o Layout Principal do Shell (`apps/shell/src/app/layout.tsx`)
 
-Remova os imports dos Providers deletados e limpe a árvore de componentes. Ela deve ficar assim (envolvida agora por `QueryClientProvider` e `SessionProvider`):
+Remova os imports dos Providers deletados e limpe a árvore de componentes. Ela deve ficar envolvida agora por **três** providers: `<Provider store>` (Redux), `SessionProvider` (NextAuth) e `QueryClientProvider` (TanStack Query).
+
+> ⚠️ **Os três são Client Components.** No App Router do Next, providers com contexto não podem ser instanciados direto num Server Component (e o `queryClient`/`store` não são serializáveis). Crie um wrapper `'use client'` e use-o no `layout.tsx`.
+
+`apps/shell/src/app/providers.tsx`:
 
 ```typescript
+'use client';
+
+import { Provider } from 'react-redux';
 import { SessionProvider } from 'next-auth/react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from '@bytebank/api-client'; // Importe do pacote api-client
+import { store } from '@bytebank/stores';
+import { queryClient } from '@bytebank/api-client';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <Provider store={store}>
+      <SessionProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </SessionProvider>
+    </Provider>
+  );
+}
+```
+
+`apps/shell/src/app/layout.tsx` (Server Component) apenas consome o wrapper:
+
+```typescript
+import { Providers } from './providers';
 import '@bytebank/design-system/styles/globals.css';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
       <body>
-        <SessionProvider>
-          <QueryClientProvider client={queryClient}>
-            {children}
-          </QueryClientProvider>
-        </SessionProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
 ```
 
+> Sem o `<Provider store>` envolvendo a árvore, qualquer `useAppSelector`/`useAppDispatch` (seção 3) lança erro em runtime ("could not find react-redux context").
+
 ---
 
-### 3. Substituir Consumidores de `FeedbackContext` por `useUIStore`
+### 3. Substituir Consumidores de `FeedbackContext` pelo `uiSlice` (Redux)
 
 Em componentes como o modal de mensagens (`FeedbackModal.tsx`):
 
@@ -76,20 +98,24 @@ Em componentes como o modal de mensagens (`FeedbackModal.tsx`):
 - **Depois**:
 
   ```typescript
-  import { useUIStore } from '@bytebank/stores';
+  import { useAppSelector, useAppDispatch, hideFeedback } from '@bytebank/stores';
 
-  const feedback = useUIStore((state) => state.feedback);
-  const hideFeedback = useUIStore((state) => state.hideFeedback);
+  const feedback = useAppSelector((state) => state.ui.feedback);
+  const dispatch = useAppDispatch();
+  // dispatch(hideFeedback()) para fechar
   ```
 
 Substitua também todos os disparadores de alertas (ex: ao criar transação ou falhar no login):
 
 - **Antes**: `showFeedback('Erro', 'Mensagem', 'error');`
 - **Depois**:
+
   ```typescript
-  const showFeedback = useUIStore((state) => state.showFeedback);
+  import { useAppDispatch, showFeedback } from '@bytebank/stores';
+
+  const dispatch = useAppDispatch();
   // ...
-  showFeedback({ type: 'error', title: 'Erro', message: 'Mensagem' });
+  dispatch(showFeedback({ type: 'error', title: 'Erro', message: 'Mensagem' }));
   ```
 
 ---
@@ -126,11 +152,11 @@ Lembre-se de tratar os estados de `isLoading` de forma acessível e visualmente 
 
 ## Gotchas
 
-1. **Hydration Warning no NextJS**: Como o Zustand é importado do package e o TanStack Query gerencia o estado no client, evite renderizações parciais condicionadas a variáveis globais logo no primeiro render do Server Component do Next.js. Certifique-se de envolver componentes dinâmicos no cliente.
+1. **Hydration Warning no NextJS**: Como o store Redux é provido no client (`<Provider>`) e o TanStack Query gerencia o estado no client, evite renderizações parciais condicionadas a variáveis globais logo no primeiro render do Server Component do Next.js. Certifique-se de envolver componentes dinâmicos no cliente.
 2. **Prop Drilling de Callbacks**: Com a remoção do context, evite cair no erro de passar o hook de transações por múltiplos níveis de propriedades. Se um componente filho precisa das transações, invoque o hook `useTransactions()` diretamente dentro dele, pois o cache do TanStack Query garante que nenhuma chamada de rede redundante seja feita.
 
 ---
 
 ## Próximo passo
 
-→ **Adicionar os testes de integração do Vitest, cobrir o Middleware e ajustar o CI na [Task 10 — Testes Vitest & CI](./10-vitest-ci-setup.md).**
+→ **Adicionar os testes de integração do Vitest, cobrir o Proxy de rotas protegidas e ajustar o CI na [Task 10 — Testes Vitest & CI](./10-vitest-ci-setup.md).**

@@ -1,7 +1,7 @@
 # Sprint 1 — Auth + State Migration
 
 **Duração:** 14 dias · 2026-05-20 → 2026-06-02
-**Objetivo:** Login funcional com NextAuth (Credentials + Google), persistência real para transações, estado migrado de Context API para Zustand + TanStack Query.
+**Objetivo:** Login funcional com NextAuth (Credentials + Google), persistência real para transações, estado migrado de Context API para Redux Toolkit + TanStack Query.
 
 > Voltar para o [PLAN.md](./PLAN.md) · Anterior: [sprint-0](./sprint-0-foundation.md) · Próximo: [sprint-2](./sprint-2-dashboard.md)
 > **Alocação de tarefas por dev:** [team-allocation.md#sprint-1](./team-allocation.md#sprint-1--auth--state-migration-14-dias)
@@ -18,10 +18,10 @@
 
 ## Tasks
 
-### 1. Spike: time aprende Zustand + TanStack Query (1 dia · **todo time** — **dev1-infra** lidera)
+### 1. Spike: time aprende Redux Toolkit + TanStack Query (1 dia · **todo time** — **dev1-infra** lidera)
 
-- [ ] Pair session de 2h: padrões de uso, store boundaries, cache keys
-- [ ] Build de exemplo descartável: contador Zustand + lista TanStack Query
+- [ ] Pair session de 2h: padrões de uso, slice boundaries, hooks tipados, cache keys
+- [ ] Build de exemplo descartável: contador com slice Redux Toolkit + lista TanStack Query
 - [ ] Documentar convenções em `docs/phase-2/state-conventions.md`
 
 **Aceite:** time todo confortável com a API antes de tocar código real.
@@ -67,8 +67,8 @@
 - [ ] Session strategy: `jwt`, maxAge 7 dias, cookie httpOnly + secure em prod
 - [ ] Callbacks: `jwt` adiciona `userId` ao token, `session` expõe ao cliente
 - [ ] Página de erro `/auth/error` (DS-styled)
-- [ ] `apps/shell/middleware.ts` protege todas rotas exceto `/login`, `/api/auth/*`, `/_next/*`
-- [ ] Env vars: `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- [ ] `apps/shell/src/proxy.ts` protege todas rotas exceto `/login`, `/api/auth/*`, `/_next/*`
+- [ ] Env vars: `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`
 - [ ] `apps/shell/src/app/layout.tsx`: wrap em `<SessionProvider>`
 
 **Aceite:** `/login` redireciona para Google ou aceita credentials; após login, `/` acessível; logout funciona.
@@ -126,14 +126,17 @@
 
 **Aceite:** todos os 24 seeds aparecem após migração com novos campos preenchidos.
 
-### 7. packages/stores — Zustand (1 dia · **dev4-dashboard**)
+### 7. packages/stores — Redux Toolkit (1 dia · **dev4-dashboard**)
 
-- [ ] `packages/stores/src/useAuthStore.ts` — lê session do NextAuth, expõe `user`, `isAuthenticated`, `logout()`
-- [ ] `packages/stores/src/useUIStore.ts` — `filterPanelOpen`, `setFilterPanelOpen`, `feedback: { type, title, message } | null`, `showFeedback()`, `hideFeedback()`
-- [ ] Persist middleware (zustand/middleware) para UI store se quiser (opcional)
-- [ ] Index barrel exports
+- [ ] Instalar `@reduxjs/toolkit` e `react-redux` em `@bytebank/stores`
+- [ ] `packages/stores/src/authSlice.ts` — estado derivado da session do NextAuth: `user`, `isAuthenticated`; actions `setSession`/`clearSession`; selectors `selectUser`, `selectIsAuthenticated`
+- [ ] `packages/stores/src/uiSlice.ts` — `filterPanelOpen`, `setFilterPanelOpen`, `feedback: { type, title, message } | null`, actions `showFeedback()`/`hideFeedback()`
+- [ ] `packages/stores/src/store.ts` — `configureStore({ reducer: { auth, ui } })` + tipos `RootState`/`AppDispatch`
+- [ ] `packages/stores/src/hooks.ts` — `useAppDispatch` + `useAppSelector` tipados
+- [ ] `redux-persist` para o UI slice se quiser persistir preferências (opcional)
+- [ ] Index barrel exports (slices, actions, selectors, store, hooks)
 
-**Aceite:** stores tipados, testados com Vitest, consumíveis de qualquer app/package.
+**Aceite:** slices tipados, testados com Vitest, consumíveis de qualquer app/package via `useAppSelector`/`useAppDispatch`.
 
 ### 8. packages/api-client — TanStack Query hooks (2 dias · **dev4-dashboard**)
 
@@ -163,19 +166,19 @@
   - todos consumidores
 - [ ] `usePaginatedTransactions` virou consumer de `useTransactions` (já que filtros agora batem no servidor via cache)
 - [ ] Remover `apps/shell/src/context/FeedbackContext.tsx`
-- [ ] Substituir `useFeedback` (context) → `useUIStore` (zustand) — `FeedbackModal` consome do store
-- [ ] Remover `TransactionsProvider` e `FeedbackProvider` do layout
+- [ ] Substituir `useFeedback` (context) → `useAppSelector`/`useAppDispatch` no `uiSlice` (Redux) — `FeedbackModal` lê `feedback` do store e despacha `hideFeedback()`
+- [ ] Remover `TransactionsProvider` e `FeedbackProvider` do layout; garantir que `<Provider store={store}>` (react-redux) envolve o app
 
 **Aceite:** `grep -r "useContext" apps/shell/src` retorna apenas Next/React internals; nenhum `Transactions...Context` no código.
 
 ### 10. Testes Vitest (1 dia · **dev1-infra**)
 
-- [ ] `packages/stores/src/useAuthStore.test.ts` — login, logout, state transitions
-- [ ] `packages/stores/src/useUIStore.test.ts` — filter panel toggle, feedback push
+- [ ] `packages/stores/src/authSlice.test.ts` — reducers de login/logout, state transitions, selectors
+- [ ] `packages/stores/src/uiSlice.test.ts` — filter panel toggle, feedback push/clear
 - [ ] `packages/api-client/src/transactions.test.ts` — mock fetch, verificar cache keys e optimistic updates
-- [ ] `apps/shell/middleware.test.ts` — redirect anônimo, allow auth routes
+- [ ] `apps/shell/src/proxy.test.ts` — redirect anônimo, allow auth routes
 
-**Aceite:** `npm test` passa com ≥ 10 testes cobrindo store/hooks/middleware.
+**Aceite:** `npm test` passa com ≥ 10 testes cobrindo store/hooks/Proxy.
 
 ---
 
@@ -188,7 +191,7 @@
 - [x] Transação criada persiste após `vercel dev` restart
 - [x] Schema da transação tem `userId`, `category`, `attachments?`
 - [x] `useContext(TransactionsContext)` removido de todo o código
-- [x] FeedbackModal controlado por Zustand
+- [x] FeedbackModal controlado por Redux Toolkit (`uiSlice`)
 - [x] 4 novos componentes no DS publicados no Chromatic com stories
 - [x] Vitest passa
 - [x] CI verde
