@@ -54,15 +54,25 @@ export function LoginForm({ onSubmit, isLoading = false, className }: LoginFormP
         }}
       />
 
-      <Input
-        label="Senha"
-        type="password"
-        autoComplete="current-password"
-        placeholder="Digite sua senha"
-        disabled={isLoading}
-        error={!!errors.password}
-        helperText={errors.password?.message}
-        {...register('password')}
+      <Controller
+        name="password"
+        control={control}
+        render={({ field }) => {
+          const { ref, ...fieldProps } = field;
+
+          return (
+            <Input
+              label="Senha"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Digite sua senha"
+              disabled={isLoading}
+              error={!!errors.password}
+              helperText={errors.password?.message}
+              {...fieldProps}
+            />
+          );
+        }}
       />
 
       <Button type="submit" fullWidth loading={isLoading} disabled={isLoading}>
