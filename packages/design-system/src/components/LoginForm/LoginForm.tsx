@@ -33,15 +33,25 @@ export function LoginForm({ onSubmit, isLoading = false, className }: LoginFormP
 
   return (
     <form onSubmit={handleSubmit(submit)} className={cn('flex flex-col gap-md', className)}>
-      <Input
-        label="Email"
-        type="email"
-        autoComplete="email"
-        placeholder="voce@email.com"
-        disabled={isLoading}
-        error={!!errors.email}
-        helperText={errors.email?.message}
-        {...register('email')}
+      <Controller
+        name="email"
+        control={control}
+        render={({ field }) => {
+          const { ref, ...fieldProps } = field;
+
+          return (
+            <Input
+              label="Email"
+              type="email"
+              autoComplete="email"
+              placeholder="voce@email.com"
+              disabled={isLoading}
+              error={!!errors.email}
+              helperText={errors.email?.message}
+              {...fieldProps}
+            />
+          );
+        }}
       />
 
       <Input
