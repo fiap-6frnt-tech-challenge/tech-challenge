@@ -49,7 +49,7 @@ export const TransactionService = {
 
   async update(id: string, data: UpdateTransaction): Promise<Transaction> {
     const res = await fetch(`${apiBaseUrl}/transactions/${id}`, {
-      method: 'PATCH', // a rota [id]/route.ts expõe PATCH (não PUT)
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });

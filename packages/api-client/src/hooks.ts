@@ -22,7 +22,6 @@ export function usePaginatedTransactions(params: GetPaginatedParams) {
   return useQuery({
     queryKey: transactionKeys.list(params),
     queryFn: () => TransactionService.getPaginated(params),
-    // Mantém a página anterior visível enquanto a próxima carrega (paginação suave).
     placeholderData: (prev) => prev,
   });
 }
