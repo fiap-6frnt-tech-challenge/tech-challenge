@@ -14,19 +14,19 @@ Cada arquivo neste diretório descreve **uma task** do [sprint-1-auth-state.md](
 
 ## Ordem de execução e Alocação (Revisada)
 
-| #   | Status | Task                                                          | Owner | Duração  | PR      | Arquivo                                                  |
-| --- | ------ | ------------------------------------------------------------- | ----- | -------- | ------- | -------------------------------------------------------- |
-| 1   | 🟢     | Spike: Redux Toolkit + TanStack Query                         | Dev 1 | 1 dia    | pending | [01-spike-redux-query.md](./01-spike-redux-query.md)     |
-| 2   | ⏳     | Persistência real (Vercel KV ou Postgres)                     | Dev 1 | 2 dias   | pending | [02-real-persistence.md](./02-real-persistence.md)       |
-| 3   | ⏳     | Schema de Transação Evoluído & Seed                           | Dev 1 | 1.5 dia  | pending | [06-evolved-schema.md](./06-evolved-schema.md)           |
-| 4   | ⏳     | NextAuth v5 Setup no Shell & Middleware                       | Dev 2 | 2 dias   | pending | [03-nextauth-setup.md](./03-nextauth-setup.md)           |
-| 5   | ⏳     | Componentes de Autenticação no Design System                  | Dev 2 | 2 dias   | pending | [05-ds-auth-components.md](./05-ds-auth-components.md)   |
-| 6   | ⏳     | Criar slices Redux Toolkit em `packages/stores`               | Dev 3 | 1 dia    | pending | [07-packages-stores.md](./07-packages-stores.md)         |
-| 7   | ⏳     | Criar hooks TanStack Query em `packages/api-client`           | Dev 3 | 2 dias   | pending | [08-packages-api-client.md](./08-packages-api-client.md) |
-| 8   | ⏳     | Páginas `/login` e `/auth/error` no Shell                     | Dev 2 | 1 dia    | pending | [04-auth-pages.md](./04-auth-pages.md)                   |
-| 9   | ⏳     | Migração: Remover Context API (Transactions + Feedback)       | Dev 3 | 2.5 dias | pending | [09-migrate-context-api.md](./09-migrate-context-api.md) |
-| 10  | ⏳     | Testes Vitest de Middleware/Stores & Configuração de CI e Env | Dev 1 | 1.5 dia  | pending | [10-vitest-ci-setup.md](./10-vitest-ci-setup.md)         |
-| 11  | ⏳     | Smoke test final & Vídeo Demo                                 | Todos | 0.5 dia  | pending | [11-smoke-test-demo.md](./11-smoke-test-demo.md)         |
+| #   | Status | Task                                                     | Owner | Duração  | PR      | Arquivo                                                  |
+| --- | ------ | -------------------------------------------------------- | ----- | -------- | ------- | -------------------------------------------------------- |
+| 1   | 🟢     | Spike: Redux Toolkit + TanStack Query                    | Dev 1 | 1 dia    | pending | [01-spike-redux-query.md](./01-spike-redux-query.md)     |
+| 2   | ⏳     | Persistência real (Vercel KV ou Postgres)                | Dev 1 | 2 dias   | pending | [02-real-persistence.md](./02-real-persistence.md)       |
+| 3   | ⏳     | Schema de Transação Evoluído & Seed                      | Dev 1 | 1.5 dia  | pending | [06-evolved-schema.md](./06-evolved-schema.md)           |
+| 4   | ⏳     | NextAuth v5 Setup no Shell & Proxy                       | Dev 2 | 2 dias   | pending | [03-nextauth-setup.md](./03-nextauth-setup.md)           |
+| 5   | ⏳     | Componentes de Autenticação no Design System             | Dev 2 | 2 dias   | pending | [05-ds-auth-components.md](./05-ds-auth-components.md)   |
+| 6   | ⏳     | Criar slices Redux Toolkit em `packages/stores`          | Dev 3 | 1 dia    | pending | [07-packages-stores.md](./07-packages-stores.md)         |
+| 7   | ⏳     | Criar hooks TanStack Query em `packages/api-client`      | Dev 3 | 2 dias   | pending | [08-packages-api-client.md](./08-packages-api-client.md) |
+| 8   | ⏳     | Páginas `/login` e `/auth/error` no Shell                | Dev 2 | 1 dia    | pending | [04-auth-pages.md](./04-auth-pages.md)                   |
+| 9   | ⏳     | Migração: Remover Context API (Transactions + Feedback)  | Dev 3 | 2.5 dias | pending | [09-migrate-context-api.md](./09-migrate-context-api.md) |
+| 10  | ⏳     | Testes Vitest de Proxy/Stores & Configuração de CI e Env | Dev 1 | 1.5 dia  | pending | [10-vitest-ci-setup.md](./10-vitest-ci-setup.md)         |
+| 11  | ⏳     | Smoke test final & Vídeo Demo                            | Todos | 0.5 dia  | pending | [11-smoke-test-demo.md](./11-smoke-test-demo.md)         |
 
 **Legenda:** ✅ mergeada · 🟢 implementada (validada, aguarda merge) · ⏳ pendente
 

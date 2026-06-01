@@ -148,7 +148,7 @@ export default function AuthErrorPage() {
 ## Validação
 
 - [ ] Acesse `http://localhost:3000/`. Você deve ser redirecionado para `/login`.
-- [ ] Submeta credenciais inválidas (ex: senha errada). O middleware/handler deve redirecionar para `/auth/error?error=CredentialsSignin` e mostrar a mensagem de credenciais inválidas.
+- [ ] Submeta credenciais inválidas (ex: senha errada). O Proxy/handler deve redirecionar para `/auth/error?error=CredentialsSignin` e mostrar a mensagem de credenciais inválidas.
 - [ ] Submeta credenciais válidas (qualquer e-mail com senha `senha123`). Você deve ser logado e redirecionado com sucesso para a home `/`.
 - [ ] Teste tentar entrar em `/login` enquanto estiver logado: você deve ser mandado de volta para `/` automaticamente.
 

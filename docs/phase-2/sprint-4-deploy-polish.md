@@ -200,7 +200,7 @@
 
 #### README por package
 
-- [ ] `apps/shell/README.md`: propósito, scripts, env vars, rotas API, middleware
+- [ ] `apps/shell/README.md`: propósito, scripts, env vars, rotas API, Proxy de auth
 - [ ] `apps/dashboard-mfe/README.md`: o que expõe, como consome dados, charts
 - [ ] `apps/transactions-mfe/README.md`: o que expõe, features (busca, scroll, categorias, anexos)
 - [ ] `packages/design-system/README.md`: componentes disponíveis, tokens, como adicionar novos
