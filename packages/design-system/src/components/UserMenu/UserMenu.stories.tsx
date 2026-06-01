@@ -80,7 +80,15 @@ export const BackdropClose: Story = {
     await userEvent.click(trigger);
     await expect(canvas.getByRole('menu')).toBeInTheDocument();
 
-    await userEvent.click(canvas.getByRole('button', { name: /fechar menu do usuário/i }));
+    const backdrop = canvasElement.querySelector<HTMLDivElement>(
+      'div[aria-hidden="true"].fixed.inset-0'
+    );
+
+    if (!backdrop) {
+      throw new Error('UserMenu backdrop was not rendered');
+    }
+
+    await userEvent.click(backdrop);
     await expect(canvas.queryByRole('menu')).not.toBeInTheDocument();
   },
 };
