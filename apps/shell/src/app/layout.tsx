@@ -2,9 +2,8 @@ import type { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 import { TransactionsProvider } from '@/context/TransactionsContext';
 import { FeedbackProvider } from '@/context/FeedbackContext';
-import { Header } from '@bytebank/design-system';
-import { Sidebar } from '@bytebank/design-system';
 import { ViewportFix } from '@bytebank/design-system';
+import { AppShell } from './AppShell';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -24,28 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ViewportFix />
           <FeedbackProvider>
             <TransactionsProvider>
-              <div className="flex h-dvh flex-col overflow-hidden">
-                <Header />
-
-                {/* Tablet: horizontal nav (full width, above content) */}
-                <div className="hidden sm:block lg:hidden bg-background border-b border-border h-fit">
-                  <div className="mx-auto max-w-300 h-fit">
-                    <Sidebar />
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-hidden">
-                  {/* Desktop + content area */}
-                  <div className="mx-auto flex max-w-300 flex-col lg:flex-row px-lg gap-lg w-full h-full">
-                    {/* Desktop: vertical sidebar */}
-                    <div className="hidden lg:block w-48 shrink-0 sticky top-0 self-start">
-                      <Sidebar />
-                    </div>
-
-                    <main className="w-full py-lg h-full overflow-y-auto">{children}</main>
-                  </div>
-                </div>
-              </div>
+              <AppShell>{children}</AppShell>
             </TransactionsProvider>
           </FeedbackProvider>
         </SessionProvider>
