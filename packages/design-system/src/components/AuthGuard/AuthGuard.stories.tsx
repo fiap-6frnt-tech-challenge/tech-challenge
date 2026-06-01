@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 import { Button } from '../Button';
+import { Skeleton } from '../Skeleton';
 import { AuthGuard } from './AuthGuard';
 
 const protectedContent = (
@@ -62,8 +63,24 @@ export const LoadingCustomSkeleton: Story = {
     isLoading: true,
     isAuthenticated: false,
     fallbackSkeleton: (
-      <div className="rounded-default border border-border bg-surface p-lg">
-        <p className="label-default text-content-secondary">Carregando sessão...</p>
+      <div
+        className="flex w-full min-w-80 max-w-full sm:max-w-120 flex-col gap-md rounded-default border border-border bg-surface p-lg"
+        role="status"
+        aria-label="Carregando sessão"
+        aria-busy="true"
+      >
+        <div className="flex items-center gap-md">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="flex flex-1 flex-col gap-sm">
+            <Skeleton className="h-4 w-2/5" />
+            <Skeleton className="h-4 w-3/5" />
+          </div>
+        </div>
+        <Skeleton className="h-20 w-full" />
+        <div className="grid grid-cols-2 gap-sm">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
       </div>
     ),
   },

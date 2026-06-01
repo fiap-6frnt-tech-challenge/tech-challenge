@@ -7,12 +7,16 @@ import type { AuthGuardProps } from './IAuthGuard';
 function DefaultAuthSkeleton() {
   return (
     <div
-      className="flex w-full max-w-120 flex-col gap-md"
+      className="flex w-full min-w-80 max-w-full flex-col gap-md sm:max-w-120"
       role="status"
       aria-label="Carregando autenticação"
+      aria-busy="true"
     >
-      <Skeleton className="h-8 w-1/2" />
-      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-6 w-2/5" />
+      <div className="flex flex-col gap-sm">
+        <Skeleton className="h-11 w-full" />
+        <Skeleton className="h-11 w-full" />
+      </div>
       <Skeleton className="h-12 w-full" />
     </div>
   );
