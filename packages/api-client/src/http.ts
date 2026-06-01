@@ -3,7 +3,7 @@ import type { Transaction, NewTransaction, UpdateTransaction } from '@bytebank/s
 let apiBaseUrl = '/api';
 
 export function configureApiBaseUrl(baseUrl: string): void {
-  apiBaseUrl = baseUrl || '/api';
+  apiBaseUrl = (baseUrl || '/api').replace(/\/+$/, '');
 }
 
 export const TRANSACTIONS_PER_PAGE = 10;
