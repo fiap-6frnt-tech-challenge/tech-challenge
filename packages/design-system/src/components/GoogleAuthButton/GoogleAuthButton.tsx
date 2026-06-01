@@ -1,5 +1,4 @@
-import { cn } from '@bytebank/shared';
-import { Loader2 } from 'lucide-react';
+import { Button } from '../Button';
 import type { GoogleAuthButtonProps } from './IGoogleAuthButton';
 
 function GoogleIcon() {
@@ -38,24 +37,18 @@ export function GoogleAuthButton({
   className,
 }: GoogleAuthButtonProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="secondary"
+      size="md"
+      fullWidth
+      loading={isLoading}
+      leftIcon={<GoogleIcon />}
       onClick={onClick}
       disabled={disabled || isLoading}
-      className={cn(
-        'inline-flex h-12 w-full items-center justify-center gap-sm rounded-md border border-border bg-surface px-lg',
-        'label-semibold text-content-primary transition-colors hover:bg-surface-hover',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        className
-      )}
+      className={className}
     >
-      {isLoading ? (
-        <Loader2 aria-hidden="true" className="animate-spin" size={18} />
-      ) : (
-        <GoogleIcon />
-      )}
-      <span>{isLoading ? 'Conectando...' : 'Continuar com Google'}</span>
-    </button>
+      {isLoading ? 'Conectando...' : 'Continuar com Google'}
+    </Button>
   );
 }
