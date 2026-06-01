@@ -1,4 +1,4 @@
-# Task 3 — NextAuth v5 Setup no Shell & Middleware
+# Task 3 — NextAuth v5 Setup no Shell & Proxy
 
 > ⏳ **Status: Pending**
 
@@ -16,13 +16,15 @@
 ## Dependências
 
 - **O que bloqueia esta tarefa**: Depende da entrega da **Task 6 (Schema Evoluído)** pelo Dev 1. É necessário ter os novos campos como `userId` estabilizados nos tipos do `packages/shared` para sincronizar o mock e as callbacks do NextAuth de forma adequada.
-- **O que esta tarefa desbloqueia**: Desbloqueia os slices Redux Toolkit (**Task 7**) e os testes de infra/CI (**Task 10**), visto que estes necessitam ler a sessão e interceptar as rotas protegidas pelo middleware em ambiente de teste.
+- **O que esta tarefa desbloqueia**: Desbloqueia os slices Redux Toolkit (**Task 7**) e os testes de infra/CI (**Task 10**), visto que estes necessitam ler a sessão e interceptar as rotas protegidas pelo Proxy do Next.js em ambiente de teste.
 
 ---
 
 ## Contexto
 
-A segurança e o controle de acesso na Fase 2 serão centralizados no aplicativo **host (shell)** utilizando o **NextAuth.js v5 (Beta)**. O shell será o responsável por validar as credenciais do usuário, gerenciar a sessão segura (JWT em cookies HTTPOnly e Secure) e interceptar rotas não autenticadas via Middleware do Next.js. Os Microfrontends remotos que serão integrados no futuro consumirão a sessão de forma passiva através do contexto compartilhado.
+A segurança e o controle de acesso na Fase 2 serão centralizados no aplicativo **host (shell)** utilizando o **NextAuth.js v5 (Beta)**. O shell será o responsável por validar as credenciais do usuário, gerenciar a sessão segura (JWT em cookies HTTPOnly e Secure) e interceptar rotas não autenticadas via Proxy do Next.js. Os Microfrontends remotos que serão integrados no futuro consumirão a sessão de forma passiva através do contexto compartilhado.
+
+> **Nota sobre Next.js 16:** esta tarefa foi originalmente descrita como "middleware" porque essa era a convenção anterior do Next.js. No Next.js 16, o arquivo `middleware.ts` foi substituído pela convenção `proxy.ts`; usar `middleware.ts` ainda compila, mas emite warning de depreciação. Por isso, a implementação atual usa `apps/shell/src/proxy.ts`.
 
 ---
 
@@ -119,14 +121,14 @@ export const { GET, POST } = handlers;
 
 ---
 
-### 4. Configurar Middleware de Rotas Protegidas
+### 4. Configurar Proxy de Rotas Protegidas
 
-Crie o arquivo de middleware na raiz da pasta `src/` do shell (`apps/shell/src/middleware.ts`):
+Crie o arquivo de Proxy na raiz da pasta `src/` do shell (`apps/shell/src/proxy.ts`). Ele substitui o antigo `middleware.ts` no Next.js 16 e mantém a mesma responsabilidade: bloquear rotas privadas para usuários não autenticados e redirecionar usuários autenticados para fora das rotas públicas de auth.
 
 ```typescript
 import { auth } from './auth';
 
-export default auth((req) => {
+export const proxy = auth((req) => {
   const isLoggedIn = !!req.auth;
   const { nextUrl } = req;
 
@@ -145,7 +147,6 @@ export default auth((req) => {
 });
 
 export const config = {
-  // Protege todas as rotas exceto assets, favicon, _next e rotas públicas
   matcher: ['/((?!api/auth|_next/static|_next/image|favicon.ico).*)'],
 };
 ```
@@ -184,7 +185,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ## Validação
 
-- [ ] Acesse `http://localhost:3000/`. Se você não estiver autenticado, deve ser redirecionado automaticamente para `http://localhost:3000/login` (a rota estará em 404 até criarmos a página, mas o redirect valida a segurança do middleware).
+- [ ] Acesse `http://localhost:3000/`. Se você não estiver autenticado, deve ser redirecionado automaticamente para `http://localhost:3000/login` (a rota estará em 404 até criarmos a página, mas o redirect valida a segurança do Proxy).
 - [ ] Chame `http://localhost:3000/api/auth/providers` no navegador e verifique se as configurações de Credentials e Google são listadas como JSON.
 
 ---
@@ -193,6 +194,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 1. **NextAuth v5 Import Patterns**: O NextAuth v5 não exporta mais a biblioteca padrão `next-auth/client` ou `next-auth/next`. Certifique-se de importar `auth`, `signIn` e `signOut` diretamente do arquivo local `./auth.ts` configurado no passo 2. No client, use `next-auth/react`.
 2. **Secret Opcional em Dev**: A partir da v5, se você esquecer `AUTH_SECRET` em dev, o NextAuth tenta gerar um hash temporário, mas em produção o build ou deploy quebrará silenciosamente. Sempre garanta esta variável no ambiente.
+3. **Middleware vs Proxy no Next.js 16**: se esta task for comparada com materiais antigos do Next.js, o exemplo pode aparecer como `middleware.ts` com `export default`. Neste projeto, use `proxy.ts` com `export const proxy` para evitar o warning de depreciação e ficar alinhado à versão atual do Next.js.
 
 ---
 

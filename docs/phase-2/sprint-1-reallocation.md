@@ -8,11 +8,11 @@ Devido à redução da equipe para **3 integrantes**, este documento oficializa 
 
 Os 5 tracks originais da Fase 2 foram fundidos em 3 papéis principais para evitar overlaps e balancear a carga técnica:
 
-| Papel                           | Foco Principal                           | Responsabilidades na Sprint 1                                                                                                                 |
-| :------------------------------ | :--------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Dev 1 (Infra & Backend)**     | Infra, Banco de Dados e Testes           | Persistência real (KV/Postgres), schema de transação, migração de seeds, configurações de CI/CD, testes do middleware e deploy.               |
-| **Dev 2 (DS & UI Pages)**       | UI Components e Páginas do Host          | Componentes de autenticação do Design System (LoginForm, GoogleAuthButton, UserMenu, AuthGuard), NextAuth v5 setup e telas de login/erro.     |
-| **Dev 3 (State & Integration)** | Redux Toolkit, React Query e Refatoração | Configuração de `@bytebank/stores` (Redux Toolkit slices), `@bytebank/api-client` (Query hooks) e migração/remoção completa das Context APIs. |
+| Papel                           | Foco Principal                           | Responsabilidades na Sprint 1                                                                                                                  |
+| :------------------------------ | :--------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dev 1 (Infra & Backend)**     | Infra, Banco de Dados e Testes           | Persistência real (KV/Postgres), schema de transação, migração de seeds, configurações de CI/CD, testes do Proxy de rotas protegidas e deploy. |
+| **Dev 2 (DS & UI Pages)**       | UI Components e Páginas do Host          | Componentes de autenticação do Design System (LoginForm, GoogleAuthButton, UserMenu, AuthGuard), NextAuth v5 setup e telas de login/erro.      |
+| **Dev 3 (State & Integration)** | Redux Toolkit, React Query e Refatoração | Configuração de `@bytebank/stores` (Redux Toolkit slices), `@bytebank/api-client` (Query hooks) e migração/remoção completa das Context APIs.  |
 
 ---
 
@@ -46,7 +46,7 @@ Para evitar que desenvolvedores fiquem bloqueados, o time deve seguir a seguinte
 5. **Dias 9 a 11 (Dev 3)**:
    - **Dev 3** realiza a migração massiva da Context API (**Task 9**), dependendo dos hooks (**Task 8**) e das stores (**Task 7**).
 6. **Dias 12 e 13 (Dev 1)**:
-   - **Dev 1** finaliza os testes do middleware e a pipeline de CI/CD (**Task 10**).
+   - **Dev 1** finaliza os testes do Proxy e a pipeline de CI/CD (**Task 10**).
 7. **Dia 14 (Todos)**:
    - Validação final do smoke test em clone limpo e gravação da demo (**Task 11**).
 

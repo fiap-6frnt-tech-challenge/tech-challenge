@@ -57,7 +57,7 @@
 | Persistência real (Vercel KV ou Postgres) + migrar `store.ts`           | dev2-backend                          | 2    | —                                           |
 | Schema da `Transaction` evoluído (`userId`, `category`, `attachments?`) | dev2-backend                          | 1    | persistência decidida                       |
 | Migration do seed `data/transactions.json`                              | dev2-backend                          | 0.5  | schema evoluído                             |
-| NextAuth setup (Credentials + Google) + middleware                      | dev2-backend                          | 2    | schema evoluído                             |
+| NextAuth setup (Credentials + Google) + Proxy                           | dev2-backend                          | 2    | schema evoluído                             |
 | DS: `LoginForm` + Storybook                                             | dev3-ds                               | 0.5  | —                                           |
 | DS: `GoogleAuthButton` + Storybook                                      | dev3-ds                               | 0.5  | —                                           |
 | DS: `UserMenu` + Storybook                                              | dev3-ds                               | 0.5  | —                                           |
@@ -68,7 +68,7 @@
 | Migração: remover `TransactionsContext` + adaptar todos consumidores    | dev5-transactions                     | 2    | api-client pronto (dev4-dashboard dia 8)    |
 | Migração: remover `FeedbackContext` + adaptar                           | dev5-transactions                     | 0.5  | uiSlice pronto (dev4-dashboard dia 6)       |
 | Configurar env vars Vercel (preview + prod)                             | dev1-infra                            | 0.5  | NextAuth setup                              |
-| Testes Vitest middleware + integração CI                                | dev1-infra                            | 1    | tudo acima                                  |
+| Testes Vitest Proxy + integração CI                                     | dev1-infra                            | 1    | tudo acima                                  |
 | Smoke test + vídeo curto demo                                           | Todo time                             | 0.5  | tudo                                        |
 
 **Capacidade:** 70 dev-days. Alocados: ~17. Devs com folga (especialmente dev1-infra e dev3-ds após dia 5) podem adiantar Sprint 2: dev3-ds começa research/protótipo de charts; dev1-infra começa setup Rsbuild para `dashboard-mfe`.

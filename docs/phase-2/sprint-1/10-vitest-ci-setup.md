@@ -1,4 +1,4 @@
-# Task 10 — Testes Vitest de Middleware, Configuração de CI e Env Vars
+# Task 10 — Testes Vitest de Proxy, Configuração de CI e Env Vars
 
 > ⏳ **Status: Pending**
 
@@ -9,13 +9,13 @@
 | **Duração estimada**   | 1.5 dia                                                                                                                                                   |
 | **Branch recomendada** | `dev1/vitest-ci-setup`                                                                                                                                    |
 | **Depende de**         | [Task 3 — NextAuth Setup](./03-nextauth-setup.md), [Task 7 — Criar stores](./07-packages-stores.md) e [Task 8 — Criar hooks](./08-packages-api-client.md) |
-| **PR só abre**         | Após todos os testes de middleware passarem localmente e o CI rodar com caching                                                                           |
+| **PR só abre**         | Após todos os testes de Proxy passarem localmente e o CI rodar com caching                                                                                |
 
 ---
 
 ## Dependências
 
-- **O que bloqueia esta tarefa**: Bloqueada pelas tarefas **Task 3 (NextAuth Setup)**, **Task 7 (Stores)** e **Task 8 (API Hooks)**. Como os testes unitários do middleware do shell requerem o mock do NextAuth funcionando, e a pipeline de CI rodará testes unitários de todos os pacotes, esses recursos devem estar consolidados.
+- **O que bloqueia esta tarefa**: Bloqueada pelas tarefas **Task 3 (NextAuth Setup)**, **Task 7 (Stores)** e **Task 8 (API Hooks)**. Como os testes unitários do Proxy do shell requerem o mock do NextAuth funcionando, e a pipeline de CI rodará testes unitários de todos os pacotes, esses recursos devem estar consolidados.
 - **O que esta tarefa desbloqueia**: Desbloqueia a **Task 11 (Smoke Test Final)** ao garantir que o monorepo possua testes de integração estáveis e variáveis de ambiente configuradas na Vercel para deploys de pré-visualização.
 
 ---
@@ -29,13 +29,13 @@
 
 ## Implementação passo-a-passo
 
-### 1. Criar testes para o Middleware (`apps/shell/src/middleware.test.ts`)
+### 1. Criar testes para o Proxy (`apps/shell/src/proxy.test.ts`)
 
-Para garantir que rotas privadas continuam protegidas contra regressões acidentais, mocke o NextAuth e teste a lógica do middleware:
+Para garantir que rotas privadas continuam protegidas contra regressões acidentais, mocke o NextAuth e teste a lógica do Proxy. No Next.js 16, o antigo `middleware.ts` foi substituído por `proxy.ts`, então os testes devem importar `proxy` por nome:
 
 ```typescript
 import { describe, it, expect, vi } from 'vitest';
-import middleware from './middleware';
+import { proxy } from './proxy';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Mock do next-auth/jwt ou do auth nativo
@@ -50,7 +50,7 @@ vi.mock('./auth', () => ({
   },
 }));
 
-describe('Middleware de Autenticação', () => {
+describe('Proxy de Autenticação', () => {
   const createMockRequest = (path: string, isAuthed = false) => {
     const url = `http://localhost:3000${path}`;
     const req = new NextRequest(url);
@@ -62,7 +62,7 @@ describe('Middleware de Autenticação', () => {
 
   it('deve redirecionar usuário anônimo tentando acessar a home para /login', async () => {
     const req = createMockRequest('/');
-    const res = await middleware(req, {} as any);
+    const res = await proxy(req, {} as any);
 
     expect(res).toBeDefined();
     expect(res?.status).toBe(307); // Redirect temporário
@@ -71,7 +71,7 @@ describe('Middleware de Autenticação', () => {
 
   it('deve permitir acesso à rota /login para usuários anônimos', async () => {
     const req = createMockRequest('/login');
-    const res = await middleware(req, {} as any);
+    const res = await proxy(req, {} as any);
 
     // Sem redirect (continua o fluxo normal)
     expect(res).toBeUndefined();
@@ -79,7 +79,7 @@ describe('Middleware de Autenticação', () => {
 
   it('deve redirecionar usuário já logado acessando /login para a home', async () => {
     const req = createMockRequest('/login', true);
-    const res = await middleware(req, {} as any);
+    const res = await proxy(req, {} as any);
 
     expect(res).toBeDefined();
     expect(res?.status).toBe(307);

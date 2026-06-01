@@ -490,7 +490,7 @@ jobs:
 
 O `apps/shell/vitest.config.ts` atual referencia `.storybook/` que acabou de sair do shell. Após Phase C deste task, `npm run test -w @bytebank/shell` falha com "ENOENT: no such file or directory '.storybook'". Esta phase resolve.
 
-**Decisão:** simplificar o vitest do shell para **não** integrar com Storybook (Storybook agora vive no DS). Shell terá seu vitest "limpo" pronto para tests que o Sprint 1 vai escrever (auth middleware, hooks, etc.).
+**Decisão:** simplificar o vitest do shell para **não** integrar com Storybook (Storybook agora vive no DS). Shell terá seu vitest "limpo" pronto para tests que o Sprint 1 vai escrever (Proxy de auth, hooks, etc.).
 
 Substituir conteúdo de `apps/shell/vitest.config.ts`:
 

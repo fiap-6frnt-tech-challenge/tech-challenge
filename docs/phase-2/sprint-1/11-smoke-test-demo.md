@@ -70,7 +70,7 @@ A entrega da sprint exige um vídeo demonstrativo gravado pela equipe (com prefe
 
 ### Roteiro Recomendado:
 
-1. **0:00 - 0:30**: Mostrar a tela de login vazia. Explicar brevemente que a aplicação agora está sob rotas protegidas pelo middleware do NextAuth.
+1. **0:00 - 0:30**: Mostrar a tela de login vazia. Explicar brevemente que a aplicação agora está sob rotas protegidas pelo Proxy do Next.js integrado ao NextAuth.
 2. **0:30 - 1:00**: Realizar o fluxo de autenticação com o Google OAuth. Mostrar o redirecionamento bem-sucedido para a home. Exibir no Header o componente `UserMenu` com as informações do usuário logado.
 3. **1:00 - 1:30**: Criar uma transação nova na interface. Mostrar o feedback visual de sucesso gerenciado pelo Redux Toolkit.
 4. **1:30 - 2:00**: Simular o logout do usuário através do menu dropdown, mostrando que ele retorna para a página `/login` impedindo novos acessos a rotas privadas.

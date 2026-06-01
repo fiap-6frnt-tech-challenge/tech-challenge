@@ -67,7 +67,7 @@
 - [ ] Session strategy: `jwt`, maxAge 7 dias, cookie httpOnly + secure em prod
 - [ ] Callbacks: `jwt` adiciona `userId` ao token, `session` expõe ao cliente
 - [ ] Página de erro `/auth/error` (DS-styled)
-- [ ] `apps/shell/middleware.ts` protege todas rotas exceto `/login`, `/api/auth/*`, `/_next/*`
+- [ ] `apps/shell/src/proxy.ts` protege todas rotas exceto `/login`, `/api/auth/*`, `/_next/*`
 - [ ] Env vars: `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - [ ] `apps/shell/src/app/layout.tsx`: wrap em `<SessionProvider>`
 
@@ -176,9 +176,9 @@
 - [ ] `packages/stores/src/authSlice.test.ts` — reducers de login/logout, state transitions, selectors
 - [ ] `packages/stores/src/uiSlice.test.ts` — filter panel toggle, feedback push/clear
 - [ ] `packages/api-client/src/transactions.test.ts` — mock fetch, verificar cache keys e optimistic updates
-- [ ] `apps/shell/middleware.test.ts` — redirect anônimo, allow auth routes
+- [ ] `apps/shell/src/proxy.test.ts` — redirect anônimo, allow auth routes
 
-**Aceite:** `npm test` passa com ≥ 10 testes cobrindo store/hooks/middleware.
+**Aceite:** `npm test` passa com ≥ 10 testes cobrindo store/hooks/Proxy.
 
 ---
 

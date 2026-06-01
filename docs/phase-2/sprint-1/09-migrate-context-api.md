@@ -159,4 +159,4 @@ Lembre-se de tratar os estados de `isLoading` de forma acessível e visualmente 
 
 ## Próximo passo
 
-→ **Adicionar os testes de integração do Vitest, cobrir o Middleware e ajustar o CI na [Task 10 — Testes Vitest & CI](./10-vitest-ci-setup.md).**
+→ **Adicionar os testes de integração do Vitest, cobrir o Proxy de rotas protegidas e ajustar o CI na [Task 10 — Testes Vitest & CI](./10-vitest-ci-setup.md).**
