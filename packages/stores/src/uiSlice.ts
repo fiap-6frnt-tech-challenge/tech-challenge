@@ -1,9 +1,10 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+// Mantém o union em sincronia com FeedbackType do @bytebank/design-system.
 export interface FeedbackMessage {
   type: 'success' | 'error' | 'info';
   title: string;
-  message: string;
+  message?: string;
 }
 
 export interface UIState {

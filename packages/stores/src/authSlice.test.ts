@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 
 vi.mock('next-auth/react', () => ({ signOut: vi.fn() }));
 
+import { signOut } from 'next-auth/react';
 import authReducer, { setSession, clearSession, logout, type UserSession } from './authSlice';
 
 const initialState = { user: null, isAuthenticated: false };
@@ -44,5 +46,18 @@ describe('authSlice', () => {
     const state = authReducer(logged, { type: logout.fulfilled.type });
     expect(state.user).toBeNull();
     expect(state.isAuthenticated).toBe(false);
+  });
+
+  it('logout dispara signOut com callbackUrl e limpa a sessão', async () => {
+    const store = configureStore({
+      reducer: { auth: authReducer },
+      preloadedState: { auth: { user: fakeUser, isAuthenticated: true } },
+    });
+
+    await store.dispatch(logout());
+
+    expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/login' });
+    expect(store.getState().auth.user).toBeNull();
+    expect(store.getState().auth.isAuthenticated).toBe(false);
   });
 });
