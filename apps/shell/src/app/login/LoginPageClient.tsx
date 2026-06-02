@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useTransition } from 'react';
 import type { LoginFormFields } from '@bytebank/design-system';
 import { GoogleAuthButton, LoginForm } from '@bytebank/design-system';
@@ -33,12 +34,17 @@ export function LoginPageClient({
 
   return (
     <main className="min-h-dvh flex items-center justify-center bg-background px-md py-xl">
-      <section className="w-full max-w-[28rem] rounded-md border border-border bg-surface p-xl shadow-sm">
-        <div className="mb-lg text-center">
-          <h1 className="text-2xl font-bold text-content-primary">Acesse o ByteBank</h1>
-          <p className="mt-xs text-sm text-content-secondary">
-            Insira suas credenciais ou continue com sua conta Google
-          </p>
+      <section className="w-full max-w-[28rem] rounded-md border border-border bg-surface p-2xl shadow-sm">
+        <div className="mb-lg flex flex-col items-center text-center">
+          <Image
+            src="/login.svg"
+            alt=""
+            width={360}
+            height={280}
+            priority
+            className="mb-md h-auto w-full max-w-[22rem]"
+          />
+          <h1 className="text-2xl font-bold text-content-primary">Login</h1>
         </div>
 
         <LoginForm onSubmit={handleCredentialsSubmit} isLoading={isPending} />
