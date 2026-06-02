@@ -68,7 +68,7 @@ export function LoginForm({
 
           return (
             <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between gap-sm">
+              <div className="flex items-center justify-between gap-2">
                 <Label htmlFor="password">Senha</Label>
               </div>
               <Input
