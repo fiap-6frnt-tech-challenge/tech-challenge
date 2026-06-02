@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
-import { TransactionsProvider } from '@/context/TransactionsContext';
 import { FeedbackProvider } from '@/context/FeedbackContext';
 import { ViewportFix } from '@bytebank/design-system';
 import { AppShell } from './AppShell';
@@ -22,9 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SessionProvider>
           <ViewportFix />
           <FeedbackProvider>
-            <TransactionsProvider>
-              <AppShell>{children}</AppShell>
-            </TransactionsProvider>
+            <AppShell>{children}</AppShell>
           </FeedbackProvider>
         </SessionProvider>
       </body>

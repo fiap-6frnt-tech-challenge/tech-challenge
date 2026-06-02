@@ -1,17 +1,36 @@
 'use client';
 
+import { useTransition } from 'react';
 import type { LoginFormFields } from '@bytebank/design-system';
 import { GoogleAuthButton, LoginForm } from '@bytebank/design-system';
 
 interface LoginPageClientProps {
+  isGoogleAuthEnabled: boolean;
   loginWithCredentialsAction: (data: LoginFormFields) => void | Promise<void>;
   loginWithGoogleAction: () => void | Promise<void>;
 }
 
 export function LoginPageClient({
+  isGoogleAuthEnabled,
   loginWithCredentialsAction,
   loginWithGoogleAction,
 }: LoginPageClientProps) {
+  const [isCredentialsPending, startCredentialsTransition] = useTransition();
+  const [isGooglePending, startGoogleTransition] = useTransition();
+  const isPending = isCredentialsPending || isGooglePending;
+
+  function handleCredentialsSubmit(data: LoginFormFields) {
+    startCredentialsTransition(async () => {
+      await loginWithCredentialsAction(data);
+    });
+  }
+
+  function handleGoogleClick() {
+    startGoogleTransition(async () => {
+      await loginWithGoogleAction();
+    });
+  }
+
   return (
     <main className="min-h-dvh flex items-center justify-center bg-background px-md py-xl">
       <section className="w-full max-w-[28rem] rounded-md border border-border bg-surface p-xl shadow-sm">
@@ -22,15 +41,23 @@ export function LoginPageClient({
           </p>
         </div>
 
-        <LoginForm onSubmit={loginWithCredentialsAction} />
+        <LoginForm onSubmit={handleCredentialsSubmit} isLoading={isPending} />
 
-        <div className="my-lg flex items-center gap-md">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs font-medium uppercase text-content-secondary">ou</span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
+        {isGoogleAuthEnabled ? (
+          <>
+            <div className="my-lg flex items-center gap-md">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs font-medium uppercase text-content-secondary">ou</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
 
-        <GoogleAuthButton onClick={loginWithGoogleAction} />
+            <GoogleAuthButton
+              onClick={handleGoogleClick}
+              isLoading={isGooglePending}
+              disabled={isPending}
+            />
+          </>
+        ) : null}
       </section>
     </main>
   );

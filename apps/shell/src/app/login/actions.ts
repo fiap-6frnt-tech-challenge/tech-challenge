@@ -3,14 +3,7 @@
 import { redirect } from 'next/navigation';
 import type { LoginFormFields } from '@bytebank/design-system';
 import { signIn } from '../../auth';
-
-function isNextRedirectError(error: unknown) {
-  if (!(error instanceof Error)) return false;
-
-  const digest = 'digest' in error && typeof error.digest === 'string' ? error.digest : '';
-
-  return error.message === 'NEXT_REDIRECT' || digest.startsWith('NEXT_REDIRECT');
-}
+import { isCredentialsSigninError, isNextRedirectError } from './authErrors';
 
 export async function loginWithCredentialsAction({ email, password }: LoginFormFields) {
   try {
@@ -24,7 +17,11 @@ export async function loginWithCredentialsAction({ email, password }: LoginFormF
       throw error;
     }
 
-    redirect('/auth/error?error=CredentialsSignin');
+    if (isCredentialsSigninError(error)) {
+      redirect('/auth/error?error=CredentialsSignin');
+    }
+
+    throw error;
   }
 }
 
