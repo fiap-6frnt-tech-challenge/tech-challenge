@@ -38,7 +38,6 @@ export const uiSlice = createSlice({
 export const { setFilterPanelOpen, toggleFilterPanel, showFeedback, hideFeedback } =
   uiSlice.actions;
 
-// Selectors
 export const selectFilterPanelOpen = (state: { ui: UIState }) => state.ui.filterPanelOpen;
 export const selectFeedback = (state: { ui: UIState }) => state.ui.feedback;
 

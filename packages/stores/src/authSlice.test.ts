@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 
-// Gotcha #1: signOut vem de next-auth/react (ESM) — mockamos para isolar o reducer.
 vi.mock('next-auth/react', () => ({ signOut: vi.fn() }));
 
 import authReducer, { setSession, clearSession, logout, type UserSession } from './authSlice';

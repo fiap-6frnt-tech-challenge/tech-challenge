@@ -35,8 +35,8 @@ MFEs consume the same store as a shared singleton via Module Federation
 ## Scripts
 
 ```bash
-npm run test -w @bytebank/stores   # Vitest (reducers as pure functions)
-npm run build -w @bytebank/stores  # tsc type-check
+npm run test -w @bytebank/stores
+npm run build -w @bytebank/stores
 ```
 
 See conventions in `docs/phase-2/state-conventions.md`.

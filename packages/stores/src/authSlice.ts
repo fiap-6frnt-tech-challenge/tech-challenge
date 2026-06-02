@@ -18,7 +18,6 @@ const initialState: AuthState = {
   isAuthenticated: false,
 };
 
-// Invalida cookies no NextAuth e redireciona para /login
 export const logout = createAsyncThunk('auth/logout', async () => {
   await signOut({ callbackUrl: '/login' });
 });
@@ -46,7 +45,6 @@ export const authSlice = createSlice({
 
 export const { setSession, clearSession } = authSlice.actions;
 
-// Selectors
 export const selectUser = (state: { auth: AuthState }) => state.auth.user;
 export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
 
