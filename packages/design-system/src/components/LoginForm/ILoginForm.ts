@@ -6,5 +6,6 @@ export interface LoginFormFields {
 export interface LoginFormProps {
   onSubmit: (data: LoginFormFields) => void | Promise<void>;
   isLoading?: boolean;
+  forgotPasswordHref?: string;
   className?: string;
 }
