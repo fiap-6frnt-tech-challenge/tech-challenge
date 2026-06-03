@@ -1,6 +1,6 @@
 # Task 7 — Criar slices Redux Toolkit em packages/stores
 
-> ⏳ **Status: Pending**
+> ✅ **Status: Done**
 
 |                        |                                                                                         |
 | ---------------------- | --------------------------------------------------------------------------------------- |
@@ -264,8 +264,8 @@ npm run test -w @bytebank/stores
 
 ## Validação
 
-- [ ] A execução de `npm run test -w @bytebank/stores` completa com 100% dos testes passando.
-- [ ] O monorepo compila com sucesso usando `npm run build` na raiz.
+- [x] A execução de `npm run test -w @bytebank/stores` completa com 100% dos testes passando.
+- [x] O monorepo compila com sucesso usando `npm run build` na raiz.
 
 ---
 
