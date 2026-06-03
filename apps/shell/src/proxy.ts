@@ -1,4 +1,5 @@
 import { auth } from './auth';
+import { NextResponse } from 'next/server';
 
 export const proxy = auth((req) => {
   const isLoggedIn = !!req.auth;
@@ -10,11 +11,11 @@ export const proxy = auth((req) => {
   if (isApiRoute) return;
 
   if (!isLoggedIn && !isPublicRoute) {
-    return Response.redirect(new URL('/login', nextUrl));
+    return NextResponse.redirect(new URL('/login', nextUrl));
   }
 
   if (isLoggedIn && isPublicRoute) {
-    return Response.redirect(new URL('/', nextUrl));
+    return NextResponse.redirect(new URL('/', nextUrl));
   }
 });
 

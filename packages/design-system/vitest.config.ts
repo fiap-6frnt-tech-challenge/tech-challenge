@@ -8,6 +8,9 @@ const dirname =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  server: {
+    host: '127.0.0.1',
+  },
   test: {
     projects: [
       {
@@ -19,6 +22,10 @@ export default defineConfig({
             enabled: true,
             headless: true,
             provider: playwright({}),
+            api: {
+              host: '127.0.0.1',
+              port: 64123,
+            },
             instances: [{ browser: 'chromium' }],
           },
           setupFiles: ['.storybook/vitest.setup.ts'],
