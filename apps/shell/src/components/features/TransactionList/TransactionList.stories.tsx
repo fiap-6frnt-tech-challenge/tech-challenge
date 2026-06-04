@@ -6,23 +6,51 @@ import { ReceiptText } from 'lucide-react';
 import { EmptyState } from '@bytebank/design-system';
 
 const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: '1', type: 'deposit', description: 'Salário mensal', amount: 5000, date: '2025-03-01' },
-  { id: '2', type: 'withdrawal', description: 'Aluguel', amount: 1500, date: '2025-03-05' },
+  {
+    id: '1',
+    userId: 'user-1',
+    type: 'deposit',
+    category: 'Salário',
+    description: 'Salário mensal',
+    amount: 5000,
+    date: '2025-03-01',
+  },
+  {
+    id: '2',
+    userId: 'user-1',
+    type: 'withdrawal',
+    category: 'Moradia',
+    description: 'Aluguel',
+    amount: 1500,
+    date: '2025-03-05',
+  },
   {
     id: '3',
+    userId: 'user-1',
     type: 'transfer',
+    category: 'Poupança',
     description: 'Transferência para conta poupança',
     amount: 800,
     date: '2025-03-10',
   },
   {
     id: '4',
+    userId: 'user-1',
     type: 'deposit',
+    category: 'Freelance',
     description: 'Freelance — projeto web',
     amount: 2200,
     date: '2025-03-15',
   },
-  { id: '5', type: 'withdrawal', description: 'Supermercado', amount: 320, date: '2025-03-18' },
+  {
+    id: '5',
+    userId: 'user-1',
+    type: 'withdrawal',
+    category: 'Alimentação',
+    description: 'Supermercado',
+    amount: 320,
+    date: '2025-03-18',
+  },
 ];
 
 const meta: Meta<typeof TransactionList> = {
@@ -38,7 +66,7 @@ const meta: Meta<typeof TransactionList> = {
     docs: {
       description: {
         component:
-          'Renders a list of transactions using TransactionItem. Handles loading and empty states. Supports optional title and custom className for different layout contexts. Does not require providers directly; in app usage it is commonly wired with TransactionsContext data and filter state.',
+          'Renders a list of transactions using TransactionItem. Handles loading and empty states. Supports optional title and custom className for different layout contexts. Does not require providers directly; in app usage it is commonly wired with TanStack Query data and filter state.',
       },
     },
   },
@@ -85,7 +113,7 @@ export const ContextIntegration: Story = {
     docs: {
       description: {
         story:
-          'Integration reference: in production this component typically receives `transactions`, `onEdit`, and `onDelete` from TransactionsContext-driven containers.',
+          'Integration reference: in production this component typically receives `transactions`, `onEdit`, and `onDelete` from TanStack Query-driven containers.',
       },
     },
   },

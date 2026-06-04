@@ -6,9 +6,13 @@ import { TransactionList } from '@/components/features/TransactionList';
 import { EmptyState, IconButton, Pagination } from '@bytebank/design-system';
 import { ErrorState } from '@bytebank/design-system';
 import { SkeletonList } from '@bytebank/design-system';
-import { useFeedback } from '@/context/FeedbackContext';
-import { useTransactions } from '@/context/TransactionsContext';
-import { usePaginatedTransactions, useTransactionFilters } from '@/hooks';
+import {
+  usePaginatedTransactions,
+  useDeleteTransaction,
+  useUpdateTransaction,
+} from '@bytebank/api-client';
+import { showFeedback, useAppDispatch } from '@bytebank/stores';
+import { useTransactionFilters } from '@/hooks';
 import { DEFAULT_FILTERS } from '@/components/features/TransactionFilters';
 import type { Transaction } from '@bytebank/shared';
 import { Funnel, ReceiptText, SearchX } from 'lucide-react';
@@ -26,15 +30,15 @@ const EditTransactionModal = dynamic(
 );
 
 function TransactionsContent() {
-  const { deleteTransaction, updateTransaction } = useTransactions();
   const { filters, setFilters, clearFilters, page, setPage, isFilterVisible, setIsFilterVisible } =
     useTransactionFilters();
-  const { transactions, totalPages, isLoading, isError, refetch } = usePaginatedTransactions(
-    filters,
-    page
-  );
+  const { data: paginated, isLoading, isError } = usePaginatedTransactions({ page, ...filters });
+  const transactions = paginated?.data ?? [];
+  const totalPages = Math.max(1, paginated?.pages ?? 1);
 
-  const { showFeedback } = useFeedback();
+  const dispatch = useAppDispatch();
+  const { mutateAsync: deleteTransaction } = useDeleteTransaction();
+  const { mutateAsync: updateTransaction } = useUpdateTransaction();
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [pendingEdit, setPendingEdit] = useState<Transaction | null>(null);
@@ -59,19 +63,22 @@ function TransactionsContent() {
     setIsDeleting(true);
     try {
       await deleteTransaction(pendingDelete.id);
-      showFeedback({
-        type: 'success',
-        title: 'Transação excluída',
-        message: 'A transação foi removida com sucesso.',
-      });
+      dispatch(
+        showFeedback({
+          type: 'success',
+          title: 'Transação excluída',
+          message: 'A transação foi removida com sucesso.',
+        })
+      );
       setPendingDelete(null);
-      await refetch();
     } catch {
-      showFeedback({
-        type: 'error',
-        title: 'Erro ao excluir',
-        message: 'Não foi possível excluir a transação. Tente novamente.',
-      });
+      dispatch(
+        showFeedback({
+          type: 'error',
+          title: 'Erro ao excluir',
+          message: 'Não foi possível excluir a transação. Tente novamente.',
+        })
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -81,20 +88,23 @@ function TransactionsContent() {
     if (!pendingEdit) return;
     setIsUpdating(true);
     try {
-      await updateTransaction(pendingEdit.id, data);
-      showFeedback({
-        type: 'success',
-        title: 'Transação atualizada',
-        message: 'A transação foi atualizada com sucesso.',
-      });
+      await updateTransaction({ id: pendingEdit.id, data });
+      dispatch(
+        showFeedback({
+          type: 'success',
+          title: 'Transação atualizada',
+          message: 'A transação foi atualizada com sucesso.',
+        })
+      );
       setPendingEdit(null);
-      await refetch();
     } catch {
-      showFeedback({
-        type: 'error',
-        title: 'Erro ao atualizar',
-        message: 'Não foi possível atualizar a transação. Tente novamente.',
-      });
+      dispatch(
+        showFeedback({
+          type: 'error',
+          title: 'Erro ao atualizar',
+          message: 'Não foi possível atualizar a transação. Tente novamente.',
+        })
+      );
     } finally {
       setIsUpdating(false);
     }
