@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { TransactionsProvider } from '@/context/TransactionsContext';
 import { Header, Sidebar } from '@bytebank/design-system';
 import { isPublicAuthRoute } from './AppShell.routes';
 
@@ -13,26 +12,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <TransactionsProvider>
-      <div className="flex h-dvh flex-col overflow-hidden">
-        <Header />
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <Header />
 
-        <div className="hidden sm:block lg:hidden bg-background border-b border-border h-fit">
-          <div className="mx-auto max-w-300 h-fit">
-            <Sidebar />
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-hidden">
-          <div className="mx-auto flex max-w-300 flex-col lg:flex-row px-lg gap-lg w-full h-full">
-            <div className="hidden lg:block w-48 shrink-0 sticky top-0 self-start">
-              <Sidebar />
-            </div>
-
-            <main className="w-full py-lg h-full overflow-y-auto">{children}</main>
-          </div>
+      <div className="hidden sm:block lg:hidden bg-background border-b border-border h-fit">
+        <div className="mx-auto max-w-300 h-fit">
+          <Sidebar />
         </div>
       </div>
-    </TransactionsProvider>
+
+      <div className="flex-1 overflow-hidden">
+        <div className="mx-auto flex max-w-300 flex-col lg:flex-row px-lg gap-lg w-full h-full">
+          <div className="hidden lg:block w-48 shrink-0 sticky top-0 self-start">
+            <Sidebar />
+          </div>
+
+          <main className="w-full py-lg h-full overflow-y-auto">{children}</main>
+        </div>
+      </div>
+    </div>
   );
 }

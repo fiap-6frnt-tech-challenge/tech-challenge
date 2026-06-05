@@ -2,8 +2,8 @@
 
 import { ConfirmTransactionModal } from '@/components/features/ConfirmTransactionModal';
 import { Card } from '@bytebank/design-system';
-import { useFeedback } from '@/context/FeedbackContext';
-import { useTransactions } from '@/context/TransactionsContext';
+import { useCreateTransaction } from '@bytebank/api-client';
+import { showFeedback, useAppDispatch } from '@bytebank/stores';
 import type { ReactElement } from 'react';
 import { useRef, useState } from 'react';
 import type {
@@ -26,8 +26,8 @@ const DEFAULT_USER_ID = 'joana';
 const DEFAULT_CATEGORY = 'default';
 
 export function NewTransaction(): ReactElement {
-  const { addTransaction } = useTransactions();
-  const { showFeedback } = useFeedback();
+  const { mutateAsync: createTransaction } = useCreateTransaction();
+  const dispatch = useAppDispatch();
 
   const formRef = useRef<TransactionFormRef>(null);
   const [pendingData, setPendingData] = useState<TransactionFormValues | null>(null);
@@ -43,7 +43,7 @@ export function NewTransaction(): ReactElement {
     setIsSubmitting(true);
 
     try {
-      await addTransaction({
+      await createTransaction({
         ...pendingData,
         userId: DEFAULT_USER_ID,
         category: DEFAULT_CATEGORY,
@@ -51,10 +51,10 @@ export function NewTransaction(): ReactElement {
       });
       setPendingData(null);
       formRef.current?.reset();
-      showFeedback(SUCCESS_FEEDBACK);
+      dispatch(showFeedback(SUCCESS_FEEDBACK));
     } catch {
       setPendingData(null);
-      showFeedback(ERROR_FEEDBACK);
+      dispatch(showFeedback(ERROR_FEEDBACK));
     } finally {
       setIsSubmitting(false);
     }

@@ -140,13 +140,13 @@ Lembre-se de tratar os estados de `isLoading` de forma acessível e visualmente 
 
 ## Validação
 
-- [ ] Execute uma busca global no projeto no terminal para garantir que nenhum arquivo de código-fonte está importando Contexts deletados:
+- [x] Execute uma busca global no projeto no terminal para garantir que nenhum arquivo de código-fonte está importando Contexts deletados:
   ```bash
   grep -rn "TransactionsContext" apps/shell/src/
   ```
   O resultado do comando deve ser inteiramente vazio.
-- [ ] O monorepo compila de forma limpa: `npm run build`.
-- [ ] Abra a aplicação no navegador, crie uma transação, veja se ela entra na lista de extrato automaticamente (validando o cache do TanStack Query) e confirme que os feedbacks visuais de sucesso continuam aparecendo na tela.
+- [x] O monorepo compila de forma limpa: `npm run build`.
+- [x] Abra a aplicação no navegador, crie uma transação, veja se ela entra na lista de extrato automaticamente (validando o cache do TanStack Query) e confirme que os feedbacks visuais de sucesso continuam aparecendo na tela.
 
 ---
 

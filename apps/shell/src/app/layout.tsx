@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import { SessionProvider } from 'next-auth/react';
-import { FeedbackProvider } from '@/context/FeedbackContext';
 import { ViewportFix } from '@bytebank/design-system';
+import { Providers } from './providers';
 import { AppShell } from './AppShell';
 import './globals.css';
 
@@ -18,12 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" as="image" href="/piggy-bank.png" type="image/png" />
       </head>
       <body suppressHydrationWarning>
-        <SessionProvider>
+        <Providers>
           <ViewportFix />
-          <FeedbackProvider>
-            <AppShell>{children}</AppShell>
-          </FeedbackProvider>
-        </SessionProvider>
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );

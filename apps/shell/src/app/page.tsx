@@ -4,7 +4,8 @@ import { TransactionList } from '@/components/features/TransactionList';
 import { Button } from '@bytebank/design-system';
 import { EmptyState } from '@bytebank/design-system';
 import { ErrorState } from '@bytebank/design-system';
-import { useTransactions } from '@/context/TransactionsContext';
+import { useTransactions } from '@bytebank/api-client';
+import { calculateBalance, getRecent } from '@bytebank/shared';
 import { ReceiptText } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -16,8 +17,9 @@ const NewTransaction = dynamic(
 );
 
 export default function Home() {
-  const { transactions, balance, isLoading, isError } = useTransactions();
-  const recentTransactions = useMemo(() => transactions.slice(0, 5), [transactions]);
+  const { data, isLoading, isError } = useTransactions();
+  const balance = useMemo(() => calculateBalance(data ?? []), [data]);
+  const recentTransactions = useMemo(() => getRecent(data ?? [], 5), [data]);
 
   if (isError) {
     return <ErrorState />;
