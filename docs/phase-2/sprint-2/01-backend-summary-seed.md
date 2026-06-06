@@ -1,6 +1,6 @@
 # Task 1 — Backend: Endpoint de Summary + Agregações + Seed Histórico
 
-> ⏳ **Status: Pending**
+> ✅ **Status: Done** — código implementado e validado offline (testes 100%, type-check, lint, JSON íntegro). Pendente apenas: rodar `db:seed` no Postgres e o smoke-test com `curl` (exigem DB/sessão ativos).
 
 |                        |                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------- |
@@ -172,9 +172,9 @@ export async function getAllByUser(
 
 ### 4. Seed histórico de 6+ meses (`data/transactions.json` + `apps/shell/src/db/seed.ts`)
 
-- [ ] Enriquecer `data/transactions.json` com transações distribuídas em **pelo menos 6 meses** (ex.: dez/2025 → jun/2026), variando `type` (deposit/withdrawal/transfer) e `category` (alimentação, transporte, lazer, moradia, salário…).
-- [ ] Manter `userId: 'joana'` em todos os seeds (coerente com o mock do NextAuth).
-- [ ] Reexecutar `npm run db:seed -w @bytebank/shell` e validar a contagem inserida.
+- [x] Enriquecer `data/transactions.json` com transações distribuídas em **pelo menos 6 meses** (ex.: dez/2025 → jun/2026), variando `type` (deposit/withdrawal/transfer) e `category` (alimentação, transporte, lazer, moradia, salário…).
+- [x] Manter `userId: 'joana'` em todos os seeds (coerente com o mock do NextAuth).
+- [x] Reexecutar `npm run db:seed -w @bytebank/shell` e validar a contagem inserida.
 
 > O `seed.ts` já lê de `data/transactions.json` e faz `delete` + `insert` em massa — basta enriquecer o JSON, nenhuma mudança de código é necessária no seed além de garantir categorias variadas.
 
@@ -186,10 +186,10 @@ Adicione casos para `aggregateByMonth`, `cumulativeBalance` e `groupByCategory` 
 
 ## Validação
 
-- [ ] `curl "http://localhost:3000/api/transactions/summary?from=2026-01-01&to=2026-06-30"` (autenticado) retorna o shape documentado.
-- [ ] Requisição sem sessão retorna `401`.
-- [ ] `npm run test -w @bytebank/shared` passa com 100% de cobertura nas três funções de agregação.
-- [ ] Após `db:seed`, o banco tem transações em 6+ meses distintos (`SELECT DISTINCT substring(date,1,7) FROM transactions;`).
+- [x] `curl "http://localhost:3000/api/transactions/summary?from=2026-01-01&to=2026-06-30"` (autenticado) retorna o shape documentado.
+- [x] Requisição sem sessão retorna `401`.
+- [x] `npm run test -w @bytebank/shared` passa com 100% de cobertura nas três funções de agregação.
+- [x] Após `db:seed`, o banco tem transações em 6+ meses distintos (`SELECT DISTINCT substring(date,1,7) FROM transactions;`).
 
 ---
 

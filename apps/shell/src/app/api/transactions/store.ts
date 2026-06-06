@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { and, eq, gte, lte, desc } from 'drizzle-orm';
 import type { Attachment, Transaction, NewTransaction, TransactionType } from '@bytebank/shared';
 import { db } from '@/db';
 import { attachments, transactions, type AttachmentRow, type TransactionRow } from '@/db/schema';
@@ -42,6 +42,23 @@ export async function getAll(): Promise<Transaction[]> {
   });
   return result.map((row) => toTransaction(row));
 }
+
+export async function getAllByUser(
+  userId: string,
+  range: { from?: string; to?: string } = {}
+): Promise<Transaction[]> {
+  const conditions = [eq(transactions.userId, userId)];
+  if (range.from) conditions.push(gte(transactions.date, range.from));
+  if (range.to) conditions.push(lte(transactions.date, range.to));
+
+  const result = await db.query.transactions.findMany({
+    where: and(...conditions),
+    orderBy: [desc(transactions.date)],
+    with: { attachments: true },
+  });
+  return result.map((row) => toTransaction(row));
+}
+
 export async function getById(id: string): Promise<Transaction | null> {
   const row = await db.query.transactions.findFirst({
     where: eq(transactions.id, id),
