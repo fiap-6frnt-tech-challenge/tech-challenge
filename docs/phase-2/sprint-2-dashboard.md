@@ -1,194 +1,110 @@
-# Sprint 2 — Dashboard MFE + Charts
+# Sprint 2 — Dashboard MFE + Charts (+ correções de Auth)
 
 **Duração:** 14 dias · 2026-06-03 → 2026-06-16
-**Objetivo:** Primeiro MFE federado em produção: home renderiza `dashboard-mfe` com 4+ widgets analíticos (KPIs, gráficos receita/despesa, evolução do saldo, breakdown por categoria).
+**Time:** 3 desenvolvedores — Dev 1 (Infra & Backend) · Dev 2 (DS & UI Pages) · Dev 3 (State & Integration)
+**Objetivo:** Primeiro MFE federado em produção — a home renderiza `dashboard-mfe` com 4+ widgets analíticos (KPIs, gráficos receita/despesa, evolução do saldo, breakdown por categoria) — **e** fechamento dos buracos de Auth deixados pela Sprint 1: **botão de logout**, **área de cadastro** e **sincronização do estado Redux no login/logout**.
 
 > Voltar para o [PLAN.md](./PLAN.md) · Anterior: [sprint-1](./sprint-1-auth-state.md) · Próximo: [sprint-3](./sprint-3-transactions.md)
+> **Tasks detalhadas (1 arquivo por task):** [sprint-2/README.md](./sprint-2/README.md)
 > **Alocação de tarefas por dev:** [team-allocation.md#sprint-2](./team-allocation.md#sprint-2--dashboard-mfe--charts-14-dias)
+
+---
+
+## ⚠️ Correção de escopo herdada da Sprint 1
+
+A Sprint 1 entregou a tela de **login**, mas o planejamento falhou em três pontos que esta sprint precisa cobrir:
+
+1. **Não há botão de logout** — o componente `UserMenu` (com "Sair") existe no Design System, mas **nunca foi conectado ao `Header`** do app. → Tasks **4** e **9**.
+2. **Não há área de cadastro** — não existe tabela `users`, endpoint de registro nem página `/register`; o `authorize()` é um mock (`senha123`). → Tasks **2**, **4** e **9**.
+3. **O estado Redux não reflete login/logout** — o `authSlice` tem `setSession`/`clearSession`/`logout`, mas **nada despacha** essas actions a partir da sessão NextAuth. → Task **6** (e logout fechado na Task **9**).
+
+Essas correções entram na fila de tasks **paralelas** (sem custo de bloqueio no Dashboard) e convergem na Task 9.
 
 ---
 
 ## Pré-requisitos
 
-- [ ] Sprint 1 fechado (auth + state + persistência)
-- [x] Opção A (Rsbuild + `@module-federation/enhanced`) validada no Sprint 0 — ou fallback D documentado
-- [ ] Backend retorna `userId` e `category` em cada transação (mesmo que `category='default'`)
+- [x] Sprint 1 fechada (auth + state + persistência Postgres/Drizzle)
+- [x] Opção A (Rsbuild + `@module-federation/enhanced`) validada no Sprint 0
+- [ ] Backend retorna `userId` e `category` em cada transação (já no schema; validar no summary)
+- [ ] `DATABASE_URL` e migrações em dia em todos os ambientes
 
 ---
 
-## Tasks
+## Trilhas e alocação (3 devs)
 
-### 1. Criar apps/dashboard-mfe (1 dia · **dev4-dashboard**)
+| Dev       | Tasks                                                                                        | Esforço   |
+| :-------- | :------------------------------------------------------------------------------------------- | :-------- |
+| **Dev 1** | 1 (Summary+Seed) · 2 (Cadastro backend) · 11 (SSR) · 12 (testes agreg.) · 13 (smoke)         | ~5 dias   |
+| **Dev 2** | 3 (Gráficos DS) · 4 (RegisterForm) · 9 (/register + Logout) · 12 (stories) · 13 (smoke)      | ~7.5 dias |
+| **Dev 3** | 5 (dashboard-mfe) · 6 (Session sync) · 7 (Hook) · 8 (Shell consome) · 10 (Widgets) · 12 · 13 | ~7.5 dias |
 
-- [ ] `npm create rsbuild@latest apps/dashboard-mfe` (template React-ts)
-- [ ] Adicionar `@module-federation/enhanced` e `@module-federation/rsbuild-plugin`
-- [ ] Configurar `rsbuild.config.ts` espelhando o setup do `hello-mfe` do Sprint 0:
-  - Expor: `./Dashboard` → `./src/Dashboard.tsx`
-  - Shared singletons: `react`, `react-dom`, `@bytebank/design-system`, `@bytebank/shared`, `@bytebank/stores`, `@bytebank/api-client`
-  - Dev server `:3001`
-- [ ] Tailwind v4 PostCSS configurado (mesmo config do DS)
-- [ ] Importa `tokens.css` e `globals.css` do `@bytebank/design-system`
-- [ ] `apps/dashboard-mfe/src/Dashboard.tsx` skeleton inicial: `<div>Dashboard placeholder</div>`
-- [ ] Workspace deps no package.json: `@bytebank/design-system`, `@bytebank/api-client`, `@bytebank/shared`, `@bytebank/stores`
+**Capacidade:** 42 dev-days. Alocados ~20 → buffer para imprevistos, code review e pair. Dev 1 (mais folgado) apoia testes e adianta o setup de Docker da Sprint 4.
 
-> **Fallback opção D:** Se Sprint 0 acionou fallback, criar como `packages/dashboard-mfe/` exportando `<Dashboard />` para consumo em build time. Restante das tasks abaixo permanece idêntico.
+---
 
-**Aceite:** `npm run dev -w @bytebank/dashboard-mfe` sobe :3001 standalone com placeholder.
+## Tasks (na ordem de execução — paralelas primeiro)
 
-### 2. Shell consome dashboard-mfe (1 dia · **dev4-dashboard**)
+> Detalhe completo, snippets e gotchas em [sprint-2/](./sprint-2/). As tasks 1–6 **não têm dependência dentro do sprint** e começam no dia 1; 7–13 dependem das primeiras.
 
-- [ ] `apps/shell/src/app/page.tsx` reescrito:
-  ```tsx
-  'use client';
-  import dynamic from 'next/dynamic';
-  const Dashboard = dynamic(() => import('dashboard/Dashboard'), {
-    ssr: false,
-    loading: () => <DashboardSkeleton />,
-  });
-  export default function Home() {
-    return <Dashboard />;
-  }
-  ```
-- [ ] Wrapper `'use client'` para passar `SessionProvider` + `QueryClientProvider` se ainda não estiver no root layout
-- [ ] Configurar `next.config.ts` remote URL (env: `NEXT_PUBLIC_DASHBOARD_MFE_URL`)
-- [ ] Server component em `page.tsx` mantém SEO/metadata via `generateMetadata`
+### Paralelas (dia 1)
 
-**Aceite:** abrir `localhost:3000/` mostra dashboard-mfe carregado em iframe-less runtime; DevTools Network mostra `remoteEntry.js`.
+1. **Backend: Summary + Agregações + Seed histórico** (2d · Dev 1) — `GET /api/transactions/summary` agregando no servidor (`aggregateByMonth`, `cumulativeBalance`, `groupByCategory`) + enriquecer seed com 6+ meses. → [01](./sprint-2/01-backend-summary-seed.md)
+2. **Backend: Cadastro de usuário** (1d · Dev 1) — tabela `users`, `POST /api/auth/register` (hash bcrypt), `authorize` real contra o banco. → [02](./sprint-2/02-backend-register-endpoint.md)
+3. **DS: Componentes de gráfico** (4d · Dev 2) — `BarChart`, `LineChart`, `PieChart`, `KpiCard`, `DashboardWidget` (Recharts + tokens DS + a11y). → [03](./sprint-2/03-ds-chart-components.md)
+4. **DS: `RegisterForm` + revisão do `UserMenu`** (1d · Dev 2) — form de cadastro acessível + estado "saindo…" no UserMenu. → [04](./sprint-2/04-ds-register-form-usermenu.md)
+5. **Criar `apps/dashboard-mfe`** (1d · Dev 3) — Rsbuild + Module Federation expondo `./Dashboard` em `:3001`. → [05](./sprint-2/05-create-dashboard-mfe.md)
+6. **State: Sincronizar Redux ↔ NextAuth** (1d · Dev 3) — `SessionSync` despacha `setSession`/`clearSession` conforme a sessão. → [06](./sprint-2/06-state-session-sync.md)
 
-### 3. Backend: endpoint de summary (1 dia · **dev2-backend**)
+### Dependentes
 
-- [ ] `apps/shell/src/app/api/transactions/summary/route.ts`:
-  ```ts
-  GET /api/transactions/summary?from=2026-01-01&to=2026-06-30
-  Response: {
-    balance: number,
-    incomeMonth: number,
-    expenseMonth: number,
-    savingsMonth: number,
-    byMonth: Array<{ month: 'YYYY-MM', income: number, expense: number }>,
-    balanceOverTime: Array<{ date: 'YYYY-MM-DD', balance: number }>,
-    byCategory: Array<{ category: string, total: number }>,
-  }
-  ```
-- [ ] Agregação no servidor (não no cliente) — performance + escalabilidade
-- [ ] Reusar/estender `packages/shared/src/lib/transactions.ts` com funções puras: `aggregateByMonth`, `cumulativeBalance`, `groupByCategory`
-- [ ] Auth: ler `userId` da sessão; filtrar transações por usuário
-- [ ] Testes Vitest das funções puras
-
-**Aceite:** `curl /api/transactions/summary` retorna JSON correto; 100% cobertura nas funções de agregação.
-
-### 4. Hook useDashboardSummary (0.5 dia · **dev4-dashboard**)
-
-- [ ] `packages/api-client/src/useDashboardSummary.ts`:
-  ```ts
-  useDashboardSummary({ from, to }) → useQuery
-  ```
-- [ ] Cache key: `['summary', { from, to, userId }]`
-- [ ] Default range: últimos 6 meses
-
-**Aceite:** consumível do dashboard-mfe.
-
-### 5. Chart components no Design System (4 dias · **dev3-ds**)
-
-> **Cada um:** `I{Name}.ts`, `{Name}.tsx`, `{Name}.stories.tsx`, tokens DS, a11y (`role="img"` + `aria-label`).
-
-- [ ] Instalar `recharts` em `packages/design-system`
-- [ ] **`BarChart`** — props: `data`, `xKey`, `bars: Array<{ key, label, color }>`, `height`
-  - Cores via tokens: `var(--color-badge-deposit-bg)`, `var(--color-badge-withdraw-bg)`
-  - Tooltip estilizado com DS tokens
-  - Story: empty / loading / error / com dados / responsive (mobile/desktop)
-- [ ] **`LineChart`** — props: `data`, `xKey`, `lines: Array<{ key, label, color }>`, `height`
-  - Suaviza curva (type: 'monotone'), pontos clicáveis
-  - Story: idem
-- [ ] **`PieChart`** — props: `data: Array<{ label, value }>`, `colors`, `height`
-  - Legenda lateral; segmento clicável
-  - Story: idem
-- [ ] **`KpiCard`** — props: `label`, `value`, `delta?`, `icon?`, `loading`, `error`
-  - Usa `Card` do DS como container
-  - Formata via `formatCurrency` do shared
-  - Story: positive delta / negative delta / loading / error / no-delta
-- [ ] **`DashboardWidget`** — wrapper composable: `<DashboardWidget title="" loading error onRefresh>{children}</DashboardWidget>`
-  - Header com title + refresh icon button + status
-  - Skeleton enquanto `loading`
-  - `ErrorState` interno se `error`
-  - Story: loading / error / com children customizado
-
-**Aceite:** 5 componentes no Chromatic; a11y addon passa; charts renderizam tokens DS dinamicamente.
-
-### 6. Dashboard layout + widgets (3 dias · **dev4-dashboard** + apoio de **dev5-transactions** quando livre)
-
-- [ ] `apps/dashboard-mfe/src/Dashboard.tsx` — layout responsivo:
-  ```
-  Mobile (1 coluna):           Desktop (3 colunas):
-  ┌─────────┐                  ┌──┬──┬──┐
-  │  KPIs   │                  │KPI│KPI│KPI│KPI
-  ├─────────┤                  ├──┴──┼──┤
-  │ Income  │                  │ Bar │Pie│
-  │  Bar    │                  ├─────┴──┤
-  ├─────────┤                  │  Line  │
-  │ Balance │                  ├────────┤
-  │  Line   │                  │ Recent │
-  ├─────────┤                  └────────┘
-  │ Pie     │
-  ├─────────┤
-  │ Recent  │
-  └─────────┘
-  ```
-- [ ] 4 KPIs: Saldo total, Receita do mês, Despesa do mês, Economia do mês
-- [ ] Cada KPI calcula `delta` vs mês anterior
-- [ ] BarChart: receita vs despesa últimos 6 meses
-- [ ] LineChart: evolução do saldo últimos 6 meses
-- [ ] PieChart: top 5 categorias de despesa (com "Outros" se >5)
-- [ ] Lista de transações recentes: reusar `TransactionList` do DS, somente leitura
-- [ ] Botão "Nova transação" no canto: abre modal `NewTransaction` (vive no shell?) — decidir: ou MFE tem o seu, ou shell expõe via event bus
-
-**Aceite:** desktop e mobile renderizam todos widgets; dados batem com agregação manual.
-
-### 7. SSR no shell para SEO + perf (1 dia · **dev1-infra**)
-
-- [ ] `apps/shell/src/app/page.tsx` server component:
-  - `generateMetadata()` retorna title, description, OG tags
-  - Wrapper client `<DashboardShell>` que faz dynamic import
-  - Skeleton SSR enquanto MFE não hidrata
-- [ ] Preload do `remoteEntry.js` via `<link rel="preload">` no head
-- [ ] Lighthouse: First Contentful Paint < 1.5s desktop
-
-**Aceite:** view-source mostra HTML com skeleton + metadata; MFE hidrata no client.
-
-### 8. Testes (1.5 dia · distribuído entre **dev2-backend** [agregações], **dev3-ds** [stories chart], **dev4-dashboard** [hook])
-
-- [ ] Funções de agregação (`aggregateByMonth`, `cumulativeBalance`, `groupByCategory`): unit tests com fixtures variadas
-- [ ] Hook `useDashboardSummary`: mock fetch, verificar shape
-- [ ] Storybook interactions test em `KpiCard`: simular `delta` positivo/negativo, verificar ARIA labels
-
-**Aceite:** ≥ 15 testes novos; coverage > 80% nas funções de agregação.
+7. **Hook `useDashboardSummary`** (0.5d · Dev 3) — ⬅ Task 1. → [07](./sprint-2/07-hook-dashboard-summary.md)
+8. **Shell consome o `dashboard-mfe`** (1d · Dev 3) — ⬅ Task 5; `dynamic(import('dashboard/Dashboard'), { ssr:false })`. → [08](./sprint-2/08-shell-consume-mfe.md)
+9. **Página `/register` + Logout no Header** (1.5d · Dev 2) — ⬅ Tasks 2, 4, 6; **fecha os 3 buracos de Auth**. → [09](./sprint-2/09-register-page-logout-wiring.md)
+10. **Layout do Dashboard + Widgets** (3d · Dev 3) — ⬅ Tasks 3, 7, 8. → [10](./sprint-2/10-dashboard-layout-widgets.md)
+11. **SSR no Shell para SEO + perf** (1d · Dev 1) — ⬅ Tasks 8, 10. → [11](./sprint-2/11-ssr-shell.md)
+12. **Testes** (1.5d · distribuído) — agregações, hook, session sync, stories de gráfico. → [12](./sprint-2/12-tests.md)
+13. **Smoke Test Final & Demo** (0.5d · Todos). → [13](./sprint-2/13-smoke-test-demo.md)
 
 ---
 
 ## Critério de aceite do sprint
 
-- [x] Home (`/`) carrega `dashboard-mfe` federado em runtime
-- [x] DevTools Network mostra `remoteEntry.js` carregado
-- [x] 4 KPIs corretos com delta vs mês anterior
-- [x] BarChart, LineChart, PieChart renderizam dados reais
-- [x] Endpoint `/api/transactions/summary` agrega no servidor
-- [x] Lighthouse Performance ≥ 85 (mobile), 90 (desktop)
-- [x] 5 chart components no DS publicados no Chromatic
-- [x] Coverage > 80% em funções de agregação
-- [x] A11y: charts têm `role="img"` + `aria-label` descritivo
-- [x] Vercel preview de shell + dashboard-mfe funcionando
+### Dashboard / MFE
+
+- [ ] Home (`/`) carrega `dashboard-mfe` federado em runtime; Network mostra `remoteEntry.js`
+- [ ] 4 KPIs corretos com delta vs mês anterior
+- [ ] BarChart, LineChart e PieChart renderizam dados reais
+- [ ] `/api/transactions/summary` agrega no servidor e filtra por `userId`
+- [ ] 5 chart components no DS publicados no Chromatic; a11y (`role="img"` + `aria-label`)
+- [ ] Lighthouse Performance ≥ 85 (mobile), 90 (desktop)
+
+### Auth (correção da Sprint 1)
+
+- [ ] **Cadastro** funcional: `/register` cria conta, loga e redireciona para `/`
+- [ ] **Logout** funcional: `UserMenu` no Header desloga e bloqueia rotas privadas
+- [ ] **Estado Redux** reflete login/logout (`auth.user`/`isAuthenticated` via Redux DevTools)
+- [ ] Senha persistida apenas como hash; e-mail duplicado tratado com erro acessível
+
+### Qualidade
+
+- [ ] Coverage > 80% nas funções de agregação; `npx turbo run test` verde
+- [ ] Vercel preview de shell + dashboard-mfe funcionando
+
+---
 
 ## Riscos do sprint
 
-| Risco                                      | Mitigação                                                                             |
-| ------------------------------------------ | ------------------------------------------------------------------------------------- |
-| Recharts hydration mismatch                | `dynamic(..., { ssr: false })` em todos charts; wrapper `<ClientOnly>`                |
-| Tailwind v4 + Rsbuild config divergente    | Compartilhar `tailwind.config.ts` via `@bytebank/design-system` ou copiar; documentar |
-| `remoteEntry.js` 404 em prod               | Env vars corretas + CORS no MFE deploy; fallback graceful no shell                    |
-| Pie chart com >10 categorias fica ilegível | Agrupar em "Outros" no servidor; testes garantem isso                                 |
-| Dados de seed insuficientes para charts    | Enriquecer `data/transactions.json` com 6+ meses de histórico no início do sprint     |
+| Risco                                           | Mitigação                                                                                           |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Recharts hydration mismatch no MFE              | `dynamic(..., { ssr: false })` + componentes de chart `'use client'` + `ResponsiveContainer`        |
+| Edge vs Node runtime no `authorize` (bcrypt/pg) | Config base edge-safe em `auth.config.ts`; `authorize` em `auth.ts` (Node); rota `runtime='nodejs'` |
+| `remoteEntry.js` 404 / CORS em prod             | Env vars corretas + CORS no deploy do MFE; fallback graceful no shell                               |
+| Pie chart com >5 categorias ilegível            | Agrupar em "Outros"; testes garantem o limite                                                       |
+| Seed insuficiente para gráficos                 | Enriquecer `data/transactions.json` com 6+ meses no início (Task 1)                                 |
+| Só 3 devs: Dev 2 e Dev 3 sobrecarregados        | DS entrega 1 chart/dia; Dev 1 (folgado) apoia testes/integração; pair na Task 9                     |
 
 ## Definição de Pronto
 
-- Cada PR: CI verde + 1 revisor + Chromatic visual review aprovado + testes
-- Sprint encerra com demo gravada (3 min): navegar para `/`, mostrar widgets, abrir DevTools Network mostrando MFE federado
+- Cada PR: CI verde + 1 revisor + (se tocar DS) Chromatic aprovado + testes
+- Sprint encerra com demo gravada (3 min): cadastrar → dashboard federado → criar transação → logout (estado Redux zerando)
