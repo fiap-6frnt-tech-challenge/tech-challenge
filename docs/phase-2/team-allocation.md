@@ -1,9 +1,11 @@
-# Alocação de Time — 5 Devs
+# Alocação de Time — 5 Devs (plano original) · 3 Devs (vigente)
 
 **Time:** 5 devs frontend
 **Estratégia:** 5 tracks paralelos por responsabilidade, cada dev "dono" de uma vertical através das 5 sprints. Continuidade reduz onboarding e overlap.
 
 > Voltar para o [PLAN.md](./PLAN.md)
+
+> ⚠️ **Atualização (Sprint 1 em diante): o time foi reduzido para 3 desenvolvedores.** Os 5 tracks abaixo foram consolidados em **3 papéis**: **Dev 1 (Infra & Backend)**, **Dev 2 (DS & UI Pages)** e **Dev 3 (State & Integration)**. A redistribuição da Sprint 1 está em [sprint-1-reallocation.md](./sprint-1-reallocation.md) e a da Sprint 2 em [sprint-2/README.md](./sprint-2/README.md). As tabelas das Sprints 0 e 1 abaixo permanecem como **registro histórico** do plano de 5 devs; a Sprint 2 já foi reescrita para 3 devs nesta página, e as Sprints 3–4 serão redistribuídas no início de cada uma.
 
 ---
 
@@ -83,36 +85,32 @@
 
 ## Sprint 2 — Dashboard MFE + Charts (14 dias)
 
-| Tarefa                                                               | Owner             | Dias            | Depende de                        |
-| -------------------------------------------------------------------- | ----------------- | --------------- | --------------------------------- |
-| Criar `apps/dashboard-mfe` Rsbuild + MF config                       | dev4-dashboard    | 1               | Sprint 0 PoC verde                |
-| Endpoint `/api/transactions/summary` + funções de agregação          | dev2-backend      | 1.5             | schema Sprint 1                   |
-| Hook `useDashboardSummary` no api-client                             | dev4-dashboard    | 0.5             | summary endpoint                  |
-| DS: `BarChart` + Storybook                                           | dev3-ds           | 1               | —                                 |
-| DS: `LineChart` + Storybook                                          | dev3-ds           | 1               | —                                 |
-| DS: `PieChart` + Storybook                                           | dev3-ds           | 1               | —                                 |
-| DS: `KpiCard` + Storybook                                            | dev3-ds           | 0.5             | —                                 |
-| DS: `DashboardWidget` (wrapper) + Storybook                          | dev3-ds           | 0.5             | —                                 |
-| Dashboard layout responsivo + integração KPIs                        | dev4-dashboard    | 1.5             | KpiCard + summary endpoint        |
-| Dashboard: integração BarChart receita vs despesa                    | dev4-dashboard    | 0.5             | BarChart DS                       |
-| Dashboard: integração LineChart evolução saldo                       | dev4-dashboard    | 0.5             | LineChart DS                      |
-| Dashboard: integração PieChart por categoria                         | dev4-dashboard    | 0.5             | PieChart DS                       |
-| Shell consome `dashboard-mfe` em `/` via `dynamic`                   | dev4-dashboard    | 1               | dashboard-mfe expondo `Dashboard` |
-| SSR no shell para `/` (metadata + skeleton)                          | dev1-infra        | 1               | dashboard-mfe integrado           |
-| Enriquecer `data/transactions.json` com 6+ meses de histórico        | dev2-backend      | 0.5             | schema                            |
-| Auth: garantir `userId` na sessão e em todas API routes              | dev2-backend      | 0.5             | NextAuth Sprint 1                 |
-| **Track paralelo:** começar setup `apps/transactions-mfe` (skeleton) | dev5-transactions | 2               | Sprint 0 PoC pattern              |
-| **Track paralelo:** research backend cursor pagination               | dev5-transactions | 1               | —                                 |
-| Testes agregação + Storybook interactions                            | Todos             | 1.5 distribuído | implementação pronta              |
-| Smoke test + vídeo 3 min                                             | Todo time         | 0.5             | tudo                              |
+> **Reescrita para 3 devs.** Detalhe (1 arquivo por task, com branch/dependências/aceite) em [sprint-2/README.md](./sprint-2/README.md) e [sprint-2-dashboard.md](./sprint-2-dashboard.md). Inclui a correção dos buracos de Auth da Sprint 1 (cadastro, logout, estado Redux). Tasks 1–6 rodam em paralelo (sem dependência interna); 7–13 dependem das primeiras.
 
-**Capacidade:** 70 dev-days. Alocados: ~18. dev5-transactions fica em "Sprint 3 prep" no início e ajuda dev4-dashboard com integração no fim.
+| #   | Tarefa                                                            | Owner       | Dias | Depende de                |
+| --- | ----------------------------------------------------------------- | ----------- | ---- | ------------------------- |
+| 1   | Backend: `/api/transactions/summary` + agregações + seed 6 meses  | Dev 1       | 2    | schema Sprint 1           |
+| 2   | Backend: cadastro (`users` + `POST /api/auth/register` + hash)    | Dev 1       | 1    | persistência Sprint 1     |
+| 3   | DS: `BarChart`/`LineChart`/`PieChart`/`KpiCard`/`DashboardWidget` | Dev 2       | 4    | —                         |
+| 4   | DS: `RegisterForm` + revisão do `UserMenu` (botão Sair)           | Dev 2       | 1    | —                         |
+| 5   | Criar `apps/dashboard-mfe` (Rsbuild + MF)                         | Dev 3       | 1    | Sprint 0 PoC verde        |
+| 6   | State: sync Redux ↔ NextAuth (`setSession`/`clearSession`)        | Dev 3       | 1    | `authSlice` Sprint 1      |
+| 7   | Hook `useDashboardSummary` no api-client                          | Dev 3       | 0.5  | Task 1 (summary endpoint) |
+| 8   | Shell consome `dashboard-mfe` em `/` via `dynamic`                | Dev 3       | 1    | Task 5 (dashboard-mfe)    |
+| 9   | Página `/register` + Logout no Header                             | Dev 2       | 1.5  | Tasks 2, 4, 6             |
+| 10  | Dashboard layout responsivo + integração dos widgets              | Dev 3       | 3    | Tasks 3, 7, 8             |
+| 11  | SSR no shell para `/` (metadata + skeleton + preload)             | Dev 1       | 1    | Tasks 8, 10               |
+| 12  | Testes (agregações, hook, session sync, stories de gráfico)       | Distribuído | 1.5  | implementações            |
+| 13  | Smoke test + vídeo 3 min                                          | Todo time   | 0.5  | tudo                      |
+
+**Capacidade:** 3 devs × 14 dias = 42 dev-days. Alocados: ~20 (Dev 1 ~5 · Dev 2 ~7.5 · Dev 3 ~7.5). Buffer para imprevistos, code review e pair; Dev 1, mais folgado, apoia testes e adianta o setup de Docker da Sprint 4.
 
 **Deps críticas:**
 
-- dev4-dashboard espera dev3-ds entregar charts (BarChart dia 3, LineChart dia 4, PieChart dia 5). Mitigação: dev3-ds entrega 1 chart/dia, dev4-dashboard integra incrementalmente
-- dev4-dashboard espera dev2-backend entregar summary endpoint (dia 2). Prioridade alta para dev2-backend
-- dev1-infra SSR no shell depende de dev4-dashboard finalizar integração (dia 10) — ele faz Docker prep enquanto espera
+- Dev 3 (Tasks 7 e 10) espera Dev 1 entregar o summary endpoint (Task 1, ~dia 2) e Dev 2 entregar os charts. Mitigação: Dev 2 entrega **1 chart/dia** e Dev 3 integra incrementalmente.
+- As correções de Auth (cadastro, logout, estado) convergem na Task 9, que depende de Tasks 2 (Dev 1), 4 (Dev 2) e 6 (Dev 3) — pair entre Dev 2 e Dev 3 recomendado.
+- Dev 1 faz o SSR (Task 11) só após a integração do dashboard (Task 10, ~dia 10) — usa o tempo anterior para enriquecer o seed e preparar Docker.
+- Com apenas 3 devs, o setup do `apps/transactions-mfe` e a pesquisa de cursor pagination saem do Sprint 2 e voltam para o início do Sprint 3.
 
 ---
 
