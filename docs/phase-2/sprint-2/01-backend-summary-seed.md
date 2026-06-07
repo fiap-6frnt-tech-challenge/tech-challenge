@@ -1,6 +1,6 @@
 # Task 1 — Backend: Endpoint de Summary + Agregações + Seed Histórico
 
-> ✅ **Status: Done** — código implementado e validado offline (testes 100%, type-check, lint, JSON íntegro). Pendente apenas: rodar `db:seed` no Postgres e o smoke-test com `curl` (exigem DB/sessão ativos).
+> ✅ **Status: Done** — código implementado e validado (testes 100%, type-check, lint, JSON íntegro), seed aplicado e smoke-test do endpoint realizado.
 
 |                        |                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------- |
