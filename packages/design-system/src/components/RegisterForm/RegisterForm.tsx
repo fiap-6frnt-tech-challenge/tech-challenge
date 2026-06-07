@@ -44,7 +44,7 @@ export function RegisterForm({
       {errorMessage ? (
         <div
           role="alert"
-          aria-live="polite"
+          aria-live="assertive"
           className="rounded-default border border-feedback-danger bg-feedback-danger/10 px-md py-sm text-sm font-medium text-feedback-danger"
         >
           {errorMessage}
@@ -54,53 +54,64 @@ export function RegisterForm({
       <Controller
         name="name"
         control={control}
-        render={({ field }) => (
-          <Input
-            label="Nome"
-            type="text"
-            autoComplete="name"
-            placeholder="Digite seu nome"
-            disabled={isLoading}
-            error={!!errors.name}
-            helperText={errors.name?.message}
-            {...field}
-          />
-        )}
+        render={({ field }) => {
+          const { ref, ...fieldProps } = field;
+
+          return (
+            <Input
+              label="Nome"
+              type="text"
+              autoComplete="name"
+              placeholder="Digite seu nome"
+              disabled={isLoading}
+              error={!!errors.name}
+              helperText={errors.name?.message}
+              {...fieldProps}
+            />
+          );
+        }}
       />
 
       <Controller
         name="email"
         control={control}
-        render={({ field }) => (
-          <Input
-            label="Email"
-            type="email"
-            autoComplete="email"
-            placeholder="voce@email.com"
-            disabled={isLoading}
-            error={!!errors.email}
-            helperText={errors.email?.message}
-            {...field}
-          />
-        )}
+        render={({ field }) => {
+          const { ref, ...fieldProps } = field;
+
+          return (
+            <Input
+              label="Email"
+              type="email"
+              autoComplete="email"
+              placeholder="voce@email.com"
+              disabled={isLoading}
+              error={!!errors.email}
+              helperText={errors.email?.message}
+              {...fieldProps}
+            />
+          );
+        }}
       />
 
       <Controller
         name="password"
         control={control}
-        render={({ field }) => (
-          <Input
-            label="Senha"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Crie uma senha"
-            disabled={isLoading}
-            error={!!errors.password}
-            helperText={errors.password?.message}
-            {...field}
-          />
-        )}
-      />
+        render={({ field }) => {
+          const { ref, ...fieldProps } = field;
+
+          return (
+            <Input
+              label="Senha"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Crie uma senha"
+              disabled={isLoading}
+              error={!!errors.password}
+              helperText={errors.password?.message}
+              {...fieldProps}
+            />
+          );
+        }}
 
       <Button type="submit" fullWidth loading={isLoading} disabled={isLoading}>
         {isLoading ? 'Criando conta...' : 'Criar conta'}
