@@ -15,7 +15,7 @@ function getInitials(name: string): string {
     .join('');
 }
 
-export function UserMenu({ user, onLogout, className }: UserMenuProps) {
+export function UserMenu({ user, onLogout, isLoggingOut = false, className }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -114,13 +114,16 @@ export function UserMenu({ user, onLogout, className }: UserMenuProps) {
               type="button"
               role="menuitem"
               onClick={onLogout}
+              disabled={isLoggingOut}
+              aria-busy={isLoggingOut || undefined}
               className={cn(
                 'flex w-full items-center gap-sm rounded-default px-sm py-sm text-left label-semibold text-content-primary',
-                'transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'
+                'transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary',
+                'disabled:cursor-not-allowed disabled:opacity-60'
               )}
             >
               <LogOut aria-hidden="true" size={16} />
-              Sair
+              {isLoggingOut ? 'Saindo...' : 'Sair'}
             </button>
           </div>
         </>

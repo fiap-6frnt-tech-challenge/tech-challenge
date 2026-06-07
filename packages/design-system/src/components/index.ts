@@ -19,6 +19,7 @@ export * from './Pagination';
 export * from './ViewportFix';
 export * from './ErrorState';
 export * from './LoginForm';
+export * from './RegisterForm';
 export * from './GoogleAuthButton';
 export * from './UserMenu';
 export * from './AuthGuard';

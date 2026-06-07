@@ -17,6 +17,7 @@ const meta: Meta<typeof UserMenu> = {
   argTypes: {
     user: { control: 'object' },
     onLogout: { control: false },
+    isLoggingOut: { control: 'boolean' },
     className: { control: 'text' },
   },
   parameters: {
@@ -48,6 +49,29 @@ export const WithAvatar: Story = {
 export const SignedOut: Story = {
   args: {
     user: null,
+  },
+};
+
+export const LoggingOut: Story = {
+  args: {
+    user: {
+      name: 'Joana da Silva',
+      email: 'joana@bytebank.com',
+    },
+    isLoggingOut: true,
+  },
+  render: (args) => (
+    <div className="flex h-48 items-start justify-end p-lg">
+      <UserMenu {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: /abrir menu do usuário/i }));
+
+    const logout = canvas.getByRole('menuitem', { name: /saindo/i });
+    await expect(logout).toBeDisabled();
+    await expect(logout).toHaveAttribute('aria-busy', 'true');
   },
 };
 

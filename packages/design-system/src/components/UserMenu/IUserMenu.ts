@@ -7,5 +7,6 @@ export interface UserMenuUser {
 export interface UserMenuProps {
   user: UserMenuUser | null;
   onLogout: () => void | Promise<void>;
+  isLoggingOut?: boolean;
   className?: string;
 }
