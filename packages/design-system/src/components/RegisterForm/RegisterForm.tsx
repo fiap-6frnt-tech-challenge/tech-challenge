@@ -55,7 +55,7 @@ export function RegisterForm({
         name="name"
         control={control}
         render={({ field }) => {
-          const { ref, ...fieldProps } = field;
+          const { ...fieldProps } = field;
 
           return (
             <Input
@@ -76,7 +76,7 @@ export function RegisterForm({
         name="email"
         control={control}
         render={({ field }) => {
-          const { ref, ...fieldProps } = field;
+          const { ...fieldProps } = field;
 
           return (
             <Input
@@ -97,7 +97,7 @@ export function RegisterForm({
         name="password"
         control={control}
         render={({ field }) => {
-          const { ref, ...fieldProps } = field;
+          const { ...fieldProps } = field;
 
           return (
             <Input
@@ -112,6 +112,7 @@ export function RegisterForm({
             />
           );
         }}
+      />
 
       <Button type="submit" fullWidth loading={isLoading} disabled={isLoading}>
         {isLoading ? 'Criando conta...' : 'Criar conta'}
