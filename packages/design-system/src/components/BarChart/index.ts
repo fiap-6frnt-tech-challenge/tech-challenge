@@ -1,2 +1,2 @@
 export { BarChart } from './BarChart';
-export { type BarSeries, type BarChartProps } from './IBarChart';
+export { type BarSeries, type BarChartProps } from './types';

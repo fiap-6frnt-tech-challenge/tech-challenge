@@ -7,7 +7,7 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { PieChartProps } from './IPieChart';
+import { PieChartProps } from './types';
 import { useIsMounted } from '../../hooks';
 import { AccessibleChartData } from '../AccessibleChartData';
 import { ChartTooltip } from '../ChartTooltip';
@@ -61,7 +61,7 @@ export function PieChart({ data, colors, height, className, accessibleCaption }:
       />
     );
 
-  const palette = colors && colors.length > 0 ? colors : DEFAULT_COLORS;
+  const palette = colors ?? DEFAULT_COLORS;
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   // Tabela acessível: cabeçalhos fixos, uma linha por categoria

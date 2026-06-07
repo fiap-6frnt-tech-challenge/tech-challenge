@@ -8,7 +8,7 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { BarChartProps } from './IBarChart';
+import { BarChartProps } from './types';
 import { useIsMounted } from '../../hooks';
 import { AccessibleChartData } from '../AccessibleChartData';
 import { ChartTooltip } from '../ChartTooltip';
@@ -43,7 +43,7 @@ export function BarChart({
           <XAxis dataKey={xKey} tick={{ fontSize: 12 }} />
           {data && data.length > 0 && <RechartsTooltip content={<ChartTooltip />} />}
           {bars.map((bar) => (
-            <Bar key={bar.key} dataKey={bar.key} fill={bar.color} />
+            <Bar key={bar.key} dataKey={bar.key} fill={bar.color} className="rounded-default" />
           ))}
         </RechartsBarChart>
       </ResponsiveContainer>

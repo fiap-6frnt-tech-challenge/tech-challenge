@@ -4,7 +4,7 @@ import { Card } from '../Card';
 import { EmptyState } from '../EmptyState';
 import { ErrorState } from '../ErrorState';
 import { Skeleton } from '../Skeleton';
-import { DashboardWidgetProps } from './IDashboardWidget';
+import { DashboardWidgetProps } from './types';
 import { RotateCcw } from 'lucide-react';
 
 export const DashboardWidget = ({

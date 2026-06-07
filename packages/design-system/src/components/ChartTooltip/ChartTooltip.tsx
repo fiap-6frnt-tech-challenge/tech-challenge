@@ -1,5 +1,5 @@
 import { formatCurrency } from '@bytebank/shared';
-import { ChartTooltipProps } from './IChartTooltip';
+import { ChartTooltipProps } from './types';
 
 export function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload || !payload.length) return null;

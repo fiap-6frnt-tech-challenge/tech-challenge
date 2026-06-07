@@ -1,6 +1,5 @@
 'use client';
 
-import { useId } from 'react';
 import {
   AreaChart as RechartsAreaChart,
   Area,
@@ -9,7 +8,7 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { LineChartProps } from './ILineChart';
+import { LineChartProps } from './types';
 import { useIsMounted } from '../../hooks';
 import { AccessibleChartData } from '../AccessibleChartData';
 import { ChartTooltip } from '../ChartTooltip';
@@ -22,7 +21,6 @@ export function LineChart({
   className,
   accessibleCaption,
 }: LineChartProps) {
-  const uid = useId();
   const isMounted = useIsMounted();
   if (!isMounted)
     return (
@@ -46,7 +44,7 @@ export function LineChart({
             {lines.map((line) => (
               <linearGradient
                 key={`grad-${line.key}`}
-                id={`${uid}-grad-${line.key}`}
+                id={`grad-${line.key}`}
                 x1="0"
                 y1="0"
                 x2="0"
@@ -67,7 +65,7 @@ export function LineChart({
               type="monotone"
               stroke={line.color}
               strokeWidth={2.5}
-              fill={`url(#${uid}-grad-${line.key})`}
+              fill={`url(#grad-${line.key})`}
               fillOpacity={1}
               dot={false}
               activeDot={{ r: 5, fill: line.color, strokeWidth: 2 }}

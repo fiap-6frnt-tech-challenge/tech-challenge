@@ -1,2 +1,2 @@
 export { AccessibleChartData } from './AccessibleChartData';
-export type { AccessibleDataProps } from './IAccessibleChartData';
+export type { AccessibleDataProps } from './types';
