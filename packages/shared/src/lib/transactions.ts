@@ -42,7 +42,7 @@ export function aggregateByMonth(transactions: Transaction[]): MonthlyAggregate[
     else if (t.type === TRANSACTION_TYPE.WITHDRAWAL) entry.expense += t.amount;
     map.set(month, entry);
   }
-  return [...map.values()].sort((a, b) => (a.month < b.month ? -1 : 1));
+  return [...map.values()].sort((a, b) => a.month.localeCompare(b.month));
 }
 
 export function cumulativeBalance(transactions: Transaction[]): BalancePoint[] {
