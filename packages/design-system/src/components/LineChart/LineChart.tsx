@@ -1,8 +1,8 @@
 'use client';
 
 import {
-  LineChart as RechartsLineChart,
-  Line,
+  AreaChart as RechartsAreaChart,
+  Area,
   XAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
@@ -38,7 +38,7 @@ export function LineChart({
     <div className="w-full relative min-w-0">
       <ResponsiveContainer width="100%" height={height ?? 300}>
         {/* aria-hidden esconde o SVG dos leitores de tela */}
-        <RechartsLineChart className={className} data={data} aria-hidden="true">
+        <RechartsAreaChart className={className} data={data} aria-hidden="true">
           {/* Gradiente por série — profundidade visual abaixo do traço (estilo Area/Line híbrido) */}
           <defs>
             {lines.map((line) => (
@@ -59,17 +59,19 @@ export function LineChart({
           <XAxis dataKey={xKey} tick={{ fontSize: 12 }} />
           {data && data.length > 0 && <RechartsTooltip content={<ChartTooltip />} />}
           {lines.map((line) => (
-            <Line
+            <Area
               key={line.key}
               dataKey={line.key}
               type="monotone"
               stroke={line.color}
               strokeWidth={2.5}
+              fill={`url(#grad-${line.key})`}
+              fillOpacity={1}
               dot={false}
               activeDot={{ r: 5, fill: line.color, strokeWidth: 2 }}
             />
           ))}
-        </RechartsLineChart>
+        </RechartsAreaChart>
       </ResponsiveContainer>
 
       {/* Tabela acessível lida nativamente por leitores de tela */}
