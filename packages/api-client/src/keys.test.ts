@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { transactionKeys } from './keys';
+import { summaryKeys, transactionKeys } from './keys';
 
 describe('transactionKeys', () => {
   it('monta chaves hierárquicas consistentes', () => {
@@ -14,5 +14,20 @@ describe('transactionKeys', () => {
     const list = transactionKeys.list({ type: 'deposit' });
     const lists = transactionKeys.lists();
     expect(list.slice(0, lists.length)).toEqual([...lists]);
+  });
+});
+
+describe('summaryKeys', () => {
+  it('monta chaves de summary por range', () => {
+    const range = { from: '2026-01-01', to: '2026-06-30' };
+
+    expect(summaryKeys.all).toEqual(['summary']);
+    expect(summaryKeys.range(range)).toEqual(['summary', { from: '2026-01-01', to: '2026-06-30' }]);
+  });
+
+  it('range() é prefixado por all (permite invalidação por escopo)', () => {
+    const key = summaryKeys.range({ from: '2026-01-01' });
+
+    expect(key.slice(0, summaryKeys.all.length)).toEqual([...summaryKeys.all]);
   });
 });
