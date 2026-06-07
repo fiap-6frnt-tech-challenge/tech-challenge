@@ -1,4 +1,4 @@
-import { AccessibleDataProps } from './types';
+import { AccessibleDataProps } from './IAccessibleChartData';
 
 export function AccessibleChartData({ caption, headers, rows }: AccessibleDataProps) {
   return (
