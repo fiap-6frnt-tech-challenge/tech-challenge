@@ -1,18 +1,12 @@
 import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { isGoogleAuthEnabled } from './auth.config';
+import { authConfig } from './auth.config';
+import { verifyCredentials } from '@/db/users';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
-    ...(isGoogleAuthEnabled
-      ? [
-          GoogleProvider({
-            clientId: process.env.AUTH_GOOGLE_ID!,
-            clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-          }),
-        ]
-      : []),
+    ...authConfig.providers,
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -22,12 +16,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        // IMPORTANTE: nunca permitir este mock em produção
-        if (process.env.NODE_ENV === 'production') return null;
+        const user = await verifyCredentials(
+          credentials.email as string,
+          credentials.password as string
+        );
+        if (user) {
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            image: user.image ?? undefined,
+          };
+        }
 
-        // Mock temporário para validação local: aceita qualquer login se senha for "senha123"
-        // Em um cenário real, você faria uma query no Postgres/KV aqui.
-        if (credentials.password === 'senha123') {
+        if (process.env.NODE_ENV !== 'production' && credentials.password === 'senha123') {
           return {
             id: 'joana', // Garantindo o userId igual ao do seed das transações
             name: 'Joana da Silva',
@@ -39,26 +41,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  pages: {
-    signIn: '/login',
-    error: '/auth/error',
-  },
-  session: {
-    strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60, // 7 dias
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.userId = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.userId as string;
-      }
-      return session;
-    },
-  },
 });
