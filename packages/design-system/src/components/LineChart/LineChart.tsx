@@ -38,7 +38,7 @@ export function LineChart({
     <div className="w-full relative min-w-0">
       <ResponsiveContainer width="100%" height={height ?? 300}>
         {/* aria-hidden esconde o SVG dos leitores de tela */}
-        <RechartsAreaChart className={className} data={data} aria-hidden="true">
+        <RechartsAreaChart className={className} data={data} aria-hidden="true" tabIndex={-1}>
           {/* Gradiente por série — profundidade visual abaixo do traço (estilo Area/Line híbrido) */}
           <defs>
             {lines.map((line) => (

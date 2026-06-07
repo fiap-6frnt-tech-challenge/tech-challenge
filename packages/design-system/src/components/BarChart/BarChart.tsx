@@ -38,7 +38,7 @@ export function BarChart({
     <div className="w-full relative min-w-0">
       <ResponsiveContainer width="100%" height={height ?? 300}>
         {/* aria-hidden esconde o SVG dos leitores de tela */}
-        <RechartsBarChart className={className} data={data} aria-hidden="true">
+        <RechartsBarChart className={className} data={data} aria-hidden="true" tabIndex={-1}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
           <XAxis dataKey={xKey} tick={{ fontSize: 12 }} />
           {data && data.length > 0 && <RechartsTooltip content={<ChartTooltip />} />}

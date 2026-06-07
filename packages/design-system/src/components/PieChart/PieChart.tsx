@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import {
   PieChart as RechartsPieChart,
   Pie,
@@ -23,6 +24,35 @@ const DEFAULT_COLORS = [
 
 export function PieChart({ data, colors, height, className, accessibleCaption }: PieChartProps) {
   const isMounted = useIsMounted();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isMounted || !containerRef.current) return;
+    const updateTabIndex = () => {
+      const focusable = containerRef.current?.querySelectorAll('[tabindex]');
+      focusable?.forEach((el) => {
+        if (el.getAttribute('tabindex') !== '-1') {
+          el.setAttribute('tabindex', '-1');
+        }
+      });
+    };
+    updateTabIndex();
+
+    const observer = new MutationObserver(() => {
+      updateTabIndex();
+    });
+
+    observer.observe(containerRef.current, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['tabindex'],
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isMounted, data]);
   if (!isMounted)
     return (
       <div
@@ -48,14 +78,18 @@ export function PieChart({ data, colors, height, className, accessibleCaption }:
     name: item.label,
     color: palette[index % palette.length],
     fill: palette[index % palette.length],
+    tabIndex: -1,
   }));
 
   return (
-    <div className={`w-full relative min-w-0 flex gap-6 items-center ${className ?? ''}`}>
+    <div
+      ref={containerRef}
+      className={`w-full relative min-w-0 flex gap-6 items-center ${className ?? ''}`}
+    >
       {/* Gráfico Donut — aria-hidden: leitores de tela usam a tabela abaixo */}
       <div className="flex-1 min-w-0">
         <ResponsiveContainer width="100%" height={height ?? 300}>
-          <RechartsPieChart aria-hidden="true">
+          <RechartsPieChart aria-hidden="true" tabIndex={-1}>
             {data && data.length > 0 && <RechartsTooltip content={<ChartTooltip />} />}
             <Pie
               data={enrichedData}
@@ -64,6 +98,7 @@ export function PieChart({ data, colors, height, className, accessibleCaption }:
               innerRadius="60%"
               outerRadius="80%"
               strokeWidth={2}
+              tabIndex={-1}
             />
           </RechartsPieChart>
         </ResponsiveContainer>
