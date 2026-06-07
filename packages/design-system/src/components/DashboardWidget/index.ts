@@ -1,2 +1,2 @@
 export { DashboardWidget } from './DashboardWidget';
-export type { DashboardWidgetProps } from './types';
+export type { DashboardWidgetProps } from './IDashboardWidget';

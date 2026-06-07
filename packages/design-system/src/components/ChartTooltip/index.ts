@@ -1,2 +1,2 @@
 export { ChartTooltip } from './ChartTooltip';
-export type { ChartTooltipProps } from './types';
+export type { ChartTooltipProps } from './IChartTooltip';

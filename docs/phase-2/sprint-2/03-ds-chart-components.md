@@ -1,6 +1,6 @@
 # Task 3 — Design System: Componentes de Gráfico + KpiCard + DashboardWidget (Detalhamento Técnico Completo)
 
-> ⏳ **Status: Pending**
+> ✅ **Status: Done**
 
 |                        |                                                                                       |
 | ---------------------- | ------------------------------------------------------------------------------------- |
