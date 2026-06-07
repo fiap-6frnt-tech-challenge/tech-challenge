@@ -112,4 +112,14 @@
   --color-focus-ring: var(--color-brand-primary);
   --color-focus-ring-offset: var(--color-surface);
   /* auto-adapta no dark mode via --color-surface */
+
+  /* ============================================
+  CHARTS COLORS
+  ============================================ */
+  --color-chart-brand: var(--color-brand-primary);
+  --color-chart-blue: #0098f4;
+  --color-chart-pink: #ec4899;
+  --color-chart-orange: #f97316;
+  --color-chart-green: #1cc060;
+  --color-chart-red: #ff3631;
 }
