@@ -20,5 +20,8 @@ export async function POST(request: Request) {
   }
 
   const user = await createUser(parsed.data);
+  if (!user) {
+    return NextResponse.json({ error: 'E-mail já cadastrado' }, { status: 409 });
+  }
   return NextResponse.json({ id: user.id, name: user.name, email: user.email }, { status: 201 });
 }

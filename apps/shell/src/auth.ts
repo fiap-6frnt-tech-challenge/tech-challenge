@@ -16,10 +16,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const user = await verifyCredentials(
-          credentials.email as string,
-          credentials.password as string
-        );
+        let user: Awaited<ReturnType<typeof verifyCredentials>> = null;
+
+        try {
+          user = await verifyCredentials(
+            credentials.email as string,
+            credentials.password as string
+          );
+        } catch (error) {
+          console.error('[auth] Falha ao verificar credenciais no banco:', error);
+        }
+
         if (user) {
           return {
             id: user.id,
