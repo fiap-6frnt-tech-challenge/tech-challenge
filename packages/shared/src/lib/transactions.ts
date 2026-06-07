@@ -46,7 +46,7 @@ export function aggregateByMonth(transactions: Transaction[]): MonthlyAggregate[
 }
 
 export function cumulativeBalance(transactions: Transaction[]): BalancePoint[] {
-  const ordered = [...transactions].sort((a, b) => (a.date < b.date ? -1 : 1));
+  const ordered = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
   let running = 0;
   return ordered.map((t) => {
     if (t.type === TRANSACTION_TYPE.DEPOSIT) running += t.amount;
