@@ -130,7 +130,7 @@ export const Error: Story = {
 // Grade com 4 cards — visualização de dashboard real
 export const DashboardGrid: Story = {
   render: () => (
-    <div className="grid grid-cols-2 gap-4 max-w-xl">
+    <div className="w-full grid grid-cols-2 gap-4">
       <KpiCard label="Saldo Total" value={23200} delta={0.12} />
       <KpiCard label="Receita do Mês" value={5500} delta={0.05} />
       <KpiCard label="Despesas" value={2400} delta={-0.08} />
