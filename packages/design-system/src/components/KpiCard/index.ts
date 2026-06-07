@@ -1,2 +1,2 @@
 export { KpiCard } from './KpiCard';
-export type { KpiCardProps } from './types';
+export type { KpiCardProps } from './IKpiCard';

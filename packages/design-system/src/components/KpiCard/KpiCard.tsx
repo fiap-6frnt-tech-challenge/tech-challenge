@@ -2,7 +2,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 import { cn, formatCurrency } from '@bytebank/shared';
 import { Card } from '../Card';
 import { Skeleton } from '../Skeleton';
-import { KpiCardProps } from './types';
+import { KpiCardProps } from './IKpiCard';
 
 export function KpiCard({
   label,
