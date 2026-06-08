@@ -16,6 +16,15 @@ export const transactions = pgTable('transactions', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const users = pgTable('users', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  image: text('image'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const attachments = pgTable('attachments', {
   id: text('id').primaryKey(),
   transactionId: text('transaction_id')
@@ -44,3 +53,5 @@ export type TransactionRow = typeof transactions.$inferSelect;
 export type NewTransactionRow = typeof transactions.$inferInsert;
 export type AttachmentRow = typeof attachments.$inferSelect;
 export type NewAttachmentRow = typeof attachments.$inferInsert;
+export type UserRow = typeof users.$inferSelect;
+export type NewUserRow = typeof users.$inferInsert;

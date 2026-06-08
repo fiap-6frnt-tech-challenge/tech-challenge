@@ -15,7 +15,7 @@
 A Sprint 1 entregou a tela de **login**, mas o planejamento falhou em três pontos que esta sprint precisa cobrir:
 
 1. **Não há botão de logout** — o componente `UserMenu` (com "Sair") existe no Design System, mas **nunca foi conectado ao `Header`** do app. → Tasks **4** e **9**.
-2. **Não há área de cadastro** — não existe tabela `users`, endpoint de registro nem página `/register`; o `authorize()` é um mock (`senha123`). → Tasks **2**, **4** e **9**.
+2. **Não há área de cadastro** — não existe tabela `users`, endpoint de registro nem página `/register`; o `authorize()` é um mock (`senha123`). → Tasks **2**, **4** e **9**. _Backend ✅ concluído (Task 2): tabela `users`, `POST /api/auth/register` e `authorize` real contra o banco (mock `senha123` mantido só como fallback de dev). Falta a UI — Tasks 4 e 9._
 3. **O estado Redux não reflete login/logout** — o `authSlice` tem `setSession`/`clearSession`/`logout`, mas **nada despacha** essas actions a partir da sessão NextAuth. → Task **6** (e logout fechado na Task **9**).
 
 Essas correções entram na fila de tasks **paralelas** (sem custo de bloqueio no Dashboard) e convergem na Task 9.
@@ -50,7 +50,7 @@ Essas correções entram na fila de tasks **paralelas** (sem custo de bloqueio n
 ### Paralelas (dia 1)
 
 1. **Backend: Summary + Agregações + Seed histórico** (2d · Dev 1) — `GET /api/transactions/summary` agregando no servidor (`aggregateByMonth`, `cumulativeBalance`, `groupByCategory`) + enriquecer seed com 6+ meses. → [01](./sprint-2/01-backend-summary-seed.md)
-2. **Backend: Cadastro de usuário** (1d · Dev 1) — tabela `users`, `POST /api/auth/register` (hash bcrypt), `authorize` real contra o banco. → [02](./sprint-2/02-backend-register-endpoint.md)
+2. ✅ **Backend: Cadastro de usuário** (1d · Dev 1) — tabela `users`, `POST /api/auth/register` (hash bcrypt), `authorize` real contra o banco. **Concluída** (2026-06-07). → [02](./sprint-2/02-backend-register-endpoint.md)
 3. **DS: Componentes de gráfico** (4d · Dev 2) — `BarChart`, `LineChart`, `PieChart`, `KpiCard`, `DashboardWidget` (Recharts + tokens DS + a11y). → [03](./sprint-2/03-ds-chart-components.md)
 4. **DS: `RegisterForm` + revisão do `UserMenu`** (1d · Dev 2) — form de cadastro acessível + estado "saindo…" no UserMenu. → [04](./sprint-2/04-ds-register-form-usermenu.md)
 5. **Criar `apps/dashboard-mfe`** (1d · Dev 3) — Rsbuild + Module Federation expondo `./Dashboard` em `:3001`. → [05](./sprint-2/05-create-dashboard-mfe.md)
@@ -95,14 +95,14 @@ Essas correções entram na fila de tasks **paralelas** (sem custo de bloqueio n
 
 ## Riscos do sprint
 
-| Risco                                           | Mitigação                                                                                           |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Recharts hydration mismatch no MFE              | `dynamic(..., { ssr: false })` + componentes de chart `'use client'` + `ResponsiveContainer`        |
-| Edge vs Node runtime no `authorize` (bcrypt/pg) | Config base edge-safe em `auth.config.ts`; `authorize` em `auth.ts` (Node); rota `runtime='nodejs'` |
-| `remoteEntry.js` 404 / CORS em prod             | Env vars corretas + CORS no deploy do MFE; fallback graceful no shell                               |
-| Pie chart com >5 categorias ilegível            | Agrupar em "Outros"; testes garantem o limite                                                       |
-| Seed insuficiente para gráficos                 | Enriquecer `data/transactions.json` com 6+ meses no início (Task 1)                                 |
-| Só 3 devs: Dev 2 e Dev 3 sobrecarregados        | DS entrega 1 chart/dia; Dev 1 (folgado) apoia testes/integração; pair na Task 9                     |
+| Risco                                           | Mitigação                                                                                                                                                         |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recharts hydration mismatch no MFE              | `dynamic(..., { ssr: false })` + componentes de chart `'use client'` + `ResponsiveContainer`                                                                      |
+| Edge vs Node runtime no `authorize` (bcrypt/pg) | ✅ Resolvido (Task 2): config base edge-safe em `auth.config.ts`; `authorize` em `auth.ts` (Node); `proxy.ts` usa `NextAuth(authConfig)`; rota `runtime='nodejs'` |
+| `remoteEntry.js` 404 / CORS em prod             | Env vars corretas + CORS no deploy do MFE; fallback graceful no shell                                                                                             |
+| Pie chart com >5 categorias ilegível            | Agrupar em "Outros"; testes garantem o limite                                                                                                                     |
+| Seed insuficiente para gráficos                 | Enriquecer `data/transactions.json` com 6+ meses no início (Task 1)                                                                                               |
+| Só 3 devs: Dev 2 e Dev 3 sobrecarregados        | DS entrega 1 chart/dia; Dev 1 (folgado) apoia testes/integração; pair na Task 9                                                                                   |
 
 ## Definição de Pronto
 
