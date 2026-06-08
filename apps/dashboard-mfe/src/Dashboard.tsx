@@ -1,13 +1,5 @@
 import { Badge, Button, Card } from '@bytebank/design-system';
 
-/**
- * Componente exposto via Module Federation (`exposes: { './Dashboard' }`).
- *
- * Por enquanto é um placeholder — o layout real (widgets + charts) chega na
- * Task 10. Importa componentes do @bytebank/design-system para provar, ainda
- * standalone em :3001, que os tokens e os singletons compartilhados resolvem
- * corretamente (validação da Task 5).
- */
 export default function Dashboard() {
   return (
     <div className="flex flex-col gap-lg p-lg">

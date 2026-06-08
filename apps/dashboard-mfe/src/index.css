@@ -1,8 +1,2 @@
-/* Tokens + base do Design System (globals.css já importa tailwindcss e tokens.css).
-   Espelha apps/shell/src/app/globals.css para o MFE ter os tokens standalone. */
 @import '@bytebank/design-system/styles/globals.css';
-
-/* Tailwind v4 só gera utilitários para classes encontradas nas fontes escaneadas.
-   Sem este @source, classes usadas só aqui no MFE (p-lg, bg-background, etc.)
-   não seriam geradas. */
 @source "./**/*.{ts,tsx}";
