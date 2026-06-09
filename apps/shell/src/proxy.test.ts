@@ -59,4 +59,20 @@ describe('Proxy de Autenticação', () => {
     expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toBe('http://localhost:3000/');
   });
+
+  it('deve permitir acesso à rota /register para usuários anônimos', async () => {
+    const req = createMockRequest('/register');
+    const res = await proxy(req, proxyEvent);
+
+    expect(res).toBeUndefined();
+  });
+
+  it('deve redirecionar usuário já logado acessando /register para a home', async () => {
+    const req = createMockRequest('/register', true);
+    const res = await proxy(req, proxyEvent);
+
+    expect(res).toBeDefined();
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('location')).toBe('http://localhost:3000/');
+  });
 });
