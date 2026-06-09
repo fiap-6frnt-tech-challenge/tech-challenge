@@ -1,6 +1,6 @@
 # Task 2 — Backend: Cadastro de Usuário (tabela `users` + endpoint de registro)
 
-> ⏳ **Status: Pending**
+> ✅ **Status: Concluída** (2026-06-07)
 
 |                        |                                                                                                                     |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -179,11 +179,11 @@ async authorize(credentials) {
 
 ## Validação
 
-- [ ] `curl -X POST http://localhost:3000/api/auth/register -H "Content-Type: application/json" -d '{"name":"Ana Souza","email":"ana@bytebank.com","password":"segredo123"}'` retorna `201` com `{ id, name, email }`.
-- [ ] Repetir o mesmo e-mail retorna `409`.
-- [ ] Payload inválido (senha curta) retorna `422` com `issues`.
-- [ ] Login em `/login` com o usuário recém-criado autentica e redireciona para `/`.
-- [ ] A senha **nunca** é persistida ou retornada em texto puro (apenas `password_hash`).
+- [x] `curl -X POST http://localhost:3000/api/auth/register -H "Content-Type: application/json" -d '{"name":"Ana Souza","email":"ana@bytebank.com","password":"segredo123"}'` retorna `201` com `{ id, name, email }`.
+- [x] Repetir o mesmo e-mail retorna `409`.
+- [x] Payload inválido (senha curta) retorna `422` com `issues` (`fieldErrors` por campo).
+- [x] Login com o usuário recém-criado autentica contra o banco — validado no nível de `verifyCredentials` (senha correta casa com o hash; senha errada é rejeitada) e via wiring `authorize → verifyCredentials` no build. _O walk-through visual em `/login` será fechado junto da [Task 9](./09-register-page-logout-wiring.md)._
+- [x] A senha **nunca** é persistida ou retornada em texto puro — confirmado no banco (apenas `password_hash` no formato bcrypt `$2b$10$…`); a resposta 201 devolve só `{ id, name, email }`.
 
 ---
 

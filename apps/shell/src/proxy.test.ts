@@ -9,16 +9,17 @@ type AuthCallback = (
 ) => Response | undefined | Promise<Response | undefined>;
 type ProxyEvent = Parameters<typeof proxy>[1];
 
-// Mock do next-auth/jwt ou do auth nativo
-vi.mock('./auth', () => ({
-  auth: (callback: AuthCallback) => {
-    return async (req: NextRequest) => {
-      // Simula o comportamento do wrapper injetando a sessão conforme o teste
-      const isAuthed = req.headers.get('x-mock-auth') === 'true';
-      const mockSession: MockSession = isAuthed ? { user: { id: 'joana' } } : null;
-      return callback(Object.assign(req, { auth: mockSession }));
-    };
-  },
+vi.mock('next-auth', () => ({
+  default: () => ({
+    auth: (callback: AuthCallback) => {
+      return async (req: NextRequest) => {
+        // Simula o wrapper do NextAuth injetando a sessão conforme o teste
+        const isAuthed = req.headers.get('x-mock-auth') === 'true';
+        const mockSession: MockSession = isAuthed ? { user: { id: 'joana' } } : null;
+        return callback(Object.assign(req, { auth: mockSession }));
+      };
+    },
+  }),
 }));
 
 const proxyEvent = {} as ProxyEvent;
