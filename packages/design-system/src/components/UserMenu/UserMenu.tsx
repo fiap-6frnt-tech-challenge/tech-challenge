@@ -75,7 +75,7 @@ export function UserMenu({ user, onLogout, isLoggingOut = false, className }: Us
         onKeyDown={handleTriggerKeyDown}
         className={cn(
           'cursor-pointer',
-          'flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-border bg-surface',
+          'flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border bg-surface',
           'label-semibold text-content-primary transition-colors hover:bg-surface-hover',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'
         )}

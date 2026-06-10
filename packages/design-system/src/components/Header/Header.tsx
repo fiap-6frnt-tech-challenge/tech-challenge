@@ -20,7 +20,7 @@ export function Header({ userName = 'Joana da Silva Oliveira', actionsSlot }: He
           </Link>
 
           {/* User info — tablet and above */}
-          <div className="hidden sm:flex items-center gap-sm text-content-inverse">
+          <div className="hidden sm:flex items-center gap-md text-content-inverse">
             <span className="label-default">{userName}</span>
             {actionsSlot !== undefined ? actionsSlot : <UserCircle size={32} aria-hidden="true" />}
           </div>
