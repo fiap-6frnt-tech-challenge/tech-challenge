@@ -1,6 +1,6 @@
 # Task 8 — Shell consome o `dashboard-mfe` em `/` (Module Federation runtime)
 
-> ⏳ **Status: Pending**
+> ✅ **Status: Done** — implementado e verificado em 2026-06-10. Federação via **runtime** Module Federation (ver _Implementação real_ no passo 1).
 
 |                        |                                                                                                |
 | ---------------------- | ---------------------------------------------------------------------------------------------- |
@@ -47,8 +47,10 @@ remotes: {
 },
 ```
 
-- [ ] Adicionar `NEXT_PUBLIC_DASHBOARD_MFE_URL` ao `.env.example` e `.env.local`.
-- [ ] Garantir que `@bytebank/dashboard-mfe` (e demais pacotes em TS cru) estejam em `transpilePackages`.
+> ⚠️ **Implementação real:** o shell registra o remote em **runtime** via `@module-federation/enhanced/runtime` em [`apps/shell/src/lib/federation.ts`](../../../apps/shell/src/lib/federation.ts) (padrão validado no PoC), **não** em `next.config.ts` — o `next.config.ts` do shell não tem plugin de MF, então o snippet acima não se aplica e um `import('dashboard/Dashboard')` estático não resolveria. Foi adicionado o remote `dashboard` + a função `loadDashboard()`, e habilitados os singletons compartilhados (`@bytebank/design-system`, `@bytebank/shared`, `@bytebank/stores`, `@bytebank/api-client`) espelhando o `rsbuild.config.ts` do MFE — é o que satisfaz a gotcha #4 (providers do host).
+
+- [x] `NEXT_PUBLIC_DASHBOARD_MFE_URL` adicionado ao `.env.example` e `.env.local`.
+- [x] ~~`@bytebank/dashboard-mfe` em `transpilePackages`~~ — **N/A**: o shell carrega o MFE por HTTP em runtime, nunca importa o pacote como source; adicioná-lo quebraria a resolução. Os pacotes `@bytebank/*` que o shell de fato importa já estão em `transpilePackages`.
 
 ### 2. Wrapper client que carrega o MFE (`apps/shell/src/components/DashboardRemote.tsx`)
 
@@ -77,6 +79,8 @@ export function DashboardRemote() {
 }
 ```
 
+> ✅ **Implementação real:** o [`DashboardRemote.tsx`](../../../apps/shell/src/components/DashboardRemote.tsx) carrega o remote via `loadDashboard()` do `lib/federation.ts` (runtime) e envolve o `dynamic` num `MFErrorBoundary` (espelhando o `RemoteHello` do PoC) — é o que garante o fallback gracioso quando `:3001` cai, em vez de tela branca.
+
 ### 3. Reescrever a home (`apps/shell/src/app/page.tsx`)
 
 Mantém-se Server Component (para metadata/SEO via [Task 11](./11-ssr-shell.md)); o MFE entra pelo wrapper client:
@@ -98,15 +102,17 @@ declare module 'dashboard/Dashboard' {
 }
 ```
 
+> ✅ **Implementação real:** declaração adicionada ao arquivo já existente [`apps/shell/src/types/federation.d.ts`](../../../apps/shell/src/types/federation.d.ts) (que já declarava `hello/Hello`), em vez de criar um `remotes.d.ts` novo — segue a convenção do repo.
+
 ---
 
 ## Validação
 
-- [ ] `localhost:3000/` (autenticado) renderiza o placeholder/Dashboard do MFE.
-- [ ] DevTools → Network mostra o `remoteEntry.js`/`mf-manifest.json` vindo de `:3001`.
-- [ ] DevTools → Components mostra **um único** React (singletons OK; sem "Invalid hook call").
-- [ ] `npm run build -w @bytebank/shell` passa (transpilePackages correto).
-- [ ] Derrubar o MFE (`:3001`) mostra o skeleton/fallback graceful, não uma tela branca quebrada.
+- [x] `localhost:3000/` (autenticado) renderiza o Dashboard do MFE — verificado via Playwright (badge "MFE :3001", heading "Dashboard" e botão do DS presentes).
+- [x] Network mostra `mf-manifest.json` + chunks de federação (`dashboard.js`, `__federation_expose_Dashboard.js`) vindos de `:3001`.
+- [x] **Um único** React — zero erros de console/page e nenhum "Invalid hook call"; os componentes do DS renderizam (React singleton OK).
+- [x] `npm run build -w @bytebank/shell` passa (`/` sai como rota estática; `tsc --noEmit` e ESLint limpos).
+- [x] Derrubar o MFE (`:3001`) mostra o fallback gracioso — card "Dashboard indisponível" via `MFErrorBoundary` dentro do AppShell, não tela branca.
 
 ---
 

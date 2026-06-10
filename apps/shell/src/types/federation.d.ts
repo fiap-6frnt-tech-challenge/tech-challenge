@@ -7,3 +7,8 @@ declare module 'hello/Hello' {
   const Hello: React.ComponentType;
   export default Hello;
 }
+
+declare module 'dashboard/Dashboard' {
+  const Dashboard: React.ComponentType;
+  export default Dashboard;
+}
