@@ -16,7 +16,7 @@ export function AppHeader() {
 
   return (
     <Header
-      userName={user?.name}
+      userName={user?.name ?? ''}
       actionsSlot={
         user ? (
           <UserMenu

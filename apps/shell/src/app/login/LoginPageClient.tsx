@@ -5,16 +5,15 @@ import Link from 'next/link';
 import { useTransition } from 'react';
 import type { LoginFormFields } from '@bytebank/design-system';
 import { GoogleAuthButton, LoginForm } from '@bytebank/design-system';
+import { loginWithCredentials } from './loginFlow';
 
 interface LoginPageClientProps {
   isGoogleAuthEnabled: boolean;
-  loginWithCredentialsAction: (data: LoginFormFields) => void | Promise<void>;
   loginWithGoogleAction: () => void | Promise<void>;
 }
 
 export function LoginPageClient({
   isGoogleAuthEnabled,
-  loginWithCredentialsAction,
   loginWithGoogleAction,
 }: LoginPageClientProps) {
   const [isCredentialsPending, startCredentialsTransition] = useTransition();
@@ -23,7 +22,14 @@ export function LoginPageClient({
 
   function handleCredentialsSubmit(data: LoginFormFields) {
     startCredentialsTransition(async () => {
-      await loginWithCredentialsAction(data);
+      const result = await loginWithCredentials(data);
+
+      if (!result.ok) {
+        window.location.assign('/auth/error?error=CredentialsSignin');
+        return;
+      }
+
+      window.location.assign('/');
     });
   }
 

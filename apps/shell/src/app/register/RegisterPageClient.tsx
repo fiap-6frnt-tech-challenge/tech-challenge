@@ -1,13 +1,11 @@
 'use client';
 
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { RegisterForm, type RegisterFormFields } from '@bytebank/design-system';
 import { registerAndSignIn } from './registerFlow';
 
 export function RegisterPageClient() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -22,7 +20,7 @@ export function RegisterPageClient() {
         return;
       }
 
-      router.push('/');
+      window.location.assign('/');
     });
   }
 
