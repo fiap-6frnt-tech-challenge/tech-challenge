@@ -2,6 +2,10 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import * as DS from '@bytebank/design-system';
+import * as Shared from '@bytebank/shared';
+import * as Stores from '@bytebank/stores';
+import * as ApiClient from '@bytebank/api-client';
 import { createInstance, getInstance } from '@module-federation/enhanced/runtime';
 
 type MFInstance = ReturnType<typeof createInstance>;
@@ -32,6 +36,11 @@ function ensureInstance(): MFInstance {
           name: 'hello',
           entry: process.env.NEXT_PUBLIC_HELLO_MFE_URL ?? 'http://localhost:3001/mf-manifest.json',
         },
+        {
+          name: 'dashboard',
+          entry:
+            process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3001/mf-manifest.json',
+        },
       ],
       shared: {
         react: {
@@ -46,10 +55,30 @@ function ensureInstance(): MFInstance {
           lib: () => ReactDOM,
           shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
         },
-        // TODO (Task 6 dia 2, após Tasks 3+4 mergearem):
-        // Adicionar singletons de @bytebank/design-system e @bytebank/shared.
-        // Sem eles, DS pode duplicar entre shell e remote (2x bundle + risco Context bugs).
-        // Ver docs/phase-2/sprint-0/06-poc-module-federation.md seção B2 para config completa.
+        '@bytebank/design-system': {
+          version: '0.1.0',
+          scope: 'default',
+          lib: () => DS,
+          shareConfig: { singleton: true, requiredVersion: '*' },
+        },
+        '@bytebank/shared': {
+          version: '0.1.0',
+          scope: 'default',
+          lib: () => Shared,
+          shareConfig: { singleton: true, requiredVersion: '*' },
+        },
+        '@bytebank/stores': {
+          version: '0.1.0',
+          scope: 'default',
+          lib: () => Stores,
+          shareConfig: { singleton: true, requiredVersion: '*' },
+        },
+        '@bytebank/api-client': {
+          version: '0.1.0',
+          scope: 'default',
+          lib: () => ApiClient,
+          shareConfig: { singleton: true, requiredVersion: '*' },
+        },
       },
     });
 
@@ -60,5 +89,12 @@ export async function loadHello() {
   const mf = ensureInstance();
   const mod = await mf.loadRemote<{ default: React.ComponentType }>('hello/Hello');
   if (!mod) throw new Error('Failed to load remote hello/Hello');
+  return mod.default;
+}
+
+export async function loadDashboard() {
+  const mf = ensureInstance();
+  const mod = await mf.loadRemote<{ default: React.ComponentType }>('dashboard/Dashboard');
+  if (!mod) throw new Error('Failed to load remote dashboard/Dashboard');
   return mod.default;
 }
