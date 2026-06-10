@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { TransactionService } from './http';
+import { SummaryService, TransactionService } from './http';
 
 function mockFetch(body: unknown, ok = true) {
   const fn = vi.fn().mockResolvedValue({
@@ -59,5 +59,52 @@ describe('TransactionService', () => {
   it('lança erro quando a resposta não é ok', async () => {
     mockFetch({ error: 'boom' }, false);
     await expect(TransactionService.getById('1')).rejects.toThrow('Falha ao buscar transação');
+  });
+});
+
+describe('SummaryService', () => {
+  it('get busca o summary sem range', async () => {
+    const summary = {
+      balance: 1000,
+      incomeMonth: 2000,
+      expenseMonth: 1000,
+      savingsMonth: 1000,
+      deltaIncome: 100,
+      deltaExpense: -50,
+      byMonth: [],
+      balanceOverTime: [],
+      byCategory: [],
+    };
+    const fetchMock = mockFetch(summary);
+
+    await expect(SummaryService.get()).resolves.toEqual(summary);
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/summary');
+  });
+
+  it('get inclui from/to quando o range é informado', async () => {
+    const fetchMock = mockFetch({
+      balance: 0,
+      incomeMonth: 0,
+      expenseMonth: 0,
+      savingsMonth: 0,
+      deltaIncome: 0,
+      deltaExpense: 0,
+      byMonth: [],
+      balanceOverTime: [],
+      byCategory: [],
+    });
+
+    await SummaryService.get({ from: '2026-01-01', to: '2026-06-30' });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/transactions/summary?from=2026-01-01&to=2026-06-30'
+    );
+  });
+
+  it('lança erro quando o summary não retorna ok', async () => {
+    mockFetch({ error: 'boom' }, false);
+
+    await expect(SummaryService.get()).rejects.toThrow('Falha ao buscar resumo financeiro');
   });
 });

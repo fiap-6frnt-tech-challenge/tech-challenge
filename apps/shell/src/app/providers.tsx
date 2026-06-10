@@ -7,11 +7,13 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { store } from '@bytebank/stores';
 import { queryClient } from '@bytebank/api-client';
 import { FeedbackHost } from './FeedbackHost';
+import { SessionSync } from './SessionSync';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <SessionProvider>
+        <SessionSync />
         <QueryClientProvider client={queryClient}>
           {children}
           <FeedbackHost />

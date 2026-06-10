@@ -1,4 +1,9 @@
-import type { Transaction, NewTransaction, UpdateTransaction } from '@bytebank/shared';
+import type {
+  DashboardSummary,
+  NewTransaction,
+  Transaction,
+  UpdateTransaction,
+} from '@bytebank/shared';
 
 let apiBaseUrl = '/api';
 
@@ -22,6 +27,11 @@ export interface GetPaginatedParams {
   dateTo?: string;
   sortBy?: string;
   sortOrder?: string;
+}
+
+export interface SummaryRange {
+  from?: string;
+  to?: string;
 }
 
 export const TransactionService = {
@@ -84,6 +94,19 @@ export const TransactionService = {
 
     const res = await fetch(`${apiBaseUrl}/transactions?${query.toString()}`);
     if (!res.ok) throw new Error('Falha ao buscar transações');
+    return res.json();
+  },
+};
+
+export const SummaryService = {
+  async get({ from, to }: SummaryRange = {}): Promise<DashboardSummary> {
+    const query = new URLSearchParams();
+    if (from) query.set('from', from);
+    if (to) query.set('to', to);
+
+    const qs = query.toString();
+    const res = await fetch(`${apiBaseUrl}/transactions/summary${qs ? `?${qs}` : ''}`);
+    if (!res.ok) throw new Error('Falha ao buscar resumo financeiro');
     return res.json();
   },
 };

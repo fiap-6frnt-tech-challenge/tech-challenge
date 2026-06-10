@@ -1,6 +1,6 @@
 # Task 5 — Criar `apps/dashboard-mfe` (Rsbuild + Module Federation)
 
-> ⏳ **Status: Pending**
+> ✅ **Status: Done**
 
 |                        |                                                                                                 |
 | ---------------------- | ----------------------------------------------------------------------------------------------- |
@@ -97,10 +97,10 @@ export default function Dashboard() {
 
 ## Validação
 
-- [ ] `npm run dev -w @bytebank/dashboard-mfe` sobe o MFE em `http://localhost:3001` mostrando o placeholder.
-- [ ] `http://localhost:3001/mf-manifest.json` (ou `remoteEntry.js`) é servido corretamente.
-- [ ] `npm run build -w @bytebank/dashboard-mfe` gera o `remoteEntry.js` sem erros.
-- [ ] Importar `@bytebank/design-system` dentro do MFE renderiza um componente do DS standalone (prova de que os singletons resolvem).
+- [x] `npm run dev -w @bytebank/dashboard-mfe` sobe o MFE em `http://localhost:3001` mostrando o placeholder.
+- [x] `http://localhost:3001/mf-manifest.json` (ou `remoteEntry.js`) é servido corretamente.
+- [x] `npm run build -w @bytebank/dashboard-mfe` gera o `remoteEntry.js` sem erros.
+- [x] Importar `@bytebank/design-system` dentro do MFE renderiza um componente do DS standalone (prova de que os singletons resolvem).
 
 ---
 

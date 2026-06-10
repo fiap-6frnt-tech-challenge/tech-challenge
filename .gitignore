@@ -55,5 +55,10 @@ storybook-static
 **/.next
 **/coverage
 
+# Module Federation generated artifacts (diagnostics, runtime cache, federated types)
+**/.mf
+**/@mf-types
+**/.federation
+
 # Backup .package.json.fase1.bak
 .package.json.fase1.bak
