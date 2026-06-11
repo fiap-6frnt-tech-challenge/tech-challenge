@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '../../auth';
 import { isGoogleAuthEnabled } from '../../auth.config';
-import { loginWithCredentialsAction, loginWithGoogleAction } from './actions';
+import { loginWithGoogleAction } from './actions';
 import { LoginPageClient } from './LoginPageClient';
 
 export default async function LoginPage() {
@@ -14,7 +14,6 @@ export default async function LoginPage() {
   return (
     <LoginPageClient
       isGoogleAuthEnabled={isGoogleAuthEnabled}
-      loginWithCredentialsAction={loginWithCredentialsAction}
       loginWithGoogleAction={loginWithGoogleAction}
     />
   );

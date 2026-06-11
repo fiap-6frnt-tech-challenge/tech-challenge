@@ -1,19 +1,19 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useTransition } from 'react';
 import type { LoginFormFields } from '@bytebank/design-system';
 import { GoogleAuthButton, LoginForm } from '@bytebank/design-system';
+import { loginWithCredentials } from './loginFlow';
 
 interface LoginPageClientProps {
   isGoogleAuthEnabled: boolean;
-  loginWithCredentialsAction: (data: LoginFormFields) => void | Promise<void>;
   loginWithGoogleAction: () => void | Promise<void>;
 }
 
 export function LoginPageClient({
   isGoogleAuthEnabled,
-  loginWithCredentialsAction,
   loginWithGoogleAction,
 }: LoginPageClientProps) {
   const [isCredentialsPending, startCredentialsTransition] = useTransition();
@@ -22,7 +22,14 @@ export function LoginPageClient({
 
   function handleCredentialsSubmit(data: LoginFormFields) {
     startCredentialsTransition(async () => {
-      await loginWithCredentialsAction(data);
+      const result = await loginWithCredentials(data);
+
+      if (!result.ok) {
+        window.location.assign('/auth/error?error=CredentialsSignin');
+        return;
+      }
+
+      window.location.assign('/');
     });
   }
 
@@ -71,6 +78,16 @@ export function LoginPageClient({
               />
             </>
           ) : null}
+
+          <p className="mt-lg text-center text-sm text-content-secondary">
+            Ainda não tem conta?{' '}
+            <Link
+              href="/register"
+              className="font-medium text-brand-primary underline-offset-4 transition-colors hover:text-brand-primary-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            >
+              Criar conta
+            </Link>
+          </p>
         </div>
       </section>
     </main>

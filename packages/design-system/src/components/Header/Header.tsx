@@ -7,7 +7,7 @@ import { Menu, X, UserCircle } from 'lucide-react';
 import { Sidebar } from '../Sidebar';
 import type { HeaderProps } from './IHeader';
 
-export function Header({ userName = 'Joana da Silva Oliveira' }: HeaderProps) {
+export function Header({ userName = 'Joana da Silva Oliveira', actionsSlot }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -20,9 +20,9 @@ export function Header({ userName = 'Joana da Silva Oliveira' }: HeaderProps) {
           </Link>
 
           {/* User info — tablet and above */}
-          <div className="hidden sm:flex items-center gap-sm text-content-inverse">
+          <div className="hidden sm:flex items-center gap-md text-content-inverse">
             <span className="label-default">{userName}</span>
-            <UserCircle size={32} aria-hidden="true" />
+            {actionsSlot !== undefined ? actionsSlot : <UserCircle size={32} aria-hidden="true" />}
           </div>
 
           {/* Hamburger — mobile only */}

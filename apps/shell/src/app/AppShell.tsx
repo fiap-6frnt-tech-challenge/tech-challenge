@@ -1,7 +1,8 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Header, Sidebar } from '@bytebank/design-system';
+import { Sidebar } from '@bytebank/design-system';
+import { AppHeader } from '../components/AppHeader';
 import { isPublicAuthRoute } from './AppShell.routes';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -13,7 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
-      <Header />
+      <AppHeader />
 
       <div className="hidden sm:block lg:hidden bg-background border-b border-border h-fit">
         <div className="mx-auto max-w-300 h-fit">
