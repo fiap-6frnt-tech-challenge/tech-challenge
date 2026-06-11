@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { DashboardWidget } from './DashboardWidget';
 import { BarChart } from '../BarChart';
 import { LineChart } from '../LineChart';
@@ -151,6 +152,13 @@ export const LoadingLine: Story = {
     loading: true,
     skeletonType: 'line',
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Desempenho Semanal')).toBeInTheDocument();
+    const skeletons = canvasElement.querySelectorAll('.animate-pulse');
+    await expect(skeletons.length).toBe(4);
+    await expect(canvas.queryByRole('button', { name: /atualizar/i })).not.toBeInTheDocument();
+  },
 };
 
 export const LoadingBar: Story = {
@@ -182,7 +190,14 @@ export const ErrorStateStory: Story = {
   args: {
     title: 'Relatório Financeiro',
     error: true,
-    onRefresh: () => alert('Refreshing...'),
+    onRefresh: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Erro ao carregar transações')).toBeInTheDocument();
+    const retry = canvas.getByRole('button', { name: /tentar novamente/i });
+    await userEvent.click(retry);
+    await expect(args.onRefresh).toHaveBeenCalled();
   },
 };
 

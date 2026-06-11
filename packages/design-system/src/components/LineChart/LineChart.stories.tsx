@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, within } from 'storybook/test';
 import { LineChart } from './LineChart';
 
 const meta: Meta<typeof LineChart> = {
@@ -69,6 +70,15 @@ export const Default: Story = {
       },
     },
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const table = canvas.getByRole('table');
+    await expect(
+      within(table).getByText('Evolução do saldo nos últimos 6 meses')
+    ).toBeInTheDocument();
+    // cabeçalho + 6 meses de dados
+    await expect(within(table).getAllByRole('row')).toHaveLength(7);
+  },
 };
 
 // Múltiplas séries: receita vs despesa
@@ -119,6 +129,12 @@ export const Empty: Story = {
     docs: {
       description: { story: 'Sem dados — o Recharts renderiza os eixos vazios.' },
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const table = canvas.getByRole('table');
+    await expect(within(table).getByText('Sem dados no período selecionado')).toBeInTheDocument();
+    await expect(within(table).getAllByRole('row')).toHaveLength(1);
   },
 };
 
