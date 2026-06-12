@@ -66,14 +66,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPIs Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
-        <KpiCard
-          className="w-full"
-          label="Saldo total"
-          value={data?.balance ?? 0}
-          loading={isLoading}
-          error={isError}
-        />
+      <div className="flex flex-col md:flex-row gap-lg">
         <KpiCard
           className="w-full"
           label="Receita do mês"
