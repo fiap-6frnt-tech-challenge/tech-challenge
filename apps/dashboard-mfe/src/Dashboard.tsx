@@ -66,7 +66,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center gap-md">
         <h1 className="heading">Dashboard</h1>
-        <Badge variant="transfer">MFE :3001</Badge>
+        <Badge variant="transfer">MFE :3002</Badge>
       </div>
 
       {/* KPIs Grid */}
