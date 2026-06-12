@@ -111,7 +111,7 @@ export default function Dashboard() {
           >
             <div role="img" aria-label="Gráfico de barras mostrando receita e despesa por mês">
               <BarChart
-                data={(data?.byMonth || []) as unknown as Record<string, string | number>[]}
+                data={data?.byMonth ?? []}
                 xKey="month"
                 bars={[
                   { key: 'income', label: 'Receita', color: 'var(--color-chart-green)' },
