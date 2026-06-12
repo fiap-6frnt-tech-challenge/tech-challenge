@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, within } from 'storybook/test';
 import { Wallet } from 'lucide-react';
 import { KpiCard } from './KpiCard';
 
@@ -45,6 +46,12 @@ export const PositiveDelta: Story = {
       },
     },
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const delta = canvas.getByLabelText('Aumento de +12.0% vs mês anterior');
+    await expect(delta).toHaveTextContent('+12.0%');
+    await expect(delta).toHaveClass('text-feedback-success');
+  },
 };
 
 // Delta negativo — despesa subindo
@@ -60,6 +67,12 @@ export const NegativeDelta: Story = {
         story: '`delta < 0` — seta TrendingDown vermelha com `aria-label="Queda de -8.0%"`.',
       },
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const delta = canvas.getByLabelText('Queda de -8.0% vs mês anterior');
+    await expect(delta).toHaveTextContent('-8.0%');
+    await expect(delta).toHaveClass('text-feedback-danger');
   },
 };
 
@@ -124,6 +137,11 @@ export const Error: Story = {
         story: '`error=true` — exibe "--" no lugar do valor e oculta o delta.',
       },
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByLabelText('Valor indisponível')).toHaveTextContent('--');
+    await expect(canvas.queryByLabelText(/Aumento de/)).not.toBeInTheDocument();
   },
 };
 

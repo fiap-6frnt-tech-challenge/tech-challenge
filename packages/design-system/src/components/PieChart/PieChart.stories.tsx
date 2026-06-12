@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, within } from 'storybook/test';
 import { PieChart } from './PieChart';
 
 const meta: Meta<typeof PieChart> = {
@@ -56,6 +57,12 @@ export const Default: Story = {
           'Sem `colors` → usa a paleta padrão de tokens `--color-chart-*`.',
       },
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const table = canvas.getByRole('table');
+    await expect(within(table).getByText('Despesa por categoria — top 5')).toBeInTheDocument();
+    await expect(within(table).getAllByRole('row')).toHaveLength(6);
   },
 };
 
@@ -124,6 +131,12 @@ export const Empty: Story = {
         story: 'Array `data` vazio — o Recharts renderiza o container sem segmentos.',
       },
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const table = canvas.getByRole('table');
+    await expect(within(table).getByText('Sem dados no período selecionado')).toBeInTheDocument();
+    await expect(within(table).getAllByRole('row')).toHaveLength(1);
   },
 };
 
