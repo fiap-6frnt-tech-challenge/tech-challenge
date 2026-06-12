@@ -12,26 +12,22 @@ import { useDashboardSummary } from '@bytebank/api-client';
 export default function Dashboard() {
   const { data, isLoading, isError, refetch } = useDashboardSummary();
 
-  const deltaIncomePercent = useMemo(() => {
-    if (!data?.byMonth || data.byMonth.length < 2) return undefined;
-    const current = data.incomeMonth;
-    const previous = data.byMonth[data.byMonth.length - 2]?.income;
-    return previous && previous > 0 ? (current - previous) / previous : undefined;
-  }, [data]);
+  const deltas = useMemo(() => {
+    if (!data) return { income: undefined, expense: undefined, savings: undefined };
 
-  const deltaExpensePercent = useMemo(() => {
-    if (!data?.byMonth || data.byMonth.length < 2) return undefined;
-    const current = data.expenseMonth;
-    const previous = data.byMonth[data.byMonth.length - 2]?.expense;
-    return previous && previous > 0 ? (current - previous) / previous : undefined;
-  }, [data]);
+    const toPercent = (delta: number, previous: number) =>
+      previous > 0 ? delta / previous : undefined;
 
-  const deltaSavingsPercent = useMemo(() => {
-    if (!data?.byMonth || data.byMonth.length < 2) return undefined;
-    const current = data.savingsMonth;
-    const prevMonth = data.byMonth[data.byMonth.length - 2];
-    const previous = (prevMonth?.income ?? 0) - (prevMonth?.expense ?? 0);
-    return previous && previous > 0 ? (current - previous) / previous : undefined;
+    const prevIncome = data.incomeMonth - data.deltaIncome;
+    const prevExpense = data.expenseMonth - data.deltaExpense;
+    const prevSavings = prevIncome - prevExpense;
+    const deltaSavings = data.deltaIncome - data.deltaExpense;
+
+    return {
+      income: toPercent(data.deltaIncome, prevIncome),
+      expense: toPercent(data.deltaExpense, prevExpense),
+      savings: toPercent(deltaSavings, prevSavings),
+    };
   }, [data]);
 
   const processedPieData = useMemo(() => {
@@ -70,12 +66,19 @@ export default function Dashboard() {
       </div>
 
       {/* KPIs Grid */}
-      <div className="flex flex-col md:flex-row gap-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+        <KpiCard
+          className="w-full"
+          label="Saldo total"
+          value={data?.balance ?? 0}
+          loading={isLoading}
+          error={isError}
+        />
         <KpiCard
           className="w-full"
           label="Receita do mês"
           value={data?.incomeMonth ?? 0}
-          delta={deltaIncomePercent}
+          delta={deltas.income}
           loading={isLoading}
           error={isError}
         />
@@ -83,7 +86,7 @@ export default function Dashboard() {
           label="Despesa do mês"
           className="w-full"
           value={data?.expenseMonth ?? 0}
-          delta={deltaExpensePercent !== undefined ? -deltaExpensePercent : undefined}
+          delta={deltas.expense !== undefined ? -deltas.expense : undefined}
           loading={isLoading}
           error={isError}
         />
@@ -91,7 +94,7 @@ export default function Dashboard() {
           label="Economia do mês"
           className="w-full"
           value={data?.savingsMonth ?? 0}
-          delta={deltaSavingsPercent}
+          delta={deltas.savings}
           loading={isLoading}
           error={isError}
         />

@@ -4,8 +4,10 @@ export interface LineSeries {
   color: string;
 }
 
-export interface LineChartProps {
-  data: Record<string, string | number>[];
+export type ChartRow = Record<string, string | number>;
+
+export interface LineChartProps<TRow extends object = ChartRow> {
+  data: TRow[];
   xKey: string;
   lines: LineSeries[];
   height?: number;
