@@ -11,7 +11,7 @@ export default defineConfig({
     // componentes de layout (são do shell), então resolvemos os imports de Next para
     // módulos vazios. Quando o shell consome o remote, @bytebank/design-system é um
     // singleton compartilhado → a instância do host (com o Next real) é usada, logo
-    // este alias só vale no modo standalone (:3001).
+    // este alias só vale no modo standalone (:3002).
     alias: {
       'next/image': false,
       'next/link': false,
@@ -37,7 +37,7 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 3001,
+    port: 3002,
     strictPort: true,
     cors: {
       origin: ['http://localhost:3000'],

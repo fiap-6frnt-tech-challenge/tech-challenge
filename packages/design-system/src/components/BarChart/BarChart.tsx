@@ -43,7 +43,7 @@ export function BarChart({
           <XAxis dataKey={xKey} tick={{ fontSize: 12 }} />
           {data && data.length > 0 && <RechartsTooltip content={<ChartTooltip />} />}
           {bars.map((bar) => (
-            <Bar key={bar.key} dataKey={bar.key} fill={bar.color} />
+            <Bar key={bar.key} dataKey={bar.key} name={bar.label} fill={bar.color} />
           ))}
         </RechartsBarChart>
       </ResponsiveContainer>

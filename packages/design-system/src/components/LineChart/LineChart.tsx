@@ -64,6 +64,7 @@ export function LineChart({
             <Area
               key={line.key}
               dataKey={line.key}
+              name={line.label}
               type="monotone"
               stroke={line.color}
               strokeWidth={2.5}
