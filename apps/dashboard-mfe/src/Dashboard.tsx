@@ -159,7 +159,7 @@ export default function Dashboard() {
               aria-label="Gráfico de linha mostrando a evolução do saldo ao longo do tempo"
             >
               <LineChart
-                data={(data?.balanceOverTime || []) as unknown as Record<string, string | number>[]}
+                data={data?.balanceOverTime ?? []}
                 xKey="date"
                 lines={[{ key: 'balance', label: 'Saldo', color: 'var(--color-brand-primary)' }]}
                 height={300}
