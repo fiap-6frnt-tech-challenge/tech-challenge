@@ -67,22 +67,50 @@ describe('useDashboardSummary', () => {
 
     vi.useRealTimers();
   });
+
+  it('queryFn busca o summary via fetch (com o range efetivo) e retorna o shape', async () => {
+    const summary = {
+      balance: 1000,
+      incomeMonth: 2000,
+      expenseMonth: 1000,
+      savingsMonth: 1000,
+      deltaIncome: 100,
+      deltaExpense: -50,
+      byMonth: [],
+      balanceOverTime: [],
+      byCategory: [],
+    };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => summary });
+    vi.stubGlobal('fetch', fetchMock);
+
+    useDashboardSummary({ from: '2026-01-01', to: '2026-06-30' });
+    const options = mocks.useQuery.mock.calls[0][0];
+
+    await expect(options.queryFn()).resolves.toEqual(summary);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/transactions/summary?from=2026-01-01&to=2026-06-30'
+    );
+
+    vi.unstubAllGlobals();
+  });
 });
 
 describe('transaction mutations summary invalidation', () => {
   it('useCreateTransaction invalida listas e summary no sucesso', () => {
-    const mutation = useCreateTransaction();
+    useCreateTransaction();
+    const options = mocks.useMutation.mock.calls[0][0];
 
-    mutation.onSuccess();
+    options.onSuccess();
 
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.lists() });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: summaryKeys.all });
   });
 
   it('useUpdateTransaction invalida listas, detalhe e summary no sucesso', () => {
-    const mutation = useUpdateTransaction();
+    useUpdateTransaction();
+    const options = mocks.useMutation.mock.calls[0][0];
 
-    mutation.onSuccess({ id: 'tx-1' });
+    options.onSuccess({ id: 'tx-1' });
 
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.lists() });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
@@ -92,9 +120,10 @@ describe('transaction mutations summary invalidation', () => {
   });
 
   it('useDeleteTransaction invalida listas, detalhe e summary no settled', () => {
-    const mutation = useDeleteTransaction();
+    useDeleteTransaction();
+    const options = mocks.useMutation.mock.calls[0][0];
 
-    mutation.onSettled(undefined, undefined, 'tx-1');
+    options.onSettled(undefined, undefined, 'tx-1');
 
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.lists() });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
