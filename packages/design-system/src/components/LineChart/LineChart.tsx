@@ -9,19 +9,19 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { LineChartProps } from './ILineChart';
+import { LineChartProps, ChartRow } from './ILineChart';
 import { useIsMounted } from '../../hooks';
 import { AccessibleChartData } from '../AccessibleChartData';
 import { ChartTooltip } from '../ChartTooltip';
 
-export function LineChart({
+export function LineChart<TRow extends object = ChartRow>({
   data,
   xKey,
   lines,
   height,
   className,
   accessibleCaption,
-}: LineChartProps) {
+}: LineChartProps<TRow>) {
   const uid = useId();
   const isMounted = useIsMounted();
   if (!isMounted)
@@ -34,7 +34,10 @@ export function LineChart({
 
   // Mapeia chaves para cabeçalhos e linhas da tabela
   const headers = [xKey, ...lines.map((l) => l.label)];
-  const rows = data.map((item) => [item[xKey], ...lines.map((l) => item[l.key])]);
+  const rows = data.map((item) => {
+    const row = item as ChartRow;
+    return [row[xKey], ...lines.map((l) => row[l.key])];
+  });
 
   return (
     <div className="w-full relative min-w-0">
@@ -64,6 +67,7 @@ export function LineChart({
             <Area
               key={line.key}
               dataKey={line.key}
+              name={line.label}
               type="monotone"
               stroke={line.color}
               strokeWidth={2.5}

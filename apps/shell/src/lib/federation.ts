@@ -39,7 +39,7 @@ function ensureInstance(): MFInstance {
         {
           name: 'dashboard',
           entry:
-            process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3001/mf-manifest.json',
+            process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3002/mf-manifest.json',
         },
       ],
       shared: {

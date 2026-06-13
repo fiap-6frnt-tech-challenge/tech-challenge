@@ -46,7 +46,7 @@ class MFErrorBoundary extends Component<{ children: ReactNode }, MFErrorBoundary
         <div role="alert" className="p-lg border border-feedback-danger rounded-default bg-surface">
           <p className="body-semibold text-feedback-danger">Dashboard indisponível</p>
           <p className="body-default mt-sm">
-            Não foi possível carregar o <code>dashboard-mfe</code> do remote em <code>:3001</code>.
+            Não foi possível carregar o <code>dashboard-mfe</code> do remote em <code>:3002</code>.
             Confirme que o app está rodando (<code>npm run dev -w @bytebank/dashboard-mfe</code>).
           </p>
           <details className="mt-sm label-default text-content-secondary">

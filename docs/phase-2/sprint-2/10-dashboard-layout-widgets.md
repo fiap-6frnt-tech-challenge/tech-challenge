@@ -1,6 +1,6 @@
 # Task 10 — Layout do Dashboard + Integração dos Widgets
 
-> ⏳ **Status: Pending**
+> ✅ **Status: Done**
 
 |                        |                                                                                                                                                                                                        |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -86,11 +86,11 @@ Decisão de arquitetura: o modal `NewTransaction` vive no **shell**. O MFE dispa
 
 ## Validação
 
-- [ ] Desktop (1024px+) e mobile (375px) renderizam **todos** os widgets sem overflow.
-- [ ] Os números dos KPIs batem com agregação manual sobre o seed.
-- [ ] Cada `DashboardWidget` mostra skeleton enquanto `isLoading` e `ErrorState` + retry quando `isError` (testar derrubando o backend).
-- [ ] Criar uma transação em `/transactions` e voltar para `/` reflete nos KPIs/gráficos (invalidação do summary — ver [Task 7](./07-hook-dashboard-summary.md) Gotcha 1).
-- [ ] Charts têm `role="img"` + `aria-label` descritivo.
+- [x] Desktop (1024px+) e mobile (375px) renderizam **todos** os widgets sem overflow.
+- [x] Os números dos KPIs batem com agregação manual sobre o seed.
+- [x] Cada `DashboardWidget` mostra skeleton enquanto `isLoading` e `ErrorState` + retry quando `isError` (testar derrubando o backend).
+- [x] Criar uma transação em `/transactions` e voltar para `/` reflete nos KPIs/gráficos (invalidação do summary — ver [Task 7](./07-hook-dashboard-summary.md) Gotcha 1).
+- [x] Charts têm `role="img"` + `aria-label` descritivo.
 
 ---
 
