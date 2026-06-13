@@ -8,19 +8,19 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { BarChartProps } from './IBarChart';
+import { BarChartProps, ChartRow } from './IBarChart';
 import { useIsMounted } from '../../hooks';
 import { AccessibleChartData } from '../AccessibleChartData';
 import { ChartTooltip } from '../ChartTooltip';
 
-export function BarChart({
+export function BarChart<TRow extends object = ChartRow>({
   data,
   xKey,
   bars,
   height,
   className,
   accessibleCaption,
-}: BarChartProps) {
+}: BarChartProps<TRow>) {
   const isMounted = useIsMounted();
   if (!isMounted)
     return (
@@ -32,7 +32,10 @@ export function BarChart({
 
   // Mapeia chaves para cabeçalhos e linhas da tabela
   const headers = [xKey, ...bars.map((b) => b.label)];
-  const rows = data.map((item) => [item[xKey], ...bars.map((b) => item[b.key])]);
+  const rows = data.map((item) => {
+    const row = item as ChartRow;
+    return [row[xKey], ...bars.map((b) => row[b.key])];
+  });
 
   return (
     <div className="w-full relative min-w-0">
