@@ -93,7 +93,7 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Charts & Recent Transactions Grid */}
+      {/* Charts */}
       <div className="flex flex-col gap-lg">
         {/* BarChart - Receita vs Despesa */}
         <div>

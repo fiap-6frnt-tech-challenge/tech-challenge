@@ -53,7 +53,7 @@ Essas correções entram na fila de tasks **paralelas** (sem custo de bloqueio n
 2. ✅ **Backend: Cadastro de usuário** (1d · Dev 1) — tabela `users`, `POST /api/auth/register` (hash bcrypt), `authorize` real contra o banco. **Concluída** (2026-06-07). → [02](./sprint-2/02-backend-register-endpoint.md)
 3. **DS: Componentes de gráfico** (4d · Dev 2) — `BarChart`, `LineChart`, `PieChart`, `KpiCard`, `DashboardWidget` (Recharts + tokens DS + a11y). → [03](./sprint-2/03-ds-chart-components.md)
 4. **DS: `RegisterForm` + revisão do `UserMenu`** (1d · Dev 2) — form de cadastro acessível + estado "saindo…" no UserMenu. → [04](./sprint-2/04-ds-register-form-usermenu.md)
-5. **Criar `apps/dashboard-mfe`** (1d · Dev 3) — Rsbuild + Module Federation expondo `./Dashboard` em `:3001`. → [05](./sprint-2/05-create-dashboard-mfe.md)
+5. **Criar `apps/dashboard-mfe`** (1d · Dev 3) — Rsbuild + Module Federation expondo `./Dashboard` em `:3002`. → [05](./sprint-2/05-create-dashboard-mfe.md)
 6. **State: Sincronizar Redux ↔ NextAuth** (1d · Dev 3) — `SessionSync` despacha `setSession`/`clearSession` conforme a sessão. → [06](./sprint-2/06-state-session-sync.md)
 
 ### Dependentes

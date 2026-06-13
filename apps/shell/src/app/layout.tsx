@@ -9,12 +9,14 @@ export const metadata: Metadata = {
   description: 'Seu banco digital',
 };
 
+const dashboardManifestUrl =
+  process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3002/mf-manifest.json';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
       <head>
-        {/* Preload LCP image */}
-        <link rel="preload" as="image" href="/piggy-bank.png" type="image/png" />
+        <link rel="preload" as="fetch" href={dashboardManifestUrl} crossOrigin="anonymous" />
       </head>
       <body suppressHydrationWarning>
         <Providers>

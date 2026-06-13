@@ -18,9 +18,23 @@ const Dashboard = dynamic(
 
 function DashboardSkeleton() {
   return (
-    <div className="grid gap-lg p-lg" aria-busy="true" aria-label="Carregando dashboard">
-      <Skeleton className="h-24" />
-      <Skeleton className="h-64" />
+    <div className="flex flex-col gap-lg" aria-busy="true" aria-label="Carregando dashboard">
+      {/* Header */}
+      <Skeleton className="h-8 w-48" />
+
+      {/* KPIs */}
+      <div className="flex flex-col md:flex-row gap-lg">
+        <Skeleton className="h-[136px] w-full rounded-lg" />
+        <Skeleton className="h-[136px] w-full rounded-lg" />
+        <Skeleton className="h-[136px] w-full rounded-lg" />
+      </div>
+
+      {/* Gráficos */}
+      <div className="flex flex-col gap-lg">
+        <Skeleton className="h-[396px] w-full rounded-lg" />
+        <Skeleton className="h-[396px] w-full rounded-lg" />
+        <Skeleton className="h-[396px] w-full rounded-lg" />
+      </div>
     </div>
   );
 }

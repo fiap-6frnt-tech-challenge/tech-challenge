@@ -31,7 +31,7 @@ export const DashboardWidget = ({
           );
         case 'bar':
           return (
-            <div className="flex items-end justify-between gap-md h-40 px-lg pt-lg">
+            <div className="flex items-end justify-between gap-md h-[300px] px-lg pt-lg">
               <Skeleton className="h-24 w-8 flex-1" />
               <Skeleton className="h-36 w-8 flex-1" />
               <Skeleton className="h-16 w-8 flex-1" />
@@ -41,14 +41,14 @@ export const DashboardWidget = ({
           );
         case 'pie':
           return (
-            <div className="flex items-center justify-center h-40">
-              <Skeleton className="h-32 w-32 rounded-full" />
+            <div className="flex items-center justify-center h-[300px]">
+              <Skeleton className="h-40 w-40 rounded-full" />
             </div>
           );
         case 'line':
         default:
           return (
-            <div className="flex flex-col gap-md h-40 justify-between py-md relative">
+            <div className="flex flex-col gap-md h-[300px] justify-between py-md relative">
               <Skeleton className="h-2 w-full" />
               <Skeleton className="h-2 w-full" />
               <Skeleton className="h-2 w-full" />

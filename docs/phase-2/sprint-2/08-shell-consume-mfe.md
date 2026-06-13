@@ -15,7 +15,7 @@
 
 ## Dependências
 
-- **O que bloqueia esta tarefa**: Bloqueada pela **[Task 5](./05-create-dashboard-mfe.md)** — precisa do MFE expondo `./Dashboard` em `:3001`.
+- **O que bloqueia esta tarefa**: Bloqueada pela **[Task 5](./05-create-dashboard-mfe.md)** — precisa do MFE expondo `./Dashboard` em `:3002`.
 - **O que esta tarefa desbloqueia**: Desbloqueia a **[Task 10 — Layout do Dashboard](./10-dashboard-layout-widgets.md)** (o MFE passa a renderizar dentro do host) e a **[Task 11 — SSR no Shell](./11-ssr-shell.md)** (que otimiza esse carregamento).
 
 ---
@@ -29,7 +29,7 @@ O shell Next.js 16 consome o remote em **runtime** via `dynamic import`, seguind
 ## Pré-condições
 
 - Estar na branch `dev3/shell-consume-dashboard`.
-- MFE da Task 5 rodando em `:3001`.
+- MFE da Task 5 rodando em `:3002`.
 - Revisar como o `next.config.ts` do shell registra o remote do PoC (`hello-mfe`) e replicar para `dashboard`.
 
 ---
@@ -43,7 +43,7 @@ Adicione `dashboard` aos remotes do `@module-federation/enhanced` (espelhando a 
 ```typescript
 // next.config.ts (trecho)
 remotes: {
-  dashboard: `dashboard@${process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3001'}/mf-manifest.json`,
+  dashboard: `dashboard@${process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3002'}/mf-manifest.json`,
 },
 ```
 
@@ -79,7 +79,7 @@ export function DashboardRemote() {
 }
 ```
 
-> ✅ **Implementação real:** o [`DashboardRemote.tsx`](../../../apps/shell/src/components/DashboardRemote.tsx) carrega o remote via `loadDashboard()` do `lib/federation.ts` (runtime) e envolve o `dynamic` num `MFErrorBoundary` (espelhando o `RemoteHello` do PoC) — é o que garante o fallback gracioso quando `:3001` cai, em vez de tela branca.
+> ✅ **Implementação real:** o [`DashboardRemote.tsx`](../../../apps/shell/src/components/DashboardRemote.tsx) carrega o remote via `loadDashboard()` do `lib/federation.ts` (runtime) e envolve o `dynamic` num `MFErrorBoundary` (espelhando o `RemoteHello` do PoC) — é o que garante o fallback gracioso quando `:3002` cai, em vez de tela branca.
 
 ### 3. Reescrever a home (`apps/shell/src/app/page.tsx`)
 
@@ -108,11 +108,11 @@ declare module 'dashboard/Dashboard' {
 
 ## Validação
 
-- [x] `localhost:3000/` (autenticado) renderiza o Dashboard do MFE — verificado via Playwright (badge "MFE :3001", heading "Dashboard" e botão do DS presentes).
-- [x] Network mostra `mf-manifest.json` + chunks de federação (`dashboard.js`, `__federation_expose_Dashboard.js`) vindos de `:3001`.
+- [x] `localhost:3000/` (autenticado) renderiza o Dashboard do MFE — verificado via Playwright (badge "MFE :3002", heading "Dashboard" e botão do DS presentes).
+- [x] Network mostra `mf-manifest.json` + chunks de federação (`dashboard.js`, `__federation_expose_Dashboard.js`) vindos de `:3002`.
 - [x] **Um único** React — zero erros de console/page e nenhum "Invalid hook call"; os componentes do DS renderizam (React singleton OK).
 - [x] `npm run build -w @bytebank/shell` passa (`/` sai como rota estática; `tsc --noEmit` e ESLint limpos).
-- [x] Derrubar o MFE (`:3001`) mostra o fallback gracioso — card "Dashboard indisponível" via `MFErrorBoundary` dentro do AppShell, não tela branca.
+- [x] Derrubar o MFE (`:3002`) mostra o fallback gracioso — card "Dashboard indisponível" via `MFErrorBoundary` dentro do AppShell, não tela branca.
 
 ---
 

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useTransition } from 'react';
 import type { LoginFormFields } from '@bytebank/design-system';
@@ -43,12 +42,20 @@ export function LoginPageClient({
     <main className="min-h-dvh flex items-center justify-center bg-white px-md py-xl">
       <section className="w-full max-w-[28rem] lg:grid lg:max-w-[72rem] lg:grid-cols-[minmax(0,1fr)_1px_minmax(22rem,1fr)] lg:items-center lg:gap-3xl">
         <div className="mb-lg flex flex-col items-center text-center lg:mb-0">
-          <Image
+          <link
+            rel="preload"
+            as="image"
+            href="/login.svg"
+            type="image/svg+xml"
+            fetchPriority="high"
+          />
+          <img
             src="/login.svg"
             alt=""
             width={360}
             height={280}
-            priority
+            fetchPriority="high"
+            decoding="async"
             className="mb-md h-auto w-full max-w-[22rem] lg:mb-0 lg:max-w-3/4"
           />
           <h1 className="text-2xl font-bold text-content-primary lg:hidden">Login</h1>

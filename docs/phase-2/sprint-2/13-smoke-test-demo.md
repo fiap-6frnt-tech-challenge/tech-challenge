@@ -44,7 +44,7 @@ Validação final em ambiente limpo de que o shell carrega o `dashboard-mfe` fed
    npm run db:migrate -w @bytebank/shell
    npm run db:seed -w @bytebank/shell      # 6+ meses de histórico
    ```
-4. **Subir tudo** (shell `:3000` + dashboard-mfe `:3001`):
+4. **Subir tudo** (shell `:3000` + dashboard-mfe `:3002`):
    ```bash
    npm run dev
    ```
@@ -56,7 +56,7 @@ Validação final em ambiente limpo de que o shell carrega o `dashboard-mfe` fed
 ### Dashboard / MFE
 
 - [ ] `localhost:3000/` (autenticado) renderiza o `dashboard-mfe` federado.
-- [ ] DevTools → Network mostra `remoteEntry.js`/`mf-manifest.json` carregado de `:3001`.
+- [ ] DevTools → Network mostra `remoteEntry.js`/`mf-manifest.json` carregado de `:3002`.
 - [ ] 4 KPIs corretos com delta vs mês anterior; BarChart, LineChart e PieChart com dados reais.
 - [ ] `GET /api/transactions/summary` agrega no servidor e filtra por usuário.
 - [ ] Charts têm `role="img"` + `aria-label`; navegação por teclado OK.
