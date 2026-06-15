@@ -17,7 +17,7 @@
 | **dev2-backend**      | **Backend & Auth**   | NextAuth, API Routes, persistência (KV/Postgres), Vercel Blob | Node, REST, DB, OAuth flows                |
 | **dev3-ds**           | **Design System**    | Componentes DS, Storybook, Chromatic, A11y, tokens            | React, Tailwind v4, ARIA, WCAG             |
 | **dev4-dashboard**    | **Dashboard MFE**    | dashboard-mfe, charts, agregações, KPIs                       | React, data viz, Recharts                  |
-| **dev5-transactions** | **Transactions MFE** | transactions-mfe, filtros, busca, scroll infinito, anexos     | React, UX patterns, forms, RHF             |
+| **dev5-transactions** | **Transactions MFE** | transactions-mfe, filtros, busca, paginação, anexos           | React, UX patterns, forms, RHF             |
 
 **Princípios:**
 
@@ -110,41 +110,41 @@
 - Dev 3 (Tasks 7 e 10) espera Dev 1 entregar o summary endpoint (Task 1, ~dia 2) e Dev 2 entregar os charts. Mitigação: Dev 2 entrega **1 chart/dia** e Dev 3 integra incrementalmente.
 - As correções de Auth (cadastro, logout, estado) convergem na Task 9, que depende de Tasks 2 (Dev 1), 4 (Dev 2) e 6 (Dev 3) — pair entre Dev 2 e Dev 3 recomendado.
 - Dev 1 faz o SSR (Task 11) só após a integração do dashboard (Task 10, ~dia 10) — usa o tempo anterior para enriquecer o seed e preparar Docker.
-- Com apenas 3 devs, o setup do `apps/transactions-mfe` e a pesquisa de cursor pagination saem do Sprint 2 e voltam para o início do Sprint 3.
+- Com apenas 3 devs, o setup do `apps/transactions-mfe` e a evolução da paginação no banco (LIMIT/OFFSET + filtros) saem do Sprint 2 e voltam para o início do Sprint 3.
 
 ---
 
 ## Sprint 3 — Transactions MFE + Enhancements (14 dias)
 
-| Tarefa                                                       | Owner             | Dias | Depende de                       |
-| ------------------------------------------------------------ | ----------------- | ---- | -------------------------------- |
-| Criar `apps/transactions-mfe` + MF config                    | dev5-transactions | 1    | Sprint 2 setup já feito          |
-| Mover features de transação para o MFE                       | dev5-transactions | 1    | dashboard-mfe pattern            |
-| Backend: cursor pagination em `/api/transactions`            | dev2-backend      | 1    | —                                |
-| Backend: Vercel Blob storage + endpoints anexos              | dev2-backend      | 2    | token Blob configurado           |
-| Backend: interface `StorageProvider` + impl                  | dev2-backend      | 0.5  | endpoints anexos                 |
-| Categorias: lista padrão + `suggestCategory` (pura) + Vitest | dev4-dashboard    | 1    | —                                |
-| DS: `SearchInput` + Storybook                                | dev3-ds           | 0.5  | —                                |
-| DS: `RangeInput` + Storybook                                 | dev3-ds           | 0.5  | —                                |
-| DS: `MultiSelect` + Storybook                                | dev3-ds           | 1.5  | —                                |
-| DS: `CategorySelect` + Storybook                             | dev3-ds           | 1    | —                                |
-| DS: `FileUpload` + Storybook                                 | dev3-ds           | 1.5  | —                                |
-| DS: `AttachmentList` + Storybook                             | dev3-ds           | 0.5  | —                                |
-| Integração: filtros avançados em `TransactionFilters`        | dev5-transactions | 2    | DS filter components             |
-| Integração: scroll infinito com `useInfiniteQuery`           | dev5-transactions | 1.5  | cursor pagination (dev2-backend) |
-| Integração: `CategorySelect` em `TransactionForm` + sugestão | dev5-transactions | 1    | suggestCategory + CategorySelect |
-| Integração: `FileUpload` + `AttachmentList` em forms         | dev5-transactions | 1.5  | FileUpload + endpoints anexos    |
-| Validação Zod avançada no schema                             | dev4-dashboard    | 0.5  | schema base                      |
-| Infra: env var Blob token + CORS                             | dev1-infra        | 0.5  | —                                |
-| Tests E2E exploratórios + DS interactions                    | dev1-infra        | 1    | features prontas                 |
-| Smoke test + vídeo 4 min                                     | Todo time         | 0.5  | tudo                             |
+| Tarefa                                                        | Owner             | Dias | Depende de                       |
+| ------------------------------------------------------------- | ----------------- | ---- | -------------------------------- |
+| Criar `apps/transactions-mfe` + MF config                     | dev5-transactions | 1    | Sprint 2 setup já feito          |
+| Mover features de transação para o MFE                        | dev5-transactions | 1    | dashboard-mfe pattern            |
+| Backend: paginação no banco + filtros em `/api/transactions`  | dev2-backend      | 1    | —                                |
+| Backend: Vercel Blob storage + endpoints anexos               | dev2-backend      | 2    | token Blob configurado           |
+| Backend: interface `StorageProvider` + impl                   | dev2-backend      | 0.5  | endpoints anexos                 |
+| Categorias: lista padrão + `suggestCategory` (pura) + Vitest  | dev4-dashboard    | 1    | —                                |
+| DS: `SearchInput` + Storybook                                 | dev3-ds           | 0.5  | —                                |
+| DS: `RangeInput` + Storybook                                  | dev3-ds           | 0.5  | —                                |
+| DS: `MultiSelect` + Storybook                                 | dev3-ds           | 1.5  | —                                |
+| DS: `CategorySelect` + Storybook                              | dev3-ds           | 1    | —                                |
+| DS: `FileUpload` + Storybook                                  | dev3-ds           | 1.5  | —                                |
+| DS: `AttachmentList` + Storybook                              | dev3-ds           | 0.5  | —                                |
+| Integração: filtros avançados em `TransactionFilters`         | dev5-transactions | 2    | DS filter components             |
+| Integração: paginação na lista com `usePaginatedTransactions` | dev5-transactions | 1    | paginação backend (dev2-backend) |
+| Integração: `CategorySelect` em `TransactionForm` + sugestão  | dev5-transactions | 1    | suggestCategory + CategorySelect |
+| Integração: `FileUpload` + `AttachmentList` em forms          | dev5-transactions | 1.5  | FileUpload + endpoints anexos    |
+| Validação Zod avançada no schema                              | dev4-dashboard    | 0.5  | schema base                      |
+| Infra: env var Blob token + CORS                              | dev1-infra        | 0.5  | —                                |
+| Tests E2E exploratórios + DS interactions                     | dev1-infra        | 1    | features prontas                 |
+| Smoke test + vídeo 4 min                                      | Todo time         | 0.5  | tudo                             |
 
 **Capacidade:** 70 dev-days. Alocados: ~21. dev5-transactions é o mais carregado (~8 dias) por ser o integrador. Compensação: dev3-ds entrega DS rápido nos primeiros 5 dias; dev2-backend entrega backend cedo.
 
 **Deps críticas:**
 
-- dev5-transactions depende fortemente de dev3-ds (todos componentes DS) e dev2-backend (endpoints + cursor pagination)
-- **Mitigação:** dev3-ds prioriza SearchInput → RangeInput → MultiSelect → CategorySelect → FileUpload → AttachmentList nessa ordem (mais usados primeiro). dev2-backend entrega cursor pagination no dia 2 e Blob no dia 5
+- dev5-transactions depende fortemente de dev3-ds (todos componentes DS) e dev2-backend (endpoints + paginação no banco)
+- **Mitigação:** dev3-ds prioriza SearchInput → RangeInput → MultiSelect → CategorySelect → FileUpload → AttachmentList nessa ordem (mais usados primeiro). dev2-backend entrega a paginação + filtros no dia 2 e Blob no dia 5
 - dev5-transactions começa o sprint integrando componentes existentes; à medida que dev3-ds libera novos, dev5-transactions progride
 
 ---
