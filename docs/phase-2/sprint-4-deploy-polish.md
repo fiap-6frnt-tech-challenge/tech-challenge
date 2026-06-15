@@ -111,7 +111,7 @@
   - Tabela alternativa oculta visualmente (`<table class="sr-only">`) com mesmos dados
 - [ ] Modais: focus trap (já existe via `useFocusTrap`), Escape fecha, `aria-modal="true"`, `aria-labelledby`
 - [ ] Forms: labels associadas via `htmlFor`, erros com `role="alert"` ou `aria-describedby`
-- [ ] Listas longas (transactions): `aria-live="polite"` anuncia novos itens carregados via infinite scroll
+- [ ] Paginação (transactions): `nav` com `aria-label`, página atual com `aria-current="page"`, controles operáveis por teclado; `aria-busy` durante a troca de página
 - [ ] Contraste: validar todos pares fg/bg do DS (token check)
 - [ ] Navegação por teclado E2E: percorrer todo app só com Tab/Enter/Esc
 
@@ -202,7 +202,7 @@
 
 - [ ] `apps/shell/README.md`: propósito, scripts, env vars, rotas API, Proxy de auth
 - [ ] `apps/dashboard-mfe/README.md`: o que expõe, como consome dados, charts
-- [ ] `apps/transactions-mfe/README.md`: o que expõe, features (busca, scroll, categorias, anexos)
+- [ ] `apps/transactions-mfe/README.md`: o que expõe, features (busca, filtros, paginação, categorias, anexos)
 - [ ] `packages/design-system/README.md`: componentes disponíveis, tokens, como adicionar novos
 - [ ] `packages/api-client/README.md`: hooks exportados
 - [ ] `packages/stores/README.md`: stores e quando usar cada
@@ -216,7 +216,7 @@
   1. (0:00–0:30) Intro: Bytebank, Fase 2, time
   2. (0:30–1:30) Login Google → home com dashboard
   3. (1:30–2:30) Tour pelos widgets (KPIs, charts, lista recente)
-  4. (2:30–3:30) `/transactions`: busca textual, filtros, scroll infinito
+  4. (2:30–3:30) `/transactions`: busca textual, filtros, paginação (`page` na URL)
   5. (3:30–4:30) Criar transação → categoria sugerida → anexar PDF
   6. (4:30–5:00) Mostrar DevTools Network → MFEs federados carregados
   7. (5:00–5:30) Storybook + Chromatic publish
@@ -243,7 +243,7 @@
 ### Spec compliance
 
 - [x] **Home com gráficos e análise financeira** ✓ (Sprint 2)
-- [x] **Filtros avançados + busca + scroll infinito** ✓ (Sprint 3)
+- [x] **Filtros avançados + busca + paginação** ✓ (Sprint 3)
 - [x] **Validação avançada + sugestão de categorias + anexos** ✓ (Sprint 3)
 - [x] **Docker + docker-compose** ✓ (esta sprint)
 - [x] **Cloud deploy + auth/autorização** ✓ (Sprint 1 + esta)

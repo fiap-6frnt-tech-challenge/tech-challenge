@@ -1,267 +1,120 @@
 # Sprint 3 — Transactions MFE + Enhancements
 
 **Duração:** 14 dias · 2026-06-17 → 2026-06-30
-**Objetivo:** Segundo MFE federado em produção: `transactions-mfe` com busca textual, filtros avançados, scroll infinito, categorias com sugestão automática e upload de anexos.
+**Time:** 3 desenvolvedores — Dev 1 (Infra & Backend) · Dev 2 (DS & UI Pages) · Dev 3 (State & Integration)
+**Objetivo:** Segundo MFE federado em produção — `transactions-mfe` com busca textual, filtros avançados, paginação no servidor, sugestão automática de categorias e upload de anexos.
 
 > Voltar para o [PLAN.md](./PLAN.md) · Anterior: [sprint-2](./sprint-2-dashboard.md) · Próximo: [sprint-4](./sprint-4-deploy-polish.md)
+> **Tasks detalhadas (1 arquivo por task):** [sprint-3/README.md](./sprint-3/README.md)
 > **Alocação de tarefas por dev:** [team-allocation.md#sprint-3](./team-allocation.md#sprint-3--transactions-mfe--enhancements-14-dias)
+
+---
+
+## Paginação vs Scroll Infinito
+
+O desafio (Fase 2 — _Listagem de Transações_) pede **"paginação OU scroll infinito"** para "otimizar o carregamento de grandes volumes de dados" — os dois cumprem o escopo. A Sprint 3 adota **paginação**. Racional:
+
+- **Já existe e funciona:** `usePaginatedTransactions` (TanStack Query) + `<Pagination>` do DS + `page` na URL já estão em produção no shell ([apps/shell/src/app/transactions/page.tsx](../../apps/shell/src/app/transactions/page.tsx)). Reusar reduz risco no caminho crítico (Dev 3 é o integrador).
+- **Acessibilidade (vale nota):** controles de paginação são navegáveis por teclado e anunciáveis por leitor de tela (`aria-current`, `aria-label`), sem os problemas conhecidos de foco/anúncio do scroll infinito.
+- **Performance/grandes volumes:** o ganho real exigido pelo desafio vem de paginar **no banco** (Task 01: `LIMIT`/`OFFSET`+`COUNT` via Drizzle) em vez de carregar tudo em memória — independente de a UI ser página ou scroll.
+- **SSR/SEO e deep-link:** `page` na URL é compartilhável, recarregável (F5) e compatível com SSR — alinhado ao requisito de SSR/performance da Fase 2.
+
+> Esta decisão substitui o plano anterior de scroll infinito (cursor pagination + `useInfiniteQuery` + `IntersectionObserver`). O escopo do desafio permanece coberto; mudamos apenas **o nosso planejamento**, que é livre.
 
 ---
 
 ## Pré-requisitos
 
-- [ ] Sprint 2 fechado (dashboard-mfe em produção)
-- [ ] Vercel Blob token configurado (`BLOB_READ_WRITE_TOKEN`)
-- [ ] Schema da transação tem `category` e `attachments` (Sprint 1)
+- [x] Sprint 2 fechada (dashboard-mfe em produção, auth completo)
+- [x] `apps/dashboard-mfe` como referência de padrão Rsbuild + Module Federation
+- [ ] `BLOB_READ_WRITE_TOKEN` configurado no ambiente Vercel (necessário para Task 02)
+- [x] Schema da transação tem `category` e `attachments` (Sprint 1)
 
 ---
 
-## Tasks
+## Trilhas e alocação (3 devs)
 
-### 1. Criar apps/transactions-mfe (1 dia · **dev5-transactions**)
+| Dev       | Tasks                                                                                                                                                                  | Esforço   |
+| :-------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------- |
+| **Dev 1** | 01 (Paginação+Filtros backend) · 02 (Blob Storage) · 03 (suggestCategory) · 17 (Infra/CORS) · 18 (testes) · 19 (smoke)                                                 | ~5.5 dias |
+| **Dev 2** | 04 (SearchInput+RangeInput) · 05 (MultiSelect) · 06 (CategorySelect) · 07 (FileUpload) · 08 (AttachmentList) · 16 (Zod) · 18 (testes) · 19 (smoke)                     | ~6 dias   |
+| **Dev 3** | 09 (criar MFE) · 10 (mover features) · 11 (hook paginado+filtros) · 12 (filtros) · 13 (paginação) · 14 (categorias form) · 15 (anexos form) · 18 (testes) · 19 (smoke) | ~8.5 dias |
 
-- [ ] `npm create rsbuild@latest apps/transactions-mfe` (template React-ts) — espelha setup do `dashboard-mfe`
-- [ ] Configurar `rsbuild.config.ts` com `@module-federation/enhanced`:
-  - Expor: `./TransactionsPage` → `./src/TransactionsPage.tsx`
-  - Expor: `./AccountOverview` → `./src/components/AccountOverview.tsx` (widget da home: saldo + últimas transações + atalhos — ver Task 2)
-  - Shared singletons: `react`, `react-dom`, `@bytebank/design-system`, `@bytebank/shared`, `@bytebank/stores`, `@bytebank/api-client`
-  - Dev server `:3003` (⚠️ `:3002` passou a ser do `dashboard-mfe` — ver [Sprint 2](./sprint-2-dashboard.md))
-- [ ] Workspace deps no package.json
-- [ ] `TransactionsPage.tsx` skeleton inicial: simplesmente importa e renderiza versão atual da página (mover de `apps/shell/src/app/transactions/page.tsx` + componentes correlatos)
+**Capacidade:** 42 dev-days. Alocados ~19.5 → buffer para imprevistos, code review e pair. Dev 1 (folgado a partir do dia 5) apoia Dev 3 na integração dos filtros no backend e adianta setup de Docker da Sprint 4.
 
-> **Fallback opção D:** se Sprint 0 acionou D, criar como `packages/transactions-mfe/` workspace package.
+---
 
-**Aceite:** `localhost:3000/transactions` carrega versão pré-Sprint 3 via MFE federado.
+## Tasks (ordem de execução — paralelas primeiro)
 
-### 2. Mover features de transação para o MFE (1 dia · **dev5-transactions**)
+> Detalhe completo, snippets e gotchas em [sprint-3/](./sprint-3/). As tasks 01–10 **não têm dependência interna** e começam no dia 1; 11–19 dependem das anteriores.
 
-- [ ] `git mv apps/shell/src/components/features/TransactionFilters apps/transactions-mfe/src/components/`
-- [ ] `git mv apps/shell/src/components/features/TransactionList apps/transactions-mfe/src/components/`
-- [ ] `git mv apps/shell/src/components/features/TransactionItem apps/transactions-mfe/src/components/`
-- [ ] `git mv apps/shell/src/components/features/TransactionForm apps/transactions-mfe/src/components/`
-- [ ] `git mv apps/shell/src/components/features/EditTransactionModal apps/transactions-mfe/src/components/`
-- [ ] `git mv apps/shell/src/components/features/DeleteTransactionModal apps/transactions-mfe/src/components/`
-- [ ] `git mv apps/shell/src/components/features/NewTransaction apps/transactions-mfe/src/components/`
-- [ ] `git mv apps/shell/src/components/features/ConfirmTransactionModal apps/transactions-mfe/src/components/`
-- [ ] Atualizar imports
-- [ ] Decisão: `NewTransaction` modal continua disponível no shell? → expor via slot ou event bus, ou ser invocado de qualquer página
-- [ ] **`AccountOverview` (widget da home — saldo + últimas transações + atalho "nova transação"):** hoje vive em `apps/shell/src/components/features/AccountOverview.tsx` e importa `TransactionList` + `NewTransactionModal`, que **saem do shell nesta task** → o import quebra. Mover a lógica para o MFE e expor como módulo federado (`./AccountOverview`, ver Task 1); o shell passa a montá-lo via federação na home.
+### Paralelas (dia 1)
 
-> ⚠️ **Lembrete de fronteira MFE:** a composição da home (card boas-vindas/saldo + últimas transações + atalho "nova transação") é **requisito da Fase 1** e **permanece na home `/`** — não migra para `/transactions` nem entra no `dashboard-mfe`. Mas a **lógica é do domínio de transações**: o `transactions-mfe` deve **expor** um `./AccountOverview` (saldo + últimas transações + atalhos) que o shell **monta na home** via federação (`loadRemote`/`dynamic`), espelhando o [`DashboardRemote`](../../apps/shell/src/components/DashboardRemote.tsx). **Consumir via federação, nunca reimportar o source no shell** — reimportar recria acoplamento build-time e enfraquece o requisito de "desenvolvimento/deploy isolado" de microfrontends do desafio.
+1. **Backend: Paginação no banco + Filtros avançados em `/api/transactions`** (1d · Dev 1) — Mover paginação/filtragem/ordenação para o banco (Drizzle: `WHERE`+`LIMIT`/`OFFSET`+`COUNT`) e adicionar `q`, `amount_gte/lte`, `category[]`; manter contrato `{ data, pages, items }`. → [01](./sprint-3/01-backend-pagination-filters.md)
+2. **Backend: Vercel Blob Storage + Endpoints de Anexos** (2d · Dev 1) — `StorageProvider` interface + `VercelBlobStorageProvider`, rotas `POST/GET/DELETE /api/transactions/[id]/attachments`. → [02](./sprint-3/02-backend-blob-storage.md)
+3. **Shared: Categorias + `suggestCategory` pura** (1d · Dev 1, começa dia 2) — `CATEGORIES` em `packages/shared`, função pura `suggestCategory(description)`, ≥20 casos Vitest. → [03](./sprint-3/03-shared-categories-suggest.md)
+4. **DS: `SearchInput` + `RangeInput`** (1d · Dev 2) — `SearchInput` com debounce+clear+`aria-live`, `RangeInput` (min/max currency). Stories em todos os estados. → [04](./sprint-3/04-ds-search-range-inputs.md)
+5. **DS: `MultiSelect`** (1.5d · Dev 2) — Combobox multi-seleção com pills removíveis, keyboard nav (Enter/Backspace/Esc), searchable. → [05](./sprint-3/05-ds-multiselect.md)
+6. **DS: `CategorySelect`** (1d · Dev 2) — Combobox com badge "Sugerido" para `suggestedCategory`, keyboard nav. → [06](./sprint-3/06-ds-category-select.md)
+7. **DS: `FileUpload`** (1.5d · Dev 2) — Drag-and-drop + click, preview thumbnails/ícone PDF, progresso por arquivo, a11y completo. → [07](./sprint-3/07-ds-file-upload.md)
+8. **DS: `AttachmentList`** (0.5d · Dev 2) — Lista vertical com thumbnail, tamanho, link e botão remover; modo readonly. → [08](./sprint-3/08-ds-attachment-list.md)
+9. **Criar `apps/transactions-mfe`** (1d · Dev 3) — Rsbuild + `@module-federation/enhanced` expondo `./TransactionsPage` e `./AccountOverview`, porta `:3003`. → [09](./sprint-3/09-create-transactions-mfe.md)
+10. **Mover features + Shell wiring** (1.5d · Dev 3) — `git mv` de todos os componentes de transação para o MFE; shell consome `./TransactionsPage` via `loadRemote` em `/transactions` e `./AccountOverview` na home. → [10](./sprint-3/10-move-features-shell-wiring.md)
 
-**Aceite:** features de transação vivem em `apps/transactions-mfe/`; shell apenas roteia.
+### Dependentes
 
-### 3. Filtros avançados (2 dias · **dev3-ds** [componentes DS] + **dev5-transactions** [integração] + **dev2-backend** [endpoints filtros])
-
-#### 3a. Busca textual com debounce
-
-- [ ] Novo componente DS `SearchInput`:
-  - Props: `value`, `onValueChange`, `placeholder`, `onClear`, `debounceMs?` (default 300)
-  - Ícone de lupa à esquerda, X para limpar à direita
-  - Anuncia resultados via `aria-live="polite"` (count de resultados)
-  - Stories: empty / filled / loading / disabled
-- [ ] Integrar em `TransactionFilters` — substitui filtro por descrição
-- [ ] Backend `/api/transactions?q=...` faz match LIKE/ILIKE na `description`
-
-#### 3b. Range de valor (min/max)
-
-- [ ] Novo componente DS `RangeInput`:
-  - Dois `CurrencyInput` lado a lado com label "De" e "Até"
-  - Validação: `min <= max`
-  - Stories: empty / filled / invalid range
-- [ ] Backend aceita `amount_gte` e `amount_lte`
-
-#### 3c. Multi-select de categorias
-
-- [ ] Novo componente DS `MultiSelect`:
-  - Props: `options`, `value: string[]`, `onChange`, `placeholder`, `searchable`
-  - Pills para selecionados, removíveis
-  - Keyboard nav: Enter seleciona, Backspace remove
-  - Stories: empty / 1-selected / many-selected / searchable / disabled
-- [ ] Integrar em `TransactionFilters`
-- [ ] Backend aceita `category=X&category=Y` (múltiplos params)
-
-#### 3d. Filtros existentes mantidos
-
-- [ ] Type, dateFrom, dateTo continuam funcionando
-- [ ] Botão "Limpar filtros" reseta todos
-- [ ] URL query params sincronizados (já existe via `useTransactionFilters`)
-
-**Aceite:** busca por "uber" filtra apenas transações com "uber" na description, com debounce 300ms; range de valor filtra; multi-select de categorias filtra.
-
-### 4. Scroll infinito (2 dias · **dev5-transactions** [client] + **dev2-backend** [cursor pagination])
-
-- [ ] Backend `/api/transactions` aceita cursor: `?cursor=<id>&limit=20` (além de page-based — manter compat)
-- [ ] Resposta inclui `nextCursor: string | null`
-- [ ] No `api-client`, `useInfiniteTransactions(filters)` usa `useInfiniteQuery`:
-  ```ts
-  getNextPageParam: (last) => last.nextCursor ?? undefined;
-  ```
-- [ ] Componente `TransactionList` (no MFE) detecta scroll via `IntersectionObserver`:
-  - Sentinel `<div ref={loadMoreRef} />` no final
-  - Quando visível e `hasNextPage`, chama `fetchNextPage()`
-- [ ] Indicador de loading inline na sentinel
-- [ ] Empty state e error state continuam funcionando
-- [ ] **Manter `Pagination` component no DS** (ainda usado em casos de listas curtas)
-
-**Aceite:** rolar a lista carrega +20 itens automaticamente; mudar filtros reseta a sequência; em mobile e desktop.
-
-### 5. Categorias com sugestão automática (3 dias · **dev4-dashboard** [lista + suggestCategory] + **dev3-ds** [CategorySelect] + **dev5-transactions** [integração no form])
-
-#### 5a. Lista padrão
-
-- [ ] `packages/shared/src/categories.ts`:
-  ```ts
-  export const CATEGORIES = [
-    {
-      id: 'food',
-      label: 'Alimentação',
-      keywords: ['restaurante', 'pizza', 'mercado', 'ifood', 'lanche'],
-    },
-    {
-      id: 'transport',
-      label: 'Transporte',
-      keywords: ['uber', '99', 'metrô', 'ônibus', 'combustível', 'gasolina'],
-    },
-    { id: 'leisure', label: 'Lazer', keywords: ['cinema', 'netflix', 'spotify', 'show', 'jogo'] },
-    { id: 'health', label: 'Saúde', keywords: ['farmácia', 'médico', 'consulta', 'remédio'] },
-    { id: 'education', label: 'Educação', keywords: ['curso', 'livro', 'faculdade'] },
-    {
-      id: 'housing',
-      label: 'Moradia',
-      keywords: ['aluguel', 'condomínio', 'luz', 'água', 'internet'],
-    },
-    { id: 'salary', label: 'Salário', keywords: ['salário', 'pagamento', 'pix recebido'] },
-    { id: 'transfer', label: 'Transferência', keywords: ['transferência', 'pix'] },
-    { id: 'other', label: 'Outros', keywords: [] },
-  ] as const;
-  ```
-- [ ] Tipo `Category = typeof CATEGORIES[number]['id']`
-
-#### 5b. Função pura `suggestCategory`
-
-- [ ] `packages/shared/src/lib/suggestCategory.ts`:
-  ```ts
-  export function suggestCategory(description: string): Category | null;
-  ```
-- [ ] Normaliza description (lowercase, sem acentos), faz match por keyword com prioridade
-- [ ] Testes Vitest exaustivos: "Uber Trip" → 'transport', "Compra mercado" → 'food', "" → null, edge cases
-
-#### 5c. Componente DS `CategorySelect`
-
-- [ ] Combobox autocomplete: usuário pode digitar, ver opções filtradas, ou aceitar sugestão
-- [ ] Prop `suggestedCategory?: Category` destaca opção com badge "Sugerido"
-- [ ] Mantém `value` controlado
-- [ ] Keyboard nav: setas, Enter, Esc
-- [ ] Stories: empty / com sugestão / selecionado / disabled / error
-
-#### 5d. Integração no form
-
-- [ ] `TransactionForm` adiciona campo "Categoria" (obrigatório no Zod schema)
-- [ ] `onChange(description)` chama `suggestCategory()` e passa para `<CategorySelect suggestedCategory={...} />`
-- [ ] Usuário pode aceitar (clique/Enter) ou ignorar e escolher outra
-
-**Aceite:** ao digitar "Uber" em description, "Transporte" aparece destacada como sugerida; clicar aplica; cobertura 100% em `suggestCategory`.
-
-### 6. Anexos (3 dias · **dev2-backend** [endpoints + Blob + StorageProvider] + **dev3-ds** [FileUpload, AttachmentList] + **dev5-transactions** [integração nos forms])
-
-#### 6a. Backend
-
-- [ ] `apps/shell/src/app/api/transactions/[id]/attachments/route.ts`:
-  - `POST` — recebe `multipart/form-data`, valida tamanho/tipo, sobe pra Vercel Blob, retorna `Attachment`
-  - `GET` — lista anexos da transação
-- [ ] `apps/shell/src/app/api/transactions/[id]/attachments/[attachmentId]/route.ts`:
-  - `DELETE` — remove do Blob + remove da DB
-- [ ] Interface `StorageProvider`:
-  ```ts
-  interface StorageProvider {
-    upload(file: File, userId: string): Promise<{ url: string; size: number }>;
-    delete(url: string): Promise<void>;
-  }
-  ```
-- [ ] Implementação `VercelBlobStorageProvider` em `apps/shell/src/lib/storage.ts`
-- [ ] Validação: max 5MB, tipos: `image/png`, `image/jpeg`, `image/webp`, `application/pdf`
-- [ ] Auth: só dono da transação pode upload/delete
-
-#### 6b. Componente DS `FileUpload`
-
-- [ ] Drag-and-drop zone + click para abrir picker
-- [ ] Props: `accept`, `maxSize`, `maxFiles`, `value: File[]`, `onChange`, `onError`
-- [ ] Visual feedback: hover, dragging-over, error
-- [ ] Preview thumbnails (imagens) ou ícone (PDF)
-- [ ] Indicador de progresso por arquivo
-- [ ] Stories: empty / dragging / com arquivos / max-exceeded / file-too-large / invalid-type
-- [ ] A11y: anuncia file count, drop area com `role="button"` + keyboard support
-
-#### 6c. Componente DS `AttachmentList`
-
-- [ ] Lista vertical de anexos com: thumbnail/ícone, nome, tamanho formatado, botão remover, link abrir
-- [ ] Modo readonly (sem remover) para visualização
-- [ ] Stories: empty / com items / loading / readonly
-
-#### 6d. Integração no `TransactionForm`
-
-- [ ] Adiciona seção "Anexos (opcional)" com `FileUpload`
-- [ ] Upload progressivo: cada arquivo sobe assim que selecionado; se transação não existe ainda, segura em memória até submit
-- [ ] No edit modal, mostra `AttachmentList` + permite adicionar/remover
-- [ ] Zod schema: `attachments: z.array(attachmentSchema).max(5).optional()`
-
-**Aceite:** upload PDF de 2MB funciona, preview aparece, persiste após F5, delete remove do Blob.
-
-### 7. Validação Zod avançada (0.5 dia · **dev4-dashboard**)
-
-- [ ] Em `packages/shared/src/schemas/transaction.ts`:
-  ```ts
-  export const transactionSchema = z.object({
-    type: z.enum([...]),
-    category: z.string().min(1, 'Categoria é obrigatória'),
-    amount: z.number().positive('Valor deve ser positivo'),
-    date: z.string().refine(d => new Date(d) <= new Date(), 'Data não pode ser futura'),
-    description: z.string().min(3, 'Mínimo 3 caracteres').max(140),
-    attachments: z.array(attachmentSchema).max(5).optional(),
-  });
-  ```
-- [ ] Form usa esse schema via `zodResolver`
-- [ ] Mensagens em pt-BR
-
-**Aceite:** form rejeita descrição com 2 chars; rejeita data futura; aceita até 5 anexos.
-
-### 8. Testes (1.5 dia · **dev1-infra** lidera, donos de cada feature contribuem testes do que entregaram)
-
-- [ ] `suggestCategory` — ≥ 20 casos
-- [ ] `transactionSchema` validação — pos/neg/edge
-- [ ] `useInfiniteTransactions` — mock com 3 páginas, verifica concat
-- [ ] `StorageProvider` (VercelBlob mock) — upload/delete
-- [ ] Storybook interactions: `CategorySelect` com sugestão, `FileUpload` drag
-
-**Aceite:** ≥ 30 testes novos; coverage > 80% em categorias e validações.
+11. **Hook `usePaginatedTransactions` com filtros avançados** (0.5d · Dev 3) — ⬅ Task 01; estender o hook existente (`useQuery`) e o `TransactionService.getPaginated` com `q`, `amount_gte/lte`, `category[]`; manter `placeholderData`. → [11](./sprint-3/11-hook-paginated-transactions.md)
+12. **Integração: Filtros Avançados em `TransactionFilters`** (2d · Dev 3) — ⬅ Tasks 04, 05; `SearchInput` (debounce 300ms), `RangeInput` (amount_gte/lte), `MultiSelect` de categorias; tudo via `useTransactionFilters` → URL params. → [12](./sprint-3/12-integration-filters.md)
+13. **Integração: Paginação na lista do MFE** (1d · Dev 3) — ⬅ Tasks 01, 11, 12; cabear `usePaginatedTransactions` + `<Pagination>` na `TransactionList` do MFE; `page` na URL; mudar filtros reseta para página 1; a11y dos controles. → [13](./sprint-3/13-integration-pagination.md)
+14. **Integração: `CategorySelect` + sugestão no `TransactionForm`** (1d · Dev 3) — ⬅ Tasks 03, 06; campo Categoria obrigatório; `onChange(description)` chama `suggestCategory()` e passa para `<CategorySelect suggestedCategory={...} />`. → [14](./sprint-3/14-integration-category-form.md)
+15. **Integração: `FileUpload` + `AttachmentList` nos forms** (1.5d · Dev 3) — ⬅ Tasks 02, 07, 08; upload progressivo no TransactionForm (new + edit); edit modal exibe `AttachmentList`; delete remove do Blob. → [15](./sprint-3/15-integration-attachments-form.md)
+16. **Validação Zod avançada** (0.5d · Dev 2) — ⬅ Tasks 03, 14 (shape de categoria estabilizado); `category` obrigatório, `date` não-futura, `description` min 3/max 140, `attachments` max 5. Mensagens pt-BR. → [16](./sprint-3/16-zod-validation.md)
+17. **Infra: Env Blob + CORS + verificação cross-origin** (0.5d · Dev 1) — ⬅ Task 02; `BLOB_READ_WRITE_TOKEN` em todos os ambientes, headers CORS corretos nos remotes. → [17](./sprint-3/17-infra-env-cors.md)
+18. **Testes** (1.5d · distribuído) — `suggestCategory` ≥20 casos, `transactionSchema` pos/neg/edge, paginação+filtros no backend, `usePaginatedTransactions` (troca de página + filtros), `StorageProvider` mock, stories interactions `CategorySelect`/`FileUpload`. → [18](./sprint-3/18-tests.md)
+19. **Smoke Test + Vídeo 4 min** (0.5d · Todos). → [19](./sprint-3/19-smoke-test-demo.md)
 
 ---
 
 ## Critério de aceite do sprint
 
-- [x] `/transactions` carrega `transactions-mfe` federado em runtime
-- [x] Busca textual com debounce 300ms funciona
-- [x] Range de valor + multi-select de categorias filtra corretamente
-- [x] Scroll infinito carrega +20 por página
-- [x] Categoria sugerida ao digitar description (mínimo 5 mappings funcionais)
-- [x] Upload de PDF/imagem (≤5MB) funciona; preview; delete; persistência
-- [x] Validação Zod cobre todos campos com mensagens pt-BR
-- [x] 5 novos componentes DS (SearchInput, RangeInput, MultiSelect, CategorySelect, FileUpload, AttachmentList) publicados no Chromatic
-- [x] ≥ 30 novos testes; coverage > 80% em features novas
-- [x] Vercel preview com shell + 2 MFEs verde
+### Transactions MFE
+
+- [ ] `/transactions` carrega `transactions-mfe` federado em runtime; Network mostra `remoteEntry.js`
+- [ ] `AccountOverview` na home (`/`) vem do `transactions-mfe` via federação (não reimportado do shell)
+- [ ] Busca textual com debounce 300ms filtra por description
+- [ ] Range de valor (min/max) filtra corretamente
+- [ ] Multi-select de categorias filtra (múltiplos params `category=X&category=Y`)
+- [ ] Lista paginada no servidor: navegar entre páginas carrega só a página atual (Network: `?_page=N`); `page` persiste na URL (F5 mantém); mudar filtros reseta para a página 1
+- [ ] Ao digitar "Uber" em description, "Transporte" aparece como sugerida; aceitar aplica
+- [ ] Upload PDF/imagem ≤5MB funciona; preview aparece; persiste após F5; delete remove do Blob
+- [ ] Validação Zod: descrição <3 chars rejeitada; data futura rejeitada; até 5 anexos aceitos
+
+### Design System
+
+- [ ] 6 novos componentes DS (`SearchInput`, `RangeInput`, `MultiSelect`, `CategorySelect`, `FileUpload`, `AttachmentList`) publicados no Chromatic
+- [ ] A11y: `aria-live` em SearchInput, `role="button"` + keyboard em FileUpload
+
+### Qualidade
+
+- [ ] ≥30 novos testes; `suggestCategory` 100% coverage
+- [ ] `npx turbo run test` verde
+- [ ] Vercel preview de shell + 2 MFEs verde
+
+---
 
 ## Riscos do sprint
 
-| Risco                                                | Mitigação                                                                                                     |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Vercel Blob 1GB free tier estoura em testes          | Cleanup automático de anexos órfãos a cada deploy preview                                                     |
-| Backend não retorna nextCursor correto               | Testes de integração ANTES de cabear no front                                                                 |
-| FileUpload + arrastar arquivo gigante quebra browser | Validação client-side ANTES de iniciar upload                                                                 |
-| `suggestCategory` muito agressiva (sugere errado)    | Heurística conservadora (match exato em keywords); só sugere com confiança                                    |
-| Scope explode (anexos + categorias + scroll + busca) | Priorização: anexos > categorias > busca > scroll infinito. Se atrasar, scroll infinito vira pagination ainda |
+| Risco                                                                  | Mitigação                                                                                                                                                        |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dev 3 é o integrador e está no caminho crítico de quase tudo           | Dev 1 (folgado após dia 5) apoia filtros no backend e testa endpoints; Dev 2 entrega DS na ordem de prioridade de consumo                                        |
+| Vercel Blob 1GB free tier estoura em testes                            | Cleanup automático de anexos órfãos a cada deploy preview                                                                                                        |
+| `remoteEntry.js` 404 / CORS no `transactions-mfe`                      | Espelhar exatamente o setup do `dashboard-mfe`; CORS em Task 17                                                                                                  |
+| `pages`/`items` errados quando há filtros (COUNT desalinhado do WHERE) | Testes de integração no backend ANTES de cabear no front; COUNT reusa o mesmo `WHERE` da página                                                                  |
+| `FileUpload` drag + arquivo gigante quebra browser                     | Validação client-side de tamanho ANTES de iniciar upload                                                                                                         |
+| `suggestCategory` muito agressiva                                      | Heurística conservadora (match de substring exato em keywords); só sugere com alta confiança                                                                     |
+| Scope explode                                                          | Priorizar: MFE > filtros > paginação > categorias > anexos. A paginação reusa o `<Pagination>` e o `usePaginatedTransactions` já existentes, então é baixo risco |
 
 ## Definição de Pronto
 
-- PRs: CI verde + 1 revisor + Chromatic + testes acompanhando
-- Sprint encerra com vídeo (4 min): busca → filtro categoria → criar transação "Uber" → ver categoria sugerida → anexar comprovante PDF → scroll infinito demonstrado
+- Cada PR: CI verde + 1 revisor + (se tocar DS) Chromatic aprovado + testes acompanhando
+- Sprint encerra com vídeo 4 min: busca → filtro categoria → criar transação "Uber Trip" → ver sugestão "Transporte" → anexar PDF → navegação por páginas demonstrada (com `page` na URL)

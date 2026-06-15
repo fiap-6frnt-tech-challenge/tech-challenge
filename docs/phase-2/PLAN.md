@@ -10,7 +10,7 @@
 > - [sprint-0-foundation.md](./sprint-0-foundation.md) — Monorepo + DS + PoC MF (dias 1-7)
 > - [sprint-1-auth-state.md](./sprint-1-auth-state.md) — Auth + State + Persistência (dias 8-21)
 > - [sprint-2-dashboard.md](./sprint-2-dashboard.md) — Dashboard MFE + Charts (dias 22-35)
-> - [sprint-3-transactions.md](./sprint-3-transactions.md) — Transactions MFE + busca/scroll/categorias/anexos (dias 36-49)
+> - [sprint-3-transactions.md](./sprint-3-transactions.md) — Transactions MFE + busca/paginação/categorias/anexos (dias 36-49)
 > - [sprint-4-deploy-polish.md](./sprint-4-deploy-polish.md) — Docker + Deploy + A11y + Demo (dias 50-60)
 
 ---
@@ -182,22 +182,22 @@ gh pr create --base phase-2 --title "feat(ds): LoginForm component"
 
 ## Riscos & mitigações
 
-| Risco                                         | Mitigação                                                              |
-| --------------------------------------------- | ---------------------------------------------------------------------- |
-| PoC Rsbuild MF + Next 16 falha                | Gate dia 5 + fallback automático para opção D (build-time packages)    |
-| Vercel KV/Blob limites no free tier           | Documentar; cleanup script de anexos órfãos                            |
-| Time não conhece Redux Toolkit/TanStack Query | Spike 1 dia no Sprint 1 antes de migrar                                |
-| Singletons React quebram em runtime           | `singleton: true, strictVersion: true` + E2E "session presente em MFE" |
-| Recharts hydration warnings                   | `dynamic(..., { ssr: false })` em todos charts                         |
-| Categoria sugestão erra                       | Heurística keyword + override manual + testes                          |
-| Scope creep no S3                             | Priorizar anexos+categorias; dropar scroll infinito se necessário      |
+| Risco                                         | Mitigação                                                                                             |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| PoC Rsbuild MF + Next 16 falha                | Gate dia 5 + fallback automático para opção D (build-time packages)                                   |
+| Vercel KV/Blob limites no free tier           | Documentar; cleanup script de anexos órfãos                                                           |
+| Time não conhece Redux Toolkit/TanStack Query | Spike 1 dia no Sprint 1 antes de migrar                                                               |
+| Singletons React quebram em runtime           | `singleton: true, strictVersion: true` + E2E "session presente em MFE"                                |
+| Recharts hydration warnings                   | `dynamic(..., { ssr: false })` em todos charts                                                        |
+| Categoria sugestão erra                       | Heurística keyword + override manual + testes                                                         |
+| Scope creep no S3                             | Paginação reusa `<Pagination>`/`usePaginatedTransactions` (baixo risco); priorizar MFE+filtros+anexos |
 
 ## Verificação end-to-end (final)
 
 1. `npm install && npm run dev` sobe shell + 2 MFEs localmente (via Turborepo)
 2. `localhost:3000` redireciona para `/login`
 3. Login Google → home renderiza dashboard com 4+ widgets
-4. `/transactions` → busca, filtros, scroll infinito funcionando
+4. `/transactions` → busca, filtros, paginação (server-side, `page` na URL) funcionando
 5. Criar transação "Uber Trip" → categoria "Transporte" sugerida
 6. Anexar PDF → preview + persistência após F5
 7. `docker-compose up` em clone limpo → tudo sobe
