@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, desc } from 'drizzle-orm';
+import { and, eq, gte, lte, desc, inArray } from 'drizzle-orm';
 import type { Attachment, Transaction, NewTransaction, TransactionType } from '@bytebank/shared';
 import { db } from '@/db';
 import { attachments, transactions, type AttachmentRow, type TransactionRow } from '@/db/schema';
@@ -145,4 +145,60 @@ export async function update(
 export async function remove(id: string): Promise<boolean> {
   const rows = await db.delete(transactions).where(eq(transactions.id, id)).returning();
   return rows.length > 0;
+}
+
+export async function createAttachment(data: {
+  transactionId: string;
+  url: string;
+  name: string;
+  size: number;
+  mimeType: string;
+}): Promise<Attachment> {
+  const [row] = await db
+    .insert(attachments)
+    .values({
+      id: crypto.randomUUID(),
+      transactionId: data.transactionId,
+      url: data.url,
+      name: data.name,
+      size: data.size,
+      mimeType: data.mimeType,
+    })
+    .returning();
+  return toAttachment(row);
+}
+
+export async function listAttachments(
+  transactionId: string,
+  userId: string
+): Promise<Attachment[]> {
+  const rows = await db
+    .select()
+    .from(attachments)
+    .innerJoin(transactions, eq(attachments.transactionId, transactions.id))
+    .where(and(eq(attachments.transactionId, transactionId), eq(transactions.userId, userId)))
+    .orderBy(desc(attachments.createdAt));
+  return rows.map((row) => toAttachment(row.attachments));
+}
+
+export async function getAttachment(
+  attachmentId: string,
+  userId: string
+): Promise<Attachment | null> {
+  const [row] = await db
+    .select()
+    .from(attachments)
+    .innerJoin(transactions, eq(attachments.transactionId, transactions.id))
+    .where(and(eq(attachments.id, attachmentId), eq(transactions.userId, userId)))
+    .limit(1);
+  return row ? toAttachment(row.attachments) : null;
+}
+
+export async function deleteAttachment(attachmentId: string, userId: string): Promise<void> {
+  const owned = db
+    .select({ id: attachments.id })
+    .from(attachments)
+    .innerJoin(transactions, eq(attachments.transactionId, transactions.id))
+    .where(and(eq(attachments.id, attachmentId), eq(transactions.userId, userId)));
+  await db.delete(attachments).where(inArray(attachments.id, owned));
 }
