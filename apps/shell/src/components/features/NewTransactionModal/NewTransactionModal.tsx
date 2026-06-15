@@ -1,7 +1,7 @@
 'use client';
 
 import { ConfirmTransactionModal } from '@/components/features/ConfirmTransactionModal';
-import { Card } from '@bytebank/design-system';
+import { Modal } from '@bytebank/design-system';
 import { useCreateTransaction } from '@bytebank/api-client';
 import { showFeedback, useAppDispatch } from '@bytebank/stores';
 import type { ReactElement } from 'react';
@@ -11,21 +11,24 @@ import type {
   TransactionFormValues,
 } from '../TransactionForm/ITransactionForm';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
+import type { NewTransactionModalProps } from './INewTransactionModal';
 
 const SUCCESS_FEEDBACK = {
   type: 'success' as const,
   title: 'Transação adicionada!',
   message: 'Seu extrato foi atualizado.',
 };
+
 const ERROR_FEEDBACK = {
   type: 'error' as const,
   title: 'Erro ao adicionar transação',
   message: 'Tente novamente',
 };
+
 const DEFAULT_USER_ID = 'joana';
 const DEFAULT_CATEGORY = 'default';
 
-export function NewTransaction(): ReactElement {
+export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalProps): ReactElement {
   const { mutateAsync: createTransaction } = useCreateTransaction();
   const dispatch = useAppDispatch();
 
@@ -49,9 +52,13 @@ export function NewTransaction(): ReactElement {
         category: DEFAULT_CATEGORY,
         attachments: [],
       });
+
       setPendingData(null);
       formRef.current?.reset();
+
       dispatch(showFeedback(SUCCESS_FEEDBACK));
+
+      onCancel();
     } catch {
       setPendingData(null);
       dispatch(showFeedback(ERROR_FEEDBACK));
@@ -62,26 +69,25 @@ export function NewTransaction(): ReactElement {
 
   const handleCancel = (): void => {
     setPendingData(null);
+    onCancel();
   };
 
   return (
     <>
-      <Card padding="lg" className="rounded-default bg-surface shadow-card">
-        <h2 className="heading text-content-primary mb-lg">Nova transação</h2>
-
+      <Modal isOpen={isOpen} onClose={handleCancel} title="Nova transação">
         <TransactionForm
           ref={formRef}
           onSubmit={handleFormSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}
         />
-      </Card>
+      </Modal>
 
       <ConfirmTransactionModal
         isOpen={pendingData !== null}
         transaction={pendingData}
         onConfirm={handleConfirm}
-        onCancel={handleCancel}
+        onCancel={() => setPendingData(null)}
         isSubmitting={isSubmitting}
       />
     </>

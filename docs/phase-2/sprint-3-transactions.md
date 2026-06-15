@@ -23,8 +23,9 @@
 - [ ] `npm create rsbuild@latest apps/transactions-mfe` (template React-ts) — espelha setup do `dashboard-mfe`
 - [ ] Configurar `rsbuild.config.ts` com `@module-federation/enhanced`:
   - Expor: `./TransactionsPage` → `./src/TransactionsPage.tsx`
+  - Expor: `./AccountOverview` → `./src/components/AccountOverview.tsx` (widget da home: saldo + últimas transações + atalhos — ver Task 2)
   - Shared singletons: `react`, `react-dom`, `@bytebank/design-system`, `@bytebank/shared`, `@bytebank/stores`, `@bytebank/api-client`
-  - Dev server `:3002`
+  - Dev server `:3003` (⚠️ `:3002` passou a ser do `dashboard-mfe` — ver [Sprint 2](./sprint-2-dashboard.md))
 - [ ] Workspace deps no package.json
 - [ ] `TransactionsPage.tsx` skeleton inicial: simplesmente importa e renderiza versão atual da página (mover de `apps/shell/src/app/transactions/page.tsx` + componentes correlatos)
 
@@ -44,6 +45,9 @@
 - [ ] `git mv apps/shell/src/components/features/ConfirmTransactionModal apps/transactions-mfe/src/components/`
 - [ ] Atualizar imports
 - [ ] Decisão: `NewTransaction` modal continua disponível no shell? → expor via slot ou event bus, ou ser invocado de qualquer página
+- [ ] **`AccountOverview` (widget da home — saldo + últimas transações + atalho "nova transação"):** hoje vive em `apps/shell/src/components/features/AccountOverview.tsx` e importa `TransactionList` + `NewTransactionModal`, que **saem do shell nesta task** → o import quebra. Mover a lógica para o MFE e expor como módulo federado (`./AccountOverview`, ver Task 1); o shell passa a montá-lo via federação na home.
+
+> ⚠️ **Lembrete de fronteira MFE:** a composição da home (card boas-vindas/saldo + últimas transações + atalho "nova transação") é **requisito da Fase 1** e **permanece na home `/`** — não migra para `/transactions` nem entra no `dashboard-mfe`. Mas a **lógica é do domínio de transações**: o `transactions-mfe` deve **expor** um `./AccountOverview` (saldo + últimas transações + atalhos) que o shell **monta na home** via federação (`loadRemote`/`dynamic`), espelhando o [`DashboardRemote`](../../apps/shell/src/components/DashboardRemote.tsx). **Consumir via federação, nunca reimportar o source no shell** — reimportar recria acoplamento build-time e enfraquece o requisito de "desenvolvimento/deploy isolado" de microfrontends do desafio.
 
 **Aceite:** features de transação vivem em `apps/transactions-mfe/`; shell apenas roteia.
 

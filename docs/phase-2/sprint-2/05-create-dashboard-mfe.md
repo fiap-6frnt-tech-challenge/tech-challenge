@@ -9,7 +9,7 @@
 | **Duração estimada**   | 1 dia                                                                                           |
 | **Branch recomendada** | `dev3/create-dashboard-mfe`                                                                     |
 | **Depende de**         | — (pode iniciar no dia 1; baseia-se no PoC validado no Sprint 0)                                |
-| **PR só abre**         | Após `npm run dev -w @bytebank/dashboard-mfe` subir o MFE standalone em `:3001` com placeholder |
+| **PR só abre**         | Após `npm run dev -w @bytebank/dashboard-mfe` subir o MFE standalone em `:3002` com placeholder |
 
 ---
 
@@ -22,7 +22,7 @@
 
 ## Contexto
 
-Este é o primeiro MFE "de produto" da fase. Ele expõe `./Dashboard` via Module Federation e roda standalone em `:3001`. O shell o consome em runtime (Task 8). Compartilha singletons (`react`, `react-dom` e os pacotes `@bytebank/*`) para que store Redux e cache do React Query sejam **a mesma instância** entre shell e MFE.
+Este é o primeiro MFE "de produto" da fase. Ele expõe `./Dashboard` via Module Federation e roda standalone em `:3002`. O shell o consome em runtime (Task 8). Compartilha singletons (`react`, `react-dom` e os pacotes `@bytebank/*`) para que store Redux e cache do React Query sejam **a mesma instância** entre shell e MFE.
 
 > **Fallback Opção D:** Se o Sprint 0 tivesse acionado o fallback build-time, este MFE seria `packages/dashboard-mfe/` exportando `<Dashboard />`. Como a Opção A foi validada ([mfe-decision.md](../sprint-0/mfe-decision.md)), seguimos com remote Rsbuild.
 
@@ -70,7 +70,7 @@ export default defineConfig({
       },
     }),
   ],
-  server: { port: 3001 },
+  server: { port: 3002 },
 });
 ```
 
@@ -97,8 +97,8 @@ export default function Dashboard() {
 
 ## Validação
 
-- [x] `npm run dev -w @bytebank/dashboard-mfe` sobe o MFE em `http://localhost:3001` mostrando o placeholder.
-- [x] `http://localhost:3001/mf-manifest.json` (ou `remoteEntry.js`) é servido corretamente.
+- [x] `npm run dev -w @bytebank/dashboard-mfe` sobe o MFE em `http://localhost:3002` mostrando o placeholder.
+- [x] `http://localhost:3002/mf-manifest.json` (ou `remoteEntry.js`) é servido corretamente.
 - [x] `npm run build -w @bytebank/dashboard-mfe` gera o `remoteEntry.js` sem erros.
 - [x] Importar `@bytebank/design-system` dentro do MFE renderiza um componente do DS standalone (prova de que os singletons resolvem).
 
@@ -109,7 +109,7 @@ export default function Dashboard() {
 1. **Turbo build sob Bash falha** — usar `npm run build -w @bytebank/dashboard-mfe`, não `turbo run build` direto (ver memória de projeto `turbo-build-bash-limitation`).
 2. **Shell precisa transpilar pacotes `@bytebank/*` em TS cru** — ao adicionar este MFE/pacotes ao shell, incluir no `transpilePackages` do `next.config.ts`, senão o `next build` quebra (memória `shell-transpile-raw-ts-packages`).
 3. **`singleton: true` é obrigatório** para `react`, `react-dom` e `@bytebank/stores`/`@bytebank/api-client` — sem isso, shell e MFE teriam stores/caches divergentes (dois Reacts = "Invalid hook call").
-4. **Porta `:3001` fixa** combina com o env `NEXT_PUBLIC_DASHBOARD_MFE_URL` que o shell usará na Task 8.
+4. **Porta `:3002` fixa** combina com o env `NEXT_PUBLIC_DASHBOARD_MFE_URL` que o shell usará na Task 8.
 
 ---
 

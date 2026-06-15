@@ -5,7 +5,7 @@ export interface NewTransactionData {
   amount: number;
 }
 
-export interface NewTransactionProps {
-  onSubmit: (data: NewTransactionData) => void | Promise<void>;
-  loading?: boolean;
+export interface NewTransactionModalProps {
+  isOpen: boolean;
+  onCancel: () => void;
 }

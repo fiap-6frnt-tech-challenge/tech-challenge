@@ -9,7 +9,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   if (isPublicAuthRoute(pathname)) {
-    return <div className="min-h-dvh bg-background">{children}</div>;
+    return <div className="h-dvh overflow-y-auto bg-background">{children}</div>;
   }
 
   return (

@@ -2,16 +2,13 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
 
+const MFE_ORIGIN = process.env.MFE_ORIGIN ?? 'http://localhost:3002';
+
 export default defineConfig({
+  output: {
+    assetPrefix: MFE_ORIGIN,
+  },
   resolve: {
-    // O barrel do @bytebank/design-system reexporta Header/Sidebar, que importam
-    // next/image, next/link e next/navigation. Em dev o Rspack não faz tree-shaking,
-    // então esses módulos são avaliados no browser e quebram num bundle não-Next
-    // (`process is not defined`, `__dirname` mockado). O MFE nunca renderiza esses
-    // componentes de layout (são do shell), então resolvemos os imports de Next para
-    // módulos vazios. Quando o shell consome o remote, @bytebank/design-system é um
-    // singleton compartilhado → a instância do host (com o Next real) é usada, logo
-    // este alias só vale no modo standalone (:3002).
     alias: {
       'next/image': false,
       'next/link': false,
