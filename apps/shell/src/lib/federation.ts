@@ -104,3 +104,19 @@ export async function loadDashboard() {
   if (!mod) throw new Error('Failed to load remote dashboard/Dashboard');
   return mod.default;
 }
+
+export async function loadTransactionsPage() {
+  const mf = ensureInstance();
+  const mod = await mf.loadRemote<{ default: React.ComponentType }>(
+    'transactions/TransactionsPage'
+  );
+  if (!mod) throw new Error('Failed to load remote transactions/TransactionsPage');
+  return mod.default;
+}
+
+export async function loadAccountOverview() {
+  const mf = ensureInstance();
+  const mod = await mf.loadRemote<{ default: React.ComponentType }>('transactions/AccountOverview');
+  if (!mod) throw new Error('Failed to load remote transactions/AccountOverview');
+  return mod.default;
+}

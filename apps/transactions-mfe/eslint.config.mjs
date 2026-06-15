@@ -6,7 +6,13 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
 
 export default defineConfig([
-  globalIgnores(['dist/**', 'node_modules/**', '@mf-types/**', '*.config.{ts,mjs}']),
+  globalIgnores([
+    'dist/**',
+    'node_modules/**',
+    '@mf-types/**',
+    '*.config.{ts,mjs}',
+    '**/*.stories.{ts,tsx}',
+  ]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -20,6 +20,7 @@ export default defineConfig({
     pluginModuleFederation({
       name: 'transactions',
       manifest: { filePath: '', fileName: 'mf-manifest.json' },
+      dts: false,
       exposes: {
         './TransactionsPage': './src/TransactionsPage.tsx',
         './AccountOverview': './src/components/AccountOverview.tsx',

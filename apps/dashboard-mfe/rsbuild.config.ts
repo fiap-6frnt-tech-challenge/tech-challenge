@@ -20,6 +20,7 @@ export default defineConfig({
     pluginModuleFederation({
       name: 'dashboard',
       manifest: { filePath: '', fileName: 'mf-manifest.json' },
+      dts: false,
       exposes: {
         './Dashboard': './src/Dashboard.tsx',
       },

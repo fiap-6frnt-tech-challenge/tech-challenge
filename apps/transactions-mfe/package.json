@@ -15,8 +15,10 @@
     "@bytebank/design-system": "*",
     "@bytebank/shared": "*",
     "@bytebank/stores": "*",
+    "@tanstack/react-query": "^5.100.14",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-redux": "^9.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9",

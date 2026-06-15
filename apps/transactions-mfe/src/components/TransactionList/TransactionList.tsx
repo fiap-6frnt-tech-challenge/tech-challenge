@@ -1,5 +1,5 @@
 import { cn } from '@bytebank/shared';
-import { TransactionItem } from '@/components/features/TransactionItem';
+import { TransactionItem } from '../TransactionItem';
 import { SkeletonList } from '@bytebank/design-system';
 import type { TransactionListProps } from './ITransactionList';
 

@@ -2,7 +2,7 @@
 
 import { Modal } from '@bytebank/design-system';
 import { Button } from '@bytebank/design-system';
-import { TransactionInfo } from '@/components/features/TransactionInfo';
+import { TransactionInfo } from '../TransactionInfo';
 import type { DeleteTransactionModalProps } from './IDeleteTransactionModal';
 
 export function DeleteTransactionModal({
