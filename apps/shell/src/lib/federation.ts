@@ -41,6 +41,12 @@ function ensureInstance(): MFInstance {
           entry:
             process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3002/mf-manifest.json',
         },
+        {
+          name: 'transactions',
+          entry:
+            process.env.NEXT_PUBLIC_TRANSACTIONS_MFE_URL ??
+            'http://localhost:3003/mf-manifest.json',
+        },
       ],
       shared: {
         react: {
