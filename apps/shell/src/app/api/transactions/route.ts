@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Transaction } from '@bytebank/shared';
+import type { TransactionType } from '@bytebank/shared';
 import * as store from './store';
 
 export async function GET(req: NextRequest) {
@@ -7,40 +7,33 @@ export async function GET(req: NextRequest) {
 
   const page = searchParams.get('_page');
   const perPage = searchParams.get('_per_page');
-  const type = searchParams.get('type');
-  const dateFrom = searchParams.get('date_gte');
-  const dateTo = searchParams.get('date_lte');
-  const sort = searchParams.get('_sort');
 
-  let transactions = await store.getAll();
-
-  if (type) transactions = transactions.filter((t) => t.type === type);
-  if (dateFrom) transactions = transactions.filter((t) => t.date >= dateFrom);
-  if (dateTo) transactions = transactions.filter((t) => t.date <= dateTo);
-
-  if (sort) {
-    const desc = sort.startsWith('-');
-    const field = (desc ? sort.slice(1) : sort) as keyof Transaction;
-    transactions = [...transactions].sort((a, b) => {
-      const aVal = a[field] ?? '';
-      const bVal = b[field] ?? '';
-      if (aVal < bVal) return desc ? 1 : -1;
-      if (aVal > bVal) return desc ? -1 : 1;
-      return 0;
-    });
+  if (!page || !perPage) {
+    return NextResponse.json(await store.getAll());
   }
 
-  if (page && perPage) {
-    const pageNum = Number(page);
-    const perPageNum = Number(perPage);
-    const total = transactions.length;
-    const pages = Math.ceil(total / perPageNum);
-    const start = (pageNum - 1) * perPageNum;
-    const data = transactions.slice(start, start + perPageNum);
-    return NextResponse.json({ data, pages, items: total });
-  }
+  const sort = searchParams.get('_sort') ?? '-date';
+  const sortOrder = sort.startsWith('-') ? 'desc' : 'asc';
+  const sortBy = sort.replace(/^-/, '') as 'date' | 'amount';
 
-  return NextResponse.json(transactions);
+  const amountGte = searchParams.get('amount_gte');
+  const amountLte = searchParams.get('amount_lte');
+
+  const result = await store.listTransactions({
+    page: Number(page),
+    perPage: Number(perPage),
+    type: (searchParams.get('type') as TransactionType) ?? undefined,
+    dateFrom: searchParams.get('date_gte') ?? undefined,
+    dateTo: searchParams.get('date_lte') ?? undefined,
+    q: searchParams.get('q') ?? undefined,
+    category: searchParams.getAll('category'),
+    amount_gte: amountGte !== null ? Number(amountGte) : undefined,
+    amount_lte: amountLte !== null ? Number(amountLte) : undefined,
+    sortBy,
+    sortOrder,
+  });
+
+  return NextResponse.json(result);
 }
 
 export async function POST(req: NextRequest) {
