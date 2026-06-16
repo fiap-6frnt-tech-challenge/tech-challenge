@@ -2,7 +2,7 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
 
-const MFE_ORIGIN = process.env.MFE_ORIGIN ?? 'http://localhost:3002';
+const MFE_ORIGIN = process.env.MFE_ORIGIN ?? 'http://localhost:3003';
 
 export default defineConfig({
   output: {
@@ -18,11 +18,12 @@ export default defineConfig({
   plugins: [
     pluginReact(),
     pluginModuleFederation({
-      name: 'dashboard',
+      name: 'transactions',
       manifest: { filePath: '', fileName: 'mf-manifest.json' },
       dts: false,
       exposes: {
-        './Dashboard': './src/Dashboard.tsx',
+        './TransactionsPage': './src/TransactionsPage.tsx',
+        './AccountOverview': './src/components/AccountOverview.tsx',
       },
       shared: {
         react: { singleton: true, requiredVersion: false },
@@ -35,7 +36,7 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 3002,
+    port: 3003,
     strictPort: true,
     cors: {
       origin: ['http://localhost:3000'],

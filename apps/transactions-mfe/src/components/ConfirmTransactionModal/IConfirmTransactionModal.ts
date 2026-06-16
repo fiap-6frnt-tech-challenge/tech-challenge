@@ -1,4 +1,4 @@
-import type { TransactionFormValues } from '@/components/features/TransactionForm/ITransactionForm';
+import type { TransactionFormValues } from '../TransactionForm/ITransactionForm';
 
 export interface ConfirmTransactionModalProps {
   isOpen: boolean;

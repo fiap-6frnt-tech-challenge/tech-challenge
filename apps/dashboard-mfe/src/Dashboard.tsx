@@ -1,12 +1,5 @@
 import { useMemo } from 'react';
-import {
-  Badge,
-  DashboardWidget,
-  KpiCard,
-  BarChart,
-  LineChart,
-  PieChart,
-} from '@bytebank/design-system';
+import { DashboardWidget, KpiCard, BarChart, LineChart, PieChart } from '@bytebank/design-system';
 import { useDashboardSummary } from '@bytebank/api-client';
 
 export default function Dashboard() {
@@ -62,7 +55,6 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center gap-md">
         <h1 className="heading">Dashboard</h1>
-        <Badge variant="transfer">MFE :3002</Badge>
       </div>
 
       {/* KPIs Grid */}

@@ -110,10 +110,10 @@ Em `apps/shell/next.config.ts`, adicionar:
 
 ## Validação
 
-- [ ] `npm run dev -w @bytebank/transactions-mfe` sobe em `http://localhost:3003`
-- [ ] `http://localhost:3003/mf-manifest.json` é servido
-- [ ] `npm run build -w @bytebank/transactions-mfe` gera `remoteEntry.js` sem erros
-- [ ] Componente do DS renderiza corretamente standalone no `:3003`
+- [x] `npm run dev -w @bytebank/transactions-mfe` sobe em `http://localhost:3003`
+- [x] `http://localhost:3003/mf-manifest.json` é servido
+- [x] `npm run build -w @bytebank/transactions-mfe` gera `remoteEntry.js` sem erros
+- [x] Componente do DS renderiza corretamente standalone no `:3003`
 
 ---
 

@@ -2,7 +2,7 @@
 
 import { Button } from '@bytebank/design-system';
 import { Modal } from '@bytebank/design-system';
-import { TransactionInfo } from '@/components/features/TransactionInfo';
+import { TransactionInfo } from '../TransactionInfo';
 import type { ConfirmTransactionModalProps } from './IConfirmTransactionModal';
 
 export function ConfirmTransactionModal({

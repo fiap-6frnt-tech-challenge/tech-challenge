@@ -41,6 +41,12 @@ function ensureInstance(): MFInstance {
           entry:
             process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3002/mf-manifest.json',
         },
+        {
+          name: 'transactions',
+          entry:
+            process.env.NEXT_PUBLIC_TRANSACTIONS_MFE_URL ??
+            'http://localhost:3003/mf-manifest.json',
+        },
       ],
       shared: {
         react: {
@@ -96,5 +102,21 @@ export async function loadDashboard() {
   const mf = ensureInstance();
   const mod = await mf.loadRemote<{ default: React.ComponentType }>('dashboard/Dashboard');
   if (!mod) throw new Error('Failed to load remote dashboard/Dashboard');
+  return mod.default;
+}
+
+export async function loadTransactionsPage() {
+  const mf = ensureInstance();
+  const mod = await mf.loadRemote<{ default: React.ComponentType }>(
+    'transactions/TransactionsPage'
+  );
+  if (!mod) throw new Error('Failed to load remote transactions/TransactionsPage');
+  return mod.default;
+}
+
+export async function loadAccountOverview() {
+  const mf = ensureInstance();
+  const mod = await mf.loadRemote<{ default: React.ComponentType }>('transactions/AccountOverview');
+  if (!mod) throw new Error('Failed to load remote transactions/AccountOverview');
   return mod.default;
 }

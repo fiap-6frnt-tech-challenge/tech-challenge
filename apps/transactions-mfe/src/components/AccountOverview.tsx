@@ -1,23 +1,16 @@
 'use client';
 
-import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Plus, ReceiptText } from 'lucide-react';
 import { Button, EmptyState, ErrorState } from '@bytebank/design-system';
 import { useTransactions } from '@bytebank/api-client';
 import { selectUser, useAppSelector } from '@bytebank/stores';
 import { calculateBalance, getRecent } from '@bytebank/shared';
-import { BalanceCard } from '@/components/features/BalanceCard';
-import { TransactionList } from '@/components/features/TransactionList';
-import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { BalanceCard } from './BalanceCard';
+import { TransactionList } from './TransactionList';
+import { NewTransactionModal } from './NewTransactionModal';
 
-const NewTransactionModal = dynamic(
-  () => import('@/components/features/NewTransactionModal').then((m) => m.NewTransactionModal),
-  { ssr: false }
-);
-
-export function AccountOverview() {
+export default function AccountOverview() {
   const { data, isLoading, isError } = useTransactions();
   const user = useAppSelector(selectUser);
   const firstName = user?.name?.split(' ')[0];
@@ -57,11 +50,11 @@ export function AccountOverview() {
         />
 
         <span className="flex flex-col gap-sm sm:flex-row sm:items-center">
-          <Link href="/transactions" className="w-full sm:w-auto">
+          <a href="/transactions" className="w-full sm:w-auto">
             <Button disabled={isLoading} className="w-full">
               Todas as transações
             </Button>
-          </Link>
+          </a>
 
           <Button
             disabled={isLoading}

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { DashboardRemote } from '@/components/DashboardRemote';
-import { AccountOverview } from '@/components/features/AccountOverview';
+import { AccountOverviewRemote } from '@/components/AccountOverviewRemote';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Bytebank',
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <div className="flex flex-col gap-xl">
-      <AccountOverview />
+      <AccountOverviewRemote />
       <DashboardRemote />
     </div>
   );
