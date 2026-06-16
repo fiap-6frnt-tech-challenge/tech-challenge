@@ -98,3 +98,12 @@ remotes: {
 1. **`Access-Control-Allow-Credentials: true` exige origem específica** — não pode usar `*` quando credentials são enviadas. Sempre especificar o domínio exato do MFE.
 2. **Cookies de sessão cross-origin** — NextAuth usa cookies `httpOnly`. Em prod, o MFE (em domínio diferente) não consegue enviar os cookies automaticamente. Solução: chamadas API vão para o mesmo domínio do shell via proxy reverso (Vercel rewrites) ou o shell expõe um token CSRF. Avaliar na Sprint 4 se necessário.
 3. **`BLOB_READ_WRITE_TOKEN` no CI** — adicionar como secret no GitHub Actions para que o CI não quebre builds que importam `@vercel/blob`.
+4. **Middleware redireciona API sem sessão com 307, não 401** — confirmado em validação da Task 02: o `proxy.ts` intercepta `/api/transactions/**` para usuários não autenticados e retorna um redirect HTML para `/login` em vez de JSON `401`. O MFE receberá HTML onde espera JSON, causando falha silenciosa. Corrigir em `apps/shell/src/proxy.ts` adicionando tratamento para rotas de API antes do redirect:
+   ```ts
+   if (!isLoggedIn && !isPublicRoute) {
+     if (nextUrl.pathname.startsWith('/api/')) {
+       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+     }
+     return NextResponse.redirect(new URL('/login', nextUrl));
+   }
+   ```
