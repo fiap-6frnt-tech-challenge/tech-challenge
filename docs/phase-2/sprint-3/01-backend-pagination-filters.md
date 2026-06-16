@@ -8,6 +8,7 @@
 | **Branch recomendada** | `dev1/pagination-filters`                                                 |
 | **Depende de**         | — (pode iniciar no dia 1)                                                 |
 | **PR só abre**         | Após endpoint paginar no banco e os novos filtros passarem nos testes     |
+| **Status**             | ✅ Implementado e validado (`store.listTransactions` + `route.ts`)        |
 
 ---
 
@@ -156,13 +157,13 @@ export async function GET(req: NextRequest) {
 
 ## Validação
 
-- [ ] `GET /api/transactions?_page=1&_per_page=10` retorna `{ data (≤10), pages, items }` paginado **no banco** (não carrega tudo em memória)
-- [ ] `GET /api/transactions?_page=2&_per_page=10` retorna a 2ª página (offset correto)
-- [ ] `GET /api/transactions?q=uber` retorna apenas transações com "uber" na description (case-insensitive)
-- [ ] `GET /api/transactions?amount_gte=100&amount_lte=500` filtra por faixa de valor
-- [ ] `GET /api/transactions?category=food&category=transport` retorna apenas essas categorias
-- [ ] `items` e `pages` refletem o **total filtrado** (não o banco inteiro)
-- [ ] `GET /api/transactions` (sem `_page`) continua retornando a lista completa (compat `useTransactions` da home)
+- [x] `GET /api/transactions?_page=1&_per_page=10` retorna `{ data (≤10), pages, items }` paginado **no banco** (não carrega tudo em memória) — `items=53, pages=6, data=10`
+- [x] `GET /api/transactions?_page=2&_per_page=10` retorna a 2ª página (offset correto) — 1º id da p2 (`txn-303`) ≠ 1º id da p1 (`txn-406`)
+- [x] `GET /api/transactions?q=...` retorna apenas transações com o termo na description (case-insensitive) — `q=super` e `q=SUPER` → ambos `6` (`ILIKE`)
+- [x] `GET /api/transactions?amount_gte=100&amount_lte=500` filtra por faixa de valor — `items=25, pages=3`
+- [x] `GET /api/transactions?category=...&category=...` retorna apenas essas categorias — `Alimentação`+`Transporte` → `13` (7+6)
+- [x] `items` e `pages` refletem o **total filtrado** (não o banco inteiro)
+- [x] `GET /api/transactions` (sem `_page`) continua retornando a lista completa (compat `useTransactions` da home) — `53` itens
 
 ---
 
@@ -172,4 +173,4 @@ export async function GET(req: NextRequest) {
 2. **Filtro em memória → DB:** a versão antiga filtrava com `Array.filter` após `getAll()`. Garanta que **todos** os filtros (incl. `type`, datas) agora vão para o `WHERE` do Drizzle; não deixe filtragem dupla.
 3. **`category` vazio:** `searchParams.getAll('category')` retorna `[]` quando ausente — só adicione a condição `inArray` se `category.length > 0`, senão a query nunca casa.
 4. **`amount` é sempre positivo** no schema (direção vem do `type`); o range filtra magnitude, não sinal.
-5. **Índices:** para "grandes volumes", crie índice em `(date)` e, se a busca textual ficar lenta, considere índice `GIN` para `ILIKE`. Fora do escopo desta task, mas anote no PR.
+5. **Índices:** para "grandes volumes", crie índice em `(date)` e, se a busca textual ficar lenta, considere índice `GIN`/`pg_trgm` para `ILIKE`. Fora do escopo desta task, mas anote no PR. _(⏳ pendente — follow-up para o PR)_

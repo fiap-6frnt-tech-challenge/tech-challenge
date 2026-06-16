@@ -1,6 +1,6 @@
 'use client';
 
-import { ConfirmTransactionModal } from '@/components/features/ConfirmTransactionModal';
+import { ConfirmTransactionModal } from '../ConfirmTransactionModal';
 import { Modal } from '@bytebank/design-system';
 import { useCreateTransaction } from '@bytebank/api-client';
 import { showFeedback, useAppDispatch } from '@bytebank/stores';

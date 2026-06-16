@@ -5,7 +5,6 @@ import { Card } from '@bytebank/design-system';
 import { Skeleton } from '@bytebank/design-system';
 import { formatCurrencyExact, formatTodayDate } from '@bytebank/shared';
 import { Eye, EyeOff } from 'lucide-react';
-import Image from 'next/image';
 import { useState } from 'react';
 import type { BalanceCardProps } from './IBalanceCard';
 
@@ -20,7 +19,7 @@ export function BalanceCard({
 
   return (
     <Card padding="lg" className="relative overflow-hidden mb-sm bg-brand-dark! text-text-on-bg">
-      <Image
+      <img
         src="/pixels.png"
         aria-hidden="true"
         width={168}
@@ -29,7 +28,7 @@ export function BalanceCard({
         className="absolute bottom-0 left-0 w-42 h-auto pointer-events-none select-none"
         alt=""
       />
-      <Image
+      <img
         src="/pixels.png"
         aria-hidden="true"
         width={168}
@@ -55,14 +54,13 @@ export function BalanceCard({
 
           <p className="text-sm mb-0 md:mb-lg">{formatTodayDate()}</p>
 
-          <Image
+          <img
             src="/piggy-bank.png"
             aria-hidden="true"
             width={283}
             height={229}
-            priority
+            loading="eager"
             fetchPriority="high"
-            sizes="(max-width: 767px) 0px, 283px"
             className="pointer-events-none select-none hidden md:block"
             alt=""
           />
@@ -108,14 +106,13 @@ export function BalanceCard({
           )}
         </div>
 
-        <Image
+        <img
           src="/piggy-bank.png"
           aria-hidden="true"
           width={283}
           height={229}
-          priority
+          loading="eager"
           fetchPriority="high"
-          sizes="(max-width: 767px) 283px, 0px"
           className="pointer-events-none select-none md:hidden"
           alt=""
         />

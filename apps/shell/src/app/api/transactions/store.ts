@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, desc, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm';
 import type { Attachment, Transaction, NewTransaction, TransactionType } from '@bytebank/shared';
 import { db } from '@/db';
 import { attachments, transactions, type AttachmentRow, type TransactionRow } from '@/db/schema';
@@ -57,6 +57,66 @@ export async function getAllByUser(
     with: { attachments: true },
   });
   return result.map((row) => toTransaction(row));
+}
+
+export type ListParams = {
+  userId?: string;
+  type?: TransactionType;
+  dateFrom?: string;
+  dateTo?: string;
+  q?: string;
+  category?: string[];
+  amount_gte?: number;
+  amount_lte?: number;
+  sortBy?: 'date' | 'amount';
+  sortOrder?: 'asc' | 'desc';
+  page: number;
+  perPage: number;
+};
+
+export type PaginatedResult = {
+  data: Transaction[];
+  pages: number;
+  items: number;
+};
+
+export async function listTransactions(params: ListParams): Promise<PaginatedResult> {
+  const conditions = [];
+  if (params.userId) conditions.push(eq(transactions.userId, params.userId));
+  if (params.type) conditions.push(eq(transactions.type, params.type));
+  if (params.dateFrom) conditions.push(gte(transactions.date, params.dateFrom));
+  if (params.dateTo) conditions.push(lte(transactions.date, params.dateTo));
+  if (params.q) conditions.push(ilike(transactions.description, `%${params.q}%`));
+  if (params.category?.length) conditions.push(inArray(transactions.category, params.category));
+  if (params.amount_gte !== undefined) conditions.push(gte(transactions.amount, params.amount_gte));
+  if (params.amount_lte !== undefined) conditions.push(lte(transactions.amount, params.amount_lte));
+
+  const where = conditions.length ? and(...conditions) : undefined;
+
+  const sortCol = params.sortBy === 'amount' ? transactions.amount : transactions.date;
+  const orderBy = params.sortOrder === 'asc' ? asc(sortCol) : desc(sortCol);
+
+  const offset = (params.page - 1) * params.perPage;
+
+  const [countRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(transactions)
+    .where(where);
+
+  const rows = await db.query.transactions.findMany({
+    where,
+    orderBy: [orderBy],
+    limit: params.perPage,
+    offset,
+    with: { attachments: true },
+  });
+
+  const items = countRow?.count ?? 0;
+  return {
+    data: rows.map((row) => toTransaction(row)),
+    pages: Math.max(1, Math.ceil(items / params.perPage)),
+    items,
+  };
 }
 
 export async function getById(id: string): Promise<Transaction | null> {

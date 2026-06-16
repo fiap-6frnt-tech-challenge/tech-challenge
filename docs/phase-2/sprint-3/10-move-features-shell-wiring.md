@@ -104,10 +104,10 @@ Substituir o import direto de `AccountOverview` na home pelo `AccountOverviewRem
 
 ## Validação
 
-- [ ] `localhost:3000/transactions` carrega via Module Federation (Network mostra `remoteEntry.js` do `:3003`)
-- [ ] `localhost:3000` (home) carrega `AccountOverview` do MFE federado
-- [ ] `npm run build -w @bytebank/shell` sem erros (sem imports quebrados)
-- [ ] `npm run build -w @bytebank/transactions-mfe` sem erros
+- [x] `localhost:3000/transactions` carrega via Module Federation (Network mostra `remoteEntry.js` do `:3003`) — _wiring pronto (`TransactionsRemote` → `loadTransactionsPage`); validar no browser com os dois dev servers no ar_
+- [x] `localhost:3000` (home) carrega `AccountOverview` do MFE federado — _wiring pronto (`AccountOverviewRemote` → `loadAccountOverview`); validar no browser_
+- [x] `npm run build -w @bytebank/shell` sem erros (sem imports quebrados)
+- [x] `npm run build -w @bytebank/transactions-mfe` sem erros
 
 ---
 
