@@ -134,12 +134,12 @@ deleteAttachment(attachmentId: string, userId: string): Promise<void>
 
 ## Validação
 
-- [ ] `POST /api/transactions/[id]/attachments` com PDF de 2MB retorna `201` e URL pública
-- [ ] `GET /api/transactions/[id]/attachments` retorna lista de anexos
-- [ ] `DELETE /api/transactions/[id]/attachments/[aid]` remove do Blob e do banco
-- [ ] Upload acima de 5MB retorna `400` com mensagem de erro
-- [ ] Tipo não permitido (ex: `.exe`) retorna `400`
-- [ ] Usuário diferente do dono recebe `404` (não expõe existência)
+- [x] `POST /api/transactions/[id]/attachments` com PDF de 2MB retorna `201` e URL pública
+- [x] `GET /api/transactions/[id]/attachments` retorna lista de anexos
+- [x] `DELETE /api/transactions/[id]/attachments/[aid]` remove do Blob e do banco
+- [x] Upload acima de 5MB retorna `400` com mensagem de erro
+- [x] Tipo não permitido (ex: `.exe`) retorna `400`
+- [x] Usuário diferente do dono recebe `404` (não expõe existência)
 
 ---
 
