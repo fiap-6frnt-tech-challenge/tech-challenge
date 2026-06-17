@@ -1,4 +1,5 @@
 export * from './CurrencyInput';
+export * from './SearchInput';
 export * from './HelperText';
 export * from './Label';
 export * from './Tooltip';
