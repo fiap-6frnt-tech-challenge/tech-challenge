@@ -25,6 +25,7 @@ function formatEditableValue(value: number | '') {
 interface RangeFieldProps {
   id: string;
   label: string;
+  ariaLabel: string;
   value: number | '';
   onValueChange: (value: number | '') => void;
   currency: string;
@@ -36,6 +37,7 @@ interface RangeFieldProps {
 function RangeField({
   id,
   label,
+  ariaLabel,
   value,
   onValueChange,
   currency,
@@ -112,6 +114,7 @@ function RangeField({
           onFocus={handleFocus}
           onBlur={handleBlur}
           disabled={disabled}
+          aria-label={ariaLabel}
           aria-invalid={error || undefined}
           aria-describedby={describedBy}
           className={cn(
@@ -130,14 +133,17 @@ export function RangeInput({
   maxValue,
   onMinChange,
   onMaxChange,
-  currency = 'R$',
+  currency = 'BRL',
   error,
   disabled = false,
 }: IRangeInput) {
   const errorId = useId();
   const minInputId = useId();
   const maxInputId = useId();
-  const hasError = Boolean(error);
+  const isInvalidRange = minValue !== '' && maxValue !== '' && minValue > maxValue;
+  const errorMessage =
+    error ?? (isInvalidRange ? 'O valor mínimo não pode ser maior que o valor máximo' : undefined);
+  const hasError = Boolean(errorMessage);
 
   return (
     <div className="flex flex-col gap-sm">
@@ -145,6 +151,7 @@ export function RangeInput({
         <RangeField
           id={minInputId}
           label="De"
+          ariaLabel="De, valor mínimo"
           value={minValue}
           onValueChange={onMinChange}
           currency={currency}
@@ -155,6 +162,7 @@ export function RangeInput({
         <RangeField
           id={maxInputId}
           label="Até"
+          ariaLabel="Até, valor máximo"
           value={maxValue}
           onValueChange={onMaxChange}
           currency={currency}
@@ -165,7 +173,7 @@ export function RangeInput({
       </div>
       {hasError && (
         <p id={errorId} role="alert" className="mt-1 text-sm font-normal text-feedback-danger">
-          {error}
+          {errorMessage}
         </p>
       )}
     </div>

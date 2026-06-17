@@ -9,7 +9,7 @@ const meta: Meta<typeof RangeInput> = {
   args: {
     minValue: '',
     maxValue: '',
-    currency: 'R$',
+    currency: 'BRL',
   },
   argTypes: {
     minValue: { control: 'number' },
@@ -36,7 +36,7 @@ type Story = StoryObj<typeof RangeInput>;
 function ControlledRangeInput({
   initialMin = '',
   initialMax = '',
-  currency = 'R$',
+  currency = 'BRL',
   error,
   disabled = false,
 }: {
@@ -106,7 +106,6 @@ export const InvalidRange: Story = {
   args: {
     minValue: 500,
     maxValue: 50,
-    error: 'O valor mínimo não pode ser maior que o valor máximo',
   },
 };
 
