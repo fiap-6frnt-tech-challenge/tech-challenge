@@ -8,6 +8,22 @@
 | **Branch recomendada** | `dev2/ds-file-upload`                                                     |
 | **Depende de**         | — (pode iniciar no dia 1, paralelo ao resto do DS)                        |
 | **PR só abre**         | Após drag-and-drop, validação de tipo/tamanho e stories estarem prontos   |
+| **Status**             | ✅ Concluído                                                              |
+
+---
+
+## Status — ✅ Concluído
+
+Componente implementado no design-system:
+
+- `packages/design-system/src/components/FileUpload/FileUpload.tsx`
+- `packages/design-system/src/components/FileUpload/IFileUpload.ts`
+- `packages/design-system/src/components/FileUpload/index.ts`
+- `packages/design-system/src/components/FileUpload/FileUpload.stories.tsx`
+- Export adicionado em `packages/design-system/src/components/index.ts`
+- Helper reutilizável `formatFileSize` em `packages/shared/src/lib/format.ts` (também usado pela Task 08)
+
+Verificação: ESLint limpo, `tsc --noEmit` ok, **9/9 stories passando** no Storybook test runner (Chromium headless).
 
 ---
 
@@ -38,9 +54,9 @@ interface IFileUpload {
 
 ### Zona de drop
 
-- Área retangular com borda tracejada; ícone de upload + texto "Arraste arquivos ou clique para selecionar".
-- Estados visuais: `idle` → `hovering` (borda em destaque, fundo levemente colorido) → `dragging-over` (mesmo visual do hover, mas ativado por drag externo).
-- Clique abre o file picker (`<input type="file" hidden multiple />`).
+- [x] Área retangular com borda tracejada; ícone de upload + texto "Arraste arquivos ou clique para selecionar".
+- [x] Estados visuais: `idle` → `hovering` (borda em destaque, fundo levemente colorido) → `dragging-over` (mesmo visual do hover, mas ativado por drag externo).
+- [x] Clique abre o file picker (`<input type="file" hidden multiple />`).
 
 ### Validação (client-side, antes de chamar `onChange`)
 
@@ -53,43 +69,44 @@ function validate(file: File, maxSizeBytes: number, accept: string): string | nu
 }
 ```
 
-- Arquivos inválidos: chama `onError` com a mensagem e não os adiciona a `value`.
-- `maxFiles`: se selecionados + atuais ultrapassam o limite, chama `onError` e ignora o excedente.
+- [x] Arquivos inválidos: chama `onError` com a mensagem e não os adiciona a `value`.
+- [x] `maxFiles`: se selecionados + atuais ultrapassam o limite, chama `onError` e ignora o excedente.
 
 ### Preview
 
-- **Imagens** (`image/*`): `<img>` com `URL.createObjectURL(file)` (thumbnail 48×48).
-- **PDF**: ícone de documento.
-- Cada preview mostra nome, tamanho formatado e botão `×` para remover da lista local (antes do upload).
+- [x] **Imagens** (`image/*`): `<img>` com `URL.createObjectURL(file)` (thumbnail 48×48).
+- [x] **PDF**: ícone de documento.
+- [x] Cada preview mostra nome, tamanho formatado e botão `×` para remover da lista local (antes do upload).
 
 ### Indicador de progresso
 
-- Para integração real com upload, o componente expõe um slot `progress?: Record<string, number>` (nome do arquivo → 0-100) que renderiza uma barra por arquivo. O upload real acontece fora do componente.
+- [x] Para integração real com upload, o componente expõe um slot `progress?: Record<string, number>` (nome do arquivo → 0-100) que renderiza uma barra por arquivo. O upload real acontece fora do componente.
 
 ### A11y
 
-- Drop zone: `role="button"` + `tabIndex={0}` + `aria-label="Área de upload de arquivos"`.
-- `onKeyDown`: `Enter`/` ` abre o picker.
-- Anuncia arquivos adicionados: `aria-live="polite"` no container de previews.
-- Indica número de arquivos selecionados: `aria-label="3 arquivo(s) selecionado(s)"`.
+- [x] Drop zone: `role="button"` + `tabIndex={0}` + `aria-label="Área de upload de arquivos"`.
+- [x] `onKeyDown`: `Enter`/` ` abre o picker.
+- [x] Anuncia arquivos adicionados: `aria-live="polite"` no container de previews.
+- [x] Indica número de arquivos selecionados: `aria-label="3 arquivo(s) selecionado(s)"`.
 
 ---
 
 ## Stories obrigatórias
 
-- `Empty`
-- `ComArquivos` — 2 arquivos pré-carregados no `value`
-- `DraggingOver` — estado visual de drag ativo (via `args` forçando a classe)
-- `MaxExcedido` — erro de limite de arquivos
-- `FileTooLarge` — erro de tamanho
-- `InvalidType` — erro de tipo
-- `Interaction: drag-and-drop simulado` (via Storybook play function com `userEvent`)
+- [x] `Empty`
+- [x] `ComArquivos` — 2 arquivos pré-carregados no `value`
+- [x] `DraggingOver` — estado visual de drag ativo (via play function disparando `dragOver`)
+- [x] `MaxExcedido` — erro de limite de arquivos
+- [x] `FileTooLarge` — erro de tamanho
+- [x] `InvalidType` — erro de tipo
+- [x] `Interaction: drag-and-drop simulado` (via Storybook play function com `userEvent`)
+- [x] _Extra:_ `ComProgresso` (barras de progresso) e `Disabled`
 
 ---
 
 ## Gotchas
 
-1. **`URL.createObjectURL`** — chamar apenas no client (não em RSC); lembrar de revogar com `URL.revokeObjectURL` no cleanup.
-2. **`dragover` vs `drop`** — sempre chamar `e.preventDefault()` no `dragover`, caso contrário o browser abre o arquivo em vez de triggar o `drop`.
-3. **`<input type="file">` reset** — após processar os arquivos, resetar `input.value = ''` para que o mesmo arquivo possa ser selecionado duas vezes.
-4. **Sem upload real no componente DS** — o DS não sabe de URLs, buckets ou APIs. Todo o upload é responsabilidade do consumidor (Task 15).
+1. [x] **`URL.createObjectURL`** — chamar apenas no client (não em RSC); lembrar de revogar com `URL.revokeObjectURL` no cleanup.
+2. [x] **`dragover` vs `drop`** — sempre chamar `e.preventDefault()` no `dragover`, caso contrário o browser abre o arquivo em vez de triggar o `drop`.
+3. [x] **`<input type="file">` reset** — após processar os arquivos, resetar `input.value = ''` para que o mesmo arquivo possa ser selecionado duas vezes.
+4. [x] **Sem upload real no componente DS** — o DS não sabe de URLs, buckets ou APIs. Todo o upload é responsabilidade do consumidor (Task 15).
