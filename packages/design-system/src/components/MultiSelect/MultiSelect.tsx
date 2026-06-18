@@ -14,6 +14,7 @@ export function MultiSelect<T extends string = string>({
   searchable = false,
   disabled = false,
   error,
+  'aria-label': ariaLabel,
 }: MultiSelectProps<T>) {
   const id = useId();
   const listboxId = `${id}-listbox`;
@@ -121,6 +122,7 @@ export function MultiSelect<T extends string = string>({
           ref={!searchable ? triggerRef : undefined}
           role={!searchable ? 'combobox' : undefined}
           tabIndex={!searchable && !disabled ? 0 : undefined}
+          aria-label={!searchable ? ariaLabel : undefined}
           aria-haspopup={!searchable ? 'listbox' : undefined}
           aria-expanded={!searchable ? open : undefined}
           aria-controls={!searchable && open ? listboxId : undefined}
@@ -171,6 +173,7 @@ export function MultiSelect<T extends string = string>({
             <input
               ref={inputRef}
               role="combobox"
+              aria-label={ariaLabel}
               aria-haspopup="listbox"
               aria-expanded={open}
               aria-controls={open ? listboxId : undefined}

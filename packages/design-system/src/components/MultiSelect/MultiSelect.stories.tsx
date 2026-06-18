@@ -20,6 +20,7 @@ const meta: Meta<typeof MultiSelect> = {
     value: [],
     onChange: () => {},
     placeholder: 'Selecione os tipos...',
+    'aria-label': 'Tipo de transação',
   },
   argTypes: {
     options: { control: false },
