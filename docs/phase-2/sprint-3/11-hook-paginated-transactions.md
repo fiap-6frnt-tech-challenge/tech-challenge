@@ -6,6 +6,7 @@
 | **Owner**              | Dev 3 (State & Integration)                                                                                                   |
 | **Duração estimada**   | 0.5 dia                                                                                                                       |
 | **Branch recomendada** | `dev3/hook-paginated-filters`                                                                                                 |
+| **Status**             | ✅ Implementado                                                                                                               |
 | **Depende de**         | [Task 01 — Paginação + Filtros](./01-backend-pagination-filters.md) — endpoint aceitando `q`, `amount_gte/lte`, `category[]`  |
 | **Desbloqueia**        | [Task 13 — Integração Paginação](./13-integration-pagination.md) · [Task 12 — Filtros Avançados](./12-integration-filters.md) |
 
@@ -21,7 +22,9 @@ O `api-client` **já tem** `usePaginatedTransactions` (offset-based, via `useQue
 
 ## Implementação
 
-### 1. Estender `GetPaginatedParams` e `getPaginated` no `http.ts`
+### ✅ 1. Estender `GetPaginatedParams` e `getPaginated` no `http.ts`
+
+Implementado em `packages/api-client/src/http.ts` (linhas 22–34 e 79–110).
 
 ```ts
 // packages/api-client/src/http.ts
@@ -33,7 +36,6 @@ export interface GetPaginatedParams {
   dateTo?: string;
   sortBy?: string;
   sortOrder?: string;
-  // --- novos (Sprint 3) ---
   q?: string;
   amount_gte?: number;
   amount_lte?: number;
@@ -76,9 +78,9 @@ async getPaginated({
 }
 ```
 
-### 2. Normalizar os novos filtros em `usePaginatedTransactions`
+### ✅ 2. Normalizar os novos filtros em `usePaginatedTransactions`
 
-O hook já normaliza os params para alinhar a `queryKey` ao request real (omitindo filtros vazios). Estender com os novos campos:
+Implementado em `packages/api-client/src/hooks.ts` (linhas 50–71).
 
 ```ts
 // packages/api-client/src/hooks.ts
@@ -100,14 +102,14 @@ export function usePaginatedTransactions(params: GetPaginatedParams) {
   return useQuery({
     queryKey: transactionKeys.list({ ...normalizedParams }),
     queryFn: () => TransactionService.getPaginated(normalizedParams),
-    placeholderData: (prev) => prev, // mantém a página anterior visível durante a troca
+    placeholderData: (prev) => prev,
   });
 }
 ```
 
 > Nada muda em `keys.ts`: `transactionKeys.list(filters)` já serializa o objeto de filtros inteiro na key, então cada combinação de filtro/página tem cache próprio.
 
-### 3. Invalidação (já coberta)
+### ✅ 3. Invalidação (já coberta)
 
 As mutações `useCreateTransaction`/`useUpdateTransaction`/`useDeleteTransaction` já invalidam `transactionKeys.lists()` no sucesso — isso cobre **todas** as combinações de filtro/página automaticamente. Não é preciso código novo.
 
@@ -115,12 +117,16 @@ As mutações `useCreateTransaction`/`useUpdateTransaction`/`useDeleteTransactio
 
 ## Validação
 
-- [ ] `usePaginatedTransactions({ page, q: 'uber' })` dispara request com `?q=uber` e atualiza a lista
-- [ ] `category: ['food','transport']` vira `?category=food&category=transport`
-- [ ] `amount_gte`/`amount_lte` aparecem no request quando definidos; ausentes quando `undefined`
-- [ ] Mudar qualquer filtro gera nova `queryKey` (novo cache); voltar à combinação anterior reusa o cache
-- [ ] Trocar de página mantém a anterior na tela até a nova chegar (`placeholderData`)
-- [ ] Criar/editar/excluir transação refaz a lista paginada atual
+- [x] `GetPaginatedParams` aceita `q`, `amount_gte`, `amount_lte`, `category[]` — confirmado no código
+- [x] `getPaginated` serializa cada filtro no `URLSearchParams` apenas quando definido/não-vazio
+- [x] `category[]` usa `query.append` — gera `?category=food&category=transport`
+- [x] `amount_gte`/`amount_lte` ausentes no request quando `undefined`
+- [x] Normalização na `queryKey` omite filtros vazios — cache estável por combinação
+- [x] `placeholderData: (prev) => prev` mantém página anterior visível durante troca
+- [x] Invalidação por mutações cobre todas as combinações de filtro/página automaticamente
+- [x] Validar em runtime: filtros refletidos nos requests de rede (DevTools)
+- [x] Validar em runtime: trocar filtro → nova entrada no cache TanStack Query
+- [x] Validar em runtime: criar/editar/excluir transação refaz a lista atual
 
 ---
 

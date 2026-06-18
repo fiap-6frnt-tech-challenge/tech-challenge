@@ -27,6 +27,10 @@ export interface GetPaginatedParams {
   dateTo?: string;
   sortBy?: string;
   sortOrder?: string;
+  q?: string;
+  amount_gte?: number;
+  amount_lte?: number;
+  category?: string[];
 }
 
 export interface SummaryRange {
@@ -80,6 +84,10 @@ export const TransactionService = {
     dateTo,
     sortBy = 'date',
     sortOrder = 'desc',
+    q,
+    amount_gte,
+    amount_lte,
+    category,
   }: GetPaginatedParams): Promise<PaginatedResponse> {
     const query = new URLSearchParams();
     query.set('_page', String(page));
@@ -88,6 +96,10 @@ export const TransactionService = {
     if (type && type !== 'all') query.set('type', type);
     if (dateFrom) query.set('date_gte', dateFrom);
     if (dateTo) query.set('date_lte', dateTo);
+    if (q) query.set('q', q);
+    if (amount_gte !== undefined) query.set('amount_gte', String(amount_gte));
+    if (amount_lte !== undefined) query.set('amount_lte', String(amount_lte));
+    category?.forEach((c) => query.append('category', c));
 
     const sortPrefix = sortOrder === 'asc' ? '' : '-';
     query.set('_sort', `${sortPrefix}${sortBy}`);

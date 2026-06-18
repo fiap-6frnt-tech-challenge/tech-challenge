@@ -57,6 +57,10 @@ export function usePaginatedTransactions(params: GetPaginatedParams) {
     ...(params.type && params.type !== 'all' ? { type: params.type } : {}),
     ...(params.dateFrom ? { dateFrom: params.dateFrom } : {}),
     ...(params.dateTo ? { dateTo: params.dateTo } : {}),
+    ...(params.q ? { q: params.q } : {}),
+    ...(params.amount_gte !== undefined ? { amount_gte: params.amount_gte } : {}),
+    ...(params.amount_lte !== undefined ? { amount_lte: params.amount_lte } : {}),
+    ...(params.category?.length ? { category: params.category } : {}),
   };
 
   return useQuery({
