@@ -16,6 +16,7 @@ export * from './Modal';
 export * from './FeedbackModal';
 export * from './Button';
 export * from './Input';
+export * from './FileUpload';
 export * from './Badge';
 export * from './Card';
 export * from './Pagination';
