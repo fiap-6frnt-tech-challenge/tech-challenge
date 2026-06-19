@@ -35,6 +35,21 @@ export function formatCurrencyExact(value: number): string {
   });
 }
 
+export function formatFileSize(bytes: number): string {
+  if (bytes <= 0) return '0 B';
+
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / 1024 ** exponent;
+
+  const formatted = value.toLocaleString('pt-BR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1,
+  });
+
+  return `${formatted} ${units[exponent]}`;
+}
+
 export function formatDate(dateStr: string | Date): string {
   if (typeof dateStr === 'string') {
     dateStr = `${dateStr}T00:00:00`;
