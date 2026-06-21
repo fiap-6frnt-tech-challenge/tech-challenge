@@ -7,8 +7,8 @@ import type { IRangeInput } from './IRangeInput';
 
 const DECIMAL_AMOUNT_PATTERN = /^\d{0,12}(\.\d{0,2})?$/;
 
-function formatDisplayValue(value: number | '') {
-  if (value === '') return '';
+function formatDisplayValue(value: number | undefined) {
+  if (value === undefined) return '';
 
   return value.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
@@ -16,8 +16,8 @@ function formatDisplayValue(value: number | '') {
   });
 }
 
-function formatEditableValue(value: number | '') {
-  if (value === '') return '';
+function formatEditableValue(value: number | undefined) {
+  if (value === undefined) return '';
 
   return String(value).replace('.', ',');
 }
@@ -26,8 +26,8 @@ interface RangeFieldProps {
   id: string;
   label: string;
   ariaLabel: string;
-  value: number | '';
-  onValueChange: (value: number | '') => void;
+  value: number | undefined;
+  onValueChange: (value: number | undefined) => void;
   currency: string;
   error: boolean;
   describedBy?: string;
@@ -63,7 +63,7 @@ function RangeField({
     setDisplayValue(nextValue);
 
     if (normalizedValue === '') {
-      onValueChange('');
+      onValueChange(undefined);
       return;
     }
 
@@ -140,7 +140,7 @@ export function RangeInput({
   const errorId = useId();
   const minInputId = useId();
   const maxInputId = useId();
-  const isInvalidRange = minValue !== '' && maxValue !== '' && minValue > maxValue;
+  const isInvalidRange = minValue !== undefined && maxValue !== undefined && minValue > maxValue;
   const errorMessage =
     error ?? (isInvalidRange ? 'O valor mínimo não pode ser maior que o valor máximo' : undefined);
   const hasError = Boolean(errorMessage);

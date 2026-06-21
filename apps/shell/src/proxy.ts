@@ -13,8 +13,12 @@ export const proxy = auth((req) => {
   const isPublicRoute = publicAuthRoutes.includes(nextUrl.pathname);
 
   if (isApiRoute) return;
+  if (req.method === 'OPTIONS') return;
 
   if (!isLoggedIn && !isPublicRoute) {
+    if (nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
     return NextResponse.redirect(new URL('/login', nextUrl));
   }
 

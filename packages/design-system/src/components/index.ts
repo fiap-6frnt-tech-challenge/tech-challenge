@@ -7,6 +7,7 @@ export * from './Tooltip';
 export * from './DatePicker';
 export * from './FormField';
 export * from './Select';
+export * from './CategorySelect';
 export * from './MultiSelect';
 export * from './Header';
 export * from './Sidebar';
