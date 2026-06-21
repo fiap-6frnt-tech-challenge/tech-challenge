@@ -1,13 +1,26 @@
 # Task 06 — DS: `CategorySelect`
 
-|                        |                                                                           |
-| ---------------------- | ------------------------------------------------------------------------- |
-| **Sprint**             | [Sprint 3 — Transactions MFE + Enhancements](../sprint-3-transactions.md) |
-| **Owner**              | Dev 2 (DS & UI Pages)                                                     |
-| **Duração estimada**   | 1 dia                                                                     |
-| **Branch recomendada** | `dev2/ds-category-select`                                                 |
-| **Depende de**         | Task 03 (tipo `CategoryId` de `@bytebank/shared`)                         |
-| **PR só abre**         | Após Task 03 mergeada e Chromatic verde                                   |
+|                        |                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| **Sprint**             | [Sprint 3 — Transactions MFE + Enhancements](../sprint-3-transactions.md)       |
+| **Owner**              | Dev 2 (DS & UI Pages)                                                           |
+| **Duração estimada**   | 1 dia                                                                           |
+| **Branch recomendada** | `dev2/ds-category-select`                                                       |
+| **Depende de**         | Task 03 (tipo `CategoryId` de `@bytebank/shared`)                               |
+| **PR só abre**         | Após Task 03 mergeada e Chromatic verde                                         |
+| **Status**             | ✅ Implementado (branch `dev2/ds-category-select`) — falta abrir PR + Chromatic |
+
+---
+
+## Status da implementação
+
+Componente criado em `packages/design-system/src/components/CategorySelect/` (`CategorySelect.tsx`, `ICategorySelect.ts`, `index.ts`, `CategorySelect.stories.tsx`) e exportado no barrel `components/index.ts`.
+
+- ✅ Props, comportamento, stories e gotchas abaixo concluídos (ver checklists).
+- ✅ Validação local: `vitest --project storybook CategorySelect` → 6/6 verde (inclui a11y/axe); ESLint e `tsc --noEmit` limpos.
+- ⬜ Abrir PR + Chromatic verde.
+
+**Ajustes de a11y feitos:** badge "Sugerido" usa `bg-brand-primary` + `text-content-inverse` (~5.8:1) no lugar do token `transfer` (4.35:1, reprova no contraste); sem `aria-activedescendant` (proibido em `role="button"`), seguindo o padrão do `Select` existente.
 
 ---
 
@@ -36,27 +49,27 @@ interface ICategorySelect {
 
 ## Comportamento
 
-- Combobox single-select com lista das categorias de `CATEGORIES` (importado de `@bytebank/shared`).
-- Quando `suggestedCategory` é passado:
-  - A opção correspondente aparece no topo da lista com badge **"Sugerido"** (cor accent/DS).
-  - Não seleciona automaticamente — o usuário decide.
-- Keyboard nav: `↓`/`↑` navega, `Enter` seleciona, `Esc` fecha.
-- Campo obrigatório: exibe `error` abaixo se `value === ''` e o form foi submetido.
+- [x] Combobox single-select com lista das categorias de `CATEGORIES` (importado de `@bytebank/shared`).
+- [x] Quando `suggestedCategory` é passado:
+  - [x] A opção correspondente aparece no topo da lista com badge **"Sugerido"** (cor accent/DS).
+  - [x] Não seleciona automaticamente — o usuário decide.
+- [x] Keyboard nav: `↓`/`↑` navega, `Enter` seleciona, `Esc` fecha (+ `Home`/`End`/`Tab` e click-outside).
+- [x] Campo obrigatório: exibe `error` abaixo (com `aria-invalid` + `aria-describedby`).
 
 ---
 
 ## Stories obrigatórias
 
-- `Empty` — sem seleção
-- `ComSugestao` — `suggestedCategory="transport"`, badge "Sugerido" visível na opção Transporte
-- `Selecionado` — valor pré-selecionado
-- `Disabled`
-- `ComErro` — com mensagem de erro
-- `Interaction: aceitar sugestão` — `userEvent` clica na opção sugerida
+- [x] `Empty` — sem seleção
+- [x] `ComSugestao` — `suggestedCategory="transport"`, badge "Sugerido" visível na opção Transporte
+- [x] `Selecionado` — valor pré-selecionado
+- [x] `Disabled`
+- [x] `ComErro` — com mensagem de erro
+- [x] `Interaction: aceitar sugestão` — `userEvent` clica na opção sugerida
 
 ---
 
 ## Gotchas
 
-1. **Não duplicar a opção sugerida** — a opção sugerida aparece no topo E na posição normal da lista. Deixar claro visualmente qual está em evidência, mas garantir que a lista não duplica a opção (ou deduplique explicitamente).
-2. **`CategoryId` como tipo externo** — ao escrever a story, importar `CATEGORIES` de `@bytebank/shared` para gerar as opções dinamicamente, evitando lista hardcoded no DS.
+1. [x] **Não duplicar a opção sugerida** — resolvido por dedupe explícito: a sugerida é fixada no topo (com badge) e **filtrada** da posição normal, então só aparece uma vez.
+2. [x] **`CategoryId` como tipo externo** — as stories importam `CATEGORIES` de `@bytebank/shared` e geram as opções dinamicamente (sem lista hardcoded).
