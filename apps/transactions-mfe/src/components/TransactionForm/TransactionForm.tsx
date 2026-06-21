@@ -34,7 +34,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
       control,
       handleSubmit,
       reset,
-      formState: { errors, isDirty },
+      formState: { errors, isDirty, isValid },
     } = useForm({
       mode: 'onChange',
       resolver: zodResolver(transactionFormSchema),
@@ -179,7 +179,11 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
         </div>
 
         <div className="flex flex-col gap-sm mt-lg sm:flex-row sm:justify-end">
-          <Button type="submit" disabled={isSubmitting || !isDirty} loading={isSubmitting}>
+          <Button
+            type="submit"
+            disabled={isSubmitting || !isDirty || !isValid}
+            loading={isSubmitting}
+          >
             {getSubmitButtonLabel()}
           </Button>
         </div>

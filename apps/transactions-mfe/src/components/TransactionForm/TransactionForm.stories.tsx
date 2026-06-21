@@ -119,22 +119,25 @@ export const CategorySuggestion: Story = {
   },
 };
 
-export const CategoryRequired: Story = {
-  name: 'Validation: Category Required',
+export const SubmitDisabledUntilValid: Story = {
+  name: 'Validation: Submit disabled until valid',
   args: {},
   parameters: {
     docs: {
       description: {
-        story: 'Submitting without choosing a category surfaces the required-field error.',
+        story:
+          'The submit button stays disabled until every required field is valid, so an incomplete transaction (missing valor, data or categoria) can never be saved.',
       },
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const submit = canvas.getByRole('button', { name: /Concluir transação/i });
+
+    await expect(submit).toBeDisabled();
 
     await userEvent.type(canvas.getByLabelText('Descrição'), 'Compra avulsa');
-    await userEvent.click(canvas.getByRole('button', { name: /Concluir transação/i }));
 
-    await expect(await canvas.findByText('Categoria é obrigatória')).toBeInTheDocument();
+    await expect(submit).toBeDisabled();
   },
 };
