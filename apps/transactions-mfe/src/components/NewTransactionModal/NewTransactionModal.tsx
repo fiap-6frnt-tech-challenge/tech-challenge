@@ -26,7 +26,6 @@ const ERROR_FEEDBACK = {
 };
 
 const DEFAULT_USER_ID = 'joana';
-const DEFAULT_CATEGORY = 'default';
 
 export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalProps): ReactElement {
   const { mutateAsync: createTransaction } = useCreateTransaction();
@@ -49,7 +48,6 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
       await createTransaction({
         ...pendingData,
         userId: DEFAULT_USER_ID,
-        category: DEFAULT_CATEGORY,
         attachments: [],
       });
 

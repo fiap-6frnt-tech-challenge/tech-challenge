@@ -19,6 +19,7 @@ export const transactionFormSchema = z.object({
     .multipleOf(0.01, { message: 'O valor deve ter no máximo 2 casas decimais' }),
   date: z.string().min(1, 'Selecione uma data'),
   description: z.string().min(1, 'Adicione uma descrição'),
+  category: z.string().min(1, 'Categoria é obrigatória'),
 });
 
 export type TransactionFormSchemaValues = z.infer<typeof transactionFormSchema>;
