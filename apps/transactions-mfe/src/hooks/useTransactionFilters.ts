@@ -11,6 +11,10 @@ function parseFiltersFromParams(params: URLSearchParams): TransactionFiltersValu
     sortOrder:
       (params.get('sortOrder') as TransactionFiltersValue['sortOrder']) ??
       DEFAULT_FILTERS.sortOrder,
+    q: params.get('q') ?? DEFAULT_FILTERS.q,
+    amount_gte: params.get('amount_gte') ? Number(params.get('amount_gte')) : undefined,
+    amount_lte: params.get('amount_lte') ? Number(params.get('amount_lte')) : undefined,
+    category: params.getAll('category'),
   };
 }
 
@@ -21,6 +25,10 @@ function buildFilterParams(filters: TransactionFiltersValue): URLSearchParams {
   if (filters.dateTo) params.set('dateTo', filters.dateTo);
   if (filters.sortBy !== DEFAULT_FILTERS.sortBy) params.set('sortBy', filters.sortBy);
   if (filters.sortOrder !== DEFAULT_FILTERS.sortOrder) params.set('sortOrder', filters.sortOrder);
+  if (filters.q) params.set('q', filters.q);
+  if (filters.amount_gte !== undefined) params.set('amount_gte', String(filters.amount_gte));
+  if (filters.amount_lte !== undefined) params.set('amount_lte', String(filters.amount_lte));
+  filters.category.forEach((c) => params.append('category', c));
   return params;
 }
 
@@ -39,6 +47,7 @@ export function useTransactionFilters() {
     const query = next.toString();
     const url = query ? `?${query}` : window.location.pathname;
     window.history.replaceState(window.history.state, '', url);
+    window.dispatchEvent(new PopStateEvent('popstate'));
     setSearch(query ? `?${query}` : '');
   }, []);
 
