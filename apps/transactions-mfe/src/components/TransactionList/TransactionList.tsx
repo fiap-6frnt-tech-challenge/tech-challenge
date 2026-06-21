@@ -6,6 +6,7 @@ import type { TransactionListProps } from './ITransactionList';
 export function TransactionList({
   transactions,
   isLoading = false,
+  isPlaceholderData = false,
   onEdit,
   onDelete,
   emptyState,
@@ -13,6 +14,7 @@ export function TransactionList({
   className,
   showActions = true,
   tooltipPosition,
+  containerRef,
 }: TransactionListProps) {
   const renderListContent = () => {
     if (isLoading) {
@@ -44,12 +46,16 @@ export function TransactionList({
   };
 
   return (
-    <div className={cn('@container', className)}>
+    <div ref={containerRef} className={cn('@container', className)} aria-busy={isPlaceholderData}>
       {title && (
         <h2 className="heading text-content-primary sm:truncate sm:tracking-tight mb-4">{title}</h2>
       )}
 
-      <ul className="flex flex-col gap-2">{renderListContent()}</ul>
+      <ul
+        className={cn('flex flex-col gap-2 transition-opacity', isPlaceholderData && 'opacity-60')}
+      >
+        {renderListContent()}
+      </ul>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Funnel, ReceiptText, SearchX } from 'lucide-react';
 import { EmptyState, ErrorState, IconButton, Pagination } from '@bytebank/design-system';
 import {
@@ -20,9 +20,20 @@ import { useTransactionFilters } from './hooks/useTransactionFilters';
 export default function TransactionsPage() {
   const { filters, setFilters, clearFilters, page, setPage, isFilterVisible, setIsFilterVisible } =
     useTransactionFilters();
-  const { data: paginated, isLoading, isError } = usePaginatedTransactions({ page, ...filters });
+  const {
+    data: paginated,
+    isLoading,
+    isError,
+    isPlaceholderData,
+  } = usePaginatedTransactions({ page, ...filters });
   const transactions = paginated?.data ?? [];
   const totalPages = Math.max(1, paginated?.pages ?? 1);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  function handlePageChange(nextPage: number) {
+    setPage(nextPage);
+    listRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   const dispatch = useAppDispatch();
   const { mutateAsync: deleteTransaction } = useDeleteTransaction();
@@ -162,14 +173,16 @@ export default function TransactionsPage() {
           />
         </div>
         <TransactionList
+          containerRef={listRef}
           transactions={transactions}
           isLoading={isLoading}
+          isPlaceholderData={isPlaceholderData}
           onEdit={handleEditRequest}
           onDelete={handleDeleteRequest}
           emptyState={renderEmptyState()}
           className="w-full overflow-y-auto flex-1 min-h-0"
         />
-        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </section>
       <DeleteTransactionModal
         transaction={pendingDelete}

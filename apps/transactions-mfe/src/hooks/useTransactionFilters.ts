@@ -76,7 +76,7 @@ export function useTransactionFilters() {
     applyParams(new URLSearchParams());
   }, [applyParams]);
 
-  const hasActiveFilters = search.replace(/^\?/, '') !== '';
+  const hasActiveFilters = buildFilterParams(filters).toString() !== '';
   const [isFilterVisible, setIsFilterVisible] = useState(hasActiveFilters);
 
   return { filters, setFilters, clearFilters, page, setPage, isFilterVisible, setIsFilterVisible };
