@@ -10,3 +10,8 @@ export const summaryKeys = {
   all: ['summary'] as const,
   range: (range: { from?: string; to?: string }) => [...summaryKeys.all, range] as const,
 };
+
+export const attachmentKeys = {
+  list: (transactionId: string) =>
+    [...transactionKeys.detail(transactionId), 'attachments'] as const,
+};
