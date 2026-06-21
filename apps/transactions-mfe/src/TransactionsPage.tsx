@@ -107,7 +107,13 @@ export default function TransactionsPage() {
   }
 
   const hasActiveFilters =
-    filters.type !== DEFAULT_FILTERS.type || !!filters.dateFrom || !!filters.dateTo;
+    filters.type !== DEFAULT_FILTERS.type ||
+    !!filters.dateFrom ||
+    !!filters.dateTo ||
+    !!filters.q ||
+    filters.amount_gte !== undefined ||
+    filters.amount_lte !== undefined ||
+    filters.category.length > 0;
 
   function renderEmptyState() {
     if (hasActiveFilters) {
@@ -145,15 +151,15 @@ export default function TransactionsPage() {
             <IconButton
               icon={<Funnel />}
               aria-label="Adicionar filtros"
-              className="sm:hidden"
               onClick={() => setIsFilterVisible(!isFilterVisible)}
             />
           </h1>
-          <div
-            className={`bg-background sm:block pb-lg ${isFilterVisible ? 'block filter-panel-in [animation:filter-panel-in_0.2s_ease-out]' : 'hidden'}`}
-          >
-            <TransactionFilters value={filters} onChange={setFilters} onClear={clearFilters} />
-          </div>
+          <TransactionFilters
+            value={filters}
+            onChange={setFilters}
+            onClear={clearFilters}
+            isFilterVisible={isFilterVisible}
+          />
         </div>
         <TransactionList
           transactions={transactions}
