@@ -8,6 +8,26 @@
 | **Branch recomendada** | `dev2/zod-validation`                                                                                                                                                                                  |
 | **Depende de**         | [Task 03 — `suggestCategory`](./03-shared-categories-suggest.md) (tipo `CategoryId` estável) · [Task 14 — Integração CategorySelect](./14-integration-category-form.md) (shape final do form definido) |
 | **Desbloqueia**        | [Task 18 — Testes](./18-tests.md) (testes de validação dependem do schema final)                                                                                                                       |
+| **Status**             | ✅ Concluída                                                                                                                                                                                           |
+
+---
+
+## Status da implementação
+
+Concluída. Arquivos:
+
+- **Criado** `packages/shared/src/schemas/transaction.ts` — `transactionFormSchema` + `attachmentSchema` + tipo `TransactionFormValues`.
+- **`packages/shared/src/index.ts`** — re-exporta os três do barrel.
+- **`apps/transactions-mfe/src/components/TransactionForm/schema.ts`** — agora só re-exporta de `@bytebank/shared` (sem schema duplicado, gotcha #2).
+- **`apps/transactions-mfe/.../TransactionForm/ITransactionForm.ts`** — usa o `TransactionFormValues` re-exportado (antes era `TransactionFormSchemaValues` local).
+
+Validado: `type-check` + `lint` em shared/transactions-mfe/api-client/stores/design-system/dashboard-mfe; os 7 itens do checklist conferidos via parse direto do schema (todos pt-BR); dev servers recompilaram limpos.
+
+> **Desvios do roteiro (necessários):**
+>
+> 1. **Zod v4** — o repo usa `zod@4.4.3`. As APIs do rascunho (`errorMap: () => (...)`, `invalid_type_error`) **não existem mais** no v4. Usei o parâmetro unificado `{ message }` (já é o padrão do schema da Sprint 1). `z.enum`, `.positive`, `.min/.max`, `.refine` seguem com mensagem direta.
+> 2. **`attachmentSchema` inclui `mimeType`** — o domínio `Attachment` tem `mimeType` obrigatório; sem ele, o `attachments` inferido não seria atribuível a `Partial<NewTransaction>` no `updateTransaction` (quebraria o type-check). Os 5 campos do rascunho + `mimeType` = `Attachment`.
+> 3. **`type`/`category` derivam de `TRANSACTION_TYPE`/`CATEGORIES`** (DRY). `type` é mantido como união literal (`as const`) → continua `TransactionType`; `category` fica `string` (gotcha #1). Removido o antigo `multipleOf(0.01)` do `amount` (fora do schema do roteiro).
 
 ---
 
@@ -79,13 +99,13 @@ export {
 
 ## Validação
 
-- [ ] Submeter form sem `category` → erro "Categoria é obrigatória" no campo
-- [ ] `description` com 2 caracteres → erro "Mínimo 3 caracteres"
-- [ ] `description` com 141 caracteres → erro "Máximo 140 caracteres"
-- [ ] `date` com data de amanhã → erro "Data não pode ser futura"
-- [ ] `amount` negativo ou zero → erro "Valor deve ser positivo"
-- [ ] Mais de 5 attachments no schema → erro "Máximo 5 anexos"
-- [ ] Todos os erros exibidos em pt-BR
+- [x] Submeter form sem `category` → erro "Categoria é obrigatória" no campo
+- [x] `description` com 2 caracteres → erro "Mínimo 3 caracteres"
+- [x] `description` com 141 caracteres → erro "Máximo 140 caracteres"
+- [x] `date` com data de amanhã → erro "Data não pode ser futura"
+- [x] `amount` negativo ou zero → erro "Valor deve ser positivo"
+- [x] Mais de 5 attachments no schema → erro "Máximo 5 anexos"
+- [x] Todos os erros exibidos em pt-BR
 
 ---
 

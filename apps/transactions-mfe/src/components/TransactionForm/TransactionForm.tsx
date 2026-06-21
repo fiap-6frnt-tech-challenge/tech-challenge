@@ -9,7 +9,9 @@ import { DatePicker } from '@bytebank/design-system';
 import { Input } from '@bytebank/design-system';
 import { HelperText } from '@bytebank/design-system';
 import { Select } from '@bytebank/design-system';
-import { TRANSACTION_TYPE, TRANSACTION_TYPE_OPTIONS } from '@bytebank/shared';
+import { CategorySelect } from '@bytebank/design-system';
+import { TRANSACTION_TYPE, TRANSACTION_TYPE_OPTIONS, suggestCategory } from '@bytebank/shared';
+import type { CategoryId } from '@bytebank/shared';
 import { transactionFormSchema } from './schema';
 import type {
   TransactionFormProps,
@@ -32,7 +34,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
       control,
       handleSubmit,
       reset,
-      formState: { errors, isDirty },
+      formState: { errors, isDirty, isValid },
     } = useForm({
       mode: 'onChange',
       resolver: zodResolver(transactionFormSchema),
@@ -41,12 +43,14 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
         amount: initialValues?.amount || 0,
         date: initialValues?.date || '',
         description: initialValues?.description || '',
+        category: initialValues?.category ?? '',
       },
     });
 
     useImperativeHandle(ref, () => ({ reset }), [reset]);
 
     const description = useWatch({ control, name: 'description' });
+    const suggestedCategory = suggestCategory(description ?? '');
 
     const handleFormSubmit = (data: TransactionFormValues) => {
       onSubmit({
@@ -157,8 +161,29 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
           </div>
         </div>
 
+        <div>
+          <Controller
+            name="category"
+            control={control}
+            render={({ field }) => (
+              <CategorySelect
+                label="Categoria"
+                value={(field.value ?? '') as CategoryId | ''}
+                onChange={field.onChange}
+                suggestedCategory={suggestedCategory}
+                disabled={isSubmitting}
+                error={errors.category?.message}
+              />
+            )}
+          />
+        </div>
+
         <div className="flex flex-col gap-sm mt-lg sm:flex-row sm:justify-end">
-          <Button type="submit" disabled={isSubmitting || !isDirty} loading={isSubmitting}>
+          <Button
+            type="submit"
+            disabled={isSubmitting || !isDirty || !isValid}
+            loading={isSubmitting}
+          >
             {getSubmitButtonLabel()}
           </Button>
         </div>
