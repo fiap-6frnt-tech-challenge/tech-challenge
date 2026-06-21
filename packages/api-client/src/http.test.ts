@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { SummaryService, TransactionService } from './http';
+import { AttachmentService, SummaryService, TransactionService } from './http';
 
 function mockFetch(body: unknown, ok = true) {
   const fn = vi.fn().mockResolvedValue({
@@ -106,5 +106,52 @@ describe('SummaryService', () => {
     mockFetch({ error: 'boom' }, false);
 
     await expect(SummaryService.get()).rejects.toThrow('Falha ao buscar resumo financeiro');
+  });
+});
+
+describe('AttachmentService', () => {
+  const attachment = {
+    id: 'attachment-1',
+    url: 'https://blob.example/attachment-1.pdf',
+    name: 'recibo.pdf',
+    size: 1024,
+    mimeType: 'application/pdf',
+  };
+
+  it('list busca anexos da transação', async () => {
+    const fetchMock = mockFetch([attachment]);
+
+    await expect(AttachmentService.list('tx-1')).resolves.toEqual([attachment]);
+    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/tx-1/attachments');
+  });
+
+  it('upload envia multipart/form-data sem forçar Content-Type', async () => {
+    const fetchMock = mockFetch(attachment);
+    const file = new File(['pdf'], 'recibo.pdf', { type: 'application/pdf' });
+
+    await expect(AttachmentService.upload('tx-1', file)).resolves.toEqual(attachment);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/transactions/tx-1/attachments');
+    expect(init.method).toBe('POST');
+    expect(init.body).toBeInstanceOf(FormData);
+    expect(init.headers).toBeUndefined();
+  });
+
+  it('remove usa DELETE no anexo informado', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(AttachmentService.remove('tx-1', 'attachment-1')).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/tx-1/attachments/attachment-1', {
+      method: 'DELETE',
+    });
+  });
+
+  it('lança erro quando o upload falha', async () => {
+    mockFetch({ error: 'boom' }, false);
+    const file = new File(['pdf'], 'recibo.pdf', { type: 'application/pdf' });
+
+    await expect(AttachmentService.upload('tx-1', file)).rejects.toThrow('Falha ao enviar anexo');
   });
 });

@@ -1,4 +1,5 @@
 import type {
+  Attachment,
   DashboardSummary,
   NewTransaction,
   Transaction,
@@ -120,5 +121,35 @@ export const SummaryService = {
     const res = await fetch(`${apiBaseUrl}/transactions/summary${qs ? `?${qs}` : ''}`);
     if (!res.ok) throw new Error('Falha ao buscar resumo financeiro');
     return res.json();
+  },
+};
+
+export const AttachmentService = {
+  async list(transactionId: string): Promise<Attachment[]> {
+    const res = await fetch(`${apiBaseUrl}/transactions/${transactionId}/attachments`);
+    if (!res.ok) throw new Error('Falha ao buscar anexos');
+    return res.json();
+  },
+
+  async upload(transactionId: string, file: File): Promise<Attachment> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${apiBaseUrl}/transactions/${transactionId}/attachments`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Falha ao enviar anexo');
+    return res.json();
+  },
+
+  async remove(transactionId: string, attachmentId: string): Promise<void> {
+    const res = await fetch(
+      `${apiBaseUrl}/transactions/${transactionId}/attachments/${attachmentId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+    if (!res.ok) throw new Error('Falha ao remover anexo');
   },
 };
