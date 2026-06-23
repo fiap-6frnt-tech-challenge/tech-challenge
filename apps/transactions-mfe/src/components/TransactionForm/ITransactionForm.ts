@@ -8,6 +8,7 @@ export interface TransactionFormProps {
   onCancel?: () => void;
   initialValues?: Partial<NewTransaction>;
   isSubmitting?: boolean;
+  hasExternalChanges?: boolean;
   attachmentSlot?: ReactNode;
 }
 export interface TransactionFormRef {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AttachmentList, FileUpload, Modal } from '@bytebank/design-system';
 import { showFeedback, useAppDispatch } from '@bytebank/stores';
 import { EditTransactionModalProps } from './IEditTransactionModal';
@@ -15,6 +15,7 @@ export function EditTransactionModal({
 }: EditTransactionModalProps) {
   const dispatch = useAppDispatch();
   const transactionId = transaction?.id;
+  const [hasAttachmentChanges, setHasAttachmentChanges] = useState(false);
   const {
     uploadedAttachments,
     removing,
@@ -27,6 +28,8 @@ export function EditTransactionModal({
   } = useAttachments(transactionId);
 
   useEffect(() => {
+    setHasAttachmentChanges(false);
+
     if (!transactionId) {
       resetAttachments();
       return;
@@ -48,6 +51,7 @@ export function EditTransactionModal({
 
     try {
       await uploadFiles(files, transactionId);
+      setHasAttachmentChanges(true);
     } catch {
       dispatch(
         showFeedback({
@@ -64,6 +68,7 @@ export function EditTransactionModal({
 
     try {
       await removeAttachment(attachmentId, transactionId);
+      setHasAttachmentChanges(true);
     } catch {
       dispatch(
         showFeedback({
@@ -82,6 +87,7 @@ export function EditTransactionModal({
         onCancel={onCancel}
         initialValues={transaction || undefined}
         isSubmitting={isSubmitting}
+        hasExternalChanges={hasAttachmentChanges}
         attachmentSlot={
           <div className="flex flex-col gap-sm">
             <p className="body-semibold text-content-primary">Anexos</p>
