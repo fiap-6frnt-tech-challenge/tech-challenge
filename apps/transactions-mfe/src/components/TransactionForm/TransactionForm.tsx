@@ -184,7 +184,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
           </section>
         )}
 
-        <div className="flex flex-col gap-sm mt-lg sm:flex-row sm:justify-end">
+        <div className="mt-lg flex flex-col gap-sm sm:flex-row sm:justify-end">
           <Button
             type="submit"
             disabled={isSubmitting || !isDirty || !isValid}
