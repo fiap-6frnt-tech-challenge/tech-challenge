@@ -35,8 +35,10 @@ import {
   useCreateTransaction,
   useDashboardSummary,
   useDeleteTransaction,
+  usePaginatedTransactions,
   useUpdateTransaction,
 } from './hooks';
+import { TransactionService } from './http';
 import { summaryKeys, transactionKeys } from './keys';
 
 beforeEach(() => {
@@ -130,5 +132,106 @@ describe('transaction mutations summary invalidation', () => {
       queryKey: transactionKeys.detail('tx-1'),
     });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: summaryKeys.all });
+  });
+});
+
+describe('usePaginatedTransactions', () => {
+  const getPaginatedSpy = vi.spyOn(TransactionService, 'getPaginated');
+
+  function lastQueryOptions() {
+    return mocks.useQuery.mock.calls.at(-1)![0];
+  }
+
+  beforeEach(() => {
+    getPaginatedSpy.mockResolvedValue({ data: [], pages: 1, items: 0 });
+  });
+
+  it('normaliza defaults (perPage=10, sort -date) na queryKey e expõe queryFn', () => {
+    usePaginatedTransactions({ page: 1 });
+
+    const options = lastQueryOptions();
+    expect(options.queryKey).toEqual(
+      transactionKeys.list({ page: 1, perPage: 10, sortBy: 'date', sortOrder: 'desc' })
+    );
+    expect(typeof options.queryFn).toBe('function');
+    expect(typeof options.placeholderData).toBe('function');
+  });
+
+  it('omite type "all" e filtros vazios da queryKey', () => {
+    usePaginatedTransactions({ page: 1, type: 'all', q: '', dateFrom: '', dateTo: '' });
+
+    expect(lastQueryOptions().queryKey).toEqual(
+      transactionKeys.list({ page: 1, perPage: 10, sortBy: 'date', sortOrder: 'desc' })
+    );
+  });
+
+  it('inclui os filtros ativos (q, faixa de valor, categorias, type) na queryKey', () => {
+    usePaginatedTransactions({
+      page: 2,
+      perPage: 5,
+      type: 'withdrawal',
+      q: 'uber',
+      amount_gte: 100,
+      amount_lte: 500,
+      category: ['food', 'transport'],
+      sortBy: 'amount',
+      sortOrder: 'asc',
+      dateFrom: '2026-01-01',
+      dateTo: '2026-06-30',
+    });
+
+    expect(lastQueryOptions().queryKey).toEqual(
+      transactionKeys.list({
+        page: 2,
+        perPage: 5,
+        sortBy: 'amount',
+        sortOrder: 'asc',
+        type: 'withdrawal',
+        dateFrom: '2026-01-01',
+        dateTo: '2026-06-30',
+        q: 'uber',
+        amount_gte: 100,
+        amount_lte: 500,
+        category: ['food', 'transport'],
+      })
+    );
+  });
+
+  it('queryFn delega para TransactionService.getPaginated com os params normalizados', async () => {
+    const response = { data: [], pages: 3, items: 25 };
+    getPaginatedSpy.mockResolvedValue(response);
+
+    usePaginatedTransactions({ page: 2, perPage: 3, q: 'uber', category: ['food'] });
+    const options = lastQueryOptions();
+
+    await expect(options.queryFn()).resolves.toBe(response);
+    expect(getPaginatedSpy).toHaveBeenCalledWith({
+      page: 2,
+      perPage: 3,
+      sortBy: 'date',
+      sortOrder: 'desc',
+      q: 'uber',
+      category: ['food'],
+    });
+  });
+
+  it('mantém a queryKey estável para os mesmos filtros e a altera ao mudar a página', () => {
+    usePaginatedTransactions({ page: 1, q: 'uber' });
+    const first = lastQueryOptions().queryKey;
+
+    usePaginatedTransactions({ page: 1, q: 'uber' });
+    const same = lastQueryOptions().queryKey;
+    expect(same).toEqual(first);
+
+    usePaginatedTransactions({ page: 2, q: 'uber' });
+    const next = lastQueryOptions().queryKey;
+    expect(next).not.toEqual(first);
+  });
+
+  it('placeholderData reaproveita os dados anteriores (sem flicker ao paginar)', () => {
+    usePaginatedTransactions({ page: 1 });
+    const prev = { data: [], pages: 3, items: 25 };
+
+    expect(lastQueryOptions().placeholderData(prev)).toBe(prev);
   });
 });
