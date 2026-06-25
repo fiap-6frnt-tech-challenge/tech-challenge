@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { NewTransaction } from '@bytebank/shared';
 import type { TransactionFormValues } from './schema';
 
@@ -7,6 +8,8 @@ export interface TransactionFormProps {
   onCancel?: () => void;
   initialValues?: Partial<NewTransaction>;
   isSubmitting?: boolean;
+  hasExternalChanges?: boolean;
+  attachmentSlot?: ReactNode;
 }
 export interface TransactionFormRef {
   reset: () => void;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { summaryKeys, transactionKeys } from './keys';
+import { attachmentKeys, summaryKeys, transactionKeys } from './keys';
 
 describe('transactionKeys', () => {
   it('monta chaves hierárquicas consistentes', () => {
@@ -29,5 +29,15 @@ describe('summaryKeys', () => {
     const key = summaryKeys.range({ from: '2026-01-01' });
 
     expect(key.slice(0, summaryKeys.all.length)).toEqual([...summaryKeys.all]);
+  });
+});
+
+describe('attachmentKeys', () => {
+  it('monta chave de anexos sob o detalhe da transação', () => {
+    expect(attachmentKeys.list('tx-1')).toEqual(['transactions', 'detail', 'tx-1', 'attachments']);
+
+    expect(attachmentKeys.list('tx-1').slice(0, transactionKeys.detail('tx-1').length)).toEqual(
+      transactionKeys.detail('tx-1')
+    );
   });
 });

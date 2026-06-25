@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { TransactionType } from '@bytebank/shared';
+import { auth } from '@/auth';
 import * as store from './store';
 
 export async function GET(req: NextRequest) {
@@ -37,7 +38,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
+
   const body = await req.json();
-  const transaction = await store.create(body);
+  const transaction = await store.create({ ...body, userId: session.user.id });
   return NextResponse.json(transaction, { status: 201 });
 }

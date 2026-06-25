@@ -29,7 +29,10 @@ function roundAmount(amount: number): number {
 }
 
 export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormProps>(
-  function TransactionForm({ onSubmit, initialValues, isSubmitting = false }, ref) {
+  function TransactionForm(
+    { onSubmit, initialValues, isSubmitting = false, hasExternalChanges = false, attachmentSlot },
+    ref
+  ) {
     const {
       control,
       handleSubmit,
@@ -178,10 +181,16 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
           />
         </div>
 
-        <div className="flex flex-col gap-sm mt-lg sm:flex-row sm:justify-end">
+        {attachmentSlot && (
+          <section aria-label="Anexos" className="flex flex-col gap-sm">
+            {attachmentSlot}
+          </section>
+        )}
+
+        <div className="mt-lg flex flex-col gap-sm sm:flex-row sm:justify-end">
           <Button
             type="submit"
-            disabled={isSubmitting || !isDirty || !isValid}
+            disabled={isSubmitting || !(isDirty || hasExternalChanges) || !isValid}
             loading={isSubmitting}
           >
             {getSubmitButtonLabel()}

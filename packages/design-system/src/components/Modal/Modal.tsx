@@ -20,7 +20,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-lg [animation:backdrop-in_150ms_ease-out]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-lg [animation:backdrop-in_150ms_ease-out]"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
@@ -36,11 +36,11 @@ export function Modal({
       <div
         ref={panelRef}
         className={cn(
-          'relative z-10 w-full max-w-120 rounded-default bg-surface p-lg shadow-card [animation:modal-panel-in_200ms_ease-out]',
+          'relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-120 flex-col overflow-hidden rounded-default bg-surface p-lg shadow-card [animation:modal-panel-in_200ms_ease-out]',
           className
         )}
       >
-        <div className="flex items-center justify-between mb-md">
+        <div className="mb-md flex shrink-0 items-center justify-between">
           {title && (
             <h2 id="modal-title" className="heading text-content-primary">
               {title}
@@ -57,7 +57,7 @@ export function Modal({
           )}
         </div>
 
-        {children}
+        <div className="min-h-0 overflow-y-auto pr-xs">{children}</div>
       </div>
     </div>,
     document.body
