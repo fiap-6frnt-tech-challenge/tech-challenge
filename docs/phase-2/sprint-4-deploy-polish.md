@@ -5,6 +5,9 @@
 
 > Voltar para o [PLAN.md](./PLAN.md) · Anterior: [sprint-3](./sprint-3-transactions.md)
 > **Alocação de tarefas por dev:** [team-allocation.md#sprint-4](./team-allocation.md#sprint-4--polish--deploy--demo-11-dias)
+> **Tasks detalhadas (3 devs, 1 arquivo por task, com bloqueios/desbloqueios):** [sprint-4/README.md](./sprint-4/README.md)
+
+> ℹ️ Este documento-resumo ainda nomeia os 5 tracks históricos. O detalhamento executável está em [sprint-4/](./sprint-4/), **consolidado nos 3 devs vigentes e reordenado para que o que já está desbloqueado venha primeiro.**
 
 ---
 
