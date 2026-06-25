@@ -11,6 +11,19 @@
 
 ---
 
+> **Status: ✅ Implementado e verificado no browser** (login → `/transactions`, 52 transações / 6 páginas). A paginação já vinha cabeada na página do MFE; faltavam o feedback de `isPlaceholderData` e o scroll-to-top, agora concluídos.
+>
+> Arquivos alterados:
+>
+> - [apps/transactions-mfe/src/TransactionsPage.tsx](../../../apps/transactions-mfe/src/TransactionsPage.tsx) — consome `isPlaceholderData`; `handlePageChange` rola a lista ao topo via `listRef`.
+> - [apps/transactions-mfe/src/components/TransactionList/TransactionList.tsx](../../../apps/transactions-mfe/src/components/TransactionList/TransactionList.tsx) — `aria-busy={isPlaceholderData}` + opacidade reduzida na lista; aceita `containerRef`.
+> - [apps/transactions-mfe/src/components/TransactionList/ITransactionList.ts](../../../apps/transactions-mfe/src/components/TransactionList/ITransactionList.ts) — novas props `isPlaceholderData` e `containerRef`.
+> - [apps/transactions-mfe/src/hooks/useTransactionFilters.ts](../../../apps/transactions-mfe/src/hooks/useTransactionFilters.ts) — **fix:** `hasActiveFilters` passou a derivar de `buildFilterParams(filters)` (que exclui `page`), em vez de "qualquer query string". Antes, recarregar em `?page=2` abria o painel de filtros sozinho.
+>
+> Já existente (sem alteração): `usePaginatedTransactions` (`placeholderData`) e o `<Pagination>` do DS (a11y completa).
+
+---
+
 ## Contexto
 
 Cabear a **paginação** na `TransactionList` dentro do `transactions-mfe`, reusando o componente `<Pagination>` do Design System (já existe em `packages/design-system/src/components/Pagination`) e o hook `usePaginatedTransactions`. A página atual vive na URL (`?page=N`), assim como já acontece hoje no shell ([apps/shell/src/app/transactions/page.tsx](../../../apps/shell/src/app/transactions/page.tsx)).
@@ -88,24 +101,27 @@ Nada é deletado nem reescrito no Design System — apenas consumimos `<Paginati
 
 ## Acessibilidade (item de nota)
 
-- [ ] Controles de página são `<button>` navegáveis por `Tab`/`Enter`/`Espaço`
-- [ ] A página atual expõe `aria-current="page"` (verificar/garantir no componente `<Pagination>`)
-- [ ] `nav` de paginação tem `aria-label="Paginação de transações"`
-- [ ] Botões "anterior/próxima" desabilitados têm `aria-disabled` e não recebem foco-armadilha
-- [ ] Ao trocar de página, mover foco para o topo da lista (ou `scrollTo`) evita desorientação
+- [x] Controles de página são `<button>` navegáveis por `Tab`/`Enter`/`Espaço`
+- [x] A página atual expõe `aria-current="page"` (já garantido no componente `<Pagination>` do DS)
+- [x] `nav` de paginação tem `aria-label` — o DS usa o rótulo genérico `"Paginação"` (landmark rotulado). Mantido genérico de propósito por ser componente reutilizado também pelo shell.
+- [x] Botões "anterior/próxima" desabilitados — o DS usa o atributo nativo `disabled` (removidos da ordem de tabulação → sem foco-armadilha e anunciados como desabilitados pelo leitor de tela)
+- [x] Ao trocar de página, a lista rola para o topo (`listRef.current?.scrollTo`) — o `<TransactionList>` do MFE é seu próprio container de scroll (`overflow-y-auto`), então `window.scrollTo` não serviria; rolamos o container via `containerRef`
 
-> Se faltar `aria-current`/`aria-label` no `<Pagination>` atual, abrir um PR pequeno no DS (coordenar com Dev 2) — conta como melhoria de a11y na nota.
+> O `<Pagination>` do DS já tinha `aria-current`/`aria-label`/`disabled`, então nenhum PR no DS foi necessário.
 
 ---
 
 ## Validação
 
-- [ ] `/transactions` lista a página 1 e mostra controles de paginação quando `pages > 1`
-- [ ] Clicar "próxima" carrega a página seguinte (Network: `?_page=2`); URL vira `?page=2`
-- [ ] Recarregar (F5) em `?page=2` mantém a página 2 (estado na URL)
-- [ ] Mudar qualquer filtro reseta para a página 1 e recalcula o total de páginas
-- [ ] Durante a troca de página, a lista anterior fica visível (sem flash de skeleton) graças ao `placeholderData`
-- [ ] Funciona em mobile (375px) e desktop; controles acessíveis por teclado
+> ✅ Verificado no browser (shell :3000 + transactions-mfe :3003, seed com 52 transações → 6 páginas).
+
+- [x] `/transactions` lista a página 1 e mostra controles de paginação quando `pages > 1` (DS `<Pagination>` retorna `null` quando `totalPages <= 1`; observados botões `1..6` + prev/next)
+- [x] Clicar "próxima" carrega a página seguinte; URL vira `?page=2` e o conteúdo muda (`setPage` via `history.replaceState` no `useTransactionFilters`)
+- [x] Recarregar (F5) em `?page=2` mantém a página 2 (`aria-current=2` após reload)
+- [x] Mudar qualquer filtro reseta para a página 1 (busca em `?page=3` → URL vira `?q=a`, `aria-current=1`)
+- [x] Durante a troca de página, a lista anterior fica visível (sem flash de skeleton) graças ao `placeholderData` — `aria-busy="true"` observado na transição + opacidade reduzida (`opacity-60`)
+- [x] Funciona em mobile (375px) e desktop; controles acessíveis por teclado (prev desabilitado na página 1)
+- [x] **(regressão corrigida)** Recarregar em página > 1 **sem** filtros mantém o painel de filtros oculto; só abre quando há filtro real na URL
 
 ---
 
