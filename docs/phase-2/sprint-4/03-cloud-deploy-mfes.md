@@ -6,7 +6,7 @@
 | **Owner**              | Dev 1 (Infra & Backend)                                           |
 | **Duração estimada**   | 1 dia                                                             |
 | **Branch recomendada** | `dev1/deploy-mfes`                                                |
-| **Status**             | ⏳ Pendente                                                       |
+| **Status**             | ✅ Concluído                                                      |
 
 ---
 
@@ -40,20 +40,29 @@ E no **build do MFE**: `MFE_ORIGIN` = a origin pública (vira `assetPrefix` → 
 
 ### 1. Criar 2 projetos Vercel (Static)
 
-Para cada MFE, um projeto novo apontando para o mesmo repo:
+Para cada MFE, um projeto novo apontando para o mesmo repo. Configuração que funcionou:
 
-- **Root Directory:** `apps/dashboard-mfe` (e `apps/transactions-mfe`).
-- **Build Command:** `npm run build -w @bytebank/dashboard-mfe` (rodado da raiz; ajustar "Include files outside root directory" para enxergar `packages/*`).
-- **Output Directory:** `dist`.
-- **Env var de build:** `MFE_ORIGIN=https://bytebank-dashboard.vercel.app` (a própria origin do projeto).
+| Campo                 | dashboard-mfe                                                | transactions-mfe                                                |
+| --------------------- | ------------------------------------------------------------ | --------------------------------------------------------------- |
+| **Framework Preset**  | `Other`                                                      | `Other`                                                         |
+| **Root Directory**    | vazio (repo root)                                            | vazio (repo root)                                               |
+| **Install Command**   | `npm install`                                                | `npm install`                                                   |
+| **Build Command**     | `npm run build -w @bytebank/dashboard-mfe`                   | `npm run build -w @bytebank/transactions-mfe`                   |
+| **Output Directory**  | `apps/dashboard-mfe/dist`                                    | `apps/transactions-mfe/dist`                                    |
+| **Production Branch** | `phase-2`                                                    | `phase-2`                                                       |
+| **Env var de build**  | `MFE_ORIGIN=https://tech-challenge-dashboard-mfe.vercel.app` | `MFE_ORIGIN=https://tech-challenge-transactions-mfe.vercel.app` |
 
-> Os `vercel.json` de CORS já estão versionados em cada app e serão aplicados pela Vercel automaticamente.
+> ⚠️ **Framework Preset = `Other` é obrigatório.** O Vercel detecta Turborepo no monorepo e assume Next.js, quebrando o build ao procurar `routes-manifest.json`. Setar `Other` resolve.
+
+> ⚠️ **Root Directory = vazio (repo root).** Usar `apps/dashboard-mfe` como root faz o Vercel baixar apenas os arquivos do subdiretório, sem acesso aos `packages/*` do workspace. Com root vazio o repo inteiro é clonado e o `npm install` resolve os workspaces corretamente.
+
+> Os `vercel.json` de CORS já estão versionados em cada app e são aplicados automaticamente.
 
 ### 2. Configurar env vars no projeto do shell
 
 ```
-NEXT_PUBLIC_DASHBOARD_MFE_URL=https://bytebank-dashboard.vercel.app/mf-manifest.json
-NEXT_PUBLIC_TRANSACTIONS_MFE_URL=https://bytebank-transactions.vercel.app/mf-manifest.json
+NEXT_PUBLIC_DASHBOARD_MFE_URL=https://tech-challenge-dashboard-mfe.vercel.app/mf-manifest.json
+NEXT_PUBLIC_TRANSACTIONS_MFE_URL=https://tech-challenge-transactions-mfe.vercel.app/mf-manifest.json
 ```
 
 Documentar também em `apps/shell/.env.example`.
@@ -66,7 +75,7 @@ Cada PR gera 3 previews. Estratégia simples e estável: o preview do shell apon
 
 ## Validação
 
-- [ ] `https://bytebank-dashboard.vercel.app/mf-manifest.json` e `.../transactions.../mf-manifest.json` respondem 200 com CORS.
+- [x] `https://tech-challenge-dashboard-mfe.vercel.app/mf-manifest.json` e `https://tech-challenge-transactions-mfe.vercel.app/mf-manifest.json` respondem 200 com CORS.
 - [ ] No shell de produção, a home carrega o `dashboard` e o `AccountOverview` (do `transactions`); DevTools → Network mostra `mf-manifest.json` + chunks vindos das **origins dos MFEs**.
 - [ ] `/transactions` carrega a página federada do `transactions-mfe`.
 - [ ] Push em PR cria 3 previews independentes; o preview do shell carrega os MFEs corretos.
