@@ -4,14 +4,14 @@ import { NextRequest } from 'next/server';
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   create: vi.fn(),
-  getAll: vi.fn(),
+  getAllByUser: vi.fn(),
   listTransactions: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
 vi.mock('./store', () => ({
   create: mocks.create,
-  getAll: mocks.getAll,
+  getAllByUser: mocks.getAllByUser,
   listTransactions: mocks.listTransactions,
 }));
 
@@ -80,19 +80,30 @@ describe('POST /api/transactions', () => {
 describe('GET /api/transactions (paginação + filtros)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getAll.mockResolvedValue([makeTx('a'), makeTx('b')]);
+    mocks.auth.mockResolvedValue({ user: { id: USER_ID } });
+    mocks.getAllByUser.mockResolvedValue([makeTx('a'), makeTx('b')]);
     mocks.listTransactions.mockResolvedValue({ data: [], pages: 1, items: 0 });
   });
 
-  it('sem _page/_per_page retorna a lista completa via getAll (sem paginar)', async () => {
+  it('retorna 401 e não consulta o store sem sessão', async () => {
+    mocks.auth.mockResolvedValue(null);
+
+    const res = await GET(getRequest());
+
+    expect(res.status).toBe(401);
+    expect(mocks.getAllByUser).not.toHaveBeenCalled();
+    expect(mocks.listTransactions).not.toHaveBeenCalled();
+  });
+
+  it('sem _page/_per_page retorna a lista do usuário da sessão via getAllByUser', async () => {
     const list = [makeTx('a'), makeTx('b')];
-    mocks.getAll.mockResolvedValue(list);
+    mocks.getAllByUser.mockResolvedValue(list);
 
     const res = await GET(getRequest());
 
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual(list);
-    expect(mocks.getAll).toHaveBeenCalledOnce();
+    expect(mocks.getAllByUser).toHaveBeenCalledWith(USER_ID);
     expect(mocks.listTransactions).not.toHaveBeenCalled();
   });
 
@@ -103,7 +114,13 @@ describe('GET /api/transactions (paginação + filtros)', () => {
     const res = await GET(getRequest('?_page=1&_per_page=3'));
 
     expect(mocks.listTransactions).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 1, perPage: 3, sortBy: 'date', sortOrder: 'desc' })
+      expect.objectContaining({
+        userId: USER_ID,
+        page: 1,
+        perPage: 3,
+        sortBy: 'date',
+        sortOrder: 'desc',
+      })
     );
     const body = await res.json();
     expect(body.data).toHaveLength(3);

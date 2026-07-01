@@ -4,13 +4,19 @@ import { auth } from '@/auth';
 import * as store from './store';
 
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
+  const userId = session.user.id;
+
   const { searchParams } = req.nextUrl;
 
   const page = searchParams.get('_page');
   const perPage = searchParams.get('_per_page');
 
   if (!page || !perPage) {
-    return NextResponse.json(await store.getAll());
+    return NextResponse.json(await store.getAllByUser(userId));
   }
 
   const sort = searchParams.get('_sort') ?? '-date';
@@ -21,6 +27,7 @@ export async function GET(req: NextRequest) {
   const amountLte = searchParams.get('amount_lte');
 
   const result = await store.listTransactions({
+    userId,
     page: Number(page),
     perPage: Number(perPage),
     type: (searchParams.get('type') as TransactionType) ?? undefined,
