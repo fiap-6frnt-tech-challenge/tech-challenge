@@ -1,7 +1,10 @@
+import path from 'node:path';
 import type { NextConfig } from 'next';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
+  outputFileTracingRoot: path.join(__dirname, '../../'),
   transpilePackages: [
     '@bytebank/shared',
     '@bytebank/design-system',
