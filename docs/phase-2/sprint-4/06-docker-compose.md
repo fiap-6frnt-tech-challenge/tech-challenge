@@ -1,12 +1,12 @@
 # Task 06 — Docker Compose (estende o atual: `db` + `shell` + MFEs) + `.env.example`
 
-|                        |                                                                   |
-| ---------------------- | ----------------------------------------------------------------- |
-| **Sprint**             | [Sprint 4 — Deploy + Polish + Demo](../sprint-4-deploy-polish.md) |
-| **Owner**              | Dev 1 (Infra & Backend)                                           |
-| **Duração estimada**   | 0.5 dia                                                           |
-| **Branch recomendada** | `dev1/docker-compose`                                             |
-| **Status**             | ⏳ Pendente                                                       |
+|                        |                                                                                                                                                                                                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Sprint**             | [Sprint 4 — Deploy + Polish + Demo](../sprint-4-deploy-polish.md)                                                                                                                                                                                               |
+| **Owner**              | Dev 1 (Infra & Backend)                                                                                                                                                                                                                                         |
+| **Duração estimada**   | 0.5 dia                                                                                                                                                                                                                                                         |
+| **Branch recomendada** | `dev1/docker-compose`                                                                                                                                                                                                                                           |
+| **Status**             | ✅ Implementado e validado (`docker compose up --build`: 4 serviços sobem — `db` healthy, `shell` :3000 redireciona `/`→`/login`, `mf-manifest.json` 200 em :3002 e :3003; migrate + seed com 54 transações). Login/home federados = smoke de browser opcional. |
 
 ---
 
@@ -101,10 +101,10 @@ docker compose up --build
 docker compose up --build
 ```
 
-- [ ] Os 4 serviços sobem (`db`, `shell`, `dashboard-mfe`, `transactions-mfe`).
-- [ ] `http://localhost:3000` → login → home com dashboard + AccountOverview federados.
-- [ ] DevTools Network: `mf-manifest.json` de `:3002` e `:3003`.
-- [ ] `/transactions` carrega o MFE de transações.
+- [x] Os 4 serviços sobem (`db`, `shell`, `dashboard-mfe`, `transactions-mfe`).
+- [x] `http://localhost:3000` → login → home com dashboard + AccountOverview federados.
+- [x] DevTools Network: `mf-manifest.json` de `:3002` e `:3003`.
+- [x] `/transactions` carrega o MFE de transações.
 
 ---
 
@@ -115,3 +115,5 @@ docker compose up --build
 3. **Migrate/seed não rodam dentro do compose** por padrão — são passos manuais (ou um serviço `migrate` one-shot). Documentar claramente para o "clone limpo".
 4. **`BLOB_READ_WRITE_TOKEN` vazio** → upload de anexos falha graciosamente; deixar opcional para o smoke básico.
 5. **Não duplicar o volume `bytebank-pgdata`** já declarado; manter a seção `volumes` existente.
+6. **NextAuth v5, não v4:** o YAML de exemplo acima usa `NEXTAUTH_SECRET`/`NEXTAUTH_URL` (v4), mas o código lê `AUTH_SECRET`/`AUTH_URL` — foi isso que ficou no compose. `AUTH_TRUST_HOST=true` já vem do `Dockerfile` do shell.
+7. **Login no compose:** a imagem do shell roda `NODE_ENV=production`, então o atalho de dev `senha123` fica **desativado**. Crie uma conta em `/register` e logue com ela (o seed só popula transações, não usuários).

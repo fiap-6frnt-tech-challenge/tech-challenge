@@ -1,11 +1,15 @@
-# Postgres local para desenvolvimento/validação da persistência (Sprint 1, Task 2).
-# Sprint 4 estende este arquivo com os serviços shell + MFEs.
+# Bytebank — orquestração local completa (Sprint 4, Task 06).
+# Sobe db + shell + dashboard-mfe + transactions-mfe numa rede interna.
 #
-#   docker compose up -d db
+# Primeiro boot (clone limpo) — migrate + seed rodam FORA do compose:
+#
+#   cp .env.example .env                 # ajuste AUTH_SECRET (e BLOB_READ_WRITE_TOKEN se for testar anexos)
+#   docker compose up -d db              # sobe só o Postgres
 #   npm run db:migrate -w @bytebank/shell
 #   npm run db:seed -w @bytebank/shell
+#   docker compose up --build            # sobe shell + MFEs
 #
-# Conexão: postgres://bytebank:bytebank@localhost:5432/bytebank
+# Conexão do host ao Postgres: postgres://bytebank:bytebank@localhost:5432/bytebank
 services:
   db:
     image: postgres:16-alpine
@@ -24,6 +28,49 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  shell:
+    build:
+      context: .
+      dockerfile: apps/shell/Dockerfile
+    container_name: bytebank-shell
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # O shell fala com o Postgres pelo nome de serviço na rede do compose.
+      DATABASE_URL: postgres://bytebank:bytebank@db:5432/bytebank
+      # NextAuth v5 (o código lê AUTH_*, não NEXTAUTH_*). AUTH_TRUST_HOST já vem do Dockerfile.
+      AUTH_SECRET: ${AUTH_SECRET:-dev-secret}
+      AUTH_URL: http://localhost:3000
+      # Os NEXT_PUBLIC_* apontam para localhost porque quem busca os remotes é o
+      # NAVEGADOR (não o container do shell) — as portas são publicadas no host.
+      NEXT_PUBLIC_DASHBOARD_MFE_URL: http://localhost:3002/mf-manifest.json
+      NEXT_PUBLIC_TRANSACTIONS_MFE_URL: http://localhost:3003/mf-manifest.json
+      BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
+    ports:
+      - '3000:3000'
+
+  dashboard-mfe:
+    build:
+      context: .
+      dockerfile: apps/dashboard-mfe/Dockerfile
+      args:
+        # build arg → assetPrefix dos chunks federados; se mudar a porta publicada, rebuild.
+        MFE_ORIGIN: http://localhost:3002
+    container_name: bytebank-dashboard-mfe
+    ports:
+      - '3002:80'
+
+  transactions-mfe:
+    build:
+      context: .
+      dockerfile: apps/transactions-mfe/Dockerfile
+      args:
+        MFE_ORIGIN: http://localhost:3003
+    container_name: bytebank-transactions-mfe
+    ports:
+      - '3003:80'
 
 volumes:
   bytebank-pgdata:
