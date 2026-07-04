@@ -5,6 +5,7 @@ const dashboardManifestUrl =
   process.env.E2E_DASHBOARD_MFE_URL ?? 'http://localhost:3002/mf-manifest.json';
 const transactionsManifestUrl =
   process.env.E2E_TRANSACTIONS_MFE_URL ?? 'http://localhost:3003/mf-manifest.json';
+const reuseExistingServer = process.env.E2E_REUSE_SERVERS === '1';
 
 export default defineConfig({
   testDir: './e2e',
@@ -14,10 +15,7 @@ export default defineConfig({
     timeout: 10_000,
   },
   globalSetup: './e2e/globalSetup.ts',
-  reporter: [
-    ['list'],
-    ['html', { open: 'never', outputFolder: 'playwright-report' }],
-  ],
+  reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   use: {
@@ -36,15 +34,14 @@ export default defineConfig({
     {
       command: 'node e2e/startShellStandalone.mjs',
       url: shellUrl,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer,
       timeout: 120_000,
       env: {
         NEXT_PUBLIC_API_URL: '/api',
         NEXT_PUBLIC_DASHBOARD_MFE_URL: dashboardManifestUrl,
         NEXT_PUBLIC_TRANSACTIONS_MFE_URL: transactionsManifestUrl,
         AUTH_URL: shellUrl,
-        AUTH_SECRET:
-          process.env.AUTH_SECRET ?? 'bytebank-e2e-auth-secret-bytebank-e2e-auth-secret',
+        AUTH_SECRET: process.env.AUTH_SECRET ?? 'bytebank-e2e-auth-secret-bytebank-e2e-auth-secret',
         DATABASE_URL:
           process.env.DATABASE_URL ?? 'postgres://bytebank:bytebank@localhost:5432/bytebank',
         BLOB_READ_WRITE_TOKEN: '',
@@ -53,13 +50,13 @@ export default defineConfig({
     {
       command: 'npm run preview --workspace @bytebank/dashboard-mfe',
       url: dashboardManifestUrl,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer,
       timeout: 120_000,
     },
     {
       command: 'npm run preview --workspace @bytebank/transactions-mfe',
       url: transactionsManifestUrl,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer,
       timeout: 120_000,
     },
   ],

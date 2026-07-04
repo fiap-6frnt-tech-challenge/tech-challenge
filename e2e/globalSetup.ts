@@ -1,13 +1,9 @@
-import { config } from 'dotenv';
 import { hash } from 'bcryptjs';
 import { eq, inArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from '../apps/shell/src/db/schema';
 import { attachments, transactions, users } from '../apps/shell/src/db/schema';
-
-config({ path: 'apps/shell/.env.local' });
-config({ path: '.env.local' });
 
 export const E2E_USER = {
   id: 'e2e-user',

@@ -1,9 +1,16 @@
 import { expect, test } from '@playwright/test';
-import path from 'node:path';
 import { login } from './helpers/auth';
 import { editTransaction, openTransactionsPage } from './helpers/transactions';
 
-const fixturePath = path.join(process.cwd(), 'e2e', 'fixtures', 'comprovante.pdf');
+const attachment = {
+  name: 'comprovante.pdf',
+  mimeType: 'application/pdf',
+  buffer: Buffer.from(
+    '%PDF-1.4\n% Bytebank E2E fixture\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n'
+  ),
+};
+
+const attachmentSize = `${attachment.buffer.byteLength} B`;
 
 test('uploads, persists, and removes an attachment from an existing transaction', async ({
   page,
@@ -16,7 +23,7 @@ test('uploads, persists, and removes an attachment from an existing transaction'
   const chooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: /área de upload de arquivos/i }).click();
   const chooser = await chooserPromise;
-  await chooser.setFiles(fixturePath);
+  await chooser.setFiles(attachment);
 
   await expect(page.getByText('comprovante.pdf')).toBeVisible();
   await expect(page.getByRole('button', { name: /atualizar transação/i })).toBeEnabled();
@@ -27,8 +34,18 @@ test('uploads, persists, and removes an attachment from an existing transaction'
   await openTransactionsPage(page);
   await editTransaction(page, 'E2E Attachment Target');
   await expect(page.getByText('comprovante.pdf')).toBeVisible();
-  await expect(page.getByText(/453 B|0,4 KB|0.4 KB|bytes/i)).toBeVisible();
+  await expect(page.getByText(attachmentSize)).toBeVisible();
 
   await page.getByRole('button', { name: /remover anexo: comprovante.pdf/i }).click();
+  await expect(page.getByText('comprovante.pdf')).toBeHidden();
+
+  const updateButton = page.getByRole('button', { name: /atualizar transação/i });
+  await expect(updateButton).toBeEnabled();
+  await updateButton.click();
+  await expect(page.getByText('Transação atualizada')).toBeVisible();
+
+  await page.reload();
+  await openTransactionsPage(page);
+  await editTransaction(page, 'E2E Attachment Target');
   await expect(page.getByText('comprovante.pdf')).toBeHidden();
 });

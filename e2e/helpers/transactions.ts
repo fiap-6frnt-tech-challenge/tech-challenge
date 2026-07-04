@@ -38,7 +38,6 @@ export async function editTransaction(page: Page, description: string) {
 
 export async function filterBySearch(page: Page, query: string) {
   await page.getByRole('searchbox', { name: /buscar transações/i }).fill(query);
-  await page.waitForTimeout(400);
 }
 
 export async function openFilterPanel(page: Page) {
