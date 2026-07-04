@@ -6,7 +6,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "value": "https://fiap-6frnt-tech-challenge.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",
@@ -15,6 +15,10 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "*"
+        },
+        {
+          "key": "Vary",
+          "value": "Origin"
         }
       ]
     }
