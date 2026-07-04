@@ -15,10 +15,6 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "*"
-        },
-        {
-          "key": "Vary",
-          "value": "Origin"
         }
       ]
     }
