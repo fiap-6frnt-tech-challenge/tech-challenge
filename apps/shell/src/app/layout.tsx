@@ -19,6 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" as="fetch" href={dashboardManifestUrl} crossOrigin="anonymous" />
       </head>
       <body suppressHydrationWarning>
+        <a href="#main" className="skip-link">
+          Pular para o conteúdo principal
+        </a>
         <Providers>
           <ViewportFix />
           <AppShell>{children}</AppShell>

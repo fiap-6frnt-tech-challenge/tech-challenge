@@ -97,7 +97,7 @@ export default function Dashboard() {
             skeletonType="bar"
             empty={!data?.byMonth || data.byMonth.length === 0}
           >
-            <div role="img" aria-label="Gráfico de barras mostrando receita e despesa por mês">
+            <div role="group" aria-label="Gráfico de barras mostrando receita e despesa por mês">
               <BarChart
                 data={data?.byMonth ?? []}
                 xKey="month"
@@ -122,7 +122,7 @@ export default function Dashboard() {
             skeletonType="pie"
             empty={!data?.byCategory || data.byCategory.length === 0}
           >
-            <div role="img" aria-label="Gráfico de pizza mostrando despesas por categoria">
+            <div role="group" aria-label="Gráfico de pizza mostrando despesas por categoria">
               <PieChart
                 data={processedPieData}
                 height={300}
@@ -143,7 +143,7 @@ export default function Dashboard() {
             empty={!data?.balanceOverTime || data.balanceOverTime.length === 0}
           >
             <div
-              role="img"
+              role="group"
               aria-label="Gráfico de linha mostrando a evolução do saldo ao longo do tempo"
             >
               <LineChart

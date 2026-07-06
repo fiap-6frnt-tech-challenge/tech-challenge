@@ -19,13 +19,17 @@ const navButtonClass = cn(
   'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:ring-offset-1'
 );
 
-export function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
+export function Pagination({ currentPage, totalPages, onPageChange, isBusy }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const pages = getPageNumbers(currentPage, totalPages);
 
   return (
-    <nav aria-label="Paginação" className="flex items-center justify-center gap-1 py-md shrink-0">
+    <nav
+      aria-label="Paginação"
+      aria-busy={isBusy || undefined}
+      className="flex items-center justify-center gap-1 py-md shrink-0"
+    >
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
