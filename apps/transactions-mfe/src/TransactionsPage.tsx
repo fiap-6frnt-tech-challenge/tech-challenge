@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { Funnel, ReceiptText, SearchX } from 'lucide-react';
 import { EmptyState, ErrorState, IconButton, Pagination } from '@bytebank/design-system';
 import {
@@ -12,10 +12,17 @@ import { showFeedback, useAppDispatch } from '@bytebank/stores';
 import type { Transaction } from '@bytebank/shared';
 import { TransactionFilters, DEFAULT_FILTERS } from './components/TransactionFilters';
 import { TransactionList } from './components/TransactionList';
-import { DeleteTransactionModal } from './components/DeleteTransactionModal';
-import { EditTransactionModal } from './components/EditTransactionModal';
 import type { TransactionFormValues } from './components/TransactionForm/ITransactionForm';
 import { useTransactionFilters } from './hooks/useTransactionFilters';
+
+const DeleteTransactionModal = lazy(() =>
+  import('./components/DeleteTransactionModal').then((m) => ({
+    default: m.DeleteTransactionModal,
+  }))
+);
+const EditTransactionModal = lazy(() =>
+  import('./components/EditTransactionModal').then((m) => ({ default: m.EditTransactionModal }))
+);
 
 export default function TransactionsPage() {
   const { filters, setFilters, clearFilters, page, setPage, isFilterVisible, setIsFilterVisible } =
@@ -184,18 +191,26 @@ export default function TransactionsPage() {
         />
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </section>
-      <DeleteTransactionModal
-        transaction={pendingDelete}
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
-        isDeleting={isDeleting}
-      />
-      <EditTransactionModal
-        transaction={pendingEdit}
-        onConfirm={handleEditConfirm}
-        onCancel={handleEditCancel}
-        isSubmitting={isUpdating}
-      />
+      {pendingDelete && (
+        <Suspense fallback={null}>
+          <DeleteTransactionModal
+            transaction={pendingDelete}
+            onConfirm={handleDeleteConfirm}
+            onCancel={handleDeleteCancel}
+            isDeleting={isDeleting}
+          />
+        </Suspense>
+      )}
+      {pendingEdit && (
+        <Suspense fallback={null}>
+          <EditTransactionModal
+            transaction={pendingEdit}
+            onConfirm={handleEditConfirm}
+            onCancel={handleEditCancel}
+            isSubmitting={isUpdating}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

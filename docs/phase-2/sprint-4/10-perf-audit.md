@@ -1,12 +1,12 @@
 # Task 10 — Perf: auditoria Lighthouse + `@next/bundle-analyzer`
 
-|                        |                                                                   |
-| ---------------------- | ----------------------------------------------------------------- |
-| **Sprint**             | [Sprint 4 — Deploy + Polish + Demo](../sprint-4-deploy-polish.md) |
-| **Owner**              | Dev 3 (State & Integration)                                       |
-| **Duração estimada**   | 1 dia                                                             |
-| **Branch recomendada** | `dev3/perf-audit`                                                 |
-| **Status**             | ⏳ Pendente                                                       |
+|                        |                                                                           |
+| ---------------------- | ------------------------------------------------------------------------- |
+| **Sprint**             | [Sprint 4 — Deploy + Polish + Demo](../sprint-4-deploy-polish.md)         |
+| **Owner**              | Dev 3 (State & Integration)                                               |
+| **Duração estimada**   | 1 dia                                                                     |
+| **Branch recomendada** | `dev3/perf-audit`                                                         |
+| **Status**             | ✅ Concluída — ver [10-perf-audit-results.md](./10-perf-audit-results.md) |
 
 ---
 
@@ -64,9 +64,11 @@ Lista priorizada de gargalos (o que otimizar na Task 11), com impacto estimado.
 
 ## Validação
 
-- [ ] Scores de baseline coletados para `/`, `/transactions`, `/login` (desktop + mobile).
-- [ ] Treemap do bundle-analyzer capturado; dependências > 100 KB listadas.
-- [ ] Lista priorizada de otimizações entregue para a Task 11.
+- [x] Scores de baseline coletados para `/`, `/transactions`, `/login` (desktop + mobile). ⚠️ Medidos contra **build de produção local** (Fase 2), porque a prod Vercel ainda serve a **Fase 1** (`phase-2` só vai pra `main` no fim); revalidar em prod real após o merge.
+- [x] Bundle capturado via `next experimental-analyze` (o `@next/bundle-analyzer` é incompatível com Turbopack); dependências > 100 KB listadas.
+- [x] Lista priorizada de otimizações entregue para a [Task 11](./11-perf-optimizations.md).
+
+**Resultados:** [10-perf-audit-results.md](./10-perf-audit-results.md).
 
 ---
 
