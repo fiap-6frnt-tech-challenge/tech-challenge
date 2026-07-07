@@ -118,7 +118,7 @@
 - [ ] Contraste: validar todos pares fg/bg do DS (token check)
 - [ ] Navegação por teclado E2E: percorrer todo app só com Tab/Enter/Esc
 
-**Aceite:** Lighthouse A11y ≥ 95 em todas páginas críticas; relatório de auditoria em `docs/phase-2/a11y-audit.md`.
+**Aceite:** Lighthouse A11y ≥ 95 em todas páginas críticas; relatório de auditoria em [`docs/phase-2/a11y-audit.md`](./a11y-audit.md).
 
 ### 4. Auditoria de Performance (1 dia · **dev4-dashboard**)
 
