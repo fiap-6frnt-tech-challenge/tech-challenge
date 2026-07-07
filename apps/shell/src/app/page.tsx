@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { DashboardRemote } from '@/components/DashboardRemote';
 import { AccountOverviewRemote } from '@/components/AccountOverviewRemote';
+import { DeferUntilVisible } from '@/components/DeferUntilVisible';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Bytebank',
@@ -12,7 +13,9 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-xl">
       <AccountOverviewRemote />
-      <DashboardRemote />
+      <DeferUntilVisible minHeight={640}>
+        <DashboardRemote />
+      </DeferUntilVisible>
     </div>
   );
 }

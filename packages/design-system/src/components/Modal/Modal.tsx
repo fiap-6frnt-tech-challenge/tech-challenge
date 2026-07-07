@@ -1,7 +1,7 @@
 'use client';
 
-import { createPortal } from 'react-dom';
 import { useId } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@bytebank/shared';
 import { useFocusTrap } from '../../hooks';
@@ -16,7 +16,8 @@ export function Modal({
   showCloseButton = true,
 }: ModalProps) {
   const panelRef = useFocusTrap({ isActive: isOpen, onEscape: onClose });
-  const titleId = useId();
+  const generatedTitleId = useId();
+  const titleId = title ? `${generatedTitleId}-title` : undefined;
 
   if (!isOpen) return null;
 
@@ -25,7 +26,7 @@ export function Modal({
       className="fixed inset-0 z-50 flex items-center justify-center p-lg [animation:backdrop-in_150ms_ease-out]"
       role="dialog"
       aria-modal="true"
-      aria-labelledby={title ? titleId : undefined}
+      aria-labelledby={titleId}
     >
       {/* Backdrop */}
       <div

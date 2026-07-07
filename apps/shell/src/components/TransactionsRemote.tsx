@@ -16,42 +16,23 @@ const TransactionsPage = dynamic(
   }
 );
 
-function FiltersSkeleton() {
-  return (
-    <div className="flex flex-wrap items-end gap-md">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="min-w-40 flex-1 flex flex-col gap-1.5">
-          <Skeleton className="h-5 w-16" />
-          <Skeleton className="h-12 w-full rounded-default" />
-        </div>
-      ))}
-      <Skeleton className="h-10 w-full rounded-default sm:h-8 sm:w-32" />
-    </div>
-  );
-}
-
 function TransactionsSkeleton() {
   return (
     <section
-      className="flex flex-col gap-lg h-full px-1"
+      className="flex flex-col gap-lg overflow-hidden h-full px-1"
       aria-busy="true"
       aria-label="Carregando transações"
     >
       <div className="flex flex-col">
         <div className="flex items-center justify-between py-lg">
           <Skeleton className="h-7 w-40" />
-          <Skeleton className="h-11 w-11 rounded-md sm:hidden" />
+          <Skeleton className="h-11 w-11 rounded-md" />
         </div>
-        <div className="pb-lg">
-          <FiltersSkeleton />
-        </div>
+        <Skeleton className="h-12 w-full rounded-default" />
       </div>
-      <SkeletonList lines={5} />
-      <nav className="flex items-center justify-center gap-1 py-md">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={i} className="h-9 w-9 rounded-default" />
-        ))}
-      </nav>
+      <div className="w-full overflow-y-auto flex-1 min-h-0 @container">
+        <SkeletonList lines={5} />
+      </div>
     </section>
   );
 }

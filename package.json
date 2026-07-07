@@ -18,10 +18,16 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "storybook": "turbo run storybook",
+    "e2e:build": "NEXT_PUBLIC_DASHBOARD_MFE_URL=http://localhost:3002/mf-manifest.json NEXT_PUBLIC_TRANSACTIONS_MFE_URL=http://localhost:3003/mf-manifest.json NEXT_PUBLIC_API_URL=/api npm run build",
+    "e2e": "npm run e2e:build && playwright test",
+    "e2e:test": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "turbo": "^2.3.0",
     "prettier": "^3.8.1",
     "husky": "^9.1.7",
