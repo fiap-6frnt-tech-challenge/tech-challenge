@@ -25,7 +25,11 @@ export function RegisterPageClient() {
   }
 
   return (
-    <main className="min-h-dvh flex items-center justify-center bg-white px-md py-xl">
+    <main
+      id="main"
+      tabIndex={-1}
+      className="min-h-dvh flex items-center justify-center bg-white px-md py-xl"
+    >
       <section className="w-full max-w-[28rem] lg:grid lg:max-w-[72rem] lg:grid-cols-[minmax(0,1fr)_1px_minmax(22rem,1fr)] lg:items-center lg:gap-3xl">
         <div className="mb-lg flex flex-col items-center text-center lg:mb-0">
           <Image

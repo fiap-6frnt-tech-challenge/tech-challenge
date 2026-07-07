@@ -28,7 +28,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Sidebar />
           </div>
 
-          <main className="w-full py-lg h-full overflow-y-auto">{children}</main>
+          <main id="main" tabIndex={-1} className="w-full py-lg h-full overflow-y-auto">
+            {children}
+          </main>
         </div>
       </div>
     </div>

@@ -20,11 +20,14 @@ export function Select({
   value,
   onChange,
   onClear,
+  'aria-describedby': ariaDescribedBy,
   ...props
 }: SelectProps) {
   const generatedId = useId();
   const selectId = id ?? generatedId;
   const listboxId = `${selectId}-listbox`;
+  const helperTextId = helperText ? `${selectId}-helper` : undefined;
+  const describedBy = [ariaDescribedBy, helperTextId].filter(Boolean).join(' ') || undefined;
 
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
@@ -133,6 +136,11 @@ export function Select({
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={open ? listboxId : undefined}
+          aria-activedescendant={
+            open && activeIndex >= 0 ? `${selectId}-option-${activeIndex}` : undefined
+          }
+          aria-describedby={describedBy}
+          aria-invalid={error || undefined}
           onKeyDown={handleButtonKeyDown}
           onClick={() => (open ? closeDropdown() : openDropdown())}
           className={cn(
@@ -211,7 +219,11 @@ export function Select({
         )}
       </div>
 
-      {helperText && <HelperText error={error}>{helperText}</HelperText>}
+      {helperText && (
+        <HelperText id={helperTextId} error={error}>
+          {helperText}
+        </HelperText>
+      )}
     </div>
   );
 }

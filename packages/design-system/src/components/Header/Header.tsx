@@ -5,10 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Menu, X, UserCircle } from 'lucide-react';
 import { Sidebar } from '../Sidebar';
+import { useFocusTrap } from '../../hooks';
 import type { HeaderProps } from './IHeader';
 
 export function Header({ userName = 'Joana da Silva Oliveira', actionsSlot }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const mobileNavRef = useFocusTrap({ isActive: menuOpen, onEscape: () => setMenuOpen(false) });
 
   return (
     <>
@@ -40,15 +42,18 @@ export function Header({ userName = 'Joana da Silva Oliveira', actionsSlot }: He
 
       {/* Mobile nav drawer */}
       {menuOpen && (
-        <div
-          className="z-20 fixed inset-0 bg-content-primary/50 sm:hidden h-screen transition-all [animation:backdrop-in_200ms_ease-out]"
-          aria-hidden="true"
-          onClick={() => setMenuOpen(false)}
-        >
+        <div className="z-20 fixed inset-0 sm:hidden h-screen">
           <div
+            className="absolute inset-0 bg-content-primary/50 transition-all [animation:backdrop-in_200ms_ease-out]"
+            aria-hidden="true"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div
+            ref={mobileNavRef}
             id="mobile-nav"
             className="fixed inset-0 top-16 z-30 bg-brand-dark sm:hidden h-fit transition-all [animation:drawer-panel-in_200ms_ease-out]"
             role="dialog"
+            aria-modal="true"
             aria-label="Menu de navegação"
           >
             <Sidebar onLinkClick={() => setMenuOpen(false)} />

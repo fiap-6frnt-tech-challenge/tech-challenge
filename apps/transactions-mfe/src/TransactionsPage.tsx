@@ -189,7 +189,12 @@ export default function TransactionsPage() {
           emptyState={renderEmptyState()}
           className="w-full overflow-y-auto flex-1 min-h-0"
         />
-        <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          isBusy={isPlaceholderData}
+        />
       </section>
       {pendingDelete && (
         <Suspense fallback={null}>

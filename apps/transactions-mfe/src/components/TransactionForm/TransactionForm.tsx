@@ -7,7 +7,6 @@ import { Button } from '@bytebank/design-system';
 import { CurrencyInput } from '@bytebank/design-system';
 import { DatePicker } from '@bytebank/design-system';
 import { Input } from '@bytebank/design-system';
-import { HelperText } from '@bytebank/design-system';
 import { Select } from '@bytebank/design-system';
 import { CategorySelect } from '@bytebank/design-system';
 import { TRANSACTION_TYPE, TRANSACTION_TYPE_OPTIONS, suggestCategory } from '@bytebank/shared';
@@ -88,10 +87,11 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
                 value={field.value}
                 onChange={field.onChange}
                 onClear={clearField(field)}
+                error={!!errors.type}
+                helperText={errors.type?.message}
               />
             )}
           />
-          {errors.type?.message && <HelperText error>{errors.type.message}</HelperText>}
         </div>
 
         <div className="flex flex-col gap-md sm:flex-row">
@@ -108,11 +108,11 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
                   placeholder={DEFAULT_CURRENCY_PLACEHOLDER}
                   disabled={isSubmitting}
                   error={!!errors.amount}
+                  helperText={errors.amount?.message}
                   onClear={clearField(field)}
                 />
               )}
             />
-            {errors.amount?.message && <HelperText error>{errors.amount.message}</HelperText>}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -127,11 +127,11 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
                   disabled={isSubmitting}
                   onChange={field.onChange}
                   error={!!errors.date}
+                  helperText={errors.date?.message}
                   onClear={clearField(field)}
                 />
               )}
             />
-            {errors.date?.message && <HelperText error>{errors.date.message}</HelperText>}
           </div>
         </div>
 
@@ -146,6 +146,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
                 placeholder={DEFAULT_DESCRIPTION_PLACEHOLDER}
                 disabled={isSubmitting}
                 error={!!errors.description}
+                helperText={errors.description?.message}
                 maxLength={80}
                 onClear={clearField(field)}
                 className="pr-15"
@@ -153,11 +154,7 @@ export const TransactionForm = forwardRef<TransactionFormRef, TransactionFormPro
             )}
           />
           <div className="flex justify-between items-center">
-            {errors.description?.message ? (
-              <HelperText error>{errors.description.message}</HelperText>
-            ) : (
-              <span />
-            )}
+            <span />
             <span className="text-sm text-content-secondary tabular-nums mt-1">
               {(description ?? '').length}/80
             </span>
