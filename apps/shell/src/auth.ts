@@ -36,14 +36,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           };
         }
 
-        if (process.env.NODE_ENV !== 'production' && credentials.password === 'senha123') {
-          return {
-            id: 'joana', // Garantindo o userId igual ao do seed das transações
-            name: 'Joana da Silva',
-            email: credentials.email as string,
-            image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-          };
-        }
         return null;
       },
     }),

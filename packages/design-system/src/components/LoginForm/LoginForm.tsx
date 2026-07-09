@@ -9,12 +9,7 @@ import { Label } from '../Label';
 import type { LoginFormFields, LoginFormProps } from './ILoginForm';
 import { loginFormSchema, type LoginFormSchemaValues } from './schema';
 
-export function LoginForm({
-  onSubmit,
-  isLoading = false,
-  forgotPasswordHref = '#',
-  className,
-}: LoginFormProps) {
+export function LoginForm({ onSubmit, isLoading = false, className }: LoginFormProps) {
   const {
     control,
     handleSubmit,
@@ -68,9 +63,7 @@ export function LoginForm({
 
           return (
             <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="password">Senha</Label>
-              </div>
+              <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -81,16 +74,6 @@ export function LoginForm({
                 helperText={errors.password?.message}
                 {...fieldProps}
               />
-              <a
-                href={forgotPasswordHref}
-                className={cn(
-                  'text-sm font-medium self-end text-brand-primary underline-offset-4 transition-colors',
-                  'hover:text-brand-primary-hover hover:underline',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary'
-                )}
-              >
-                Esqueci minha senha
-              </a>
             </div>
           );
         }}

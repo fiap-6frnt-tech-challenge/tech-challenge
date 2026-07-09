@@ -14,12 +14,17 @@ export function DeferUntilVisible({
   rootMargin = '300px',
 }: DeferUntilVisibleProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(() => typeof IntersectionObserver === 'undefined');
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (visible) return;
     const el = ref.current;
     if (!el) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      const raf = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(raf);
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
