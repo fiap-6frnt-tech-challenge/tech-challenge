@@ -175,6 +175,8 @@ Biblioteca de componentes documentada com variantes, props, acessibilidade e exe
 
 📖 **[Acessar Storybook →](https://phase-1--69d58ff921fbab085884a584.chromatic.com/)**
 
+📋 **[Relatório de acessibilidade →](docs/phase-2/a11y-audit.md)**
+
 Destaques:
 
 - **Tokens de design** — cores, espaçamento, tipografia e sombras via CSS custom properties
