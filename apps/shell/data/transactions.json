@@ -1,0 +1,545 @@
+{
+  "transactions": [
+    {
+      "id": "txn-101",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 5000,
+      "date": "2025-12-05",
+      "description": "December salary",
+      "category": "Salário",
+      "attachments": []
+    },
+    {
+      "id": "txn-102",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 110,
+      "date": "2025-12-07",
+      "description": "Supermarket",
+      "category": "Alimentação",
+      "attachments": []
+    },
+    {
+      "id": "txn-103",
+      "userId": "joana",
+      "type": "transfer",
+      "amount": 800,
+      "date": "2025-12-10",
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
+    },
+    {
+      "id": "txn-104",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 250,
+      "date": "2025-12-15",
+      "description": "Christmas gifts",
+      "category": "Presentes",
+      "attachments": []
+    },
+    {
+      "id": "txn-105",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 80,
+      "date": "2025-12-18",
+      "description": "Fuel",
+      "category": "Transporte",
+      "attachments": []
+    },
+    {
+      "id": "txn-106",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 1200,
+      "date": "2025-12-20",
+      "description": "Year-end bonus",
+      "category": "Bônus",
+      "attachments": []
+    },
+    {
+      "id": "txn-107",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 320,
+      "date": "2025-12-24",
+      "description": "Holiday dinner",
+      "category": "Lazer",
+      "attachments": []
+    },
+    {
+      "id": "txn-001",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 5000,
+      "date": "2026-01-05",
+      "description": "January salary",
+      "category": "Salário",
+      "attachments": []
+    },
+    {
+      "id": "txn-002",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 120.5,
+      "date": "2026-01-07",
+      "description": "Supermarket",
+      "category": "Alimentação",
+      "attachments": []
+    },
+    {
+      "id": "txn-003",
+      "userId": "joana",
+      "type": "transfer",
+      "amount": 800,
+      "date": "2026-01-10",
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
+    },
+    {
+      "id": "txn-004",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 45,
+      "date": "2026-01-12",
+      "description": "Streaming services",
+      "category": "Entretenimento",
+      "attachments": []
+    },
+    {
+      "id": "txn-005",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 350,
+      "date": "2026-01-15",
+      "description": "Freelance project",
+      "category": "Freelance",
+      "attachments": []
+    },
+    {
+      "id": "txn-006",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 200,
+      "date": "2026-01-18",
+      "description": "Electricity bill",
+      "category": "Contas",
+      "attachments": []
+    },
+    {
+      "id": "txn-007",
+      "userId": "joana",
+      "type": "transfer",
+      "amount": 500,
+      "date": "2026-01-20",
+      "description": "Transfer to savings",
+      "category": "Investimentos",
+      "attachments": []
+    },
+    {
+      "id": "txn-008",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 89.9,
+      "date": "2026-01-22",
+      "description": "Pharmacy",
+      "category": "Saúde",
+      "attachments": []
+    },
+    {
+      "id": "txn-009",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 150,
+      "date": "2026-01-25",
+      "description": "Refund received",
+      "category": "Reembolso",
+      "attachments": []
+    },
+    {
+      "id": "txn-010",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 310,
+      "date": "2026-01-28",
+      "description": "Internet + phone bill",
+      "category": "Contas",
+      "attachments": []
+    },
+    {
+      "id": "txn-011",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 5000,
+      "date": "2026-02-05",
+      "description": "February salary",
+      "category": "Salário",
+      "attachments": []
+    },
+    {
+      "id": "txn-012",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 75,
+      "date": "2026-02-08",
+      "description": "Restaurant",
+      "category": "Alimentação",
+      "attachments": []
+    },
+    {
+      "id": "txn-013",
+      "userId": "joana",
+      "type": "transfer",
+      "amount": 800,
+      "date": "2026-02-10",
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
+    },
+    {
+      "id": "txn-014",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 430,
+      "date": "2026-02-13",
+      "description": "Clothing store",
+      "category": "Vestuário",
+      "attachments": []
+    },
+    {
+      "id": "txn-015",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 200,
+      "date": "2026-02-16",
+      "description": "Cash gift",
+      "category": "Presentes",
+      "attachments": []
+    },
+    {
+      "id": "txn-016",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 60,
+      "date": "2026-02-19",
+      "description": "Fuel",
+      "category": "Transporte",
+      "attachments": []
+    },
+    {
+      "id": "txn-017",
+      "userId": "joana",
+      "type": "transfer",
+      "amount": 1000,
+      "date": "2026-02-21",
+      "description": "Emergency fund",
+      "category": "Reserva",
+      "attachments": []
+    },
+    {
+      "id": "txn-018",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 190,
+      "date": "2026-02-24",
+      "description": "Gym membership",
+      "category": "Saúde",
+      "attachments": []
+    },
+    {
+      "id": "txn-019",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 420,
+      "date": "2026-02-27",
+      "description": "Sold old equipment",
+      "category": "Venda",
+      "attachments": []
+    },
+    {
+      "id": "txn-020",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 55,
+      "date": "2026-02-28",
+      "description": "Books",
+      "category": "Educação",
+      "attachments": []
+    },
+    {
+      "id": "txn-021",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 5000,
+      "date": "2026-03-05",
+      "description": "March salary",
+      "category": "Salário",
+      "attachments": []
+    },
+    {
+      "id": "txn-022",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 140,
+      "date": "2026-03-08",
+      "description": "Dental appointment",
+      "category": "Saúde",
+      "attachments": []
+    },
+    {
+      "id": "txn-023",
+      "userId": "joana",
+      "type": "transfer",
+      "amount": 800,
+      "date": "2026-03-10",
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
+    },
+    {
+      "id": "txn-024",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 210,
+      "date": "2026-03-14",
+      "description": "Supermarket",
+      "category": "Alimentação",
+      "attachments": []
+    },
+    {
+      "id": "txn-025",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 95,
+      "date": "2026-03-19",
+      "description": "Bus pass",
+      "category": "Transporte",
+      "attachments": []
+    },
+    {
+      "id": "txn-026",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 380,
+      "date": "2026-03-23",
+      "description": "Freelance project",
+      "category": "Freelance",
+      "attachments": []
+    },
+    {
+      "id": "c9a0",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 200,
+      "date": "2026-03-18",
+      "description": "asdasd",
+      "category": "default",
+      "attachments": []
+    },
+    {
+      "id": "txn-201",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 5000,
+      "date": "2026-04-05",
+      "description": "April salary",
+      "category": "Salário",
+      "attachments": []
+    },
+    {
+      "id": "txn-202",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 130,
+      "date": "2026-04-08",
+      "description": "Supermarket",
+      "category": "Alimentação",
+      "attachments": []
+    },
+    {
+      "id": "txn-203",
+      "userId": "joana",
+      "type": "transfer",
+      "amount": 800,
+      "date": "2026-04-10",
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
+    },
+    {
+      "id": "txn-204",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 95,
+      "date": "2026-04-14",
+      "description": "Movie night",
+      "category": "Lazer",
+      "attachments": []
+    },
+    {
+      "id": "txn-205",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 70,
+      "date": "2026-04-17",
+      "description": "Fuel",
+      "category": "Transporte",
+      "attachments": []
+    },
+    {
+      "id": "txn-206",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 300,
+      "date": "2026-04-22",
+      "description": "Freelance project",
+      "category": "Freelance",
+      "attachments": []
+    },
+    {
+      "id": "txn-207",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 180,
+      "date": "2026-04-26",
+      "description": "Doctor appointment",
+      "category": "Saúde",
+      "attachments": []
+    },
+    {
+      "id": "txn-301",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 5000,
+      "date": "2026-05-05",
+      "description": "May salary",
+      "category": "Salário",
+      "attachments": []
+    },
+    {
+      "id": "txn-302",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 160,
+      "date": "2026-05-09",
+      "description": "Supermarket",
+      "category": "Alimentação",
+      "attachments": []
+    },
+    {
+      "id": "txn-303",
+      "userId": "joana",
+      "type": "transfer",
+      "amount": 800,
+      "date": "2026-05-10",
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
+    },
+    {
+      "id": "txn-304",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 220,
+      "date": "2026-05-13",
+      "description": "New shoes",
+      "category": "Vestuário",
+      "attachments": []
+    },
+    {
+      "id": "txn-305",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 85,
+      "date": "2026-05-18",
+      "description": "Fuel",
+      "category": "Transporte",
+      "attachments": []
+    },
+    {
+      "id": "txn-306",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 120,
+      "date": "2026-05-23",
+      "description": "Concert tickets",
+      "category": "Lazer",
+      "attachments": []
+    },
+    {
+      "id": "txn-307",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 250,
+      "date": "2026-05-28",
+      "description": "Refund received",
+      "category": "Reembolso",
+      "attachments": []
+    },
+    {
+      "id": "txn-401",
+      "userId": "joana",
+      "type": "deposit",
+      "amount": 5000,
+      "date": "2026-06-05",
+      "description": "June salary",
+      "category": "Salário",
+      "attachments": []
+    },
+    {
+      "id": "txn-402",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 145,
+      "date": "2026-06-08",
+      "description": "Supermarket",
+      "category": "Alimentação",
+      "attachments": []
+    },
+    {
+      "id": "txn-403",
+      "userId": "joana",
+      "type": "transfer",
+      "amount": 800,
+      "date": "2026-06-10",
+      "description": "Rent payment",
+      "category": "Moradia",
+      "attachments": []
+    },
+    {
+      "id": "txn-404",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 90,
+      "date": "2026-06-12",
+      "description": "Pharmacy",
+      "category": "Saúde",
+      "attachments": []
+    },
+    {
+      "id": "txn-405",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 65,
+      "date": "2026-06-15",
+      "description": "Fuel",
+      "category": "Transporte",
+      "attachments": []
+    },
+    {
+      "id": "txn-406",
+      "userId": "joana",
+      "type": "withdrawal",
+      "amount": 200,
+      "date": "2026-06-18",
+      "description": "Weekend trip",
+      "category": "Lazer",
+      "attachments": []
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

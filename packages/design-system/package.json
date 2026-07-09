@@ -1,0 +1,63 @@
+{
+  "name": "@bytebank/design-system",
+  "version": "0.1.0",
+  "private": true,
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "description": "Bytebank Design System — componentes, tokens e estilos compartilhados",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles/tokens.css": "./src/styles/tokens.css",
+    "./styles/globals.css": "./src/styles/globals.css"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "chromatic": "chromatic --project-token=chpt_330cd685ba026e8"
+  },
+  "peerDependencies": {
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "@bytebank/shared": "*",
+    "@hookform/resolvers": "^5.2.2",
+    "lucide-react": "^0.577.0",
+    "react-hook-form": "^7.72.0",
+    "recharts": "^3.8.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^5.0.1",
+    "@storybook/addon-a11y": "^10.2.16",
+    "@storybook/addon-docs": "^10.2.16",
+    "@storybook/addon-onboarding": "^10.2.16",
+    "@storybook/addon-vitest": "^10.2.16",
+    "@storybook/nextjs-vite": "^10.2.16",
+    "@storybook/test-runner": "^0.24.3",
+    "@tailwindcss/postcss": "^4",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/browser-playwright": "^4.0.18",
+    "chromatic": "^16.1.0",
+    "eslint": "^9",
+    "eslint-plugin-storybook": "^10.2.16",
+    "playwright": "^1.58.2",
+    "storybook": "^10.2.16",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  }
+}

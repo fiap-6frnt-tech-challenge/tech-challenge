@@ -1,0 +1,184 @@
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { fn } from 'storybook/test';
+import type { Transaction } from '@bytebank/shared';
+import { TransactionList } from './TransactionList';
+import { ReceiptText } from 'lucide-react';
+import { EmptyState } from '@bytebank/design-system';
+
+const MOCK_TRANSACTIONS: Transaction[] = [
+  {
+    id: '1',
+    userId: 'user-1',
+    type: 'deposit',
+    category: 'Salário',
+    description: 'Salário mensal',
+    amount: 5000,
+    date: '2025-03-01',
+  },
+  {
+    id: '2',
+    userId: 'user-1',
+    type: 'withdrawal',
+    category: 'Moradia',
+    description: 'Aluguel',
+    amount: 1500,
+    date: '2025-03-05',
+  },
+  {
+    id: '3',
+    userId: 'user-1',
+    type: 'transfer',
+    category: 'Poupança',
+    description: 'Transferência para conta poupança',
+    amount: 800,
+    date: '2025-03-10',
+  },
+  {
+    id: '4',
+    userId: 'user-1',
+    type: 'deposit',
+    category: 'Freelance',
+    description: 'Freelance — projeto web',
+    amount: 2200,
+    date: '2025-03-15',
+  },
+  {
+    id: '5',
+    userId: 'user-1',
+    type: 'withdrawal',
+    category: 'Alimentação',
+    description: 'Supermercado',
+    amount: 320,
+    date: '2025-03-18',
+  },
+];
+
+const meta: Meta<typeof TransactionList> = {
+  title: 'Features/TransactionList',
+  component: TransactionList,
+  tags: ['autodocs'],
+  args: {
+    transactions: MOCK_TRANSACTIONS,
+    onEdit: fn(),
+    onDelete: fn(),
+  },
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Renders a list of transactions using TransactionItem. Handles loading and empty states. Supports optional title and custom className for different layout contexts. Does not require providers directly; in app usage it is commonly wired with TanStack Query data and filter state.',
+      },
+    },
+  },
+  argTypes: {
+    isLoading: {
+      description: 'Shows a skeleton placeholder while data is being fetched.',
+      control: 'boolean',
+    },
+    emptyState: {
+      description: 'Message displayed when there are no transactions.',
+      control: 'text',
+    },
+    title: {
+      description: 'Optional heading displayed above the list.',
+      control: 'text',
+    },
+    className: {
+      description: 'Custom CSS classes for the wrapper div.',
+      control: 'text',
+    },
+    onEdit: { control: false },
+    onDelete: { control: false },
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof TransactionList>;
+
+export const Default: Story = {
+  name: 'State: Default',
+  parameters: {
+    docs: {
+      description: { story: 'Full list with mixed transaction types.' },
+    },
+  },
+};
+
+export const ContextIntegration: Story = {
+  name: 'Composition: Context Integration',
+  args: {
+    transactions: MOCK_TRANSACTIONS,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Integration reference: in production this component typically receives `transactions`, `onEdit`, and `onDelete` from TanStack Query-driven containers.',
+      },
+    },
+  },
+};
+
+export const Loading: Story = {
+  name: 'State: Loading',
+  args: { isLoading: true },
+  parameters: {
+    docs: {
+      description: { story: 'Skeleton state shown while transactions are being fetched.' },
+    },
+  },
+};
+
+export const Empty: Story = {
+  name: 'State: Empty',
+  args: { transactions: [] },
+  parameters: {
+    docs: {
+      description: { story: 'Empty state when no transactions exist.' },
+    },
+  },
+};
+
+export const EmptyWithCustomMessage: Story = {
+  name: 'Composition: Empty Custom Message',
+  args: {
+    transactions: [],
+    emptyState: (
+      <EmptyState
+        icon={<ReceiptText size={32} />}
+        title="Nenhuma transação encontrada"
+        description="Nenhuma transação corresponde aos filtros selecionados."
+      />
+    ),
+  },
+  parameters: {
+    docs: {
+      description: { story: 'Empty state with a custom message, e.g. after applying filters.' },
+    },
+  },
+};
+
+export const WithTitle: Story = {
+  name: 'Composition: With Title Sidebar',
+  args: {
+    title: 'Extrato',
+    className: 'lg:w-80 lg:shrink-0',
+  },
+  parameters: {
+    docs: {
+      description: { story: 'Sidebar layout with title, as used on the homepage.' },
+    },
+  },
+};
+
+export const FullWidth: Story = {
+  name: 'Composition: Full Width Transactions Page',
+  args: {
+    className: 'w-full overflow-y-auto max-h-[calc(100vh-300px)]',
+  },
+  parameters: {
+    docs: {
+      description: { story: 'Full-width layout as used on the transactions page.' },
+    },
+  },
+};

@@ -4,27 +4,39 @@ on:
   push:
     branches:
       - main
-      - phase-1
+      - phase-2
 
 jobs:
   chromatic:
     name: Run Chromatic
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Chromatic precisa de histórico completo para baseline
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24.14.0
+          node-version: '22' # Rspack exige >=20.19 ou >=22.12; Node 22 LTS satisfaz ambos
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build Storybook
+        run: npx turbo run build-storybook --filter=@bytebank/design-system
 
       - name: Run Chromatic
         uses: chromaui/action@latest
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: packages/design-system
+          storybookBuildDir: storybook-static
+          onlyChanged: true
+          exitZeroOnChanges: true

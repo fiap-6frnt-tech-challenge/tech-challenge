@@ -1,0 +1,38 @@
+{
+  "name": "@bytebank/dashboard-mfe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dashboard MFE — Rsbuild + Module Federation remote (expõe ./Dashboard, roda standalone em :3001)",
+  "scripts": {
+    "dev": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview",
+    "lint": "eslint src",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bytebank/api-client": "*",
+    "@bytebank/design-system": "*",
+    "@bytebank/shared": "*",
+    "@bytebank/stores": "*",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@module-federation/enhanced": "^2.4.0",
+    "@module-federation/rsbuild-plugin": "^2.4.0",
+    "@rsbuild/core": "^2.0.0",
+    "@rsbuild/plugin-react": "^2.0.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-prettier": "^10",
+    "eslint-plugin-react": "^7",
+    "eslint-plugin-react-hooks": "^5",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "typescript-eslint": "^8"
+  }
+}

@@ -1,0 +1,161 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - phase-2
+      - main
+  push:
+    branches:
+      - phase-2
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint + Build + Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      # Fornece o base ref explicitamente para Turbo --affected.
+      # Em PRs usa o branch de destino; em pushes usa o commit anterior.
+      TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+      TURBO_SCM_HEAD: HEAD
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # full history para Turbo --affected resolver merge-base do PR
+
+      - name: Fetch base branch
+        # Garante que origin/<base> existe como ref local para o Turbo resolver
+        if: github.event_name == 'pull_request'
+        run: git fetch origin ${{ github.base_ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22' # Rspack exige >=20.19 ou >=22.12; Node 22 LTS satisfaz ambos
+          cache: 'npm'
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ github.job }}-${{ github.ref_name }}-
+            turbo-${{ github.job }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        # Necessário para @bytebank/design-system rodar stories via @vitest/browser-playwright.
+        # `--with-deps` instala libs do sistema (apt) para Chromium headless.
+        # Idempotente: pula download se o binário já está no cache.
+        run: npx playwright install --with-deps chromium
+
+      - name: Lint
+        run: npx turbo run lint --affected --filter='!@bytebank/hello-mfe'
+
+      - name: Type check
+        run: npx turbo run type-check --affected
+
+      - name: Build
+        run: npx turbo run build --affected
+
+      - name: Test
+        run: npx turbo run test --affected
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: bytebank
+          POSTGRES_PASSWORD: bytebank
+          POSTGRES_DB: bytebank
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bytebank -d bytebank"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://bytebank:bytebank@localhost:5432/bytebank
+      AUTH_SECRET: bytebank-e2e-auth-secret-bytebank-e2e-auth-secret
+      AUTH_URL: http://localhost:3000
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: /api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ github.job }}-${{ github.ref_name }}-
+            turbo-${{ github.job }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox
+
+      - name: Run database migrations
+        run: npm run db:migrate --workspace @bytebank/shell
+
+      - name: Run E2E tests
+        run: npm run e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload Playwright test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 7
