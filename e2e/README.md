@@ -8,7 +8,7 @@ de producao locais do shell e dos MFEs.
 1. Instale o browser do Playwright, se ainda nao tiver feito isso nesta maquina:
 
 ```bash
-npx playwright install chromium
+npx playwright install chromium firefox
 ```
 
 2. Garanta que o Postgres local esta rodando e com as migrations aplicadas.
@@ -92,12 +92,28 @@ Depois de uma execucao, abra o relatorio com:
 npm run e2e:report
 ```
 
+## CI GitHub Actions
+
+O workflow de CI roda a suite E2E em pull requests e pushes para `phase-2` e
+`main`. O job sobe um Postgres descartavel, instala os browsers do Playwright,
+aplica as migrations e executa:
+
+```bash
+npm run e2e
+```
+
+A suite roda os projetos `chromium` e `firefox`. Qualquer falha reprova o PR.
+
+Depois da execucao, o GitHub Actions publica os artifacts
+`playwright-report` e `playwright-test-results`, com relatorio HTML, traces,
+screenshots e videos retidos quando houver falha.
+
 ## Troubleshooting
 
 Se o Playwright reclamar que o browser nao esta instalado:
 
 ```bash
-npx playwright install chromium
+npx playwright install chromium firefox
 ```
 
 Se algum servidor falhar por porta ocupada, encerre o processo antigo em
@@ -105,3 +121,8 @@ Se algum servidor falhar por porta ocupada, encerre o processo antigo em
 
 Se aparecer erro de tabela inexistente, o banco local precisa receber as
 migrations antes de rodar a suite.
+
+No CI, se precisar investigar uma falha, abra a execucao do workflow no GitHub
+Actions e baixe os artifacts `playwright-report` e `playwright-test-results`.
+O relatorio HTML mostra o spec que falhou, e os test results guardam traces,
+screenshots e videos quando gerados pelo Playwright.
