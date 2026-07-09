@@ -27,6 +27,7 @@ export function CategorySelect({
   const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const options = useMemo(() => {
     const base = CATEGORIES.map((category) => ({
@@ -57,6 +58,12 @@ export function CategorySelect({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!open || activeIndex < 0) return;
+    const activeOption = listRef.current?.children[activeIndex] as HTMLElement | undefined;
+    activeOption?.scrollIntoView({ block: 'nearest' });
+  }, [open, activeIndex]);
 
   function openDropdown(startIndex?: number) {
     const idx = startIndex ?? options.findIndex((option) => option.id === value);
@@ -175,14 +182,16 @@ export function CategorySelect({
 
         {open && (
           <ul
+            ref={listRef}
             id={listboxId}
             role="listbox"
+            tabIndex={0}
             aria-label={label ?? 'Categorias'}
             className={cn(
               'absolute z-50 w-full mt-1',
               'bg-surface rounded-default border',
               borderColor,
-              'overflow-hidden shadow-card'
+              'max-h-60 overflow-y-auto overscroll-contain shadow-card'
             )}
           >
             {options.map((option, index) => (

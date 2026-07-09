@@ -1,39 +1,57 @@
 # Bytebank — Gerenciamento Financeiro
 
-Frontend de gestão financeira pessoal construído como monorepo (Turborepo) com Next.js 16, Design System próprio e persistência em PostgreSQL via Drizzle ORM, desenvolvido como tech challenge da pós-graduação FIAP Frontend Engineering.
+Aplicação de gestão financeira pessoal construída como monorepo (Turborepo) com **arquitetura de microfrontends**: shell Next.js 16 + remotes React federados em runtime via Module Federation, Design System próprio, autenticação NextAuth e persistência em PostgreSQL via Drizzle ORM. Desenvolvida como Tech Challenge (Fase 2) da pós-graduação FIAP Frontend Engineering.
 
-🚀 **[Acessar aplicação →](https://fiap-6frnt-tech-challenge.vercel.app/)**
+🚀 **[Acessar aplicação →](https://tech-challenge-phase2.vercel.app/)**
 
-![Home — desktop](docs/screenshots/home-desktop.png)
+![Bytebank — home (desktop)](docs/screenshots/home-transaction-desktop.png)
 
 ---
 
 ## Funcionalidades
 
-- **Dashboard** — saldo da conta com toggle de visibilidade e lista das transações mais recentes
-- **Lista de transações** — filtros por tipo, intervalo de datas e ordenação; paginação server-side via Next.js API Routes; estado persiste na URL via query params
+- **Autenticação** — cadastro e login com email/senha (NextAuth v5 + bcrypt) e Google OAuth opcional; rotas e API protegidas por sessão JWT; cada usuário vê apenas suas transações
+- **Dashboard** — KPIs do mês (receitas, despesas e economia com variação vs. mês anterior) e gráficos de análise financeira: evolução do saldo, receitas × despesas e distribuição de gastos por categoria (Recharts)
+- **Lista de transações** — busca por descrição, filtros por tipo e intervalo de datas, ordenação e paginação server-side; estado dos filtros persiste na URL via query params
 - **CRUD completo** — adicionar, editar e excluir transações com modais de confirmação e feedback visual
-- **Design System** — biblioteca de componentes documentada no Storybook com tokens de cor, tipografia e espaçamento
-- **Persistência real** — PostgreSQL + Drizzle ORM; seed de dados iniciais incluído
+- **Categorias com sugestão automática** — a categoria é sugerida a partir da descrição digitada no formulário
+- **Anexos** — upload de recibos/comprovantes por transação (Vercel Blob)
+- **Design System** — biblioteca de componentes documentada no Storybook (publicada via Chromatic) com tokens de cor, tipografia e espaçamento
+- **Acessibilidade** — WCAG 2.1 AA: navegação por teclado, ARIA, foco gerenciado, contrastes auditados
+
+---
+
+## Arquitetura de microfrontends
+
+O app é composto em runtime por um **shell** Next.js e dois **remotes** React independentes, federados com `@module-federation/enhanced` (runtime API + `mf-manifest.json`):
+
+| App                | Porta | Papel                                                                                                           |
+| ------------------ | ----- | --------------------------------------------------------------------------------------------------------------- |
+| `shell`            | 3000  | Host Next.js 16 (App Router): autenticação, layout, SSR, API Routes (`/api/*`)                                  |
+| `dashboard-mfe`    | 3002  | Remote Rsbuild — dashboard com KPIs e gráficos, montado na home (`/`)                                           |
+| `transactions-mfe` | 3003  | Remote Rsbuild — página de transações (`/transactions`: lista, filtros, CRUD, anexos) e widget de saldo da home |
+| `hello-mfe`        | 3001  | Remote de PoC (Sprint 0) — mantido como referência histórica em `/poc`                                          |
+
+Pontos-chave:
+
+- **Deploys independentes** — cada remote é um projeto próprio na Vercel; o shell carrega os manifests pelas URLs em `NEXT_PUBLIC_*_MFE_URL`.
+- **Singletons compartilhados** — `react`, `react-dom` e os pacotes `@bytebank/*` são compartilhados como singletons, então Redux store, TanStack Query client e sessão são os mesmos objetos em shell e remotes (é assim que os MFEs se comunicam).
+- **Auth centralizada no shell** — os remotes consomem a sessão via `SessionProvider` do shell e falam apenas com `/api/*`; nunca tocam o JWT.
+- **SSR + SEO** — o shell faz SSR de layout, skeleton e metadata; os remotes hidratam client-side com `preload` do manifest.
 
 ---
 
 ## Pré-requisitos
 
-| Ferramenta | Versão mínima |
-| ---------- | ------------- |
-| Node.js    | 20+           |
-| npm        | 10+           |
-| Docker     | 24+           |
-
-> **Atenção:** Se você tiver um PostgreSQL instalado localmente rodando na porta **5432**, ele vai conflitar com o container Docker. Pare o serviço antes de subir o projeto:
->
-> - **Windows (serviço):** `Stop-Service postgresql-x64-*` (PowerShell como administrador)
-> - **macOS/Linux:** `brew services stop postgresql` ou `sudo systemctl stop postgresql`
+| Ferramenta | Versão mínima                   |
+| ---------- | ------------------------------- |
+| Node.js    | 20.19+ (ou 22 LTS, usada na CI) |
+| npm        | 10+                             |
+| Docker     | 24+                             |
 
 ---
 
-## Instalação e execução
+## Instalação e execução (dev)
 
 ### 1. Clonar o repositório
 
@@ -54,20 +72,16 @@ npm install
 cp apps/shell/.env.example apps/shell/.env.local
 ```
 
-O arquivo `.env.example` já contém os valores corretos para desenvolvimento local.
-Apenas crie um novo arquivo `.env.local` copiando os valores do `.env.example`
-Nenhuma edição é necessária se você estiver rodando com Docker.
+Os valores padrão já funcionam para desenvolvimento local com Docker. Apenas gere um `AUTH_SECRET` e cole no `.env.local`:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
 
 ### 4. Subir o banco de dados
 
 ```bash
 docker compose up -d db
-```
-
-Aguarde o container ficar `healthy` (alguns segundos). Você pode verificar com:
-
-```bash
-docker compose ps
 ```
 
 ### 5. Executar as migrations
@@ -82,13 +96,33 @@ npm run db:migrate -w @bytebank/shell
 npm run db:seed -w @bytebank/shell
 ```
 
-### 7. Iniciar o servidor de desenvolvimento
+### 7. Iniciar os servidores de desenvolvimento
 
 ```bash
 npm run dev
 ```
 
-Abre o shell (Next.js) em `http://localhost:3000`. A API é servida pelo próprio Next.js em `/api/transactions`.
+O Turborepo sobe todos os apps em paralelo: shell em `http://localhost:3000` e os remotes em `:3001`–`:3003`. A API é servida pelo próprio Next.js em `/api/*`.
+
+### 8. Criar uma conta e entrar
+
+Acesse `http://localhost:3000/register`, crie uma conta e faça login com ela — não há usuário de demonstração. As transações são por usuário, então contas novas começam vazias; crie transações pelo app para popular o dashboard.
+
+---
+
+## Rodando tudo com Docker Compose
+
+Para subir a stack completa containerizada (Postgres + shell + os dois MFEs em builds de produção):
+
+```bash
+cp .env.example .env        # gere e preencha o AUTH_SECRET
+docker compose up -d db
+npm run db:migrate -w @bytebank/shell
+npm run db:seed -w @bytebank/shell
+docker compose up --build
+```
+
+Acesse `http://localhost:3000`, crie uma conta em `/register` e faça login. `BLOB_READ_WRITE_TOKEN` é opcional — sem ele o upload de anexos usa um storage mock local.
 
 ---
 
@@ -96,20 +130,20 @@ Abre o shell (Next.js) em `http://localhost:3000`. A API é servida pelo própri
 
 ### Raiz do monorepo
 
-| Comando          | Descrição                                    |
-| ---------------- | -------------------------------------------- |
-| `npm run dev`    | Inicia todos os apps em paralelo (Turborepo) |
-| `npm run build`  | Build de produção de todos os pacotes e apps |
-| `npm run lint`   | Executa o ESLint em todo o monorepo          |
-| `npm run test`   | Executa todos os testes (Vitest)             |
-| `npm run format` | Formata todos os arquivos com Prettier       |
+| Comando          | Descrição                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| `npm run dev`    | Inicia todos os apps em paralelo (Turborepo)                                        |
+| `npm run build`  | Build de produção de todos os pacotes e apps                                        |
+| `npm run lint`   | Executa o ESLint em todo o monorepo                                                 |
+| `npm run test`   | Executa todos os testes (Vitest; stories do Storybook são os testes)                |
+| `npm run e2e`    | Builda os apps e roda a suíte E2E (Playwright) — ver [e2e/README.md](e2e/README.md) |
+| `npm run format` | Formata todos os arquivos com Prettier                                              |
 
-### Shell (`-w @bytebank/shell`)
+### Workspaces
 
 | Comando                                        | Descrição                                     |
 | ---------------------------------------------- | --------------------------------------------- |
-| `npm run dev -w @bytebank/shell`               | Inicia o Next.js em `http://localhost:3000`   |
-| `npm run build -w @bytebank/shell`             | Build de produção                             |
+| `npm run dev -w @bytebank/shell`               | Inicia só o shell em `http://localhost:3000`  |
 | `npm run db:generate -w @bytebank/shell`       | Gera arquivos de migration a partir do schema |
 | `npm run db:migrate -w @bytebank/shell`        | Aplica as migrations no banco                 |
 | `npm run db:seed -w @bytebank/shell`           | Popula o banco com dados iniciais             |
@@ -117,15 +151,29 @@ Abre o shell (Next.js) em `http://localhost:3000`. A API é servida pelo própri
 
 ---
 
+## Testes
+
+- **Componentes** — as stories do Storybook são executadas como testes num Chromium headless (`@storybook/addon-vitest`); pacotes `shared`/`stores` têm testes unitários Vitest. Rode tudo com `npm run test`.
+- **E2E** — Playwright cobre os fluxos críticos (auth + CRUD, filtros, anexos) contra builds de produção locais. Requer Postgres migrado e browsers instalados (`npx playwright install chromium firefox`); rode com `npm run e2e`. Detalhes em [e2e/README.md](e2e/README.md).
+- **CI** — GitHub Actions roda lint, type-check, build e testes (Turbo `--affected` + cache remoto) em PRs e pushes; o workflow do Chromatic publica o Storybook e faz review visual.
+
+---
+
 ## Variáveis de ambiente
 
-Todas as variáveis ficam em `apps/shell/.env.local` (criado no passo 3).
+Em dev, todas ficam em `apps/shell/.env.local` (criado no passo 3). O `.env` da raiz é usado apenas pelo Docker Compose.
 
-| Variável                    | Obrigatória | Descrição                             | Padrão (local)                                         |
-| --------------------------- | ----------- | ------------------------------------- | ------------------------------------------------------ |
-| `DATABASE_URL`              | **Sim**     | Connection string do PostgreSQL       | `postgres://bytebank:bytebank@localhost:5432/bytebank` |
-| `NEXT_PUBLIC_API_URL`       | Não         | URL base da API interna               | `/api`                                                 |
-| `NEXT_PUBLIC_HELLO_MFE_URL` | Não         | URL do manifest do MFE hello (PoC MF) | `http://localhost:3001/mf-manifest.json`               |
+| Variável                                | Obrigatória | Descrição                                                                    | Padrão (local)                                         |
+| --------------------------------------- | ----------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `DATABASE_URL`                          | **Sim**     | Connection string do PostgreSQL                                              | `postgres://bytebank:bytebank@localhost:5432/bytebank` |
+| `AUTH_SECRET`                           | **Sim**     | Segredo de assinatura dos JWTs (NextAuth) — gere um por ambiente             | —                                                      |
+| `AUTH_URL`                              | Em produção | URL base do app para o NextAuth                                              | `http://localhost:3000`                                |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Não         | Credenciais do Google OAuth; sem elas o botão "Entrar com Google" é ocultado | —                                                      |
+| `NEXT_PUBLIC_API_URL`                   | Não         | URL base da API interna                                                      | `/api`                                                 |
+| `NEXT_PUBLIC_DASHBOARD_MFE_URL`         | Não         | URL do manifest do dashboard-mfe                                             | `http://localhost:3002/mf-manifest.json`               |
+| `NEXT_PUBLIC_TRANSACTIONS_MFE_URL`      | Não         | URL do manifest do transactions-mfe                                          | `http://localhost:3003/mf-manifest.json`               |
+| `NEXT_PUBLIC_HELLO_MFE_URL`             | Não         | URL do manifest do hello-mfe (PoC)                                           | `http://localhost:3001/mf-manifest.json`               |
+| `BLOB_READ_WRITE_TOKEN`                 | Não         | Token do Vercel Blob para upload de anexos; sem ele, usa storage mock local  | —                                                      |
 
 ---
 
@@ -134,38 +182,58 @@ Todas as variáveis ficam em `apps/shell/.env.local` (criado no passo 3).
 ```
 tech-challenge/
 ├── apps/
-│   ├── shell/          # Next.js 16 — app principal (porta 3000)
-│   └── hello-mfe/      # Rsbuild — PoC Module Federation (porta 3001)
+│   ├── shell/             # Next.js 16 — host: auth, layout, /api/*, SSR (porta 3000)
+│   ├── dashboard-mfe/     # Rsbuild — dashboard federado: KPIs + gráficos (porta 3002)
+│   ├── transactions-mfe/  # Rsbuild — transações federadas: lista, CRUD, anexos (porta 3003)
+│   └── hello-mfe/         # Rsbuild — PoC Module Federation, Sprint 0 (porta 3001)
 │
 ├── packages/
-│   ├── design-system/  # Componentes, tokens e Storybook
-│   ├── shared/         # Tipos, constantes e utilitários compartilhados
-│   ├── stores/         # Redux Toolkit slices e RTK Query
-│   └── api-client/     # Cliente HTTP tipado para a API do shell
+│   ├── design-system/     # Componentes, tokens, charts e Storybook
+│   ├── shared/            # Tipos, schemas Zod, categorias e utilitários
+│   ├── stores/            # Redux Toolkit — slices de UI e auth
+│   └── api-client/        # TanStack Query — hooks de dados + cliente HTTP
 │
-├── docker-compose.yml  # PostgreSQL 16 para desenvolvimento local
-└── turbo.json          # Configuração do Turborepo
+├── e2e/                   # Suíte Playwright (specs + setup)
+├── docs/phase-2/          # Plano, sprints e auditorias (a11y, performance)
+├── docker-compose.yml     # Postgres 16 + shell + MFEs
+└── turbo.json             # Configuração do Turborepo
 ```
 
 ---
 
 ## Tech stack
 
-| Preocupação          | Escolha                    | Motivo                                                      |
-| -------------------- | -------------------------- | ----------------------------------------------------------- |
-| Monorepo             | Turborepo + npm workspaces | Build incremental, execução paralela de tasks               |
-| Framework            | Next.js 16 (App Router)    | Exigência do challenge                                      |
-| Linguagem            | TypeScript                 | Type safety, melhor DX e autocompletar                      |
-| Estilização          | Tailwind CSS v4            | Utility-first, integração nativa com Design System          |
-| Design System        | Custom + Storybook         | Exigência do challenge; tokens CSS para consistência visual |
-| Banco de dados       | PostgreSQL 16 (Docker)     | Persistência real em desenvolvimento                        |
-| ORM                  | Drizzle ORM                | Type-safe, migrations versionadas, zero overhead            |
-| Gerenciamento estado | Redux Toolkit + RTK Query  | Estado global tipado e cache de dados do servidor           |
-| Formulários          | React Hook Form + Zod      | Validação leve com inferência de tipos a partir do schema   |
-| API                  | Next.js API Routes         | REST API integrada ao Next.js, sem servidor externo         |
-| Ícones               | Lucide React               | Consistente, tree-shakeable                                 |
-| Testes               | Vitest                     | Testes unitários e de componente                            |
-| Commit hooks         | Husky + lint-staged        | Garante lint e formatação em todo commit                    |
+| Preocupação        | Escolha                                           | Motivo                                                                     |
+| ------------------ | ------------------------------------------------- | -------------------------------------------------------------------------- |
+| Monorepo           | Turborepo + npm workspaces                        | Build incremental, execução paralela de tasks, cache na CI                 |
+| Microfrontends     | `@module-federation/enhanced` (runtime) + Rsbuild | Federação real em runtime com deploys independentes; shell Next.js mantido |
+| Framework (host)   | Next.js 16 (App Router)                           | SSR/SEO no shell, API Routes integradas                                    |
+| Linguagem          | TypeScript                                        | Type safety de ponta a ponta (schemas → API → UI)                          |
+| Autenticação       | NextAuth v5 (Credentials + Google)                | Sessão JWT no shell; senha com hash bcrypt                                 |
+| Estilização        | Tailwind CSS v4                                   | Utility-first, integração nativa com os tokens do Design System            |
+| Design System      | Custom + Storybook + Chromatic                    | Exigência do challenge; review visual automatizado na CI                   |
+| Gráficos           | Recharts                                          | Declarativo; estilizado com os tokens do DS                                |
+| Estado servidor    | TanStack Query                                    | Cache e invalidação de dados da API, compartilhado entre shell e MFEs      |
+| Estado cliente     | Redux Toolkit                                     | Estado global tipado (UI/feedback/auth) cross-MFE                          |
+| Banco de dados     | PostgreSQL 16 (Docker/Neon)                       | Persistência real                                                          |
+| ORM                | Drizzle ORM                                       | Type-safe, migrations versionadas, zero overhead                           |
+| Upload de arquivos | Vercel Blob                                       | Storage de anexos zero-config na Vercel                                    |
+| Formulários        | React Hook Form + Zod                             | Validação com inferência de tipos a partir do schema                       |
+| Testes             | Vitest + Playwright                               | Stories como testes de componente; E2E dos fluxos críticos                 |
+| CI/CD              | GitHub Actions + Vercel                           | Lint/build/test por PR; deploys independentes de shell e MFEs              |
+| Commit hooks       | Husky + lint-staged                               | Garante lint e formatação em todo commit                                   |
+
+---
+
+## Deploy
+
+Deploy na **Vercel** em três projetos independentes:
+
+- **Shell** — [tech-challenge-phase2.vercel.app](https://tech-challenge-phase2.vercel.app/)
+- **Dashboard MFE** — [tech-challenge-dashboard-mfe.vercel.app](https://tech-challenge-dashboard-mfe.vercel.app/)
+- **Transactions MFE** — [tech-challenge-transactions-mfe.vercel.app](https://tech-challenge-transactions-mfe.vercel.app/)
+
+O shell aponta para os remotes publicados via `NEXT_PUBLIC_*_MFE_URL`; banco em Postgres gerenciado (Neon) e anexos no Vercel Blob.
 
 ---
 
@@ -173,9 +241,9 @@ tech-challenge/
 
 Biblioteca de componentes documentada com variantes, props, acessibilidade e exemplos interativos.
 
-📖 **[Acessar Storybook →](https://phase-1--69d58ff921fbab085884a584.chromatic.com/)**
+📖 **[Acessar Storybook →](https://phase-2--69d58ff921fbab085884a584.chromatic.com/)**
 
-📋 **[Relatório de acessibilidade →](docs/phase-2/a11y-audit.md)**
+📋 **[Relatório de acessibilidade →](docs/phase-2/a11y-audit.md)** · ⚡ **[Auditoria de performance →](docs/phase-2/perf-audit.md)**
 
 Destaques:
 
@@ -187,22 +255,38 @@ Destaques:
 
 ## Screenshots
 
-### Home — desktop (1280px)
+### Home
 
-![Home desktop](docs/screenshots/home-desktop.png)
+Card de saldo com toggle de visibilidade e as transações mais recentes. O widget de saldo (`AccountOverview`) é exposto pelo transactions-mfe e montado na home pelo shell.
 
-### Home — mobile (375px)
+| Desktop (1280px)                                               | Mobile (375px)                                               |
+| -------------------------------------------------------------- | ------------------------------------------------------------ |
+| ![Home desktop](docs/screenshots/home-transaction-desktop.png) | ![Home mobile](docs/screenshots/home-transaction-mobile.png) |
 
-![Home mobile](docs/screenshots/home-mobile.png)
+### Dashboard
 
-### Transações — desktop (1280px)
+KPIs do mês (com variação vs. mês anterior) e os três gráficos de análise renderizados pelo dashboard-mfe com Recharts.
 
-![Transactions page](docs/screenshots/transactions-desktop.png)
+![Dashboard — KPIs e Receita vs Despesa](docs/screenshots/home-dashboard-desktop-1.png)
 
-### Modal — Confirmar nova transação
+![Dashboard — Despesas por Categoria](docs/screenshots/home-dashboard-desktop-2.png)
 
-![Confirm transaction modal](docs/screenshots/modal-new-transaction.png)
+![Dashboard — Evolução do Saldo](docs/screenshots/home-dashboard-desktop-3.png)
 
-### Modal — Transação adicionada com sucesso
+<img src="docs/screenshots/home-dashboard-mobile.png" width="375" alt="Dashboard mobile (375px)" />
 
-![Success feedback modal](docs/screenshots/modal-success.png)
+### Transações
+
+Lista paginada (10 por página) com busca por descrição e filtros avançados por tipo, período, faixa de valor e categoria.
+
+| Lista + paginação                                                                      | Filtros avançados                                                         |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| ![Transações — lista e paginação](docs/screenshots/transaction-desktop-pagination.png) | ![Transações — filtros](docs/screenshots/transaction-desktop-filters.png) |
+
+### Nova transação
+
+Formulário com sugestão automática de categoria e upload de anexos; modal de confirmação de sucesso ao concluir.
+
+| Formulário + anexos                                                    | Sucesso                                                 |
+| ---------------------------------------------------------------------- | ------------------------------------------------------- |
+| ![Modal de nova transação](docs/screenshots/modal-new-transaction.png) | ![Modal de sucesso](docs/screenshots/modal-success.png) |
