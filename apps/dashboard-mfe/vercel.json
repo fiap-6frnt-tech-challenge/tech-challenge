@@ -6,7 +6,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://fiap-6frnt-tech-challenge.vercel.app"
+          "value": "https://tech-challenge-phase2.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",
