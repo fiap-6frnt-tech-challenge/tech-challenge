@@ -2,7 +2,7 @@
 
 Aplicação de gestão financeira pessoal construída como monorepo (Turborepo) com **arquitetura de microfrontends**: shell Next.js 16 + remotes React federados em runtime via Module Federation, Design System próprio, autenticação NextAuth e persistência em PostgreSQL via Drizzle ORM. Desenvolvida como Tech Challenge (Fase 2) da pós-graduação FIAP Frontend Engineering.
 
-🚀 **[Acessar aplicação →](https://fiap-6frnt-tech-challenge.vercel.app/)**
+🚀 **[Acessar aplicação →](https://tech-challenge-phase2.vercel.app/)**
 
 ![Bytebank — home (desktop)](docs/screenshots/home-transaction-desktop.png)
 
@@ -229,9 +229,9 @@ tech-challenge/
 
 Deploy na **Vercel** em três projetos independentes:
 
-- **Shell** — [fiap-6frnt-tech-challenge.vercel.app](https://fiap-6frnt-tech-challenge.vercel.app/)
-- **Dashboard MFE** — `tech-challenge-dashboard-mfe.vercel.app`
-- **Transactions MFE** — `tech-challenge-transactions-mfe.vercel.app`
+- **Shell** — [tech-challenge-phase2.vercel.app](https://tech-challenge-phase2.vercel.app/)
+- **Dashboard MFE** — [tech-challenge-dashboard-mfe.vercel.app](https://tech-challenge-dashboard-mfe.vercel.app/)
+- **Transactions MFE** — [tech-challenge-transactions-mfe.vercel.app](https://tech-challenge-transactions-mfe.vercel.app/)
 
 O shell aponta para os remotes publicados via `NEXT_PUBLIC_*_MFE_URL`; banco em Postgres gerenciado (Neon) e anexos no Vercel Blob.
 
