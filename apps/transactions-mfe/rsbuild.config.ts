@@ -5,6 +5,11 @@ import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
 const MFE_ORIGIN = process.env.MFE_ORIGIN ?? 'http://localhost:3003';
 
 export default defineConfig({
+  source: {
+    define: {
+      'process.env': JSON.stringify({ NODE_ENV: process.env.NODE_ENV ?? 'development' }),
+    },
+  },
   output: {
     assetPrefix: MFE_ORIGIN,
   },
