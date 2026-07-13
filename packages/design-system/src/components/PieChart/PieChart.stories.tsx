@@ -27,10 +27,6 @@ const meta: Meta<typeof PieChart> = {
 export default meta;
 type Story = StoryObj<typeof PieChart>;
 
-// ---------------------------------------------------------------------------
-// Dados reutilizáveis
-// ---------------------------------------------------------------------------
-
 const categoriasDespesa = [
   { label: 'Alimentação', value: 850 },
   { label: 'Transporte', value: 320 },
@@ -39,11 +35,6 @@ const categoriasDespesa = [
   { label: 'Outros', value: 430 },
 ];
 
-// ---------------------------------------------------------------------------
-// STORIES
-// ---------------------------------------------------------------------------
-
-// Caso de uso principal: despesa por categoria com paleta padrão
 export const Default: Story = {
   args: {
     data: categoriasDespesa,
@@ -66,7 +57,6 @@ export const Default: Story = {
   },
 };
 
-// Paleta customizada
 export const CustomColors: Story = {
   args: {
     data: categoriasDespesa,
@@ -88,7 +78,6 @@ export const CustomColors: Story = {
   },
 };
 
-// Poucos itens — 2 categorias
 export const TwoItems: Story = {
   args: {
     data: [
@@ -105,7 +94,6 @@ export const TwoItems: Story = {
   },
 };
 
-// Height customizado
 export const TallChart: Story = {
   args: {
     data: categoriasDespesa,
@@ -119,7 +107,6 @@ export const TallChart: Story = {
   },
 };
 
-// Estado vazio — sem dados
 export const Empty: Story = {
   args: {
     data: [],
@@ -140,7 +127,6 @@ export const Empty: Story = {
   },
 };
 
-// Muitos itens — stress test de paleta e legenda
 export const ManyItems: Story = {
   args: {
     data: [

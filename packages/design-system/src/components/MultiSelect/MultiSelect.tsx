@@ -32,7 +32,6 @@ export function MultiSelect<T extends string = string>({
       ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
       : options;
 
-  // Fecha ao clicar fora
   useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -93,7 +92,6 @@ export function MultiSelect<T extends string = string>({
         }
         break;
       case 'Backspace':
-        // Só remove pill quando o input de busca está vazio
         if ((!searchable || search === '') && value.length > 0) {
           onChange(value.slice(0, -1));
         }
@@ -117,7 +115,6 @@ export function MultiSelect<T extends string = string>({
   return (
     <div className="flex flex-col gap-sm">
       <div ref={containerRef} className="relative">
-        {/* Área de trigger + pills */}
         <div
           ref={!searchable ? triggerRef : undefined}
           role={!searchable ? 'combobox' : undefined}
@@ -143,7 +140,6 @@ export function MultiSelect<T extends string = string>({
             disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
           )}
         >
-          {/* Pills dos itens selecionados */}
           {value.map((v) => {
             const label = options.find((o) => o.value === v)?.label ?? v;
             return (
@@ -168,7 +164,6 @@ export function MultiSelect<T extends string = string>({
             );
           })}
 
-          {/* Input de busca (searchable) ou placeholder (não searchable) */}
           {searchable ? (
             <input
               ref={inputRef}
@@ -200,7 +195,6 @@ export function MultiSelect<T extends string = string>({
             )
           )}
 
-          {/* Chevron */}
           <ChevronDown
             size={20}
             className={cn(
@@ -210,7 +204,6 @@ export function MultiSelect<T extends string = string>({
           />
         </div>
 
-        {/* Dropdown */}
         {open && (
           <ul
             id={listboxId}
@@ -255,7 +248,6 @@ export function MultiSelect<T extends string = string>({
               })
             )}
 
-            {/* Limpar tudo */}
             {value.length > 0 && (
               <li className="border-t border-border">
                 <button

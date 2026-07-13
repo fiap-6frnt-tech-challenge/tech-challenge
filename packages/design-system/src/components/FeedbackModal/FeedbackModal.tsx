@@ -47,14 +47,12 @@ export function FeedbackModal({
       aria-modal="true"
       aria-labelledby="feedback-modal-title"
     >
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-content-primary/50"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Panel */}
       <div
         ref={panelRef}
         className="relative z-10 w-full max-w-[22rem] rounded-default bg-surface p-xl shadow-card flex flex-col items-center gap-sm text-center [animation:modal-panel-in_200ms_ease-out]"

@@ -5,7 +5,6 @@ COPY package.json package-lock.json ./
 COPY apps/shell/package.json apps/shell/
 COPY apps/dashboard-mfe/package.json apps/dashboard-mfe/
 COPY apps/transactions-mfe/package.json apps/transactions-mfe/
-COPY apps/hello-mfe/package.json apps/hello-mfe/
 COPY packages/shared/package.json packages/shared/
 COPY packages/design-system/package.json packages/design-system/
 COPY packages/api-client/package.json packages/api-client/

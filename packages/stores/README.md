@@ -38,5 +38,3 @@ MFEs consume the same store as a shared singleton via Module Federation
 npm run test -w @bytebank/stores
 npm run build -w @bytebank/stores
 ```
-
-See conventions in `docs/phase-2/state-conventions.md`.

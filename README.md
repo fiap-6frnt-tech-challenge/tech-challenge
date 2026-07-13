@@ -2,7 +2,7 @@
 
 Aplicação de gestão financeira pessoal construída como monorepo (Turborepo) com **arquitetura de microfrontends**: shell Next.js 16 + remotes React federados em runtime via Module Federation, Design System próprio, autenticação NextAuth e persistência em PostgreSQL via Drizzle ORM. Desenvolvida como Tech Challenge (Fase 2) da pós-graduação FIAP Frontend Engineering.
 
-🚀 **[Acessar aplicação →](https://tech-challenge-phase2.vercel.app/)**
+🚀 **[Acessar aplicação →](https://tech-challenge-phase2.vercel.app/)** · 🎥 **[Ver vídeo de apresentação →](https://youtu.be/4URo48RXs_8)**
 
 ![Bytebank — home (desktop)](docs/screenshots/home-transaction-desktop.png)
 
@@ -30,7 +30,6 @@ O app é composto em runtime por um **shell** Next.js e dois **remotes** React i
 | `shell`            | 3000  | Host Next.js 16 (App Router): autenticação, layout, SSR, API Routes (`/api/*`)                                  |
 | `dashboard-mfe`    | 3002  | Remote Rsbuild — dashboard com KPIs e gráficos, montado na home (`/`)                                           |
 | `transactions-mfe` | 3003  | Remote Rsbuild — página de transações (`/transactions`: lista, filtros, CRUD, anexos) e widget de saldo da home |
-| `hello-mfe`        | 3001  | Remote de PoC (Sprint 0) — mantido como referência histórica em `/poc`                                          |
 
 Pontos-chave:
 
@@ -43,11 +42,14 @@ Pontos-chave:
 
 ## Pré-requisitos
 
-| Ferramenta | Versão mínima                   |
-| ---------- | ------------------------------- |
-| Node.js    | 20.19+ (ou 22 LTS, usada na CI) |
-| npm        | 10+                             |
-| Docker     | 24+                             |
+| Ferramenta                       | Versão mínima                   |
+| -------------------------------- | ------------------------------- |
+| Node.js                          | 20.19+ (ou 22 LTS, usada na CI) |
+| npm                              | 10+                             |
+| Docker                           | 24+                             |
+| Visual C++ Redistributable (x64) | Só no Windows                   |
+
+> **Windows:** o Turborepo (usado por `npm run dev`, `build`, `lint` e `test`) é um binário nativo que depende do **Microsoft Visual C++ Redistributable**. Sem ele, o `npm run dev` falha de forma silenciosa no PowerShell/cmd.
 
 ---
 
@@ -102,7 +104,7 @@ npm run db:seed -w @bytebank/shell
 npm run dev
 ```
 
-O Turborepo sobe todos os apps em paralelo: shell em `http://localhost:3000` e os remotes em `:3001`–`:3003`. A API é servida pelo próprio Next.js em `/api/*`.
+O Turborepo sobe todos os apps em paralelo: shell em `http://localhost:3000` e os remotes em `:3002`–`:3003`. A API é servida pelo próprio Next.js em `/api/*`.
 
 ### 8. Criar uma conta e entrar
 
@@ -115,12 +117,15 @@ Acesse `http://localhost:3000/register`, crie uma conta e faça login com ela �
 Para subir a stack completa containerizada (Postgres + shell + os dois MFEs em builds de produção):
 
 ```bash
-cp .env.example .env        # gere e preencha o AUTH_SECRET
+cp .env.example .env                              # gere e preencha o AUTH_SECRET
+cp apps/shell/.env.example apps/shell/.env.local  # necessário p/ migrate/seed rodarem no host
 docker compose up -d db
 npm run db:migrate -w @bytebank/shell
 npm run db:seed -w @bytebank/shell
 docker compose up --build
 ```
+
+> `db:migrate` e `db:seed` rodam no host e leem `DATABASE_URL` de `apps/shell/.env.local` — por isso o segundo `cp`. O `.env` da raiz é consumido apenas pelos containers do Docker Compose.
 
 Acesse `http://localhost:3000`, crie uma conta em `/register` e faça login. `BLOB_READ_WRITE_TOKEN` é opcional — sem ele o upload de anexos usa um storage mock local.
 
@@ -130,14 +135,14 @@ Acesse `http://localhost:3000`, crie uma conta em `/register` e faça login. `BL
 
 ### Raiz do monorepo
 
-| Comando          | Descrição                                                                           |
-| ---------------- | ----------------------------------------------------------------------------------- |
-| `npm run dev`    | Inicia todos os apps em paralelo (Turborepo)                                        |
-| `npm run build`  | Build de produção de todos os pacotes e apps                                        |
-| `npm run lint`   | Executa o ESLint em todo o monorepo                                                 |
-| `npm run test`   | Executa todos os testes (Vitest; stories do Storybook são os testes)                |
-| `npm run e2e`    | Builda os apps e roda a suíte E2E (Playwright) — ver [e2e/README.md](e2e/README.md) |
-| `npm run format` | Formata todos os arquivos com Prettier                                              |
+| Comando          | Descrição                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| `npm run dev`    | Inicia todos os apps em paralelo (Turborepo)                                          |
+| `npm run build`  | Build de produção de todos os pacotes e apps                                          |
+| `npm run lint`   | Executa o ESLint em todo o monorepo                                                   |
+| `npm run test`   | Executa todos os testes (Vitest: stories do Storybook + testes unitários dos pacotes) |
+| `npm run e2e`    | Builda os apps e roda a suíte E2E (Playwright) — ver [e2e/README.md](e2e/README.md)   |
+| `npm run format` | Formata todos os arquivos com Prettier                                                |
 
 ### Workspaces
 
@@ -154,7 +159,7 @@ Acesse `http://localhost:3000`, crie uma conta em `/register` e faça login. `BL
 ## Testes
 
 - **Componentes** — as stories do Storybook são executadas como testes num Chromium headless (`@storybook/addon-vitest`); pacotes `shared`/`stores` têm testes unitários Vitest. Rode tudo com `npm run test`.
-- **E2E** — Playwright cobre os fluxos críticos (auth + CRUD, filtros, anexos) contra builds de produção locais. Requer Postgres migrado e browsers instalados (`npx playwright install chromium firefox`); rode com `npm run e2e`. Detalhes em [e2e/README.md](e2e/README.md).
+- **E2E** — Playwright cobre os fluxos críticos (auth + CRUD, filtros, anexos) contra builds de produção locais. Requer Postgres migrado e browsers instalados (`npx playwright install chromium firefox`); rode com `npm run e2e`. Detalhes em [e2e/README.md](e2e/README.md). No Windows, rode via Git Bash ou WSL — o script `e2e:build` usa sintaxe de variáveis inline (`VAR=valor …`) que não funciona no PowerShell/CMD.
 - **CI** — GitHub Actions roda lint, type-check, build e testes (Turbo `--affected` + cache remoto) em PRs e pushes; o workflow do Chromatic publica o Storybook e faz review visual.
 
 ---
@@ -172,7 +177,6 @@ Em dev, todas ficam em `apps/shell/.env.local` (criado no passo 3). O `.env` da 
 | `NEXT_PUBLIC_API_URL`                   | Não         | URL base da API interna                                                      | `/api`                                                 |
 | `NEXT_PUBLIC_DASHBOARD_MFE_URL`         | Não         | URL do manifest do dashboard-mfe                                             | `http://localhost:3002/mf-manifest.json`               |
 | `NEXT_PUBLIC_TRANSACTIONS_MFE_URL`      | Não         | URL do manifest do transactions-mfe                                          | `http://localhost:3003/mf-manifest.json`               |
-| `NEXT_PUBLIC_HELLO_MFE_URL`             | Não         | URL do manifest do hello-mfe (PoC)                                           | `http://localhost:3001/mf-manifest.json`               |
 | `BLOB_READ_WRITE_TOKEN`                 | Não         | Token do Vercel Blob para upload de anexos; sem ele, usa storage mock local  | —                                                      |
 
 ---
@@ -184,8 +188,7 @@ tech-challenge/
 ├── apps/
 │   ├── shell/             # Next.js 16 — host: auth, layout, /api/*, SSR (porta 3000)
 │   ├── dashboard-mfe/     # Rsbuild — dashboard federado: KPIs + gráficos (porta 3002)
-│   ├── transactions-mfe/  # Rsbuild — transações federadas: lista, CRUD, anexos (porta 3003)
-│   └── hello-mfe/         # Rsbuild — PoC Module Federation, Sprint 0 (porta 3001)
+│   └── transactions-mfe/  # Rsbuild — transações federadas: lista, CRUD, anexos (porta 3003)
 │
 ├── packages/
 │   ├── design-system/     # Componentes, tokens, charts e Storybook
@@ -194,7 +197,6 @@ tech-challenge/
 │   └── api-client/        # TanStack Query — hooks de dados + cliente HTTP
 │
 ├── e2e/                   # Suíte Playwright (specs + setup)
-├── docs/phase-2/          # Plano, sprints e auditorias (a11y, performance)
 ├── docker-compose.yml     # Postgres 16 + shell + MFEs
 └── turbo.json             # Configuração do Turborepo
 ```
@@ -242,8 +244,6 @@ O shell aponta para os remotes publicados via `NEXT_PUBLIC_*_MFE_URL`; banco em 
 Biblioteca de componentes documentada com variantes, props, acessibilidade e exemplos interativos.
 
 📖 **[Acessar Storybook →](https://phase-2--69d58ff921fbab085884a584.chromatic.com/)**
-
-📋 **[Relatório de acessibilidade →](docs/phase-2/a11y-audit.md)** · ⚡ **[Auditoria de performance →](docs/phase-2/perf-audit.md)**
 
 Destaques:
 

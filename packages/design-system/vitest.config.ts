@@ -11,26 +11,19 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
   },
+  plugins: [storybookTest({ configDir: path.join(dirname, '.storybook') })],
   test: {
-    projects: [
-      {
-        extends: true,
-        plugins: [storybookTest({ configDir: path.join(dirname, '.storybook') })],
-        test: {
-          name: 'storybook',
-          browser: {
-            enabled: true,
-            headless: true,
-            provider: playwright({}),
-            api: {
-              host: '127.0.0.1',
-              port: 64123,
-            },
-            instances: [{ browser: 'chromium' }],
-          },
-          setupFiles: ['.storybook/vitest.setup.ts'],
-        },
+    name: 'storybook',
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: playwright({}),
+      api: {
+        host: '127.0.0.1',
+        port: 64123,
       },
-    ],
+      instances: [{ browser: 'chromium' }],
+    },
+    setupFiles: ['.storybook/vitest.setup.ts'],
   },
 });

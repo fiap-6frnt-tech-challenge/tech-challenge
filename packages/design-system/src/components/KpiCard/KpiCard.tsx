@@ -21,7 +21,6 @@ export function KpiCard({
 
   return (
     <Card className={cn('flex flex-col gap-3', className)} padding="md">
-      {/* Linha superior: label + ícone opcional */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-content-secondary font-medium">{label}</span>
         {icon && (
@@ -31,7 +30,6 @@ export function KpiCard({
         )}
       </div>
 
-      {/* Valor principal */}
       {loading ? (
         <Skeleton className="h-8 w-24" />
       ) : error ? (
@@ -42,7 +40,6 @@ export function KpiCard({
         <span className="text-2xl font-bold text-content-primary">{formatCurrency(value)}</span>
       )}
 
-      {/* Delta (variação) */}
       {loading ? (
         <Skeleton className="h-4 w-16" />
       ) : delta !== undefined && !error ? (

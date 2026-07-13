@@ -44,12 +44,10 @@ export const BalanceCardSkeleton: Story = {
   parameters: { layout: 'padded' },
   render: () => (
     <div className="w-[600px] h-[400px] rounded-default flex flex-col md:flex-row justify-between bg-brand-dark p-lg shadow-card gap-lg">
-      {/* Left: greeting + date */}
       <div className="flex flex-col gap-xl">
         <Skeleton className="h-4 w-36 bg-content-inverse/20" />
         <Skeleton className="h-3 w-24 bg-content-inverse/10" />
       </div>
-      {/* Right: Saldo + label + balance */}
       <div className="flex flex-col gap-lg min-w-56">
         <div className="flex items-center gap-md border-b border-icon-accent pb-lg">
           <Skeleton className="h-4 w-12 bg-content-inverse/20" />

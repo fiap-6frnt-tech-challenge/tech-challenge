@@ -8,7 +8,8 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'node', // shell roda majoritariamente em Node (API routes + server components)
+    name: 'shell',
+    environment: 'node',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules', '.next', 'dist'],
   },

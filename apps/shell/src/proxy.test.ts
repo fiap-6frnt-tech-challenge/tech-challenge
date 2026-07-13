@@ -39,7 +39,7 @@ describe('Proxy de Autenticação', () => {
     const res = await proxy(req, proxyEvent);
 
     expect(res).toBeDefined();
-    expect(res?.status).toBe(307); // Redirect temporário
+    expect(res?.status).toBe(307);
     expect(res?.headers.get('location')).toBe('http://localhost:3000/login');
   });
 
@@ -47,7 +47,6 @@ describe('Proxy de Autenticação', () => {
     const req = createMockRequest('/login');
     const res = await proxy(req, proxyEvent);
 
-    // Sem redirect (continua o fluxo normal)
     expect(res).toBeUndefined();
   });
 

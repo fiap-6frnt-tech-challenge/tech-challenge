@@ -87,25 +87,19 @@ export const KeyboardInteraction: Story = {
     return <MultiSelect {...args} value={value} onChange={setValue} />;
   },
   play: async ({ canvasElement }) => {
-    // Abre o dropdown com Enter
     await userEvent.tab();
     await userEvent.keyboard('{Enter}');
 
-    // Seleciona a primeira opção (Deposit)
     await userEvent.keyboard('{Enter}');
 
-    // Navega para a segunda opção e seleciona
     await userEvent.keyboard('{ArrowDown}');
     await userEvent.keyboard('{Enter}');
 
-    // Fecha com Escape
     await userEvent.keyboard('{Escape}');
 
-    // Verifica que existem 2 pills
     const pills = canvasElement.querySelectorAll('[aria-label^="Remover"]');
     await expect(pills).toHaveLength(2);
 
-    // Remove o último pill com Backspace
     await userEvent.keyboard('{Backspace}');
     const pillsAfter = canvasElement.querySelectorAll('[aria-label^="Remover"]');
     await expect(pillsAfter).toHaveLength(1);

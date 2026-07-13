@@ -19,10 +19,8 @@ export function SkeletonList({ lines = 3, showActions = true }: SkeletonListProp
           )}
         >
           <div className="h-full w-full flex items-center justify-between gap-3 min-w-0 @md:contents">
-            {/* Badge */}
             <Skeleton className="h-6 w-15 rounded-md @md:order-1 @md:w-full" />
 
-            {/* Icons */}
             {showActions && (
               <div className="flex items-center justify-end @md:order-4 @md:w-auto">
                 <Skeleton className="h-5 w-5 m-md rounded-default" />
@@ -34,15 +32,12 @@ export function SkeletonList({ lines = 3, showActions = true }: SkeletonListProp
           <div className="w-full flex justify-between items-end gap-2 @md:contents">
             <div className="flex flex-1 min-w-0 @md:order-2">
               <div className="min-w-0 w-full">
-                {/* Description */}
                 <Skeleton className="h-5 w-3/4 mb-sm" />
 
-                {/* Date */}
                 <Skeleton className="h-3.75 w-20" />
               </div>
             </div>
 
-            {/* Amount */}
             <Skeleton className="h-5 w-16 @md:order-3" />
           </div>
         </div>

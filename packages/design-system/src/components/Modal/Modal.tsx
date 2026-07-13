@@ -28,14 +28,12 @@ export function Modal({
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-content-primary/50"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Panel */}
       <div
         ref={panelRef}
         className={cn(

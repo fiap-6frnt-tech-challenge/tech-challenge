@@ -52,12 +52,10 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-lg">
-      {/* Header */}
       <div className="flex items-center gap-md">
         <h1 className="heading">Dashboard</h1>
       </div>
 
-      {/* KPIs Grid */}
       <div className="flex flex-col md:flex-row gap-lg">
         <KpiCard
           className="w-full"
@@ -85,9 +83,7 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Charts */}
       <div className="flex flex-col gap-lg">
-        {/* BarChart - Receita vs Despesa */}
         <div>
           <DashboardWidget
             title="Receita vs Despesa"
@@ -112,7 +108,6 @@ export default function Dashboard() {
           </DashboardWidget>
         </div>
 
-        {/* PieChart - Despesas por Categoria */}
         <div>
           <DashboardWidget
             title="Despesas por Categoria"
@@ -132,7 +127,6 @@ export default function Dashboard() {
           </DashboardWidget>
         </div>
 
-        {/* LineChart - Evolução do Saldo */}
         <div>
           <DashboardWidget
             title="Evolução do Saldo"

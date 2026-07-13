@@ -29,10 +29,6 @@ const meta: Meta<typeof BarChart> = {
 export default meta;
 type Story = StoryObj<typeof BarChart>;
 
-// ---------------------------------------------------------------------------
-// Dados reutilizáveis
-// ---------------------------------------------------------------------------
-
 const monthlyData = [
   { mes: 'Jan', receita: 4200, despesa: 1800 },
   { mes: 'Fev', receita: 3800, despesa: 2100 },
@@ -56,11 +52,6 @@ const saldoData = [
   { mes: 'Jun', saldo: 23200 },
 ];
 
-// ---------------------------------------------------------------------------
-// STORIES
-// ---------------------------------------------------------------------------
-
-// Caso de uso principal: receita vs despesa por mês
 export const Default: Story = {
   args: {
     data: monthlyData,
@@ -85,7 +76,6 @@ export const Default: Story = {
   },
 };
 
-// Série única (ex.: evolução de saldo)
 export const SingleSeries: Story = {
   args: {
     data: saldoData,
@@ -100,7 +90,6 @@ export const SingleSeries: Story = {
   },
 };
 
-// Height customizado
 export const TallChart: Story = {
   args: {
     data: monthlyData,
@@ -116,7 +105,6 @@ export const TallChart: Story = {
   },
 };
 
-// Estado vazio — nenhum dado no período
 export const Empty: Story = {
   args: {
     data: [],
@@ -137,7 +125,6 @@ export const Empty: Story = {
   },
 };
 
-// Muitas séries — estresse visual das cores
 export const ManySeries: Story = {
   args: {
     data: [
