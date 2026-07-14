@@ -28,10 +28,6 @@ const meta: Meta<typeof LineChart> = {
 export default meta;
 type Story = StoryObj<typeof LineChart>;
 
-// ---------------------------------------------------------------------------
-// Dados reutilizáveis
-// ---------------------------------------------------------------------------
-
 const saldoData = [
   { mes: 'Jan', saldo: 8400 },
   { mes: 'Fev', saldo: 10100 },
@@ -50,11 +46,6 @@ const comparativoData = [
   { mes: 'Jun', receita: 5500, despesa: 2400 },
 ];
 
-// ---------------------------------------------------------------------------
-// STORIES
-// ---------------------------------------------------------------------------
-
-// Caso de uso principal: evolução do saldo
 export const Default: Story = {
   args: {
     data: saldoData,
@@ -81,7 +72,6 @@ export const Default: Story = {
   },
 };
 
-// Múltiplas séries: receita vs despesa
 export const MultiLine: Story = {
   args: {
     data: comparativoData,
@@ -101,7 +91,6 @@ export const MultiLine: Story = {
   },
 };
 
-// Height customizado
 export const TallChart: Story = {
   args: {
     data: saldoData,
@@ -117,7 +106,6 @@ export const TallChart: Story = {
   },
 };
 
-// Estado vazio — sem dados no período
 export const Empty: Story = {
   args: {
     data: [],
@@ -138,7 +126,6 @@ export const Empty: Story = {
   },
 };
 
-// Três séries — stress test de gradientes e legenda
 export const ThreeLines: Story = {
   args: {
     data: [

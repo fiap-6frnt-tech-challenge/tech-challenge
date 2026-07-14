@@ -12,7 +12,6 @@ import { useIsMounted } from '../../hooks';
 import { AccessibleChartData } from '../AccessibleChartData';
 import { ChartTooltip } from '../ChartTooltip';
 
-// Paleta padrão usada quando `colors` não é fornecido
 const DEFAULT_COLORS = [
   'var(--color-chart-brand)',
   'var(--color-chart-blue)',
@@ -64,7 +63,6 @@ export function PieChart({ data, colors, height, className, accessibleCaption }:
   const palette = colors && colors.length > 0 ? colors : DEFAULT_COLORS;
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
-  // Tabela acessível: cabeçalhos fixos, uma linha por categoria
   const headers = ['Categoria', 'Valor', 'Percentual'];
   const rows = data.map((item) => [
     item.label,
@@ -86,7 +84,6 @@ export function PieChart({ data, colors, height, className, accessibleCaption }:
       ref={containerRef}
       className={`w-full relative min-w-0 flex gap-6 items-center ${className ?? ''}`}
     >
-      {/* Gráfico Donut — aria-hidden: leitores de tela usam a tabela abaixo */}
       <div className="flex-1 min-w-0">
         <ResponsiveContainer width="100%" height={height ?? 300}>
           <RechartsPieChart aria-hidden="true" tabIndex={-1}>
@@ -104,7 +101,6 @@ export function PieChart({ data, colors, height, className, accessibleCaption }:
         </ResponsiveContainer>
       </div>
 
-      {/* Legenda lateral em HTML puro — doc: flexbox com marcadores de cor redondos */}
       <ul className="flex flex-col gap-2 shrink-0 text-sm" aria-label="Legenda">
         {enrichedData.map((item) => (
           <li key={item.label} className="flex items-center gap-2">
@@ -120,7 +116,6 @@ export function PieChart({ data, colors, height, className, accessibleCaption }:
         ))}
       </ul>
 
-      {/* Tabela acessível lida nativamente por leitores de tela */}
       <AccessibleChartData
         caption={accessibleCaption || 'Dados do gráfico'}
         headers={headers}

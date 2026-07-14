@@ -37,7 +37,6 @@ export const attachments = pgTable('attachments', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// Define relações no Drizzle para facilitar queries aninhadas
 export const transactionsRelations = relations(transactions, ({ many }) => ({
   attachments: many(attachments),
 }));

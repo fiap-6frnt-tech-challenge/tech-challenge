@@ -30,7 +30,6 @@ export function BarChart<TRow extends object = ChartRow>({
       />
     );
 
-  // Mapeia chaves para cabeçalhos e linhas da tabela
   const headers = [xKey, ...bars.map((b) => b.label)];
   const rows = data.map((item) => {
     const row = item as ChartRow;
@@ -40,7 +39,6 @@ export function BarChart<TRow extends object = ChartRow>({
   return (
     <div className="w-full relative min-w-0">
       <ResponsiveContainer width="100%" height={height ?? 300}>
-        {/* aria-hidden esconde o SVG dos leitores de tela */}
         <RechartsBarChart className={className} data={data} aria-hidden="true" tabIndex={-1}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
           <XAxis dataKey={xKey} tick={{ fontSize: 12 }} />
@@ -51,7 +49,6 @@ export function BarChart<TRow extends object = ChartRow>({
         </RechartsBarChart>
       </ResponsiveContainer>
 
-      {/* Tabela acessível lida nativamente por leitores de tela */}
       <AccessibleChartData
         caption={accessibleCaption || 'Dados do gráfico'}
         headers={headers}

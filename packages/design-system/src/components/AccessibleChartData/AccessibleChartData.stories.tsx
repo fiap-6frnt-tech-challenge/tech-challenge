@@ -23,10 +23,6 @@ const meta: Meta<typeof AccessibleChartData> = {
 export default meta;
 type Story = StoryObj<typeof AccessibleChartData>;
 
-// ---------------------------------------------------------------------------
-// Dados reutilizáveis nas stories
-// ---------------------------------------------------------------------------
-
 const barChartHeaders = ['Mês', 'Receita (R$)', 'Despesa (R$)'];
 const barChartRows: Array<Array<string | number>> = [
   ['Jan', 4200, 1800],
@@ -56,11 +52,6 @@ const pieChartRows: Array<Array<string | number>> = [
   ['Outros', 730, '29%'],
 ];
 
-// ---------------------------------------------------------------------------
-// STORIES
-// ---------------------------------------------------------------------------
-
-// Caso de uso real: BarChart de receita vs despesa
 export const BarChartData: Story = {
   args: {
     caption: 'Receita e despesa dos últimos 6 meses',
@@ -78,7 +69,6 @@ export const BarChartData: Story = {
   },
 };
 
-// Caso de uso: LineChart de evolução de saldo
 export const LineChartData: Story = {
   args: {
     caption: 'Evolução do saldo nos últimos 6 meses',
@@ -94,7 +84,6 @@ export const LineChartData: Story = {
   },
 };
 
-// Caso de uso: PieChart de despesa por categoria
 export const PieChartData: Story = {
   args: {
     caption: 'Despesa por categoria — top 5',
@@ -111,7 +100,6 @@ export const PieChartData: Story = {
   },
 };
 
-// Tabela sem linhas — estado vazio (ex.: sem transações no período)
 export const Empty: Story = {
   args: {
     caption: 'Sem dados no período selecionado',
@@ -128,7 +116,6 @@ export const Empty: Story = {
   },
 };
 
-// Story com visualização explícita para inspeção (sem sr-only)
 export const Visible: Story = {
   render: (args) => (
     <div className="p-4">
@@ -136,7 +123,6 @@ export const Visible: Story = {
         ⬇ Esta story remove o <code>sr-only</code> para permitir inspeção visual — em produção a
         tabela é invisível.
       </p>
-      {/* Recria a tabela sem sr-only para inspecionar o markup */}
       <table className="border-collapse text-sm w-full">
         <caption className="text-left font-semibold text-content-primary mb-1">
           {args.caption}

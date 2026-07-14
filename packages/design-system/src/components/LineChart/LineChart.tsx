@@ -32,7 +32,6 @@ export function LineChart<TRow extends object = ChartRow>({
       />
     );
 
-  // Mapeia chaves para cabeçalhos e linhas da tabela
   const headers = [xKey, ...lines.map((l) => l.label)];
   const rows = data.map((item) => {
     const row = item as ChartRow;
@@ -42,7 +41,6 @@ export function LineChart<TRow extends object = ChartRow>({
   return (
     <div className="w-full relative min-w-0">
       <ResponsiveContainer width="100%" height={height ?? 300}>
-        {/* aria-hidden esconde o SVG dos leitores de tela */}
         <RechartsAreaChart className={className} data={data} aria-hidden="true" tabIndex={-1}>
           {/* Gradiente por série — profundidade visual abaixo do traço (estilo Area/Line híbrido) */}
           <defs>
@@ -80,7 +78,6 @@ export function LineChart<TRow extends object = ChartRow>({
         </RechartsAreaChart>
       </ResponsiveContainer>
 
-      {/* Tabela acessível lida nativamente por leitores de tela */}
       <AccessibleChartData
         caption={accessibleCaption || 'Dados do gráfico'}
         headers={headers}

@@ -1,15 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { ChartTooltip } from './ChartTooltip';
 
-// 1. META — configura o componente no Storybook
 const meta: Meta<typeof ChartTooltip> = {
-  title: 'Charts/ChartTooltip', // aparece na sidebar do Storybook
+  title: 'Charts/ChartTooltip',
   component: ChartTooltip,
-  tags: ['autodocs'], // gera a aba "Docs" automaticamente
+  tags: ['autodocs'],
   argTypes: {
     active: { control: 'boolean' },
     label: { control: 'text' },
-    payload: { control: false }, // array complexo → desativa o control
+    payload: { control: false },
   },
   parameters: {
     docs: {
@@ -22,14 +21,8 @@ const meta: Meta<typeof ChartTooltip> = {
 };
 export default meta;
 
-// 2. BOILERPLATE obrigatório após o export default
 type Story = StoryObj<typeof ChartTooltip>;
 
-// ---------------------------------------------------------------------------
-// 3. STORIES — um export por estado relevante
-// ---------------------------------------------------------------------------
-
-// Estado mais comum: tooltip ativo com múltiplas séries (receita + despesa)
 export const Default: Story = {
   render: () => (
     <ChartTooltip
@@ -50,7 +43,6 @@ export const Default: Story = {
   },
 };
 
-// Série única (ex.: LineChart de saldo)
 export const SingleSeries: Story = {
   render: () => (
     <ChartTooltip
@@ -68,11 +60,9 @@ export const SingleSeries: Story = {
   },
 };
 
-// Quando active=false → deve renderizar null (invisível)
 export const Inactive: Story = {
   render: () => (
     <div className="text-content-secondary text-sm p-4">
-      {/* CustomTooltip retorna null quando active=false */}
       <p>Nenhum tooltip renderizado (active=false):</p>
       <ChartTooltip active={false} label="Março" payload={[{ name: 'Receita', value: 999 }]} />
       <p className="mt-2 italic">↑ vazio acima — comportamento correto.</p>
@@ -87,7 +77,6 @@ export const Inactive: Story = {
   },
 };
 
-// Payload vazio → também deve renderizar null
 export const EmptyPayload: Story = {
   render: () => (
     <div className="text-content-secondary text-sm p-4">
@@ -105,7 +94,6 @@ export const EmptyPayload: Story = {
   },
 };
 
-// Múltiplas séries (ex.: PieChart com 4 categorias)
 export const ManySeries: Story = {
   render: () => (
     <ChartTooltip

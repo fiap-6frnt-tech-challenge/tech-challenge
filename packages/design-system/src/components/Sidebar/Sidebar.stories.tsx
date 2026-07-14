@@ -37,8 +37,6 @@ const mobileDecorator: Story['decorators'] = [
   ),
 ];
 
-// ─── Desktop — active item variants ────────────────────────────────────────
-
 export const DesktopInicio: Story = {
   name: 'Desktop — Início (active)',
   args: { activePath: '/' },
@@ -53,8 +51,6 @@ export const DesktopTransactions: Story = {
   decorators: desktopDecorator,
 };
 
-// ─── Mobile (drawer) ────────────────────────────────────────────────────────
-
 export const MobileInicio: Story = {
   name: 'Mobile — Início (active)',
   args: { activePath: '/' },
@@ -68,8 +64,6 @@ export const MobileTransactions: Story = {
   globals: { viewport: { value: 'mobile' } },
   decorators: mobileDecorator,
 };
-
-// ─── Tablet ─────────────────────────────────────────────────────────────────
 
 export const TabletInicio: Story = {
   name: 'Tablet — Início (active)',

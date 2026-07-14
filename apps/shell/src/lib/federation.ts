@@ -33,10 +33,6 @@ function ensureInstance(): MFInstance {
       name: '@bytebank/shell',
       remotes: [
         {
-          name: 'hello',
-          entry: process.env.NEXT_PUBLIC_HELLO_MFE_URL ?? 'http://localhost:3001/mf-manifest.json',
-        },
-        {
           name: 'dashboard',
           entry:
             process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3002/mf-manifest.json',
@@ -89,13 +85,6 @@ function ensureInstance(): MFInstance {
     });
 
   return mfInstance;
-}
-
-export async function loadHello() {
-  const mf = ensureInstance();
-  const mod = await mf.loadRemote<{ default: React.ComponentType }>('hello/Hello');
-  if (!mod) throw new Error('Failed to load remote hello/Hello');
-  return mod.default;
 }
 
 export async function loadDashboard() {

@@ -28,11 +28,6 @@ const meta: Meta<typeof KpiCard> = {
 export default meta;
 type Story = StoryObj<typeof KpiCard>;
 
-// ---------------------------------------------------------------------------
-// STORIES
-// ---------------------------------------------------------------------------
-
-// Delta positivo — saldo crescendo
 export const PositiveDelta: Story = {
   args: {
     label: 'Saldo Total',
@@ -54,7 +49,6 @@ export const PositiveDelta: Story = {
   },
 };
 
-// Delta negativo — despesa subindo
 export const NegativeDelta: Story = {
   args: {
     label: 'Despesas',
@@ -76,7 +70,6 @@ export const NegativeDelta: Story = {
   },
 };
 
-// Sem delta — métrica estável
 export const NoDelta: Story = {
   args: {
     label: 'Receita do Mês',
@@ -89,7 +82,6 @@ export const NoDelta: Story = {
   },
 };
 
-// Com ícone
 export const WithIcon: Story = {
   args: {
     label: 'Saldo em Conta',
@@ -106,7 +98,6 @@ export const WithIcon: Story = {
   },
 };
 
-// Loading — skeletons no lugar do valor e do delta
 export const Loading: Story = {
   args: {
     label: 'Receita do Mês',
@@ -123,7 +114,6 @@ export const Loading: Story = {
   },
 };
 
-// Error — valor substituído por "--"
 export const Error: Story = {
   args: {
     label: 'Investimentos',
@@ -145,7 +135,6 @@ export const Error: Story = {
   },
 };
 
-// Grade com 4 cards — visualização de dashboard real
 export const DashboardGrid: Story = {
   render: () => (
     <div className="w-full grid grid-cols-2 gap-4">

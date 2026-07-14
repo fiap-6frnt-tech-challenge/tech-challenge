@@ -12,9 +12,9 @@ export interface Attachment {
 
 export interface Transaction {
   id: string;
-  userId: string; // ID do proprietário da transação
+  userId: string;
   type: TransactionType;
-  category: string; // Categoria da transação
+  category: string;
   amount: number; // always positive; direction is determined by `type`
   date: string; // ISO 8601 format: "YYYY-MM-DD"
   description: string;
@@ -28,6 +28,5 @@ export interface Account {
   transactions: Transaction[];
 }
 
-// Utility types used by forms and CRUD operations
 export type NewTransaction = Omit<Transaction, 'id'>;
 export type UpdateTransaction = Partial<NewTransaction>;
