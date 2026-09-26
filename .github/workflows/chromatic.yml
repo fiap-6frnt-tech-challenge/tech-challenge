@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - phase-2
+      - phase-4
 
 jobs:
   chromatic:
