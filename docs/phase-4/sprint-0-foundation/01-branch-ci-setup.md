@@ -50,7 +50,9 @@ Na Fase 2 o time integrou na branch `phase-2`, e o `.github/workflows/ci.yml` s�
 
 ## Validação
 
-> **Estado em 26/09/2026** — task fechada, menos o template de PR, que só passa a aparecer quando chegar à branch default (gotcha 4). PR desta task: [#111](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/111).
+> **Estado em 26/09/2026** — task concluída. PRs: [#111](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/111) (CI, templates, board) e [#159](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/159) (template de PR na `main`).
+>
+> **Achado para o gate:** a `main` não tem proteção nenhuma (`GET .../branches/main/protection` → `404 Branch not protected`). Protegemos a `phase-4`, mas a branch de produção aceita push direto de qualquer um com write. Decidir no [S0-07](./07-gate.md) — lembrando que o hotfix do S0-02 vai para a `main` e que os deploys saem da conta Vercel do Dev 2.
 
 - [x] `phase-4` no remoto — criada a partir da `main` (`8eda523`); `phase-2` preservada
 - [x] CI dispara para `phase-4` — `ci.yml` (`pull_request` + `push`) e `chromatic.yml` (`push`); jobs `ci` e `e2e` intactos
@@ -58,7 +60,7 @@ Na Fase 2 o time integrou na branch `phase-2`, e o `.github/workflows/ci.yml` s�
 - [x] Um PR de teste para `phase-4` dispara os jobs `ci` e `e2e` — PR #111, os dois verdes
 - [x] Template de ADR no repositório — `docs/phase-4/adr/0000-template.md`
 - [x] Board criado com as tasks e responsáveis — [Projects #2](https://github.com/orgs/fiap-6frnt-tech-challenge/projects/2): 47 issues (#112–#158) em Backlog; Status = Backlog / Em andamento / Em review / Feito; 11 labels (`P0`–`P2`, `sprint-0`…`sprint-4`, `track:sec`/`track:arch`/`track:perf`). O responsável de cada task está na label `track:*` (Dev 1 → sec, Dev 2 → arch, Dev 3 → perf; tasks de time inteiro levam as três), sem assignee até o time confirmar os handles
-- [ ] Template de PR aparece ao abrir um PR — `.github/pull_request_template.md` criado, mas só vale depois de chegar à `main` (gotcha 4)
+- [x] Template de PR aparece ao abrir um PR — o arquivo está na branch default desde o merge do #159 (`main` em `2d6e3f2`), que é a condição que o GitHub exige (gotcha 4)
 
 ## Gotchas
 
