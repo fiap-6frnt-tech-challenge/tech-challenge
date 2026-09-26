@@ -50,15 +50,15 @@ Na Fase 2 o time integrou na branch `phase-2`, e o `.github/workflows/ci.yml` s�
 
 ## Validação
 
-> **Estado em 26/09/2026** — passos 1, 2, 4 e 5 feitos na branch `dev3-perf/phase-4-setup` (ainda sem commit/push). Os passos 3 (proteção) e 6 (board) são no GitHub e seguem pendentes.
+> **Estado em 26/09/2026** — task fechada, menos o template de PR, que só passa a aparecer quando chegar à branch default (gotcha 4). PR desta task: [#111](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/111).
 
 - [x] `phase-4` no remoto — criada a partir da `main` (`8eda523`); `phase-2` preservada
-- [x] CI dispara para `phase-4` — `ci.yml` (`pull_request` + `push`) e `chromatic.yml` (`push`); YAML revalidado, jobs `ci` e `e2e` intactos
+- [x] CI dispara para `phase-4` — `ci.yml` (`pull_request` + `push`) e `chromatic.yml` (`push`); jobs `ci` e `e2e` intactos
+- [x] `phase-4` protegida — 1 aprovação, checks obrigatórios `Lint + Build + Test` e `E2E (Playwright)`, force-push e deleção bloqueados. `enforce_admins` desligado de propósito, para o hotfix do S0-02 não ficar preso; `strict` desligado para não exigir rebase a cada merge (o `turbo --affected` usa merge-base, não precisa)
+- [x] Um PR de teste para `phase-4` dispara os jobs `ci` e `e2e` — PR #111, os dois verdes
 - [x] Template de ADR no repositório — `docs/phase-4/adr/0000-template.md`
-- [ ] `phase-4` protegida — Settings → Branches: exigir PR, 1 aprovação e os checks `Lint + Build + Test` e `E2E (Playwright)`
-- [ ] Um PR de teste para `phase-4` dispara os jobs `ci` e `e2e` — depende do push desta branch
-- [ ] Template de PR aparece ao abrir um PR — arquivo criado em `.github/pull_request_template.md`, mas o GitHub só o exibe depois que ele chega à branch default (gotcha 4)
-- [ ] Board criado com as tasks e responsáveis — GitHub Projects: colunas Backlog / Em andamento / Em review / Feito; labels `P0`–`P2`, `sprint-0`…`sprint-4`, `track:sec`/`track:arch`/`track:perf`
+- [x] Board criado com as tasks e responsáveis — [Projects #2](https://github.com/orgs/fiap-6frnt-tech-challenge/projects/2): 47 issues (#112–#158) em Backlog; Status = Backlog / Em andamento / Em review / Feito; 11 labels (`P0`–`P2`, `sprint-0`…`sprint-4`, `track:sec`/`track:arch`/`track:perf`). O responsável de cada task está na label `track:*` (Dev 1 → sec, Dev 2 → arch, Dev 3 → perf; tasks de time inteiro levam as três), sem assignee até o time confirmar os handles
+- [ ] Template de PR aparece ao abrir um PR — `.github/pull_request_template.md` criado, mas só vale depois de chegar à `main` (gotcha 4)
 
 ## Gotchas
 
