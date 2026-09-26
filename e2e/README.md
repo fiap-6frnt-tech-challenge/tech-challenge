@@ -94,7 +94,7 @@ npm run e2e:report
 
 ## CI GitHub Actions
 
-O workflow de CI roda a suite E2E em pull requests e pushes para `phase-2` e
+O workflow de CI roda a suite E2E em pull requests e pushes para `phase-4` e
 `main`. O job sobe um Postgres descartavel, instala os browsers do Playwright,
 aplica as migrations e executa:
 

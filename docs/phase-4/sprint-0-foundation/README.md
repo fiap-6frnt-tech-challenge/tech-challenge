@@ -21,7 +21,7 @@
 
 | #   | Status | Task                                              | Owner | Duração      | Prio | Paralela?       | Arquivo                                              |
 | --- | ------ | ------------------------------------------------- | ----- | ------------ | ---- | --------------- | ---------------------------------------------------- |
-| 01  | ⏳     | Branch `phase-4`, CI e templates                  | Dev 3 | 0.5 dia      | P0   | ✅ dia 1        | [01-branch-ci-setup.md](./01-branch-ci-setup.md)     |
+| 01  | 🟢     | Branch `phase-4`, CI e templates                  | Dev 3 | 0.5 dia      | P0   | ✅ dia 1        | [01-branch-ci-setup.md](./01-branch-ci-setup.md)     |
 | 02  | ⏳     | Correção do IDOR em `/api/transactions/[id]`      | Dev 1 | 1 dia        | P0   | ✅ dia 1        | [02-idor-fix.md](./02-idor-fix.md)                   |
 | 03  | ⏳     | Validação no servidor + anti mass assignment      | Dev 1 | 1 dia        | P0   | ⬅ 02            | [03-server-validation.md](./03-server-validation.md) |
 | 04  | ⏳     | Baseline de performance (Lighthouse, bundle, API) | Dev 3 | 1 dia        | P0   | ⬅ 01            | [04-perf-baseline.md](./04-perf-baseline.md)         |
