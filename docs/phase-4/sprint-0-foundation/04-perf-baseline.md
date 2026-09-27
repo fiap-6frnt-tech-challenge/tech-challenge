@@ -46,11 +46,11 @@ Agora a Fase 2 está em produção (https://tech-challenge-phase2.vercel.app), o
 
 ## Validação
 
-- [ ] Tabela Lighthouse (3 páginas × 2 presets × 2 ambientes) com Perf, LCP, TBT e CLS
-- [ ] Tamanhos de bundle anotados, inclusive a localização do recharts
-- [ ] p50/p95 dos 4 endpoints com 5 mil transações
-- [ ] Metas do PLAN.md confirmadas ou ajustadas com base nos números reais
-- [ ] Comandos reproduzíveis no documento
+- [x] Tabela Lighthouse (3 páginas × 2 presets × 2 ambientes) com Perf, LCP, TBT e CLS
+- [x] Tamanhos de bundle anotados, inclusive a localização do recharts
+- [x] p50/p95 dos 4 endpoints com 5 mil transações
+- [x] Metas do PLAN.md confirmadas ou ajustadas com base nos números reais
+- [x] Comandos reproduzíveis no documento
 
 ## Gotchas
 

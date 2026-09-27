@@ -64,3 +64,6 @@ storybook-static
 
 # Backup .package.json.fase1.bak
 .package.json.fase1.bak
+
+# Cookie de sessão das medições de performance (Fase 4, S0-04)
+.secrets/
