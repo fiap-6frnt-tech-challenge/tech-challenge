@@ -1,4 +1,4 @@
-# Task 02 — Correção do IDOR em `/api/transactions/[id]`
+# Task 02 — Correção do IDOR em `/api/transactions/[id]` ✅
 
 |                 |                                                                                                               |
 | --------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -76,10 +76,10 @@ Impacto: qualquer usuário logado que obtenha o `id` de uma transação alheia (
 
 ## Validação
 
-- [ ] Testes novos verdes; testes de rota existentes verdes
-- [ ] Em produção, com 2 contas: `curl` autenticado como B em `/api/transactions/<id-de-A>` → 404 (GET/PATCH/DELETE)
-- [ ] `PATCH` com `userId` não altera o dono (conferir no banco)
-- [ ] Hotfix mergeado na `main`, deploy concluído, `main` mesclada na `phase-4`
+- [x] Testes novos verdes; testes de rota existentes verdes
+- [x] Em produção, com 2 contas: `curl` autenticado como B em `/api/transactions/<id-de-A>` → 404 (GET/PATCH/DELETE)
+- [x] `PATCH` com `userId` não altera o dono (conferir no banco)
+- [] Hotfix mergeado na `main`, deploy concluído, `main` mesclada na `phase-4`
 
 ## Gotchas
 
