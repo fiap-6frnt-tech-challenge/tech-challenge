@@ -33,16 +33,6 @@ function toTransaction(
   };
 }
 
-export async function getAll(): Promise<Transaction[]> {
-  const result = await db.query.transactions.findMany({
-    orderBy: [desc(transactions.date)],
-    with: {
-      attachments: true,
-    },
-  });
-  return result.map((row) => toTransaction(row));
-}
-
 export async function getAllByUser(
   userId: string,
   range: { from?: string; to?: string } = {}
@@ -119,9 +109,9 @@ export async function listTransactions(params: ListParams): Promise<PaginatedRes
   };
 }
 
-export async function getById(id: string): Promise<Transaction | null> {
+export async function getById(id: string, userId: string): Promise<Transaction | null> {
   const row = await db.query.transactions.findFirst({
-    where: eq(transactions.id, id),
+    where: and(eq(transactions.id, id), eq(transactions.userId, userId)),
     with: {
       attachments: true,
     },
@@ -161,10 +151,10 @@ export async function create(data: NewTransaction): Promise<Transaction> {
 
 export async function update(
   id: string,
-  data: Partial<NewTransaction>
+  userId: string,
+  data: Partial<Omit<NewTransaction, 'userId'>>
 ): Promise<Transaction | null> {
   const patch: Partial<TransactionRow> = { updatedAt: new Date() };
-  if (data.userId !== undefined) patch.userId = data.userId;
   if (data.category !== undefined) patch.category = data.category;
   if (data.type !== undefined) patch.type = data.type;
   if (data.amount !== undefined) patch.amount = data.amount;
@@ -175,7 +165,7 @@ export async function update(
     const [row] = await tx
       .update(transactions)
       .set(patch)
-      .where(eq(transactions.id, id))
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
     if (!row) return null;
 
@@ -202,8 +192,11 @@ export async function update(
   });
 }
 
-export async function remove(id: string): Promise<boolean> {
-  const rows = await db.delete(transactions).where(eq(transactions.id, id)).returning();
+export async function remove(id: string, userId: string): Promise<boolean> {
+  const rows = await db
+    .delete(transactions)
+    .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+    .returning();
   return rows.length > 0;
 }
 
