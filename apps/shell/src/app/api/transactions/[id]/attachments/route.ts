@@ -44,9 +44,9 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
   }
 
   const { id } = await params;
-  const transaction = await store.getById(id);
-  if (!transaction || transaction.userId !== session.user.id) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const transaction = await store.getById(id, session.user.id);
+  if (!transaction) {
+    return NextResponse.json({ error: 'Não encontrado' }, { status: 404 });
   }
 
   const formData = await req.formData();
