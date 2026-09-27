@@ -79,11 +79,12 @@ describe('POST /api/transactions/[id]/attachments', () => {
   });
 
   it('retorna 404 quando a transação pertence a outro usuário', async () => {
-    mocks.getById.mockResolvedValue({ id: TX_ID, userId: 'outro' });
+    mocks.getById.mockResolvedValue(null);
 
     const res = await POST(uploadRequest(pdf()), params());
 
     expect(res.status).toBe(404);
+    expect(mocks.getById).toHaveBeenCalledWith(TX_ID, USER_ID);
     expect(mocks.upload).not.toHaveBeenCalled();
   });
 

@@ -1,26 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
 import * as store from '../store';
 
 type Params = Promise<{ id: string }>;
 
 export async function GET(_req: NextRequest, { params }: { params: Params }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
+
   const { id } = await params;
-  const transaction = await store.getById(id);
-  if (!transaction) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const transaction = await store.getById(id, session.user.id);
+  if (!transaction) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 });
   return NextResponse.json(transaction);
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Params }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
+
   const { id } = await params;
   const body = await req.json();
-  const transaction = await store.update(id, body);
-  if (!transaction) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const patch = { ...body };
+  delete patch.userId;
+  const transaction = await store.update(id, session.user.id, patch);
+  if (!transaction) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 });
   return NextResponse.json(transaction);
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Params }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
+
   const { id } = await params;
-  const success = await store.remove(id);
-  if (!success) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const success = await store.remove(id, session.user.id);
+  if (!success) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 });
   return new NextResponse(null, { status: 204 });
 }
