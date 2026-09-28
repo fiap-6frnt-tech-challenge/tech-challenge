@@ -83,3 +83,15 @@ export const Interaction: Story = {
     await expect(input).toHaveFocus();
   },
 };
+
+export const Limited: Story = {
+  name: 'Interaction: respeitar o limite de caracteres',
+  args: {
+    maxLength: 100,
+  },
+  play: async ({ canvasElement }) => {
+    const input = within(canvasElement).getByRole('searchbox');
+    await userEvent.type(input, 'x'.repeat(101));
+    await expect(input).toHaveValue('x'.repeat(100));
+  },
+};

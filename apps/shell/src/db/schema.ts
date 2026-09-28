@@ -6,7 +6,7 @@ const transactionTypeValues = Object.values(TRANSACTION_TYPE) as [string, ...str
 
 export const transactions = pgTable('transactions', {
   id: text('id').primaryKey(),
-  userId: text('user_id').notNull().default('joana'), // Default temporário
+  userId: text('user_id').notNull(),
   category: text('category').notNull().default('default'),
   type: text('type', { enum: transactionTypeValues }).notNull(),
   amount: doublePrecision('amount').notNull(),

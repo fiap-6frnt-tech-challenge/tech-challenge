@@ -20,8 +20,7 @@ import { TRANSACTION_TYPE, type Transaction } from '@bytebank/shared';
 
 const USER_ID = 'user-123';
 const payload = {
-  userId: 'joana',
-  category: 'Alimentação',
+  category: 'food',
   type: 'withdrawal',
   amount: 42,
   date: '2026-06-23',
@@ -33,6 +32,14 @@ function postRequest(body: unknown): NextRequest {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+  }) as NextRequest;
+}
+
+function rawPostRequest(body: string, headers: Record<string, string> = {}): NextRequest {
+  return new Request('http://localhost/api/transactions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body,
   }) as NextRequest;
 }
 
@@ -69,11 +76,56 @@ describe('POST /api/transactions', () => {
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
-  it('usa o id da sessão em vez do userId informado pelo cliente', async () => {
+  it('usa o id da sessão após validar os campos públicos', async () => {
     const res = await POST(postRequest(payload));
 
     expect(res.status).toBe(201);
     expect(mocks.create).toHaveBeenCalledWith({ ...payload, userId: USER_ID });
+  });
+
+  it.each(['userId', 'id', 'attachments'])('rejeita mass assignment do campo %s', async (field) => {
+    const res = await POST(postRequest({ ...payload, [field]: 'injetado' }));
+
+    expect(res.status).toBe(422);
+    await expect(res.json()).resolves.toMatchObject({ error: 'Dados inválidos' });
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it.each([0, -1, '42', 1_000_000_001])('rejeita amount inválido %s', async (amount) => {
+    const res = await POST(postRequest({ ...payload, amount }));
+    expect(res.status).toBe(422);
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it.each([{ date: '2099-01-01' }, { description: 'x'.repeat(141) }])(
+    'rejeita campos fora dos limites %j',
+    async (overrides) => {
+      const res = await POST(postRequest({ ...payload, ...overrides }));
+      expect(res.status).toBe(422);
+      expect(mocks.create).not.toHaveBeenCalled();
+    }
+  );
+
+  it('retorna 400 para JSON malformado', async () => {
+    const res = await POST(rawPostRequest('{'));
+    expect(res.status).toBe(400);
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it('retorna 422 para descrição com byte NUL antes de gravar no banco', async () => {
+    const res = await POST(postRequest({ ...payload, description: 'Compra\u0000extra' }));
+    expect(res.status).toBe(422);
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it('retorna 413 para corpo maior que 16 KB mesmo com content-length falso', async () => {
+    const res = await POST(
+      rawPostRequest(JSON.stringify({ ...payload, description: 'x'.repeat(17_000) }), {
+        'content-length': '1',
+      })
+    );
+    expect(res.status).toBe(413);
+    expect(mocks.create).not.toHaveBeenCalled();
   });
 });
 
@@ -198,5 +250,22 @@ describe('GET /api/transactions (paginação + filtros)', () => {
     expect(mocks.listTransactions).toHaveBeenCalledWith(
       expect.objectContaining({ sortBy: 'date', sortOrder: 'desc' })
     );
+  });
+
+  it.each(['?_page=1&_per_page=100000', '?_per_page=100000', '?_page=0', '?_sort=userId'])(
+    'retorna 422 para query inválida %s',
+    async (query) => {
+      const res = await GET(getRequest(query));
+      expect(res.status).toBe(422);
+      await expect(res.json()).resolves.toMatchObject({ error: 'Dados inválidos' });
+      expect(mocks.listTransactions).not.toHaveBeenCalled();
+      expect(mocks.getAllByUser).not.toHaveBeenCalled();
+    }
+  );
+
+  it('retorna 422 para busca com byte NUL antes de consultar o banco', async () => {
+    const res = await GET(getRequest('?_page=1&q=Compra%00extra'));
+    expect(res.status).toBe(422);
+    expect(mocks.listTransactions).not.toHaveBeenCalled();
   });
 });

@@ -13,6 +13,7 @@ export function SearchInput({
   debounceMs = 300,
   disabled = false,
   ariaLabel = 'Buscar transações',
+  maxLength,
 }: ISearchInput) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,6 +63,7 @@ export function SearchInput({
         value={draftValue}
         placeholder={placeholder}
         disabled={disabled}
+        maxLength={maxLength}
         onChange={(event) => setDraftValue(event.target.value)}
         className={cn(
           'w-full rounded-default border border-border bg-surface py-md pl-[44px]',

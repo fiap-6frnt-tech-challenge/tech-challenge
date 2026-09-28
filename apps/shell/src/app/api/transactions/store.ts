@@ -1,5 +1,11 @@
 import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm';
-import type { Attachment, Transaction, NewTransaction, TransactionType } from '@bytebank/shared';
+import type {
+  Attachment,
+  Transaction,
+  NewTransaction,
+  UpdateTransaction,
+  TransactionType,
+} from '@bytebank/shared';
 import { db } from '@/db';
 import { attachments, transactions, type AttachmentRow, type TransactionRow } from '@/db/schema';
 
@@ -119,40 +125,27 @@ export async function getById(id: string, userId: string): Promise<Transaction |
   return row ? toTransaction(row) : null;
 }
 
-export async function create(data: NewTransaction): Promise<Transaction> {
-  return db.transaction(async (tx) => {
-    const id = crypto.randomUUID();
-    const [row] = await tx
-      .insert(transactions)
-      .values({
-        id,
-        userId: data.userId,
-        category: data.category,
-        type: data.type,
-        amount: data.amount,
-        date: data.date,
-        description: data.description,
-      })
-      .returning();
+export async function create(data: NewTransaction & { userId: string }): Promise<Transaction> {
+  const [row] = await db
+    .insert(transactions)
+    .values({
+      id: crypto.randomUUID(),
+      userId: data.userId,
+      category: data.category,
+      type: data.type,
+      amount: data.amount,
+      date: data.date,
+      description: data.description,
+    })
+    .returning();
 
-    if (data.attachments?.length) {
-      await tx.insert(attachments).values(
-        data.attachments.map((attachment) => ({
-          ...attachment,
-          id: attachment.id || crypto.randomUUID(),
-          transactionId: id,
-        }))
-      );
-    }
-
-    return toTransaction(row, data.attachments ?? []);
-  });
+  return toTransaction(row);
 }
 
 export async function update(
   id: string,
   userId: string,
-  data: Partial<Omit<NewTransaction, 'userId'>>
+  data: UpdateTransaction
 ): Promise<Transaction | null> {
   const patch: Partial<TransactionRow> = { updatedAt: new Date() };
   if (data.category !== undefined) patch.category = data.category;
@@ -168,20 +161,6 @@ export async function update(
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
     if (!row) return null;
-
-    if (data.attachments !== undefined) {
-      await tx.delete(attachments).where(eq(attachments.transactionId, id));
-      if (data.attachments.length) {
-        await tx.insert(attachments).values(
-          data.attachments.map((attachment) => ({
-            ...attachment,
-            id: attachment.id || crypto.randomUUID(),
-            transactionId: id,
-          }))
-        );
-      }
-      return toTransaction(row, data.attachments);
-    }
 
     const existingAttachments = await tx
       .select()
