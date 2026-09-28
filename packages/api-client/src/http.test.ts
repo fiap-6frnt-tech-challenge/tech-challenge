@@ -16,28 +16,39 @@ afterEach(() => {
 });
 
 describe('TransactionService', () => {
-  it('create faz POST com JSON no corpo', async () => {
+  it('create envia apenas os campos aceitos pela API', async () => {
     const fetchMock = mockFetch({ id: '1' });
-    await TransactionService.create({
+    const input = {
       userId: 'joana',
-      category: 'default',
-      type: 'deposit',
+      id: 'injetado',
+      attachments: [],
+      category: 'food',
+      type: 'deposit' as const,
       amount: 10,
       date: '2026-05-30',
-      description: 'x',
-    });
+      description: 'Salário',
+    };
+    await TransactionService.create(input);
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toContain('/transactions');
     expect(init.method).toBe('POST');
-    expect(JSON.parse(init.body).description).toBe('x');
+    expect(JSON.parse(init.body)).toEqual({
+      category: 'food',
+      type: 'deposit',
+      amount: 10,
+      date: '2026-05-30',
+      description: 'Salário',
+    });
   });
 
-  it('update usa PATCH (não PUT) na rota /:id', async () => {
+  it('update usa PATCH e omite campos fora do contrato', async () => {
     const fetchMock = mockFetch({ id: '1' });
-    await TransactionService.update('1', { amount: 99 });
+    const patch = { amount: 99, userId: 'joana', attachments: [] };
+    await TransactionService.update('1', patch);
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toContain('/transactions/1');
     expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body)).toEqual({ amount: 99 });
   });
 
   it('getPaginated monta os params _page/_per_page/_sort e filtros', async () => {

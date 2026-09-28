@@ -39,6 +39,16 @@ export interface SummaryRange {
   to?: string;
 }
 
+function transactionWritePayload(data: UpdateTransaction): UpdateTransaction {
+  return {
+    type: data.type,
+    category: data.category,
+    amount: data.amount,
+    date: data.date,
+    description: data.description,
+  };
+}
+
 export const TransactionService = {
   async getAll(): Promise<Transaction[]> {
     const res = await fetch(`${apiBaseUrl}/transactions`);
@@ -56,7 +66,7 @@ export const TransactionService = {
     const res = await fetch(`${apiBaseUrl}/transactions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(transactionWritePayload(data)),
     });
     if (!res.ok) throw new Error('Falha ao criar transação');
     return res.json();
@@ -66,7 +76,7 @@ export const TransactionService = {
     const res = await fetch(`${apiBaseUrl}/transactions/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(transactionWritePayload(data)),
     });
     if (!res.ok) throw new Error('Falha ao atualizar transação');
     return res.json();

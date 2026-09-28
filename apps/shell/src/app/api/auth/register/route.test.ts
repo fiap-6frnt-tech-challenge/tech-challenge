@@ -78,9 +78,18 @@ describe('POST /api/auth/register', () => {
     expect(mockFindUserByEmail).not.toHaveBeenCalled();
   });
 
-  it('retorna 422 para JSON malformado', async () => {
+  it('retorna 400 para JSON malformado', async () => {
     const res = await POST(postRequest('not json'));
 
-    expect(res.status).toBe(422);
+    expect(res.status).toBe(400);
+  });
+
+  it('retorna 413 para corpo JSON maior que 16 KB', async () => {
+    const res = await POST(
+      postRequest(JSON.stringify({ ...validInput, name: 'x'.repeat(17_000) }))
+    );
+
+    expect(res.status).toBe(413);
+    expect(mockCreateUser).not.toHaveBeenCalled();
   });
 });

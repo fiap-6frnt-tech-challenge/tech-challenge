@@ -37,6 +37,14 @@ function patchRequest(body: unknown): NextRequest {
   }) as NextRequest;
 }
 
+function rawPatchRequest(body: string, headers: Record<string, string> = {}): NextRequest {
+  return new Request(`http://localhost/api/transactions/${TX_ID}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body,
+  }) as NextRequest;
+}
+
 function deleteRequest(): NextRequest {
   return new Request(`http://localhost/api/transactions/${TX_ID}`, {
     method: 'DELETE',
@@ -94,20 +102,45 @@ describe('/api/transactions/[id]', () => {
     expect(mocks.remove).toHaveBeenCalledWith(TX_ID, USER_A);
   });
 
-  it('ignora userId no PATCH e preserva o dono da transação', async () => {
-    mocks.update.mockImplementation(async (_id, userId, patch) => ({
-      id: TX_ID,
-      userId,
-      ...patch,
-    }));
-
+  it.each(['userId', 'id', 'attachments'])('rejeita o campo extra %s no PATCH', async (field) => {
     const response = await PATCH(
-      patchRequest({ description: 'updated', userId: USER_B }),
+      patchRequest({ description: 'updated', [field]: USER_B }),
       params()
     );
+    expect(response.status).toBe(422);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
 
+  it('rejeita PATCH vazio', async () => {
+    const response = await PATCH(patchRequest({}), params());
+    expect(response.status).toBe(422);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it('rejeita byte NUL na descrição antes de atualizar o banco', async () => {
+    const response = await PATCH(patchRequest({ description: 'Compra\u0000extra' }), params());
+    expect(response.status).toBe(422);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it('aceita PATCH parcial e mantém o dono da sessão', async () => {
+    const response = await PATCH(patchRequest({ description: '  updated  ' }), params());
     expect(response.status).toBe(200);
     expect(mocks.update).toHaveBeenCalledWith(TX_ID, USER_A, { description: 'updated' });
-    await expect(response.json()).resolves.toMatchObject({ userId: USER_A });
+  });
+
+  it('retorna 400 para JSON malformado', async () => {
+    const response = await PATCH(rawPatchRequest('{'), params());
+    expect(response.status).toBe(400);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it('retorna 413 para corpo declarado maior que 16 KB', async () => {
+    const response = await PATCH(
+      rawPatchRequest('{"description":"updated"}', { 'content-length': '16385' }),
+      params()
+    );
+    expect(response.status).toBe(413);
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 });

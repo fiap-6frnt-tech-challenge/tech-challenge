@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { updateTransactionSchema } from '@bytebank/shared';
 import { auth } from '@/auth';
 import * as store from '../store';
+import { JsonRequestError, readJson } from '../../read-json';
 
 type Params = Promise<{ id: string }>;
 
@@ -23,10 +26,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Params }) {
   }
 
   const { id } = await params;
-  const body = await req.json();
-  const patch = { ...body };
-  delete patch.userId;
-  const transaction = await store.update(id, session.user.id, patch);
+  let body: unknown;
+  try {
+    body = await readJson(req);
+  } catch (error) {
+    if (error instanceof JsonRequestError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    throw error;
+  }
+
+  const parsed = updateTransactionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Dados inválidos', issues: z.flattenError(parsed.error) },
+      { status: 422 }
+    );
+  }
+
+  const transaction = await store.update(id, session.user.id, parsed.data);
   if (!transaction) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 });
   return NextResponse.json(transaction);
 }
