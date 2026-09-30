@@ -353,6 +353,6 @@ gh pr create --base phase-4 --title "fix(api): autorização por dono em /api/tr
 
 - [ ] Criar a branch `phase-4` a partir da `main` e habilitar a CI nela ([S0-01](./sprint-0-foundation/01-branch-ci-setup.md))
 - [ ] Dev 1 começa pelo IDOR ([S0-02](./sprint-0-foundation/02-idor-fix.md)) — prioridade máxima, a produção está vulnerável
-- [ ] Dev 3 mede a baseline em produção antes de qualquer otimização ([S0-04](./sprint-0-foundation/04-perf-baseline.md))
+- [x] Dev 3 mede a baseline em produção antes de qualquer otimização ([S0-04](./sprint-0-foundation/04-perf-baseline.md) → [baseline](./perf/baseline.md))
 - [ ] Dev 2 abre os ADRs para revisão do time até o dia 3 ([S0-05](./sprint-0-foundation/05-architecture-adrs.md))
 - [ ] Criar o board (GitHub Projects) com as tasks deste plano
