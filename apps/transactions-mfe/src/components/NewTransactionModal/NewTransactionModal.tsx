@@ -26,8 +26,6 @@ const ERROR_FEEDBACK = {
   message: 'Tente novamente',
 };
 
-const DEFAULT_USER_ID = 'joana';
-
 export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalProps): ReactElement {
   const { mutateAsync: createTransaction } = useCreateTransaction();
   const dispatch = useAppDispatch();
@@ -47,11 +45,7 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
     setIsSubmitting(true);
 
     try {
-      const createdTransaction = await createTransaction({
-        ...pendingData,
-        userId: DEFAULT_USER_ID,
-        attachments: [],
-      });
+      const createdTransaction = await createTransaction(pendingData);
       const { failed } = await flushPending(createdTransaction.id);
 
       setPendingData(null);

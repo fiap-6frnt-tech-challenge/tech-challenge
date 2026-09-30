@@ -9,5 +9,8 @@ export { CATEGORIES, type Category, type CategoryId } from './categories';
 export {
   transactionFormSchema,
   attachmentSchema,
+  createTransactionSchema,
+  updateTransactionSchema,
+  listTransactionsQuerySchema,
   type TransactionFormValues,
 } from './schemas/transaction';
