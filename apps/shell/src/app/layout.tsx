@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { ViewportFix } from '@bytebank/design-system';
 import { Providers } from './providers';
 import { AppShell } from './AppShell';
@@ -26,7 +27,8 @@ const mfeOrigins = [
   ...new Set([originOf(dashboardManifestUrl), originOf(transactionsManifestUrl)]),
 ].filter((o): o is string => Boolean(o));
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  await connection();
   return (
     <html lang="pt-BR">
       <head>

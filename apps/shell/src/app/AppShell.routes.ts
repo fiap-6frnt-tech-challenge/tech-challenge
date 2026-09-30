@@ -1,4 +1,4 @@
-const publicAuthRoutes = ['/login', '/auth/error', '/register'];
+const publicAuthRoutes = ['/login', '/auth/error', '/register', '/spike-a'];
 
 export function isPublicAuthRoute(pathname: string) {
   return publicAuthRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));

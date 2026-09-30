@@ -5,6 +5,12 @@ import { Sidebar } from '@bytebank/design-system';
 import { AppHeader } from '../components/AppHeader';
 import { isPublicAuthRoute } from './AppShell.routes';
 
+function preloadOnIntent(event: React.SyntheticEvent) {
+  const link = (event.target as Element).closest?.('a[href="/transactions"]');
+  if (!link) return;
+  void import('@/lib/federation').then((federation) => federation.preloadTransactionsPage());
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
@@ -17,14 +23,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <AppHeader />
 
       <div className="hidden sm:block lg:hidden bg-background border-b border-border h-fit">
-        <div className="mx-auto max-w-300 h-fit">
+        <div
+          className="mx-auto max-w-300 h-fit"
+          onPointerOver={preloadOnIntent}
+          onFocus={preloadOnIntent}
+        >
           <Sidebar />
         </div>
       </div>
 
       <div className="flex-1 overflow-hidden">
         <div className="mx-auto flex max-w-300 flex-col lg:flex-row px-lg gap-lg w-full h-full">
-          <div className="hidden lg:block w-48 shrink-0 sticky top-0 self-start">
+          <div
+            className="hidden lg:block w-48 shrink-0 sticky top-0 self-start"
+            onPointerOver={preloadOnIntent}
+            onFocus={preloadOnIntent}
+          >
             <Sidebar />
           </div>
 

@@ -12,6 +12,7 @@ COPY packages/shared/package.json packages/shared/
 COPY packages/design-system/package.json packages/design-system/
 COPY packages/api-client/package.json packages/api-client/
 COPY packages/stores/package.json packages/stores/
+COPY packages/core/package.json packages/core/
 RUN npm ci
 COPY . .
 RUN npm run build -w @bytebank/dashboard-mfe

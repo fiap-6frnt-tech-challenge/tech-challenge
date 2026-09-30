@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     '@bytebank/design-system',
     '@bytebank/api-client',
     '@bytebank/stores',
+    '@bytebank/core',
   ],
   experimental: {
     optimizePackageImports: ['@hookform/resolvers', 'lucide-react', '@bytebank/design-system'],

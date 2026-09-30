@@ -11,6 +11,11 @@
 
 ---
 
+> **Nota do S0-06 (2026-09-30), sobre o gotcha 2** — [contexto](../sprint-0-foundation/06-risk-spikes.md#resultado). Os previews dos três projetos estão atrás do Vercel Authentication, com SSO por domínio. Um shell de preview que busca o `mf-manifest.json` de um MFE de preview, em outro domínio, deve receber o redirect do SSO em vez do manifest (**não testado**). Antes do release, há duas saídas:
+>
+> - desligar a proteção dos previews nos projetos dos MFEs, que servem assets públicos em produção de qualquer forma;
+> - ou validar o shell de preview contra os MFEs de produção.
+
 ## Contexto
 
 Fecho da fase: smoke num clone limpo, deploy coordenado dos três projetos na Vercel, migrações de dados em produção na ordem certa e tag de release.

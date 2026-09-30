@@ -14,6 +14,13 @@
 
 ---
 
+> **Notas do Spike A (S0-06, 2026-09-30)** — [evidências](../sprint-0-foundation/06-risk-spikes.md#spike-a--evidências-e-aprendizados). O barramento singleton funcionou em dev e em build de produção: a mesma instância no shell e nos 2 MFEs, o evento do transactions-mfe chegando ao dashboard-mfe e nenhum rxjs de fallback baixado. A mitigação com `CustomEvent` não será necessária. Ajustes:
+>
+> - **Passo 1:** no shell, declare `rxjs: { version: '7.8.2', scope: 'default', lib: () => Rx, shareConfig: { singleton: true, requiredVersion: '^7.8.0' } }`. O `lib` precisa ser **síncrono**, pelo mesmo motivo do `@bytebank/core` (S1-01), e a `version` deve ser a do lockfile. O `rxjs` também entra nas `dependencies` do shell, que faz `import * as Rx from 'rxjs'`.
+> - **Imports:** nos MFEs, importe só de `'rxjs'`, que exporta os operadores desde a 7.2. `rxjs/operators`, `rxjs/ajax` etc. são outras chaves de shared e, num MFE, trariam uma segunda cópia dos internos do rxjs. Em pacotes que o shell provê (`@bytebank/stores`, `@bytebank/api-client`) não há problema, como no `rxjs/ajax` do S2-03. Trave com `no-restricted-imports` no lint dos MFEs.
+> - **Bundle:** o namespace inteiro do rxjs entra no chunk da federação (+66 kB raw / ~18 kB gzip). Anote no S2-09.
+> - **Validação:** o spike conferiu "rxjs aparece uma vez" de duas formas. Pela rede, nenhum chunk de fallback do rxjs foi baixado dos MFEs. Por identidade, o `Subject` é o mesmo nos 3 bundles. O `scripts/spikes/s0-06/spike-a-check.mjs`, no branch do spike, mostra como automatizar.
+
 ## Contexto
 
 Hoje não há nenhuma programação reativa no projeto: o `rxjs` 7.8.2 só existe como dependência transitiva. Esta task cria a base que as demais usam: o barramento de eventos de domínio (compartilhado entre shell e MFEs) e os hooks que ligam Observables ao React.
