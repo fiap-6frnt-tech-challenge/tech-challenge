@@ -11,6 +11,8 @@
 
 ---
 
+> **Nota do Spike B (S0-06, 2026-09-30)** — [evidências](../sprint-0-foundation/06-risk-spikes.md#spike-b--evidências-e-aprendizados). No item 5, confira o preload pela aba Network: o `__federation_expose_TransactionsPage` baixa no hover e não é pedido de novo no clique. Confira também pelo `loadRemote` (~2 ms). Não espere o tempo clique → conteúdo de `/transactions` cair só com o preload do chunk: o spike mediu o mesmo tempo com e sem (ver S2-08).
+
 ## Roteiro
 
 1. CI verde (lint, `arch:check`, type-check, testes com marble tests, build, E2E)

@@ -14,6 +14,25 @@
 
 ---
 
+> **Notas do Spike B (S0-06, 2026-09-30)** — [evidências](../sprint-0-foundation/06-risk-spikes.md#spike-b--evidências-e-aprendizados). O spike usou uma CSP Report-Only estrita, com `style-src` sem `'unsafe-inline'`. Nem o runtime do MF nem o recharts geraram violação, e os 21 `<script>` do Next no `/login` saíram com nonce. Ajustes:
+>
+> - **Passo 2 — o nonce vem do header da CSP, não do `x-nonce`.** O Next 16.1 lê o nonce do header de **requisição** `content-security-policy` ou `content-security-policy-report-only` (`app-render.js`). Repasse a política nesse header de requisição, além de devolvê-la na resposta. O `x-nonce` só serve para componentes que precisem ler o nonce.
+> - **Gotcha 1 — custo medido.** O nonce exige `await connection()` (ou `headers()`) no `layout.tsx`; sem isso, as páginas estáticas de hoje (`/`, `/transactions`, `/auth/error`) saem sem nonce. Com tudo dinâmico, a navegação SPA para `/transactions` foi de ~360 ms para ~870 ms em Slow 4G.
+> - **Gotcha 3 — o motivo muda, a regra fica.** O recharts **não** viola a CSP (mede texto via CSSOM). As violações de estilo vêm de `style=""` renderizado no SSR: `next/image` gera `color:transparent` e o `DeferUntilVisible`, `min-height`.
+>   - `style-src 'self' 'unsafe-inline'` sem nonce continua certo. Com nonce em `style-src`, o navegador ignora `'unsafe-inline'`.
+>   - Alternativa mais estrita: `style-src-elem 'self' 'nonce-…'` com `style-src-attr 'unsafe-inline'`.
+> - **Nova violação: `eval` do zod v4.** A sonda `allowsEval` (`new Function("")`) dispara em toda página. Em enforce é inofensiva, mas gera um relatório por página.
+>   - Chame `z.config({ jitless: true })` antes de construir os schemas.
+>   - Faça isso em cada cópia do zod (shell/shared e cada MFE), porque o zod não é compartilhado na federação.
+> - **Report-Only:**
+>   - `frame-ancestors` não vale nesse modo (especificação); mantenha o `X-Frame-Options: DENY` até o enforce.
+>   - `/api/csp-report` precisa passar pelo `proxy.ts` sem exigir sessão.
+> - **Preview da Vercel:**
+>   - Os previews estão atrás do Vercel Authentication (SSO); automação precisa do bypass (`x-vercel-protection-bypass`).
+>   - A Vercel Toolbar é injetada por padrão e exige `https://vercel.live` (script/connect/img/frame/style/font) e `wss://ws-us3.pusher.com`. A alternativa é desligá-la com `VERCEL_PREVIEW_FEEDBACK_ENABLED=0`; sem uma das duas, o relatório do preview mistura violações da toolbar.
+> - **Estilos dos MFEs:** eles vêm do build do shell, e hoje nenhum expose carrega CSS da própria origem. Só o preload com `'all'` puxava o CSS do bootstrap standalone (ver S2-08). Se um expose passar a importar CSS, o `style-src` precisará das origens dos MFEs.
+> - **Dev não foi testado.** Além de `'unsafe-eval'` e `ws:`, o rsbuild em dev injeta `<style>` inline.
+
 ## Contexto
 
 O shell não envia CSP, HSTS nem os demais headers de segurança, e o `X-Powered-By: Next.js` está ligado. As mutações da API dependem só do `SameSite=Lax` do cookie contra CSRF. As rotas de anexo liberam CORS com credenciais para as origens dos MFEs também em produção, onde isso não é necessário (em produção o código do MFE roda na origem do shell).

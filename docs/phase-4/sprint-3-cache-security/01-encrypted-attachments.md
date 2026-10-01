@@ -14,6 +14,17 @@
 
 ---
 
+> **Notas do Spike C (S0-06, 2026-09-30)** — [evidências](../sprint-0-foundation/06-risk-spikes.md#spike-c--evidências-e-aprendizados). A cifra no formato deste doc funcionou de ponta a ponta com o Blob real. Em 5 MB, cifrar levou ~7 ms, decifrar ~6 ms, e a memória transitória foi de até ~40 MB por requisição; adulteração e AAD de outra linha foram rejeitados. Ajustes:
+>
+> - **Passo 5 e gotcha 4: o limite passa a 4 MB.** Functions da Vercel recusam corpo acima de 4,5 MB com `413 FUNCTION_PAYLOAD_TOO_LARGE` na borda (em produção, 4 MB chegou à função e 5 MB não). O gargalo é o corpo da requisição, não a memória.
+>   - Hoje os 5 MB estão em `lib/storage.ts` (`MAX_SIZE_BYTES`, com testes em `storage.test.ts` e `attachments/route.test.ts`) e no `DEFAULT_MAX_SIZE` do `FileUpload` do DS.
+>   - Arquivos entre ~4,4 e 5 MB já falham em produção.
+> - **Gotcha 6 decidido: store público com ciphertext.** O store atual é público: `put(…, { access: 'private' })` responde `Cannot use private access on a public store`.
+>   - O Blob privado existe em todos os planos desde 2026-06-30 (o SDK 2.4.0 já suporta), mas exige criar um store novo e conectá-lo aos projetos.
+>   - Fica como reforço opcional. Se for adotado, a leitura é via `get(pathname, { access: 'private' })` com resposta em stream.
+> - **Download:** a resposta de uma Function também tem limite de 4,5 MB fora de streaming. Com 4 MB cabe; se o limite subir, responda em stream.
+> - **`bytea` no Postgres não será necessário.** A rota do spike (`apps/shell/src/app/api/spike/attachment-crypto/route.ts`, no branch `spike/s0-06-risk-spikes`) serve de referência para o `AesGcmCipher`.
+
 ## Contexto
 
 Hoje (`lib/storage.ts`):

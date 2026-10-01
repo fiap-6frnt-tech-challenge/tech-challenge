@@ -14,6 +14,8 @@
 
 ---
 
+> **Nota do Spike C (S0-06, 2026-09-30)** — [evidências](../sprint-0-foundation/06-risk-spikes.md#spike-c--evidências-e-aprendizados). O limite de upload passa a **4 MB** (S3-01), porque a Vercel recusa corpo acima de 4,5 MB com `413 FUNCTION_PAYLOAD_TOO_LARGE` antes de a função rodar. Na linha "API4 consumo de recursos", troque "upload ≤ 5 MB" por "upload ≤ 4 MB" e registre o limite da plataforma como controle adicional.
+
 ## Contexto
 
 A banca precisa ver que a segurança foi verificada, não só implementada. A auditoria mapeia cada categoria do OWASP para o que foi feito, com evidência, e o ZAP testa a aplicação rodando (DAST).

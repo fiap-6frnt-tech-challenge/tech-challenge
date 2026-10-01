@@ -14,6 +14,12 @@
 
 ---
 
+> **Notas do Spike C (S0-06, 2026-09-30)** — [evidências](../sprint-0-foundation/06-risk-spikes.md#spike-c--evidências-e-aprendizados).
+>
+> - **Limite de 4 MB no cliente (gotcha 4):** a Vercel recusa corpo acima de 4,5 MB com `413 FUNCTION_PAYLOAD_TOO_LARGE` antes de a função rodar (confirmado em produção). Por isso o S3-01 baixa o limite para 4 MB. Hoje o `FileUpload` do DS valida com `DEFAULT_MAX_SIZE` de 5 MB.
+> - **Esse 413 vem em `text/plain`**, não em JSON. O gateway não pode supor corpo JSON no erro; o `isTransient` já o trata como definitivo (4xx) e não retenta, o que deve continuar assim.
+> - **`rxjs/ajax` no `@bytebank/api-client` é seguro:** o shell provê o api-client e resolve `rxjs` e `rxjs/ajax` no mesmo build. Não importe `rxjs/ajax` direto num MFE sem declarar o subpath no `shared` (ver S2-01).
+
 ## Contexto
 
 Hoje o `useAttachments.flushPending` dispara todos os uploads com `Promise.allSettled`: sem progresso, sem limite de concorrência, sem retry e sem cancelamento. Upload é o exemplo clássico onde operadores do RxJS resolvem problemas reais.

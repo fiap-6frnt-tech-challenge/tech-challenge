@@ -14,6 +14,11 @@
 
 ---
 
+> **Nota do S0-06 (achado colateral, 2026-09-30)** — [detalhes](../sprint-0-foundation/06-risk-spikes.md#achados-colaterais). O `proxy.ts` falha aberto quando o Auth.js tem erro de configuração.
+>
+> - Sem `AUTH_TRUST_HOST`/`AUTH_URL`, o Auth.js lança `UntrustedHost` e `req.auth` vira `{ message: … }`. Com isso, `!!req.auth` fica `true`, e as páginas privadas abrem para anônimos; as APIs seguem em 401 porque checam `session?.user?.id`.
+> - Isso não acontece na Vercel nem no Docker, mas é defesa em profundidade barata: troque por `const isLoggedIn = Boolean(req.auth?.user?.id);` e cubra o caso no `proxy.test.ts`.
+
 ## Contexto
 
 - Estratégia JWT do NextAuth com `maxAge` de **7 dias** (`auth.config.ts`).
