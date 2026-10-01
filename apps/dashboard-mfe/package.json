@@ -12,11 +12,13 @@
   },
   "dependencies": {
     "@bytebank/api-client": "*",
+    "@bytebank/core": "*",
     "@bytebank/design-system": "*",
     "@bytebank/shared": "*",
     "@bytebank/stores": "*",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^9",

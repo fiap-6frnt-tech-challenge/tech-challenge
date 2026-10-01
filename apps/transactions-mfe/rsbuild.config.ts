@@ -29,6 +29,7 @@ export default defineConfig({
       exposes: {
         './TransactionsPage': './src/TransactionsPage.tsx',
         './AccountOverview': './src/components/AccountOverview.tsx',
+        './SpikeEmitter': './src/spike/SpikeEmitter.tsx',
       },
       shared: {
         react: { singleton: true, requiredVersion: false },
@@ -37,6 +38,8 @@ export default defineConfig({
         '@bytebank/shared': { singleton: true, requiredVersion: false },
         '@bytebank/stores': { singleton: true, requiredVersion: false },
         '@bytebank/api-client': { singleton: true, requiredVersion: false },
+        rxjs: { singleton: true, requiredVersion: false },
+        '@bytebank/core': { singleton: true, requiredVersion: false },
       },
     }),
   ],

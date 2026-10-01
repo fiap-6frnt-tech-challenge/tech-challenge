@@ -6,6 +6,8 @@ import * as DS from '@bytebank/design-system';
 import * as Shared from '@bytebank/shared';
 import * as Stores from '@bytebank/stores';
 import * as ApiClient from '@bytebank/api-client';
+import * as Rx from 'rxjs';
+import * as Core from '@bytebank/core';
 import { createInstance, getInstance } from '@module-federation/enhanced/runtime';
 
 type MFInstance = ReturnType<typeof createInstance>;
@@ -81,10 +83,38 @@ function ensureInstance(): MFInstance {
           lib: () => ApiClient,
           shareConfig: { singleton: true, requiredVersion: '*' },
         },
+        rxjs: {
+          version: '7.8.2',
+          scope: 'default',
+          lib: () => Rx,
+          shareConfig: { singleton: true, requiredVersion: '^7.8.0' },
+        },
+        '@bytebank/core': {
+          version: '0.1.0',
+          scope: 'default',
+          lib: () => Core,
+          shareConfig: { singleton: true, requiredVersion: '*' },
+        },
       },
     });
 
   return mfInstance;
+}
+
+function shouldPreload() {
+  const connection = (
+    navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
+  ).connection;
+  return !connection?.saveData && !['slow-2g', '2g'].includes(connection?.effectiveType ?? '');
+}
+
+export async function preloadTransactionsPage() {
+  if (!shouldPreload()) return;
+  performance.mark('spikeB:preload:start');
+  await ensureInstance().preloadRemote([
+    { nameOrAlias: 'transactions', exposes: ['TransactionsPage'], resourceCategory: 'sync' },
+  ]);
+  performance.mark('spikeB:preload:end');
 }
 
 export async function loadDashboard() {
@@ -95,11 +125,27 @@ export async function loadDashboard() {
 }
 
 export async function loadTransactionsPage() {
+  performance.mark('spikeB:load:start');
   const mf = ensureInstance();
   const mod = await mf.loadRemote<{ default: React.ComponentType }>(
     'transactions/TransactionsPage'
   );
+  performance.mark('spikeB:load:end');
   if (!mod) throw new Error('Failed to load remote transactions/TransactionsPage');
+  return mod.default;
+}
+
+export async function loadSpikeEmitter() {
+  const mf = ensureInstance();
+  const mod = await mf.loadRemote<{ default: React.ComponentType }>('transactions/SpikeEmitter');
+  if (!mod) throw new Error('Failed to load remote transactions/SpikeEmitter');
+  return mod.default;
+}
+
+export async function loadSpikeReceiver() {
+  const mf = ensureInstance();
+  const mod = await mf.loadRemote<{ default: React.ComponentType }>('dashboard/SpikeReceiver');
+  if (!mod) throw new Error('Failed to load remote dashboard/SpikeReceiver');
   return mod.default;
 }
 
