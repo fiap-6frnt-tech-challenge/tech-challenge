@@ -72,14 +72,14 @@ Impacto: qualquer usuário logado que obtenha o `id` de uma transação alheia (
    - Usuário B → 404 em `GET`, `PATCH` e `DELETE` da transação de A
    - `PATCH` de A com `userId: 'B'` não muda o dono
    - Sem sessão → 401
-4. **Hotfix em produção:** PR `hotfix/idor-transactions` → `main` com os passos 1–3. Depois do merge e do deploy, mesclar a `main` na `phase-4`.
+4. **Hotfix em produção:** [PR #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167), branch `hotfix/s0-07-idor-validation` → `main`, com as correções de IDOR e validação. Depois do merge e do deploy, sincronizar a `main` com a `phase-4`.
 
 ## Validação
 
 - [x] Testes novos verdes; testes de rota existentes verdes
-- [x] Em produção, com 2 contas: `curl` autenticado como B em `/api/transactions/<id-de-A>` → 404 (GET/PATCH/DELETE)
-- [x] `PATCH` com `userId` não altera o dono (conferir no banco)
-- [] Hotfix mergeado na `main`, deploy concluído, `main` mesclada na `phase-4`
+- [ ] Em produção, com 2 contas: `curl` autenticado como B em `/api/transactions/<id-de-A>` → 404 (GET/PATCH/DELETE). No [smoke de 2026-10-03](./07-gate.md#execução--2026-10-03), retornou 200/200/204.
+- [ ] `PATCH` com `userId` não altera o dono em produção (retestar após o hotfix; o smoke retornou 200)
+- [ ] Hotfix mergeado na `main`, deploy concluído e `main` sincronizada com a `phase-4` ([PR #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167) aberto)
 
 ## Gotchas
 

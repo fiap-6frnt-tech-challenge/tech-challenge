@@ -26,10 +26,10 @@
 | 03  | ✅     | Validação no servidor + anti mass assignment      | Dev 1 | 1 dia        | P0   | ⬅ 02            | [03-server-validation.md](./03-server-validation.md) |
 | 04  | ✅     | Baseline de performance (Lighthouse, bundle, API) | Dev 3 | 1 dia        | P0   | ⬅ 01            | [04-perf-baseline.md](./04-perf-baseline.md)         |
 | 05  | ✅     | ADRs da arquitetura alvo                          | Dev 2 | 1 dia        | P0   | ✅ dia 1        | [05-architecture-adrs.md](./05-architecture-adrs.md) |
-| 06  | 🟢     | Spikes de risco (um por dev)                      | Todos | 0.5 dia cada | P0   | ⬅ 05 (rascunho) | [06-risk-spikes.md](./06-risk-spikes.md)             |
-| 07  | ⏳     | **Gate** + smoke                                  | Todos | 0.5 dia      | P0   | ⬅ tudo          | [07-gate.md](./07-gate.md)                           |
+| 06  | ✅     | Spikes de risco (um por dev)                      | Todos | 0.5 dia cada | P0   | ⬅ 05 (rascunho) | [06-risk-spikes.md](./06-risk-spikes.md)             |
+| 07  | ❌     | **Gate** + smoke                                  | Todos | 0.5 dia      | P0   | ⬅ tudo          | [07-gate.md](./07-gate.md)                           |
 
-**Legenda:** ✅ mergeada · 🟢 implementada (aguarda merge) · ⏳ pendente
+**Legenda:** ✅ mergeada · ❌ executada e reprovada · ⏳ pendente
 
 ---
 
@@ -47,8 +47,9 @@ todas ──────────────→ 07 (gate)
 ## Gate — dia 5
 
 - [x] IDOR corrigido na `phase-4`
+- [ ] IDOR e validação estrita ativos em produção — [smoke de 2026-10-03](./07-gate.md#execução--2026-10-03) falhou; [hotfix #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167) aguarda revisão para `main`
 - [x] Baseline registrada em [`docs/phase-4/perf/baseline.md`](../perf/baseline.md)
-- [x] ADR-001 a ADR-005 aprovados pelo time
+- [ ] ADR-001 a ADR-005 aprovados pelo time (mergeados, mas ainda com status `proposto`)
 - [x] Spikes A, B e C com resultado registrado (ou mitigação escolhida) — [06-risk-spikes.md#resultado](./06-risk-spikes.md#resultado)
 
 ---
