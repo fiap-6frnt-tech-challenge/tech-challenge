@@ -28,5 +28,5 @@ export interface Account {
   transactions: Transaction[];
 }
 
-export type NewTransaction = Omit<Transaction, 'id'>;
+export type NewTransaction = Omit<Transaction, 'id' | 'userId' | 'attachments'>;
 export type UpdateTransaction = Partial<NewTransaction>;

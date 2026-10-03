@@ -1,5 +1,11 @@
 import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm';
-import type { Attachment, Transaction, NewTransaction, TransactionType } from '@bytebank/shared';
+import type {
+  Attachment,
+  Transaction,
+  NewTransaction,
+  UpdateTransaction,
+  TransactionType,
+} from '@bytebank/shared';
 import { db } from '@/db';
 import { attachments, transactions, type AttachmentRow, type TransactionRow } from '@/db/schema';
 
@@ -31,16 +37,6 @@ function toTransaction(
     description: row.description,
     attachments: row.attachments?.map(toAttachment) ?? fallbackAttachments,
   };
-}
-
-export async function getAll(): Promise<Transaction[]> {
-  const result = await db.query.transactions.findMany({
-    orderBy: [desc(transactions.date)],
-    with: {
-      attachments: true,
-    },
-  });
-  return result.map((row) => toTransaction(row));
 }
 
 export async function getAllByUser(
@@ -119,9 +115,9 @@ export async function listTransactions(params: ListParams): Promise<PaginatedRes
   };
 }
 
-export async function getById(id: string): Promise<Transaction | null> {
+export async function getById(id: string, userId: string): Promise<Transaction | null> {
   const row = await db.query.transactions.findFirst({
-    where: eq(transactions.id, id),
+    where: and(eq(transactions.id, id), eq(transactions.userId, userId)),
     with: {
       attachments: true,
     },
@@ -129,42 +125,29 @@ export async function getById(id: string): Promise<Transaction | null> {
   return row ? toTransaction(row) : null;
 }
 
-export async function create(data: NewTransaction): Promise<Transaction> {
-  return db.transaction(async (tx) => {
-    const id = crypto.randomUUID();
-    const [row] = await tx
-      .insert(transactions)
-      .values({
-        id,
-        userId: data.userId,
-        category: data.category,
-        type: data.type,
-        amount: data.amount,
-        date: data.date,
-        description: data.description,
-      })
-      .returning();
+export async function create(data: NewTransaction & { userId: string }): Promise<Transaction> {
+  const [row] = await db
+    .insert(transactions)
+    .values({
+      id: crypto.randomUUID(),
+      userId: data.userId,
+      category: data.category,
+      type: data.type,
+      amount: data.amount,
+      date: data.date,
+      description: data.description,
+    })
+    .returning();
 
-    if (data.attachments?.length) {
-      await tx.insert(attachments).values(
-        data.attachments.map((attachment) => ({
-          ...attachment,
-          id: attachment.id || crypto.randomUUID(),
-          transactionId: id,
-        }))
-      );
-    }
-
-    return toTransaction(row, data.attachments ?? []);
-  });
+  return toTransaction(row);
 }
 
 export async function update(
   id: string,
-  data: Partial<NewTransaction>
+  userId: string,
+  data: UpdateTransaction
 ): Promise<Transaction | null> {
   const patch: Partial<TransactionRow> = { updatedAt: new Date() };
-  if (data.userId !== undefined) patch.userId = data.userId;
   if (data.category !== undefined) patch.category = data.category;
   if (data.type !== undefined) patch.type = data.type;
   if (data.amount !== undefined) patch.amount = data.amount;
@@ -175,23 +158,9 @@ export async function update(
     const [row] = await tx
       .update(transactions)
       .set(patch)
-      .where(eq(transactions.id, id))
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
     if (!row) return null;
-
-    if (data.attachments !== undefined) {
-      await tx.delete(attachments).where(eq(attachments.transactionId, id));
-      if (data.attachments.length) {
-        await tx.insert(attachments).values(
-          data.attachments.map((attachment) => ({
-            ...attachment,
-            id: attachment.id || crypto.randomUUID(),
-            transactionId: id,
-          }))
-        );
-      }
-      return toTransaction(row, data.attachments);
-    }
 
     const existingAttachments = await tx
       .select()
@@ -202,8 +171,11 @@ export async function update(
   });
 }
 
-export async function remove(id: string): Promise<boolean> {
-  const rows = await db.delete(transactions).where(eq(transactions.id, id)).returning();
+export async function remove(id: string, userId: string): Promise<boolean> {
+  const rows = await db
+    .delete(transactions)
+    .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+    .returning();
   return rows.length > 0;
 }
 

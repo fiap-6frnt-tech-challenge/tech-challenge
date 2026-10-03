@@ -47,6 +47,7 @@ export function TransactionFilters({
         onValueChange={(q) => onChange({ ...value, q })}
         placeholder="Buscar por descrição..."
         debounceMs={300}
+        maxLength={100}
       />
       <div
         className={`bg-background flex flex-col gap-md pb-lg ${isFilterVisible ? 'block filter-panel-in [animation:filter-panel-in_0.2s_ease-out]' : 'hidden'}`}

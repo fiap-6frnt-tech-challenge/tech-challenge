@@ -5,4 +5,5 @@ export interface ISearchInput {
   debounceMs?: number;
   disabled?: boolean;
   ariaLabel?: string;
+  maxLength?: number;
 }
