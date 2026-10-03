@@ -1,54 +1,13 @@
 import { useMemo } from 'react';
 import { DashboardWidget, KpiCard, BarChart, LineChart, PieChart } from '@bytebank/design-system';
 import { useDashboardSummary } from '@bytebank/api-client';
+import { computeKpiDeltas, topCategoriesWithOthers } from '@bytebank/core';
 
 export default function Dashboard() {
   const { data, isLoading, isError, refetch } = useDashboardSummary();
 
-  const deltas = useMemo(() => {
-    if (!data) return { income: undefined, expense: undefined, savings: undefined };
-
-    const toPercent = (delta: number, previous: number) =>
-      previous > 0 ? delta / previous : undefined;
-
-    const prevIncome = data.incomeMonth - data.deltaIncome;
-    const prevExpense = data.expenseMonth - data.deltaExpense;
-    const prevSavings = prevIncome - prevExpense;
-    const deltaSavings = data.deltaIncome - data.deltaExpense;
-
-    return {
-      income: toPercent(data.deltaIncome, prevIncome),
-      expense: toPercent(data.deltaExpense, prevExpense),
-      savings: toPercent(deltaSavings, prevSavings),
-    };
-  }, [data]);
-
-  const processedPieData = useMemo(() => {
-    if (!data?.byCategory || data.byCategory.length === 0) return [];
-    const sorted = [...data.byCategory].sort((a, b) => b.total - a.total);
-    if (sorted.length <= 5) {
-      return sorted.map((c) => ({
-        label: c.category,
-        value: c.total,
-      }));
-    }
-    const top5 = sorted.slice(0, 5);
-    const others = sorted.slice(5);
-    const othersTotal = others.reduce((acc, c) => acc + c.total, 0);
-
-    const result = top5.map((c) => ({
-      label: c.category,
-      value: c.total,
-    }));
-
-    if (othersTotal > 0) {
-      result.push({
-        label: 'Outros',
-        value: othersTotal,
-      });
-    }
-    return result;
-  }, [data]);
+  const deltas = useMemo(() => computeKpiDeltas(data), [data]);
+  const processedPieData = useMemo(() => topCategoriesWithOthers(data?.byCategory ?? []), [data]);
 
   return (
     <div className="flex flex-col gap-lg">

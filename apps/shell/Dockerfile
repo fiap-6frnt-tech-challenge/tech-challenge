@@ -6,6 +6,7 @@ COPY apps/shell/package.json apps/shell/
 COPY apps/dashboard-mfe/package.json apps/dashboard-mfe/
 COPY apps/transactions-mfe/package.json apps/transactions-mfe/
 COPY packages/shared/package.json packages/shared/
+COPY packages/core/package.json packages/core/
 COPY packages/design-system/package.json packages/design-system/
 COPY packages/api-client/package.json packages/api-client/
 COPY packages/stores/package.json packages/stores/

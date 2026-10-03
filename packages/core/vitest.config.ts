@@ -7,5 +7,6 @@ export default defineConfig({
     name: 'core',
     environment: 'node',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    coverage: { include: ['src/**/*.ts'], exclude: ['src/**/*.{test,spec}.ts'] },
   },
 });

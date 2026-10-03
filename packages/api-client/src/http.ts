@@ -1,3 +1,4 @@
+import { toSearchParams, type TransactionType } from '@bytebank/core';
 import type {
   Attachment,
   DashboardSummary,
@@ -23,11 +24,11 @@ export interface PaginatedResponse {
 export interface GetPaginatedParams {
   page: number;
   perPage?: number;
-  type?: string;
+  type?: TransactionType | 'all';
   dateFrom?: string;
   dateTo?: string;
-  sortBy?: string;
-  sortOrder?: string;
+  sortBy?: 'date' | 'amount';
+  sortOrder?: 'asc' | 'desc';
   q?: string;
   amount_gte?: number;
   amount_lte?: number;
@@ -100,20 +101,10 @@ export const TransactionService = {
     amount_lte,
     category,
   }: GetPaginatedParams): Promise<PaginatedResponse> {
-    const query = new URLSearchParams();
-    query.set('_page', String(page));
-    query.set('_per_page', String(perPage));
-
-    if (type && type !== 'all') query.set('type', type);
-    if (dateFrom) query.set('date_gte', dateFrom);
-    if (dateTo) query.set('date_lte', dateTo);
-    if (q) query.set('q', q);
-    if (amount_gte !== undefined) query.set('amount_gte', String(amount_gte));
-    if (amount_lte !== undefined) query.set('amount_lte', String(amount_lte));
-    category?.forEach((c) => query.append('category', c));
-
-    const sortPrefix = sortOrder === 'asc' ? '' : '-';
-    query.set('_sort', `${sortPrefix}${sortBy}`);
+    const query = toSearchParams(
+      { type, dateFrom, dateTo, sortBy, sortOrder, q, amount_gte, amount_lte, category },
+      { page, perPage }
+    );
 
     const res = await fetch(`${apiBaseUrl}/transactions?${query.toString()}`);
     if (!res.ok) throw new Error('Falha ao buscar transações');

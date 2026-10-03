@@ -53,6 +53,7 @@ storybook-static
 
 # Build outputs
 **/dist
+**/dist-types
 **/storybook-static
 **/.next
 **/coverage

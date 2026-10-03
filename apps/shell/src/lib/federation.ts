@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as DS from '@bytebank/design-system';
 import * as Shared from '@bytebank/shared';
+import * as Core from '@bytebank/core';
 import * as Stores from '@bytebank/stores';
 import * as ApiClient from '@bytebank/api-client';
 import { createInstance, getInstance } from '@module-federation/enhanced/runtime';
@@ -61,6 +62,12 @@ function ensureInstance(): MFInstance {
           version: '0.1.0',
           scope: 'default',
           lib: () => DS,
+          shareConfig: { singleton: true, requiredVersion: '*' },
+        },
+        '@bytebank/core': {
+          version: '0.1.0',
+          scope: 'default',
+          lib: () => Core,
           shareConfig: { singleton: true, requiredVersion: '*' },
         },
         '@bytebank/shared': {

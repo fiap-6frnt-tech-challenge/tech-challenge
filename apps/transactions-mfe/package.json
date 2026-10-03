@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@bytebank/api-client": "*",
+    "@bytebank/core": "*",
     "@bytebank/design-system": "*",
     "@bytebank/shared": "*",
     "@bytebank/stores": "*",

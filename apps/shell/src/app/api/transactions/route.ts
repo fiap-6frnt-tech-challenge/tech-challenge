@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createTransactionSchema, listTransactionsQuerySchema } from '@bytebank/shared';
+import { createTransactionSchema } from '@bytebank/shared';
+import { fromSearchParams } from '@bytebank/core';
 import { auth } from '@/auth';
 import * as store from './store';
 import { JsonRequestError, readJson } from '../read-json';
@@ -14,38 +15,37 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
 
-  const rawQuery: Record<string, unknown> = Object.fromEntries(searchParams);
-  if (searchParams.has('category')) rawQuery.category = searchParams.getAll('category');
-  const parsed = listTransactionsQuerySchema.safeParse(rawQuery);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Dados inválidos', issues: z.flattenError(parsed.error) },
-      { status: 422 }
-    );
+  let decoded: ReturnType<typeof fromSearchParams>;
+  try {
+    decoded = fromSearchParams(searchParams);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Dados inválidos', issues: z.flattenError(error) },
+        { status: 422 }
+      );
+    }
+    throw error;
   }
 
   if (!searchParams.has('_page')) {
     return NextResponse.json(await store.getAllByUser(userId));
   }
 
-  const query = parsed.data;
-  const sort = query._sort;
-  const sortOrder = sort.startsWith('-') ? 'desc' : 'asc';
-  const sortBy = sort.endsWith('amount') ? 'amount' : 'date';
-
+  const { filter, page } = decoded;
   const result = await store.listTransactions({
     userId,
-    page: query._page,
-    perPage: query._per_page,
-    type: query.type,
-    dateFrom: query.date_gte,
-    dateTo: query.date_lte,
-    q: query.q,
-    category: query.category,
-    amount_gte: query.amount_gte,
-    amount_lte: query.amount_lte,
-    sortBy,
-    sortOrder,
+    page: page.page,
+    perPage: page.perPage,
+    type: filter.type === 'all' ? undefined : filter.type,
+    dateFrom: filter.dateFrom || undefined,
+    dateTo: filter.dateTo || undefined,
+    q: filter.q || undefined,
+    category: filter.category,
+    amount_gte: filter.amount_gte,
+    amount_lte: filter.amount_lte,
+    sortBy: filter.sortBy,
+    sortOrder: filter.sortOrder,
   });
 
   return NextResponse.json(result);
