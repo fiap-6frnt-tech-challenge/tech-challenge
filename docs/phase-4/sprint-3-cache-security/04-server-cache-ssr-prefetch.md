@@ -14,6 +14,15 @@
 
 ---
 
+> **Notas do Spike B (S0-06, 2026-09-30)** — [evidências](../sprint-0-foundation/06-risk-spikes.md#spike-b--evidências-e-aprendizados). A Parte B foi validada na home: `auth()` → `new QueryClient()` por requisição → `prefetchQuery` com `transactionKeys.list({})` → `HydrationBoundary` em volta dos remotes. O HTML já trouxe os dados, e o `AccountOverview` (remote) montou **sem** `GET /api/transactions`. Pontos para a implementação:
+>
+> - `HydrationBoundary`, `dehydrate` e `QueryClient` importam no Server Component, porque os módulos têm `'use client'`. O barrel do `@bytebank/api-client` também importa, mas instancia o `queryClient` singleton no servidor: nunca use esse objeto lá (gotcha 1).
+> - O DTO precisa ter só tipos JSON, como hoje (`doublePrecision` → `number`, `text` → `string`). Um `Date` (ex.: `createdAt`) seria serializado de um jeito no SSR e de outro na API.
+> - **O prefetch do resumo depende do gotcha 2.** `getDefaultSummaryRange()` faz a conta de mês no fuso local e depois usa `toISOString()` (UTC), então o `to` vira o dia seguinte entre 21h e 24h em Brasília. No servidor (UTC) a chave divergiria, e o remote refaria a busca.
+> - **Página com prefetch fica dinâmica**, e a navegação SPA passa a esperar o roundtrip RSC. Em Slow 4G, o clique → `/transactions` foi de ~360 ms para ~870 ms quando a rota ficou dinâmica. Vale testar um `loading.tsx` por rota, para o skeleton aparecer já no clique (não testado).
+> - O spike não avaliou `unstable_cache` nem `cacheComponents`, então a decisão da Parte A continua aberta.
+> - O `scripts/spikes/s0-06/spike-b-check.mjs hydration`, no branch do spike, automatiza a checagem "sem requisição de dados depois do remote".
+
 ## Contexto
 
 O gargalo que sobrou da Fase 2 é o LCP mobile das páginas federadas: HTML vazio → JS do shell → runtime do MF → remote → mount → **fetch dos dados** → paint. O preload (S2-08) encurta a parte dos remotes; esta task tira o fetch da cascata (os dados chegam junto com o HTML) e evita recalcular o resumo a cada requisição.

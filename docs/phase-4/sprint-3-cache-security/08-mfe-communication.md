@@ -14,6 +14,11 @@
 
 ---
 
+> **Notas do S0-06 (2026-09-30)** — evidências do [Spike A](../sprint-0-foundation/06-risk-spikes.md#spike-a--evidências-e-aprendizados) e do [Spike B](../sprint-0-foundation/06-risk-spikes.md#spike-b--evidências-e-aprendizados).
+>
+> - **Parte B:** o barramento singleton foi validado no Spike A. Em build de produção, um evento publicado no transactions-mfe chegou ao dashboard-mfe, sem precisar do fallback com `CustomEvent`.
+> - **Parte A, `prefetch`:** em rota dinâmica sem `loading.tsx`, o `router.prefetch` não traz o RSC da página. No Spike B, o clique em `/transactions` dinâmica ainda esperou ~400 ms de roundtrip antes de o remote começar a carregar. O preload do remote (S2-08) só aparece no tempo total quando o carregamento passa de ~300 ms.
+
 ## Contexto
 
 - No `AccountOverview.tsx` (transactions-mfe), "Todas as transações" é um `<a href="/transactions">` com um `<Button>` dentro: **recarrega a página inteira** (baixa e executa o shell de novo) e aninha elementos interativos (problema de acessibilidade). O MFE não pode usar `next/navigation` (alias para `false` no rsbuild).

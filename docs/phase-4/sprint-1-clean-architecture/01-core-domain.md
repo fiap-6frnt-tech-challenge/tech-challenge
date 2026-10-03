@@ -14,6 +14,12 @@
 
 ---
 
+> **Notas do Spike A (S0-06, 2026-09-30)** — [evidências](../sprint-0-foundation/06-risk-spikes.md#spike-a--evidências-e-aprendizados). O [checklist de pacote novo](#checklist-de-pacote-novo) foi validado, em dev e em build de produção, com um `@bytebank/core` provisório. Ajustes:
+>
+> - No `lib/federation.ts`, use `lib: () => Core` **síncrono** e a `version` igual à do `package.json` do core (`'0.1.0'`). O runtime só mantém o shell como provedor se a entrada dele estiver carregada. Com `get: () => import(...)`, um remote pode vencer o desempate e o shell ficaria com outra instância.
+> - Declare `"@bytebank/core": "*"` nas `dependencies` do shell e dos dois MFEs e rode `npm install`. Isso não está no checklist, e o grafo do turbo (e o `--affected` do CI) depende dessa declaração.
+> - O `packages/core` do branch `spike/s0-06-risk-spikes` é descartável: ele só tem o barramento do spike. Crie o pacote do zero.
+
 ## Contexto
 
 Hoje o domínio está espalhado:

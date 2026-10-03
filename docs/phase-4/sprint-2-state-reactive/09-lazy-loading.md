@@ -14,6 +14,8 @@
 
 ---
 
+> **Nota do Spike A (S0-06, 2026-09-30)** — [evidências](../sprint-0-foundation/06-risk-spikes.md#spike-a--evidências-e-aprendizados). Depois do S2-01, o chunk da federação também carrega o rxjs inteiro: +66 kB raw / ~18 kB gzip, porque o namespace passado ao `shared` não sofre tree-shaking. Leve isso em conta ao anotar "chunk da federação menor". O rxjs não pode sair do `shared` com `import()`, porque o `lib` precisa ser síncrono; o custo fica restrito às páginas federadas, que já carregam esse chunk.
+
 ## Contexto
 
 `apps/shell/src/lib/federation.ts` faz `import * as DS from '@bytebank/design-system'` para prover o DS como singleton aos remotes. Só que o barrel do DS exporta `BarChart`, `LineChart`, `PieChart`, `ChartTooltip` e `AccessibleChartData` — ou seja, **recharts** (~138 KB gzip na medição da Fase 2). Resultado: toda página federada, inclusive `/transactions` (que não tem gráfico), baixa e avalia o recharts. O zod (~74 KB gzip) aparece no mesmo caminho via `* as Shared`.
