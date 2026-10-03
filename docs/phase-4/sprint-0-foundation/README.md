@@ -26,8 +26,8 @@
 | 03  | ✅     | Validação no servidor + anti mass assignment      | Dev 1 | 1 dia        | P0   | ⬅ 02            | [03-server-validation.md](./03-server-validation.md) |
 | 04  | ✅     | Baseline de performance (Lighthouse, bundle, API) | Dev 3 | 1 dia        | P0   | ⬅ 01            | [04-perf-baseline.md](./04-perf-baseline.md)         |
 | 05  | ✅     | ADRs da arquitetura alvo                          | Dev 2 | 1 dia        | P0   | ✅ dia 1        | [05-architecture-adrs.md](./05-architecture-adrs.md) |
-| 06  | 🟢     | Spikes de risco (um por dev)                      | Todos | 0.5 dia cada | P0   | ⬅ 05 (rascunho) | [06-risk-spikes.md](./06-risk-spikes.md)             |
-| 07  | ⏳     | **Gate** + smoke                                  | Todos | 0.5 dia      | P0   | ⬅ tudo          | [07-gate.md](./07-gate.md)                           |
+| 06  | ✅     | Spikes de risco (um por dev)                      | Todos | 0.5 dia cada | P0   | ⬅ 05 (rascunho) | [06-risk-spikes.md](./06-risk-spikes.md)             |
+| 07  | ✅     | **Gate** + smoke                                  | Todos | 0.5 dia      | P0   | ⬅ tudo          | [07-gate.md](./07-gate.md)                           |
 
 **Legenda:** ✅ mergeada · 🟢 implementada (aguarda merge) · ⏳ pendente
 

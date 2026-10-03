@@ -7,7 +7,7 @@
 | **Duração**     | 1 dia                                                                                                  |
 | **Prioridade**  | P1 (cortável: reduzir à hierarquia do Storybook, sem mover pastas)                                     |
 | **Branch**      | `dev3-perf/ds-atomic-design`                                                                           |
-| **Depende de**  | —                                                                                                      |
+| **Depende de**  | — (a regra de lint do passo 4 é entregue aqui, sem esperar o S1-08)                                    |
 | **Desbloqueia** | S2-09 (subpath de gráficos)                                                                            |
 | **Requisito**   | Arquitetura modular                                                                                    |
 | **Embasamento** | Princípios e Padrões — Aula 5 (Arquiteturas CSS: Atomic Design, BEM, CSS Modules, Tailwind, CSS-in-JS) |
@@ -35,14 +35,22 @@ O DS tem cerca de 38 componentes numa pasta plana (`packages/design-system/src/c
    - Atomic Design e as regras de dependência entre camadas
    - tokens (tema do Tailwind v4 em `styles/tokens.css`)
    - por que utility-first (Tailwind) e não BEM, CSS Modules ou CSS-in-JS: tabela curta com o conteúdo da aula (escopo, custo de runtime, consistência com tokens, tamanho do CSS)
-4. Regra de lint (Task 08): átomo não importa molécula nem organismo; molécula não importa organismo.
+4. Regra de lint: átomo não importa molécula nem organismo; molécula não importa organismo. Entregue aqui, sem esperar a Task 08 (que pode incorporá-la ao grafo de fronteiras).
+
+## Entrega
+
+- **Classificação final:** igual à proposta, exceto pelo `IconButton`, que não é uma pasta: vive em `atoms/Button` (story `Atoms/IconButton`). O grafo de imports real já respeitava as camadas, então nenhum componente mudou de camada. Sem `src/templates/`: templates e páginas vivem no shell e nos MFEs, como documentado no MDX.
+- **Barrels:** `src/index.ts` → `./atoms`, `./molecules`, `./organisms`; cada camada tem seu `index.ts`. Só os imports relativos entre camadas mudaram (`'../Button'` → `'../../atoms/Button'`).
+- **Lint:** `packages/design-system/eslint.layers.mjs` (`no-restricted-imports`), aplicado pelo `eslint.config.mjs` do pacote (`turbo run lint`) e pelo da raiz (pre-commit via `lint-staged`).
+- **Tailwind:** `@source` do `globals.css` aponta para `atoms/`, `molecules/` e `organisms/`.
+- **Storybook:** glob de stories passa a ser `../src/**/*.stories.*`; página `stories/architecture.mdx` ("Arquitetura do Design System"). Tabelas em JSX, porque o MDX do Storybook não tem `remark-gfm`.
 
 ## Validação
 
-- [ ] Storybook sobe com a nova hierarquia e a página de arquitetura
-- [ ] Testes de stories (`vitest --project storybook`) verdes
-- [ ] Apps compilam sem alterar nenhum import
-- [ ] Novos baselines do Chromatic aceitos
+- [x] Storybook sobe com a nova hierarquia e a página de arquitetura (`build-storybook`: Arquitetura, Foundations, Atoms, Molecules, Organisms)
+- [x] Testes de stories (`vitest --project storybook`) verdes: 200/200
+- [x] Apps compilam sem alterar nenhum import: shell, dashboard-mfe e transactions-mfe; classes exclusivas do DS presentes no CSS dos três
+- [x] Novos baselines do Chromatic aceitos (no PR)
 
 ## Gotchas
 
