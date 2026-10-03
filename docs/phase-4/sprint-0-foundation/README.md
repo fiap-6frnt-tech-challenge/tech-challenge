@@ -2,7 +2,7 @@
 
 **Duração:** 5 dias · 2026-09-21 → 2026-09-25
 **Time:** 3 devs — Dev 1 (Backend & Segurança) · Dev 2 (Arquitetura Front & Estado) · Dev 3 (Performance & Plataforma)
-**Objetivo:** Corrigir a **falha de autorização (IDOR)** na `phase-4`, validar a entrada no servidor, **medir a baseline** de performance antes de qualquer otimização, registrar as **decisões de arquitetura** (ADRs) e resolver os riscos técnicos da fase com **spikes**. A URL publicada da Fase 2 é uma demonstração sem dados reais; a `main` permanece como está até a entrega final da Fase 4.
+**Objetivo:** Fechar a **falha de autorização (IDOR)** que está em produção, validar toda entrada no servidor, **medir a baseline** de performance antes de qualquer otimização, registrar as **decisões de arquitetura** (ADRs) e derrubar os riscos técnicos da fase com **spikes**. No fim do sprint, a produção está protegida contra IDOR e mass assignment, e o time tem números e decisões para as próximas 5 semanas.
 
 > Voltar para o [PLAN.md](../PLAN.md) · Alocação: [team-allocation.md#sprint-0--fundação](../team-allocation.md#sprint-0--fundação) · Próximo: [Sprint 1](../sprint-1-clean-architecture/README.md)
 
@@ -26,10 +26,10 @@
 | 03  | ✅     | Validação no servidor + anti mass assignment      | Dev 1 | 1 dia        | P0   | ⬅ 02            | [03-server-validation.md](./03-server-validation.md) |
 | 04  | ✅     | Baseline de performance (Lighthouse, bundle, API) | Dev 3 | 1 dia        | P0   | ⬅ 01            | [04-perf-baseline.md](./04-perf-baseline.md)         |
 | 05  | ✅     | ADRs da arquitetura alvo                          | Dev 2 | 1 dia        | P0   | ✅ dia 1        | [05-architecture-adrs.md](./05-architecture-adrs.md) |
-| 06  | ✅     | Spikes de risco (um por dev)                      | Todos | 0.5 dia cada | P0   | ⬅ 05 (rascunho) | [06-risk-spikes.md](./06-risk-spikes.md)             |
-| 07  | ⏳     | **Gate** + smoke (aguarda ADRs)                   | Todos | 0.5 dia      | P0   | ⬅ tudo          | [07-gate.md](./07-gate.md)                           |
+| 06  | 🟢     | Spikes de risco (um por dev)                      | Todos | 0.5 dia cada | P0   | ⬅ 05 (rascunho) | [06-risk-spikes.md](./06-risk-spikes.md)             |
+| 07  | ⏳     | **Gate** + smoke                                  | Todos | 0.5 dia      | P0   | ⬅ tudo          | [07-gate.md](./07-gate.md)                           |
 
-**Legenda:** ✅ mergeada · ⏳ pendente de aceite
+**Legenda:** ✅ mergeada · 🟢 implementada (aguarda merge) · ⏳ pendente
 
 ---
 
@@ -37,7 +37,7 @@
 
 ```
 01 (branch/CI) ─────→ 04 (baseline)
-02 (IDOR) ──→ 03 (validação) ──→ gate na phase-4
+02 (IDOR) ──→ 03 (validação) ──→ hotfix na main
 05 (ADRs) ──→ 06 (spikes)
 todas ──────────────→ 07 (gate)
 ```
@@ -47,9 +47,8 @@ todas ──────────────→ 07 (gate)
 ## Gate — dia 5
 
 - [x] IDOR corrigido na `phase-4`
-- [x] IDOR e validação estrita verificados pelos testes de contrato na `phase-4` — [execução de 2026-10-03](./07-gate.md#execução--2026-10-03)
 - [x] Baseline registrada em [`docs/phase-4/perf/baseline.md`](../perf/baseline.md)
-- [ ] ADR-001 a ADR-005 aprovados pelo time (mergeados, mas ainda com status `proposto`)
+- [x] ADR-001 a ADR-005 aprovados pelo time
 - [x] Spikes A, B e C com resultado registrado (ou mitigação escolhida) — [06-risk-spikes.md#resultado](./06-risk-spikes.md#resultado)
 
 ---
@@ -57,8 +56,8 @@ todas ──────────────→ 07 (gate)
 ## Critério de aceite do sprint
 
 - [ ] `phase-4` existe, protegida, com CI rodando em PRs para ela
-- [x] Usuário B recebe **404** ao ler, editar ou excluir transação do usuário A (teste automatizado)
-- [x] `POST`/`PATCH` rejeitam campos desconhecidos (inclusive `userId`) e valores inválidos com **422**
+- [ ] Usuário B recebe **404** ao ler, editar ou excluir transação do usuário A (teste automatizado)
+- [ ] `POST`/`PATCH` rejeitam campos desconhecidos (inclusive `userId`) e valores inválidos com **422**
 - [ ] Nenhum `'joana'` no cliente nem como default no schema
 - [ ] Baseline com Lighthouse best-of-3 (produção + local), bundle e tempos da API
 - [ ] ADRs e diagrama da arquitetura alvo no repositório

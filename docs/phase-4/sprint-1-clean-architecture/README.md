@@ -2,10 +2,7 @@
 
 **Duração:** 9 dias · 2026-09-26 → 2026-10-04
 **Time:** 3 devs — Dev 1 (Backend & Segurança) · Dev 2 (Arquitetura Front & Estado) · Dev 3 (Performance & Plataforma)
-
 **Objetivo:** Separar **domínio, aplicação, infraestrutura e apresentação** no servidor e no front, com a regra de dependência verificada por lint. Tirar regras de negócio de componentes e rotas, acelerar a API (índices, agregação em SQL, endpoint de overview) e organizar o Design System em Atomic Design — **sem mudar o comportamento visível da Fase 2** (strangler + testes de contrato).
-
-> **Nota do gate S0-07 (2026-10-03):** a autorização por dono e a validação estrita passaram nos testes da `phase-4`. A [URL de demonstração da Fase 2](../sprint-0-foundation/07-gate.md#execução--2026-10-03) ainda mostra o comportamento antigo; isso não exige hotfix na `main` nem adia S1-02. O gate completo aguarda apenas o aceite formal de ADR-001 a ADR-005.
 
 > Voltar para o [PLAN.md](../PLAN.md) · Alocação: [team-allocation.md#sprint-1--clean-architecture](../team-allocation.md#sprint-1--clean-architecture) · Anterior: [Sprint 0](../sprint-0-foundation/README.md) · Próximo: [Sprint 2](../sprint-2-state-reactive/README.md)
 

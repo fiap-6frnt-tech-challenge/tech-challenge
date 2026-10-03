@@ -20,7 +20,7 @@
 1. **Cada dev tem 1 track principal**, mas pega tarefas auxiliares de outro track quando fica sem dependências.
 2. **Dependências marcadas explicitamente** (`⬅ depende de`) para o time saber o que sequenciar.
 3. **Core primeiro:** o Dev 2 entrega o esqueleto do `@bytebank/core` (tipos, erros e schemas) até o **dia 2 do Sprint 1**, para desbloquear os casos de uso do Dev 1.
-4. **Segurança na fase:** IDOR e validação (Sprint 0) entram na `phase-4` antes da refatoração; a `main` fica para a entrega final.
+4. **Segurança não espera:** IDOR e validação (Sprint 0) entram antes de qualquer refatoração, com hotfix na `main`.
 5. **Medir antes de otimizar:** nenhuma task de performance começa sem a baseline do S0-04, e toda task de performance registra antes/depois.
 6. **Pair nas fronteiras:** casos de uso ↔ gateways (Dev 1 + Dev 2); CSP ↔ federação (Dev 3 + Dev 2); criptografia ↔ download no front (Dev 1 + Dev 2).
 7. **Smoke no fim de cada sprint**, com o time todo.
@@ -33,18 +33,18 @@
 
 **5 dias · 21/09 → 25/09**
 
-| #   | Tarefa                                                    | Owner | Dias     | Prio | Depende de         |
-| --- | --------------------------------------------------------- | ----- | -------- | ---- | ------------------ |
-| 01  | Branch `phase-4`, CI e templates (PR, ADR)                | Dev 3 | 0.5      | P0   | —                  |
-| 02  | Correção do IDOR em `/api/transactions/[id]` na `phase-4` | Dev 1 | 1        | P0   | —                  |
-| 03  | Validação no servidor + anti mass assignment              | Dev 1 | 1        | P0   | Task 02            |
-| 04  | Baseline de performance (Lighthouse, bundle, API)         | Dev 3 | 1        | P0   | Task 01            |
-| 05  | ADRs da arquitetura alvo (001–005)                        | Dev 2 | 1        | P0   | —                  |
-| 06  | Spikes de risco (um por dev)                              | Todos | 0.5 cada | P0   | Task 05 (rascunho) |
-| 07  | **Gate** + smoke                                          | Todos | 0.5      | P0   | tudo acima         |
+| #   | Tarefa                                                          | Owner | Dias     | Prio | Depende de         |
+| --- | --------------------------------------------------------------- | ----- | -------- | ---- | ------------------ |
+| 01  | Branch `phase-4`, CI e templates (PR, ADR)                      | Dev 3 | 0.5      | P0   | —                  |
+| 02  | Correção do IDOR em `/api/transactions/[id]` + hotfix na `main` | Dev 1 | 1        | P0   | —                  |
+| 03  | Validação no servidor + anti mass assignment                    | Dev 1 | 1        | P0   | Task 02            |
+| 04  | Baseline de performance (Lighthouse, bundle, API)               | Dev 3 | 1        | P0   | Task 01            |
+| 05  | ADRs da arquitetura alvo (001–005)                              | Dev 2 | 1        | P0   | —                  |
+| 06  | Spikes de risco (um por dev)                                    | Todos | 0.5 cada | P0   | Task 05 (rascunho) |
+| 07  | **Gate** + smoke                                                | Todos | 0.5      | P0   | tudo acima         |
 
 **Alocado:** Dev 1 ~3 · Dev 2 ~2 · Dev 3 ~2.5 (de 15 dev-days).
-**Dep crítica:** S0-02 e S0-03 precisam estar integrados e testados na `phase-4` antes de S1-02. O Dev 3 cria a branch na primeira hora para liberar o time.
+**Dep crítica:** o hotfix do IDOR precisa estar em produção até o dia 2. O Dev 3 cria a branch na primeira hora para liberar o time.
 
 ---
 

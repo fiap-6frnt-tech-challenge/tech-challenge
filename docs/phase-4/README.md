@@ -3,7 +3,7 @@
 Planejamento da **Fase 4 do POSTECH Tech Challenge**: evolução do **monorepo web da Fase 2** (Next.js 16 + microfrontends com Module Federation) para uma aplicação **mais escalável, modular, segura e performática**. Os eixos são **Clean Architecture** (domínio / aplicação / infraestrutura / apresentação), **State Management Patterns** avançados, **programação reativa (RxJS)**, **lazy loading + pré-carregamento**, **cache em camadas**, **autenticação segura** e **criptografia de dados sensíveis**.
 
 **Time:** 3 desenvolvedores · **Prazo:** 30/10/2026 · **Janela:** 21/09 → 30/10 (40 dias / 5 sprints)
-**Base:** este repositório (`main` = versão de demonstração da Fase 2, sem dados reais). O trabalho e os PRs da fase acontecem na branch `phase-4`; a `main` recebe a Fase 4 somente na entrega final.
+**Base:** este repositório (`main` = Fase 2 em produção). O trabalho da fase acontece na branch `phase-4`.
 
 ## Índice
 
