@@ -45,7 +45,7 @@ O time escolheu evoluir a **versão web (Fases 1 e 2)**, não o app mobile da Fa
 
 | Área          | O que já temos (Fase 2)                                                                     | Lacuna encontrada                                                                                                                                                                                                                                              | Task                       |
 | ------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| Autorização   | Lista, resumo e anexos filtram por `userId`                                                 | 🔴 `GET/PATCH/DELETE /api/transactions/[id]` não conferem o dono, e o `PATCH` aceita `userId` no corpo (IDOR — OWASP API1:2023). **Está em produção.**                                                                                                         | S0-02                      |
+| Autorização   | Lista, resumo e anexos filtram por `userId`                                                 | `GET/PATCH/DELETE /api/transactions/[id]` não conferem o dono, e o `PATCH` aceita `userId` no corpo (IDOR — OWASP API1:2023). Presente na demonstração da Fase 2; corrigido na `phase-4` pelo S0-02.                                                           | S0-02                      |
 | Validação     | Zod nos formulários                                                                         | `POST`/`PATCH` gravam o corpo sem validar no servidor; o cliente envia `userId: 'joana'`; a coluna `user_id` tem default `'joana'`                                                                                                                             | S0-03                      |
 | Camadas       | `StorageProvider` já é porta + adaptador                                                    | Rotas chamam o Drizzle direto (`store.ts`); regras em componente (`Dashboard.tsx`) e em rota (`summary`); `@bytebank/shared` mistura domínio com utilitários de UI; o parsing de filtros existe duas vezes (cliente e servidor)                                | S1-01 → S1-07              |
 | Estado        | TanStack (servidor) + Redux (UI), exclusão otimista                                         | Sem normalização, seletores memoizados ou efeitos centralizados; fluxo de nova transação controlado por vários booleans; Redux DevTools ligado em produção                                                                                                     | S2-04, S3-06, S3-07        |
@@ -287,9 +287,9 @@ Set                          Out
 
 ## Git workflow — Fase 4
 
-`main` = produção (Fase 2 hoje). `phase-4` = branch de integração da fase, criada a partir da `main` no dia 1. Features partem de `phase-4` e os PRs apontam para `phase-4`. A `main` recebe o merge final no fim do Sprint 4 (tag `v4.0.0`).
+`main` = versão de demonstração da Fase 2, sem dados reais. `phase-4` = branch de integração da fase, criada a partir da `main` no dia 1. Features partem de `phase-4` e os PRs apontam para `phase-4`. A `main` recebe o merge final no fim do Sprint 4 (tag `v4.0.0`).
 
-**Exceção:** a correção do IDOR (S0-02) também vai para a `main` como hotfix, porque a produção está vulnerável. Depois do merge, a `main` é mesclada de volta na `phase-4`.
+**Decisão do S0-07:** S0-02 e S0-03 ficam apenas na `phase-4` até a entrega final. O [PR de hotfix #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167) para `main` foi encerrado sem merge; a URL publicada da Fase 2 serve apenas como demonstração da versão anterior.
 
 ```bash
 git checkout main && git pull
@@ -327,7 +327,7 @@ gh pr create --base phase-4 --title "fix(api): autorização por dono em /api/tr
 | Escopo estoura (40 dias, muitos itens de segurança)      | Prioridades P0/P1/P2; P2 só com folga; P1 cortáveis nesta ordem: DS Atomic (reduzir à hierarquia do Storybook), PII com blind index, FSM, logs                |
 | Medição de performance ruidosa                           | Best-of-3, mesma máquina/rede; produção Vercel como fonte principal                                                                                           |
 | Vídeo de 5 min não comporta tudo                         | Roteiro por requisito da spec (S4-08), gravação por partes, cortes                                                                                            |
-| IDOR já em produção                                      | Hotfix na `main` no S0 (S0-02)                                                                                                                                |
+| IDOR na demonstração da Fase 2                           | Corrigir e testar na `phase-4` no S0-02; repetir o smoke na candidata da Fase 4 antes da entrega final                                                        |
 
 ## Verificação end-to-end (final)
 
@@ -352,7 +352,7 @@ gh pr create --base phase-4 --title "fix(api): autorização por dono em /api/tr
 ## Próximos passos imediatos
 
 - [ ] Criar a branch `phase-4` a partir da `main` e habilitar a CI nela ([S0-01](./sprint-0-foundation/01-branch-ci-setup.md))
-- [ ] Dev 1 começa pelo IDOR ([S0-02](./sprint-0-foundation/02-idor-fix.md)) — prioridade máxima, a produção está vulnerável
+- [x] Dev 1 começa pelo IDOR ([S0-02](./sprint-0-foundation/02-idor-fix.md)) — correção integrada e testada na `phase-4`
 - [x] Dev 3 mede a baseline em produção antes de qualquer otimização ([S0-04](./sprint-0-foundation/04-perf-baseline.md) → [baseline](./perf/baseline.md))
 - [ ] Dev 2 abre os ADRs para revisão do time até o dia 3 ([S0-05](./sprint-0-foundation/05-architecture-adrs.md))
 - [ ] Criar o board (GitHub Projects) com as tasks deste plano

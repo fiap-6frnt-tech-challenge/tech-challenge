@@ -5,7 +5,7 @@
 
 **Objetivo:** Separar **domínio, aplicação, infraestrutura e apresentação** no servidor e no front, com a regra de dependência verificada por lint. Tirar regras de negócio de componentes e rotas, acelerar a API (índices, agregação em SQL, endpoint de overview) e organizar o Design System em Atomic Design — **sem mudar o comportamento visível da Fase 2** (strangler + testes de contrato).
 
-> **Bloqueio do gate S0-07 (2026-10-03):** o [smoke em produção](../sprint-0-foundation/07-gate.md#execução--2026-10-03) reprovou por IDOR e falta de validação estrita. O Dev 1 prioriza o [hotfix #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167); S1-02 fica adiada em pelo menos um dia e só começa depois de deploy e novo smoke aprovados. O Dev 2 pode adiantar a preparação de S1-06 após a interface de S1-01 existir. O gate também aguarda o aceite formal de ADR-001 a ADR-005.
+> **Nota do gate S0-07 (2026-10-03):** a autorização por dono e a validação estrita passaram nos testes da `phase-4`. A [URL de demonstração da Fase 2](../sprint-0-foundation/07-gate.md#execução--2026-10-03) ainda mostra o comportamento antigo; isso não exige hotfix na `main` nem adia S1-02. O gate completo aguarda apenas o aceite formal de ADR-001 a ADR-005.
 
 > Voltar para o [PLAN.md](../PLAN.md) · Alocação: [team-allocation.md#sprint-1--clean-architecture](../team-allocation.md#sprint-1--clean-architecture) · Anterior: [Sprint 0](../sprint-0-foundation/README.md) · Próximo: [Sprint 2](../sprint-2-state-reactive/README.md)
 

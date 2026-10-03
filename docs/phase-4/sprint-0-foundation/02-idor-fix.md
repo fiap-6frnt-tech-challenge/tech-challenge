@@ -5,8 +5,8 @@
 | **Sprint**      | [Sprint 0 — Fundação](./README.md)                                                                            |
 | **Owner**       | Dev 1 (Backend & Segurança)                                                                                   |
 | **Duração**     | 1 dia                                                                                                         |
-| **Prioridade**  | P0 — **produção vulnerável**                                                                                  |
-| **Branch**      | `dev1-sec/idor-fix` (+ `hotfix/idor-transactions` → `main`)                                                   |
+| **Prioridade**  | P0 — requisito de autorização da Fase 4                                                                       |
+| **Branch**      | `dev1-sec/idor-fix` → `phase-4`                                                                               |
 | **Depende de**  | —                                                                                                             |
 | **Desbloqueia** | Task 03, S1-02                                                                                                |
 | **Requisito**   | Autenticação segura                                                                                           |
@@ -18,7 +18,7 @@
 
 Em `apps/shell/src/app/api/transactions/[id]/route.ts`, os handlers `GET`, `PATCH` e `DELETE` **não chamam `auth()`** e **não conferem o dono**. As funções `store.getById`, `store.update` e `store.remove` filtram só por `id`, e `store.update` ainda copia `data.userId` para o registro. O `proxy.ts` barra apenas quem não está logado.
 
-Impacto: qualquer usuário logado que obtenha o `id` de uma transação alheia (log, print, URL compartilhada) consegue **ler, alterar ou apagar** essa transação — e, com `PATCH { "userId": "<meu-id>" }`, **transferi-la para a própria conta**. Os ids são UUID (difíceis de adivinhar), mas isso é segurança por obscuridade. Como a `main` (Fase 2) está em produção, a falha está ativa hoje.
+Impacto técnico: qualquer usuário logado que obtenha o `id` de uma transação alheia (log, print, URL compartilhada) consegue **ler, alterar ou apagar** essa transação — e, com `PATCH { "userId": "<meu-id>" }`, **transferi-la para a própria conta**. Os ids são UUID (difíceis de adivinhar), mas isso não substitui a autorização. A versão publicada da Fase 2 é uma demonstração sem dados reais; a correção é entregue na `phase-4` para a avaliação acadêmica.
 
 ## Implementação
 
@@ -72,14 +72,14 @@ Impacto: qualquer usuário logado que obtenha o `id` de uma transação alheia (
    - Usuário B → 404 em `GET`, `PATCH` e `DELETE` da transação de A
    - `PATCH` de A com `userId: 'B'` não muda o dono
    - Sem sessão → 401
-4. **Hotfix em produção:** [PR #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167), branch `hotfix/s0-07-idor-validation` → `main`, com as correções de IDOR e validação. Depois do merge e do deploy, sincronizar a `main` com a `phase-4`.
+4. **Integração:** mergear a correção na `phase-4` e verificar os contratos da rota no gate S0-07. Não há hotfix para `main` no Sprint 0; o [PR #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167) foi encerrado sem merge após a decisão do projeto.
 
 ## Validação
 
 - [x] Testes novos verdes; testes de rota existentes verdes
-- [ ] Em produção, com 2 contas: `curl` autenticado como B em `/api/transactions/<id-de-A>` → 404 (GET/PATCH/DELETE). No [smoke de 2026-10-03](./07-gate.md#execução--2026-10-03), retornou 200/200/204.
-- [ ] `PATCH` com `userId` não altera o dono em produção (retestar após o hotfix; o smoke retornou 200)
-- [ ] Hotfix mergeado na `main`, deploy concluído e `main` sincronizada com a `phase-4` ([PR #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167) aberto)
+- [x] Na `phase-4`, testes de rota simulam recurso fora do escopo da sessão e verificam 404 em `GET`/`PATCH`/`DELETE`; o store filtra por `id` e `userId`
+- [x] Na `phase-4`, `PATCH` com `userId` extra recebe 422; a atualização válida mantém o dono da sessão
+- [ ] Repetir smoke com duas contas na versão candidata publicada antes da entrega final da Fase 4. A [URL antiga da Fase 2](./07-gate.md#execução--2026-10-03) retornou 200/200/204, como registro da diferença entre versões.
 
 ## Gotchas
 
