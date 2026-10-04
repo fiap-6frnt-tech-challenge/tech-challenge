@@ -48,6 +48,8 @@ services:
       NEXT_PUBLIC_DASHBOARD_MFE_URL: http://localhost:3002/mf-manifest.json
       NEXT_PUBLIC_TRANSACTIONS_MFE_URL: http://localhost:3003/mf-manifest.json
       BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
+    volumes:
+      - bytebank-uploads:/app/.uploads
     ports:
       - '3000:3000'
 
@@ -74,3 +76,4 @@ services:
 
 volumes:
   bytebank-pgdata:
+  bytebank-uploads:

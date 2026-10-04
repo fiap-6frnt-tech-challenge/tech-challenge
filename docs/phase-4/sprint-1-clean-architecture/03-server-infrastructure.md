@@ -14,6 +14,17 @@
 
 ---
 
+> **Notas da implementação (2026-10-04)**
+>
+> - **Disco em produção só com opt-in:** Docker e o servidor dos E2E rodam com `NODE_ENV=production`, então o `resolveFileStorage` do snippet abaixo quebraria os dois. Em produção, o container exige `BLOB_READ_WRITE_TOKEN` **ou** um `LOCAL_UPLOADS_DIR` explícito; só o dev cai em `.uploads` sem configuração. O opt-in já está no `turbo.json` (`passThroughEnv` do build, porque o Turbo roda em modo estrito), no job `ci`, no `e2e:build`, no `webServer` do Playwright e no Dockerfile (build e runtime), com o volume `bytebank-uploads` no compose.
+> - **Build:** o Next avalia as rotas em "Collecting page data", então uma rota que importa o container derruba o build sem token (verificado com uma importação temporária). Isso passa a valer na Task 04.
+> - **Agregações:** `monthlyTotals`, `categoryTotals`, `balanceSeries` e o saldo do `overview` continuam em JS com as regras do core (o mesmo cálculo da rota `summary`). A troca por SQL fica com a Task 05; o `recent` já usa `LIMIT`.
+> - **Ordenação:** desempate por `created_at` e `id`, para a paginação não repetir nem pular linhas com a mesma data ou o mesmo valor.
+> - **`attachments.url`** guarda a referência do storage: a URL pública no Blob (como na Fase 2) ou a chave relativa no disco. Não há migração; o S3-01 troca o campo por `downloadUrl`.
+> - **`server-only`** é resolvido pelo Next e por um alias no Vitest. Um script `tsx` que importe os adaptadores (ex.: a migração de anexos do S3-01) precisa de um alias equivalente.
+> - **Para a Task 04:** mapear `AttachmentRecord` (que traz `ref`, `transactionId` e `ownerId`) para o DTO `{ id, url, name, size, mimeType }` e `Page` para `{ data, pages, items }`. O `ListAttachments` responde 404 para a transação de outro usuário (a Fase 2 respondia `200 []`). O README e o `.env.example` ainda descrevem o storage mock e devem mudar junto com as rotas. Ao apagar o `store.ts`, apague também o `storeEquivalence.integration.test.ts`.
+> - **Testes:** `DATABASE_URL=… npm run test:integration -w @bytebank/shell`. Os dados usam o prefixo `it-<uuid>-` e são apagados no fim, então o banco de dev também serve.
+
 ## Contexto
 
 Implementar as portas da Task 02 com as tecnologias reais e montar o grafo de dependências num único lugar. Hoje a lógica de banco está em `app/api/transactions/store.ts` e `db/users.ts`, e o storage em `lib/storage.ts` (que já tem uma interface `StorageProvider` — um bom ponto de partida).
@@ -81,10 +92,10 @@ function resolveFileStorage(): FileStorage {
 
 ## Validação
 
-- [ ] Repositórios implementam as portas (o type-check garante)
-- [ ] Testes de integração verdes com Postgres
-- [ ] Upload + listagem de anexo funcionam localmente sem `BLOB_READ_WRITE_TOKEN`
-- [ ] Build de produção falha de forma clara sem o token
+- [x] Repositórios implementam as portas (o type-check garante)
+- [x] Testes de integração verdes com Postgres
+- [x] Upload + listagem de anexo funcionam localmente sem `BLOB_READ_WRITE_TOKEN` (pelo container; as rotas migram na Task 04)
+- [x] Build de produção falha de forma clara sem o token (quando uma rota importa o container)
 
 ## Gotchas
 
