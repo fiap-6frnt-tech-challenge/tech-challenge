@@ -1,0 +1,132 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Arquitetura do Design System" />
+
+# Arquitetura do Design System
+
+O `@bytebank/design-system` segue o **Atomic Design** (Brad Frost): a interface é montada de baixo para cima, das peças indivisíveis até as telas. Uma camada nunca importa outra acima dela, então fica explícito o que depende do quê.
+
+## Camadas
+
+<table>
+  <thead>
+    <tr>
+      <th>Camada</th>
+      <th>Pasta</th>
+      <th>O que é</th>
+      <th>Componentes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Átomos</td>
+      <td>
+        <code>src/atoms/</code>
+      </td>
+      <td>Elementos básicos, sem dependência de outras camadas</td>
+      <td>
+        Badge, Button (e IconButton), Card, HelperText, Input, Label, Skeleton, Tooltip, ViewportFix
+      </td>
+    </tr>
+    <tr>
+      <td>Moléculas</td>
+      <td>
+        <code>src/molecules/</code>
+      </td>
+      <td>Combinações pequenas de átomos com uma única responsabilidade</td>
+      <td>
+        AttachmentList, CategorySelect, ChartTooltip, CurrencyInput, DatePicker, EmptyState,
+        ErrorState, FileUpload, FormField, GoogleAuthButton, KpiCard, MultiSelect, Pagination,
+        RangeInput, SearchInput, Select, UserMenu
+      </td>
+    </tr>
+    <tr>
+      <td>Organismos</td>
+      <td>
+        <code>src/organisms/</code>
+      </td>
+      <td>Seções completas e autônomas da interface</td>
+      <td>
+        AccessibleChartData, AuthGuard, BarChart, DashboardWidget, FeedbackModal, Header, LineChart,
+        LoginForm, Modal, PieChart, RegisterForm, Sidebar
+      </td>
+    </tr>
+    <tr>
+      <td>Templates e páginas</td>
+      <td>shell e MFEs</td>
+      <td>Layout e dados reais de cada rota</td>
+      <td>
+        <code>apps/shell</code>, <code>apps/dashboard-mfe</code> e{' '}
+        <code>apps/transactions-mfe</code>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Templates e páginas ficam fora do DS de propósito: eles conhecem rotas, sessão e dados (TanStack Query, Redux), e o DS é agnóstico a isso. Os hooks utilitários de interface (`src/hooks/`, por exemplo `useFocusTrap`) podem ser usados por qualquer camada.
+
+## Regras de dependência
+
+- **Átomo** não importa molécula nem organismo.
+- **Molécula** importa átomos e outras moléculas; não importa organismo.
+- **Organismo** importa átomos, moléculas e outros organismos.
+
+As regras valem no lint (`no-restricted-imports`, definido em `eslint.layers.mjs`), tanto no `npm run lint` do pacote quanto no pre-commit. Um import "para cima" faz o lint falhar com a mensagem `Atomic Design: ...`.
+
+Consumidores externos continuam importando tudo do barrel, sem saber a camada:
+
+```ts
+import { Button, FormField, Modal } from '@bytebank/design-system';
+```
+
+## Tokens
+
+Os tokens vivem em `src/styles/tokens.css`, dentro do bloco `@theme` do Tailwind CSS v4: cores (marca, superfície, conteúdo, feedback, foco), tipografia, espaçamentos, raios e sombras. O `@theme` transforma cada variável em utilitário (`--color-brand-primary` vira `bg-brand-primary`, `text-brand-primary` etc.). A referência visual está em **Foundations**.
+
+## Por que utility-first (Tailwind)
+
+<table>
+  <thead>
+    <tr>
+      <th>Critério</th>
+      <th>BEM</th>
+      <th>CSS Modules</th>
+      <th>CSS-in-JS</th>
+      <th>Tailwind (adotado)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Escopo</td>
+      <td>Por convenção de nomes; nada impede colisões</td>
+      <td>Local por arquivo, garantido pelo build</td>
+      <td>Local por componente, gerado em runtime</td>
+      <td>Não há seletores a colidir: o estilo está na classe utilitária</td>
+    </tr>
+    <tr>
+      <td>Custo de runtime</td>
+      <td>Nenhum</td>
+      <td>Nenhum</td>
+      <td>Serializa e injeta estilos no render; complica SSR e streaming</td>
+      <td>Nenhum: CSS estático gerado no build</td>
+    </tr>
+    <tr>
+      <td>Consistência com tokens</td>
+      <td>Manual (variáveis CSS ou Sass)</td>
+      <td>Manual (variáveis CSS ou Sass)</td>
+      <td>Via objeto de tema em JS</td>
+      <td>
+        Nativa: <code>@theme</code> gera os utilitários a partir dos tokens
+      </td>
+    </tr>
+    <tr>
+      <td>Tamanho do CSS</td>
+      <td>Cresce com cada componente novo</td>
+      <td>Cresce com cada componente novo</td>
+      <td>Cresce com o JS do bundle</td>
+      <td>Estabiliza: só as classes usadas entram, e são reutilizadas</td>
+    </tr>
+  </tbody>
+</table>
+
+Para o Bytebank, o fator decisivo é o ambiente: Next.js com SSR e microfrontends federados. CSS estático sem runtime evita custo no servidor e no cliente, e um único `globals.css` compartilhado mantém shell e MFEs com o mesmo visual, sem duplicar estilos por componente. Padrões tipográficos recorrentes ficam como classes semânticas em `@layer components` (`src/styles/globals.css`).
