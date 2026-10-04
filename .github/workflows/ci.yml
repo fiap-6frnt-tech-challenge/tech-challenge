@@ -26,6 +26,7 @@ jobs:
       # Em PRs usa o branch de destino; em pushes usa o commit anterior.
       TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
       TURBO_SCM_HEAD: HEAD
+      LOCAL_UPLOADS_DIR: .uploads
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -140,6 +141,9 @@ jobs:
 
       - name: Run database migrations
         run: npm run db:migrate --workspace @bytebank/shell
+
+      - name: Run integration tests
+        run: npm run test:integration --workspace @bytebank/shell
 
       - name: Run E2E tests
         run: npm run e2e

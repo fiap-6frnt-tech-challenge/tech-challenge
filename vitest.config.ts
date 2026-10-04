@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     projects: [
       'apps/shell/vitest.config.ts',
+      ...(process.env.DATABASE_URL ? ['apps/shell/vitest.integration.config.ts'] : []),
       'packages/design-system/vitest.config.ts',
       'packages/shared/vitest.config.ts',
       'packages/core/vitest.config.ts',

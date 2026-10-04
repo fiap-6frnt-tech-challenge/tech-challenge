@@ -15,6 +15,7 @@ RUN npm ci
 # Stage 2: build — gera o output standalone do shell
 FROM node:22-alpine AS build
 WORKDIR /app
+ENV LOCAL_UPLOADS_DIR=/app/.uploads
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build -w @bytebank/shell
@@ -27,6 +28,7 @@ ENV PORT=3000
 # NextAuth v5 bloqueia o host em produção sem isto (na Vercel é automático);
 # como esta imagem é self-hosted atrás de um proxy conhecido, confiamos no Host.
 ENV AUTH_TRUST_HOST=true
+ENV LOCAL_UPLOADS_DIR=/app/.uploads
 # O standalone já inclui um node_modules tracado; copiamos a árvore inteira.
 COPY --from=build /app/apps/shell/.next/standalone ./
 COPY --from=build /app/apps/shell/.next/static ./apps/shell/.next/static

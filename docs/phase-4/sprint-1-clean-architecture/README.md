@@ -46,7 +46,7 @@
 | --- | ------ | --------------------------------------------- | ----- | ------- | ---- | ---------------- | ------------------------------------------------------------ |
 | 01  | ⏳     | `@bytebank/core`: camada de domínio           | Dev 2 | 2 dias  | P0   | ✅ dia 1         | [01-core-domain.md](./01-core-domain.md)                     |
 | 02  | ⏳     | Camada de aplicação: portas + casos de uso    | Dev 1 | 2 dias  | P0   | ⬅ 01 (esqueleto) | [02-application-use-cases.md](./02-application-use-cases.md) |
-| 03  | ⏳     | Infraestrutura do servidor + composition root | Dev 1 | 1.5 dia | P0   | ⬅ 02             | [03-server-infrastructure.md](./03-server-infrastructure.md) |
+| 03  | 🟢     | Infraestrutura do servidor + composition root | Dev 1 | 1.5 dia | P0   | ⬅ 02             | [03-server-infrastructure.md](./03-server-infrastructure.md) |
 | 04  | ⏳     | Rotas finas + mapeamento de erros             | Dev 1 | 1 dia   | P0   | ⬅ 03             | [04-thin-route-handlers.md](./04-thin-route-handlers.md)     |
 | 05  | ⏳     | Tempo de resposta: índices, SQL, overview     | Dev 3 | 1.5 dia | P0   | ⬅ 03             | [05-db-response-time.md](./05-db-response-time.md)           |
 | 06  | ⏳     | Front em camadas: gateways, queries, MFEs     | Dev 2 | 2 dias  | P0   | ⬅ 01             | [06-front-layers.md](./06-front-layers.md)                   |

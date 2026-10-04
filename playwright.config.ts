@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const shellUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
@@ -49,6 +50,7 @@ export default defineConfig({
         DATABASE_URL:
           process.env.DATABASE_URL ?? 'postgres://bytebank:bytebank@localhost:5432/bytebank',
         BLOB_READ_WRITE_TOKEN: '',
+        LOCAL_UPLOADS_DIR: resolve(process.env.LOCAL_UPLOADS_DIR ?? '.uploads'),
       },
     },
     {
