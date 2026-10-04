@@ -1,35 +1,15 @@
 import type { TransactionFiltersValue } from '../components/TransactionFilters';
+import { fromSearchParams, toSearchParams } from '@bytebank/core';
 import { DEFAULT_FILTERS } from '../components/TransactionFilters';
 import { useCallback, useState } from 'react';
 
-function parseFiltersFromParams(params: URLSearchParams): TransactionFiltersValue {
-  return {
-    type: (params.get('type') as TransactionFiltersValue['type']) ?? DEFAULT_FILTERS.type,
-    dateFrom: params.get('dateFrom') ?? DEFAULT_FILTERS.dateFrom,
-    dateTo: params.get('dateTo') ?? DEFAULT_FILTERS.dateTo,
-    sortBy: (params.get('sortBy') as TransactionFiltersValue['sortBy']) ?? DEFAULT_FILTERS.sortBy,
-    sortOrder:
-      (params.get('sortOrder') as TransactionFiltersValue['sortOrder']) ??
-      DEFAULT_FILTERS.sortOrder,
-    q: params.get('q') ?? DEFAULT_FILTERS.q,
-    amount_gte: params.get('amount_gte') ? Number(params.get('amount_gte')) : undefined,
-    amount_lte: params.get('amount_lte') ? Number(params.get('amount_lte')) : undefined,
-    category: params.getAll('category'),
-  };
-}
-
-function buildFilterParams(filters: TransactionFiltersValue): URLSearchParams {
-  const params = new URLSearchParams();
-  if (filters.type !== DEFAULT_FILTERS.type) params.set('type', filters.type);
-  if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
-  if (filters.dateTo) params.set('dateTo', filters.dateTo);
-  if (filters.sortBy !== DEFAULT_FILTERS.sortBy) params.set('sortBy', filters.sortBy);
-  if (filters.sortOrder !== DEFAULT_FILTERS.sortOrder) params.set('sortOrder', filters.sortOrder);
-  if (filters.q) params.set('q', filters.q);
-  if (filters.amount_gte !== undefined) params.set('amount_gte', String(filters.amount_gte));
-  if (filters.amount_lte !== undefined) params.set('amount_lte', String(filters.amount_lte));
-  filters.category.forEach((c) => params.append('category', c));
-  return params;
+function decodeBrowserSearch(search: string): { filters: TransactionFiltersValue; page: number } {
+  try {
+    const decoded = fromSearchParams(new URLSearchParams(search), { allowLegacy: true });
+    return { filters: decoded.filter, page: decoded.page.page };
+  } catch {
+    return { filters: DEFAULT_FILTERS, page: 1 };
+  }
 }
 
 function currentSearch(): string {
@@ -39,9 +19,7 @@ function currentSearch(): string {
 export function useTransactionFilters() {
   const [search, setSearch] = useState<string>(() => currentSearch());
 
-  const params = new URLSearchParams(search);
-  const filters = parseFiltersFromParams(params);
-  const page = Math.max(1, Number(params.get('page') ?? '1'));
+  const { filters, page } = decodeBrowserSearch(search);
 
   const applyParams = useCallback((next: URLSearchParams) => {
     const query = next.toString();
@@ -54,19 +32,25 @@ export function useTransactionFilters() {
   const setFilters = useCallback(
     (next: TransactionFiltersValue) => {
       // Filter changes always reset to page 1 (page param omitted)
-      applyParams(buildFilterParams(next));
+      applyParams(
+        toSearchParams(
+          next,
+          { page: 1, perPage: 10 },
+          { includeDefaults: false, legacyNames: true }
+        )
+      );
     },
     [applyParams]
   );
 
   const setPage = useCallback(
     (nextPage: number) => {
-      const next = new URLSearchParams(currentSearch());
-      if (nextPage <= 1) {
-        next.delete('page');
-      } else {
-        next.set('page', String(nextPage));
-      }
+      const current = decodeBrowserSearch(currentSearch());
+      const next = toSearchParams(
+        current.filters,
+        { page: Math.max(1, nextPage), perPage: 10 },
+        { includeDefaults: false, legacyNames: true }
+      );
       applyParams(next);
     },
     [applyParams]
@@ -76,7 +60,12 @@ export function useTransactionFilters() {
     applyParams(new URLSearchParams());
   }, [applyParams]);
 
-  const hasActiveFilters = buildFilterParams(filters).toString() !== '';
+  const hasActiveFilters =
+    toSearchParams(
+      filters,
+      { page: 1, perPage: 10 },
+      { includeDefaults: false, legacyNames: true }
+    ).toString() !== '';
   const [isFilterVisible, setIsFilterVisible] = useState(hasActiveFilters);
 
   return { filters, setFilters, clearFilters, page, setPage, isFilterVisible, setIsFilterVisible };

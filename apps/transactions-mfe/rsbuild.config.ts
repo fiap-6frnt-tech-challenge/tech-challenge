@@ -34,6 +34,7 @@ export default defineConfig({
         react: { singleton: true, requiredVersion: false },
         'react-dom': { singleton: true, requiredVersion: false },
         '@bytebank/design-system': { singleton: true, requiredVersion: false },
+        '@bytebank/core': { singleton: true, requiredVersion: false },
         '@bytebank/shared': { singleton: true, requiredVersion: false },
         '@bytebank/stores': { singleton: true, requiredVersion: false },
         '@bytebank/api-client': { singleton: true, requiredVersion: false },
