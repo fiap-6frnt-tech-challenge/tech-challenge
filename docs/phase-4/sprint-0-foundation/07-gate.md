@@ -36,7 +36,7 @@ Fecho do Sprint 0. Confirma que a produção está protegida, que o time tem nú
 - [x] IDOR fechado em produção (curl acima)
 - [x] Validação estrita ativa (422)
 - [x] Baseline registrada
-- [ ] ADR-001 a ADR-005 aceitos
+- [x] ADR-001 a ADR-005 aceitos
 - [x] Spikes A, B e C resolvidos
 
 ## Se reprovar
@@ -75,6 +75,10 @@ O [PR #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167
 | A faz `PATCH` da própria transação com `userId` extra | 422                  | 422                  |
 | A consulta a própria transação após as tentativas     | 200; dono preservado | 200; dono preservado |
 
-A transação criada para o teste foi removida por A (`DELETE` → 204). As duas contas descartáveis permanecem cadastradas, pois não há endpoint de exclusão de conta. A baseline e os resultados dos três spikes seguem registrados. ADR-001 a ADR-005 ainda declaram status `proposto`; não há registro de aceite pelo time.
+A transação criada para o teste foi removida por A (`DELETE` → 204). As duas contas descartáveis permanecem cadastradas, pois não há endpoint de exclusão de conta. A baseline e os resultados dos três spikes seguem registrados. Naquele momento, ADR-001 a ADR-005 ainda declaravam status `proposto`; o aceite do time foi registrado depois, no fechamento abaixo.
 
-**Decisão:** os quatro critérios técnicos assinalados acima foram atendidos. O gate completo continua **não aprovado** até o aceite formal dos cinco ADRs. Os critérios e o roteiro originais permanecem os mesmos.
+**Decisão após o smoke:** os quatro critérios técnicos foram atendidos. O gate ainda não estava aprovado, pois faltava o aceite formal dos cinco ADRs. Os critérios e o roteiro originais permaneceram os mesmos.
+
+## Fechamento — 2026-10-04
+
+Após o smoke, o time confirmou a aprovação de ADR-001 a ADR-005. Os cinco registros agora têm status `aceito`. Com esse aceite, os cinco critérios do gate estão atendidos e o **gate S0-07 está aprovado**. O roteiro e os critérios originais não foram alterados.
