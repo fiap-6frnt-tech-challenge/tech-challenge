@@ -1,4 +1,4 @@
-# Task 02 — Camada de aplicação: portas + casos de uso
+# Task 02 — Camada de aplicação: portas + casos de uso ✅
 
 |                 |                                                                                                      |
 | --------------- | ---------------------------------------------------------------------------------------------------- |
@@ -98,15 +98,15 @@ export class UpdateTransaction {
 
 Fakes em memória em `packages/core/src/application/testing/` (`InMemoryTransactionRepository`, `FakeClock`, `SequentialIdGenerator`):
 
-- [ ] Autorização: actor B → `NotFoundError` em get/update/delete da transação de A
-- [ ] Validação: entrada inválida → `ValidationError` com os issues
-- [ ] Caminhos felizes de todos os casos de uso
-- [ ] `GetDashboardSummary` devolve os mesmos números que a rota atual para um conjunto de dados fixo
+- [x] Autorização: actor B → `NotFoundError` em get/update/delete da transação de A
+- [x] Validação: entrada inválida → `ValidationError` com os issues
+- [x] Caminhos felizes de todos os casos de uso
+- [x] `GetDashboardSummary` devolve os mesmos números que a rota atual para um conjunto de dados fixo
 
 ## Validação
 
-- [ ] Casos de uso com testes verdes, sem banco
-- [ ] Nenhum tipo do Drizzle (`TransactionRow` etc.) no core
+- [x] Casos de uso com testes verdes, sem banco
+- [x] Nenhum tipo do Drizzle (`TransactionRow` etc.) no core
 - [ ] Revisão do Dev 2 (portas conversam com os gateways do S1-06)
 
 ## Gotchas
