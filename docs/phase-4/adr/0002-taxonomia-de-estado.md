@@ -2,7 +2,7 @@
 
 |                 |                                                                      |
 | --------------- | -------------------------------------------------------------------- |
-| **Status**      | proposto                                                             |
+| **Status**      | aceito                                                               |
 | **Data**        | 2026-09-28                                                           |
 | **Autor**       | Dev 2 (Arquitetura Front & Estado)                                   |
 | **Task**        | [S0-05](../sprint-0-foundation/05-architecture-adrs.md)              |
@@ -12,7 +12,7 @@
 
 ## Status
 
-Proposto para revisão do Dev 1 e do Dev 3; aceitação no [S0-07](../sprint-0-foundation/07-gate.md).
+Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme confirmação em 2026-10-04.
 
 ## Contexto
 
