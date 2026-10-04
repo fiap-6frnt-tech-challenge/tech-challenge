@@ -1,5 +1,6 @@
 export {
   createTransactionSchema,
+  createTransactionSchemaForDate,
   updateTransactionSchema,
   listTransactionsQuerySchema,
 } from './transaction';

@@ -15,13 +15,21 @@ function todayISO(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
 }
 
-export const createTransactionSchema = z.strictObject({
-  type: z.enum(transactionTypes),
-  category: z.enum(categoryIds),
-  amount: z.number().positive().max(1_000_000_000),
-  date: z.iso.date().refine((date) => date <= todayISO(), 'Data não pode ser futura'),
-  description: z.string().trim().min(3).max(140).refine(hasNoNullByte, 'Texto inválido'),
-});
+function buildCreateTransactionSchema(getToday: () => string) {
+  return z.strictObject({
+    type: z.enum(transactionTypes),
+    category: z.enum(categoryIds),
+    amount: z.number().positive().max(1_000_000_000),
+    date: z.iso.date().refine((date) => date <= getToday(), 'Data não pode ser futura'),
+    description: z.string().trim().min(3).max(140).refine(hasNoNullByte, 'Texto inválido'),
+  });
+}
+
+export function createTransactionSchemaForDate(today: string) {
+  return buildCreateTransactionSchema(() => today);
+}
+
+export const createTransactionSchema = buildCreateTransactionSchema(todayISO);
 
 export const updateTransactionSchema = createTransactionSchema
   .partial()
