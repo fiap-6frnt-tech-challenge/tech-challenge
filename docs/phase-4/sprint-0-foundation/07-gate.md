@@ -33,11 +33,11 @@ Fecho do Sprint 0. Confirma que a produção está protegida, que o time tem nú
 
 ## Gate — critérios
 
-- [ ] IDOR fechado em produção (curl acima)
-- [ ] Validação estrita ativa (422)
-- [ ] Baseline registrada
+- [x] IDOR fechado em produção (curl acima)
+- [x] Validação estrita ativa (422)
+- [x] Baseline registrada
 - [ ] ADR-001 a ADR-005 aceitos
-- [ ] Spikes A, B e C resolvidos
+- [x] Spikes A, B e C resolvidos
 
 ## Se reprovar
 
@@ -63,3 +63,18 @@ Registre as decisões neste arquivo e ajuste o Sprint 1 se necessário.
 | Spikes A, B e C                          | Resultados e mitigações registrados em [06-risk-spikes.md](./06-risk-spikes.md) e integrados no PR [#166](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/166).                                                                                                                                                                             |
 
 **Resultado do gate na execução de 2026-10-03: reprovado.** Os critérios originais de IDOR fechado na URL publicada, validação estrita ativa nela e aceite dos ADRs não foram atendidos. Na execução, a `main` em `2d6e3f2` não continha as correções S0-02 e S0-03 já integradas na `phase-4`; o deploy exato da URL não foi inspecionado. O planejamento prevê hotfix para a `main` na S0-02. O [PR #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167) foi reaberto após a execução para levar as correções à `main`. O gate exige novo smoke após merge e deploy, além do aceite dos ADRs.
+
+## Reexecução — 2026-10-04
+
+O [PR #167](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/167) foi mergeado na `main` em `eb89508`. O último PR da `phase-4`, [#168](https://github.com/fiap-6frnt-tech-challenge/tech-challenge/pull/168), foi mergeado com seis checks verdes. O smoke autenticado foi repetido na URL indicada no roteiro, `https://tech-challenge-phase2.vercel.app`, com duas contas descartáveis novas:
+
+| Verificação                                           | Resultado            | Esperado             |
+| ----------------------------------------------------- | -------------------- | -------------------- |
+| B faz `GET`, `PATCH` e `DELETE` da transação de A     | 404 / 404 / 404      | 404 / 404 / 404      |
+| A faz `POST` com `userId` extra                       | 422                  | 422                  |
+| A faz `PATCH` da própria transação com `userId` extra | 422                  | 422                  |
+| A consulta a própria transação após as tentativas     | 200; dono preservado | 200; dono preservado |
+
+A transação criada para o teste foi removida por A (`DELETE` → 204). As duas contas descartáveis permanecem cadastradas, pois não há endpoint de exclusão de conta. A baseline e os resultados dos três spikes seguem registrados. ADR-001 a ADR-005 ainda declaram status `proposto`; não há registro de aceite pelo time.
+
+**Decisão:** os quatro critérios técnicos assinalados acima foram atendidos. O gate completo continua **não aprovado** até o aceite formal dos cinco ADRs. Os critérios e o roteiro originais permanecem os mesmos.
