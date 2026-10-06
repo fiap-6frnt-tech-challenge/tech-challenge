@@ -1,168 +1,119 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
+import { NotFoundError } from '@bytebank/core';
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
-  getById: vi.fn(),
-  createAttachment: vi.fn(),
-  listAttachments: vi.fn(),
-  upload: vi.fn(),
-  remove: vi.fn(),
+  getTransaction: vi.fn(),
+  add: vi.fn(),
+  list: vi.fn(),
 }));
-
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
-vi.mock('../../store', () => ({
-  getById: mocks.getById,
-  createAttachment: mocks.createAttachment,
-  listAttachments: mocks.listAttachments,
+vi.mock('@/server/container', () => ({
+  container: {
+    getTransaction: { execute: mocks.getTransaction },
+    addAttachment: { execute: mocks.add },
+    listAttachments: { execute: mocks.list },
+  },
 }));
-vi.mock('@/lib/storage', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/storage')>('@/lib/storage');
-  return {
-    ...actual,
-    storage: { upload: mocks.upload, delete: mocks.remove },
-  };
-});
 
-import { GET, POST } from './route';
+import { GET, OPTIONS, POST } from './route';
 
-const USER_ID = 'user-123';
-const TX_ID = 'tx-1';
+const actor = { userId: 'owner' };
+const context = { params: Promise.resolve({ id: 'tx-1' }) };
+const attachment = {
+  id: 'att-1',
+  url: 'https://blob.test/recibo.pdf',
+  name: 'recibo.pdf',
+  size: 4,
+  mimeType: 'application/pdf',
+  ref: 'private/ref',
+  ownerId: actor.userId,
+  transactionId: 'tx-1',
+};
+const publicAttachment = {
+  id: attachment.id,
+  url: attachment.url,
+  name: attachment.name,
+  size: attachment.size,
+  mimeType: attachment.mimeType,
+};
 
-function params(id = TX_ID) {
-  return { params: Promise.resolve({ id }) };
-}
-
-function uploadRequest(file: File | null): NextRequest {
+function request(file?: File): NextRequest {
   const formData = new FormData();
   if (file) formData.append('file', file);
-  return new Request(`http://localhost/api/transactions/${TX_ID}/attachments`, {
+  return new Request('http://localhost/api/transactions/tx-1/attachments', {
     method: 'POST',
+    headers: { origin: 'http://localhost:3002' },
     body: formData,
   }) as NextRequest;
 }
-
-function pdf(name = 'recibo.pdf'): File {
-  return new File(['%PDF-1.4 conteúdo'], name, { type: 'application/pdf' });
+function pdf() {
+  return new File(['%PDF'], 'recibo.pdf', { type: 'application/pdf' });
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.auth.mockResolvedValue({ user: { id: USER_ID } });
-  mocks.getById.mockResolvedValue({ id: TX_ID, userId: USER_ID });
-  mocks.upload.mockResolvedValue({
-    url: 'https://blob.test/file.pdf',
-    key: 'test/file.pdf',
-    size: 1024,
-  });
-  mocks.createAttachment.mockImplementation(async (data) => ({ id: 'att-1', ...data }));
+  mocks.auth.mockResolvedValue({ user: { id: actor.userId } });
+  mocks.getTransaction.mockResolvedValue({ id: 'tx-1', userId: actor.userId });
+  mocks.add.mockResolvedValue(attachment);
+  mocks.list.mockResolvedValue([attachment]);
 });
 
-describe('POST /api/transactions/[id]/attachments', () => {
-  it('retorna 401 e não chama o storage sem sessão', async () => {
+describe('attachments route', () => {
+  it('answers OPTIONS without authentication and keeps CORS', async () => {
+    const response = await OPTIONS(request());
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3002');
+    expect(mocks.auth).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 before reading or uploading a file without a session', async () => {
     mocks.auth.mockResolvedValue(null);
-
-    const res = await POST(uploadRequest(pdf()), params());
-
-    expect(res.status).toBe(401);
-    expect(mocks.upload).not.toHaveBeenCalled();
-    expect(mocks.createAttachment).not.toHaveBeenCalled();
+    const response = await POST(request(pdf()), context);
+    expect(response.status).toBe(401);
+    expect(mocks.getTransaction).not.toHaveBeenCalled();
+    expect(mocks.add).not.toHaveBeenCalled();
   });
 
-  it('retorna 404 quando a transação não existe', async () => {
-    mocks.getById.mockResolvedValue(null);
-
-    const res = await POST(uploadRequest(pdf()), params());
-
-    expect(res.status).toBe(404);
-    expect(mocks.upload).not.toHaveBeenCalled();
+  it('checks ownership before accepting the upload', async () => {
+    mocks.getTransaction.mockRejectedValue(new NotFoundError('Transação'));
+    const response = await POST(request(pdf()), context);
+    expect(response.status).toBe(404);
+    expect(mocks.add).not.toHaveBeenCalled();
   });
 
-  it('retorna 404 quando a transação pertence a outro usuário', async () => {
-    mocks.getById.mockResolvedValue(null);
-
-    const res = await POST(uploadRequest(pdf()), params());
-
-    expect(res.status).toBe(404);
-    expect(mocks.getById).toHaveBeenCalledWith(TX_ID, USER_ID);
-    expect(mocks.upload).not.toHaveBeenCalled();
+  it.each([
+    [undefined, 'Arquivo não enviado'],
+    [new File(['hi'], 'note.txt', { type: 'text/plain' }), 'Tipo de arquivo não permitido'],
+  ])('returns 400 for an invalid file', async (file, message) => {
+    const response = await POST(request(file), context);
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: message });
+    expect(mocks.add).not.toHaveBeenCalled();
   });
 
-  it('retorna 400 quando nenhum arquivo é enviado', async () => {
-    const res = await POST(uploadRequest(null), params());
-
-    expect(res.status).toBe(400);
-    expect(mocks.upload).not.toHaveBeenCalled();
+  it('uploads bytes through the use case and returns only public fields', async () => {
+    const response = await POST(request(pdf()), context);
+    expect(response.status).toBe(201);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3002');
+    await expect(response.json()).resolves.toEqual(publicAttachment);
+    expect(mocks.add).toHaveBeenCalledWith(
+      actor,
+      'tx-1',
+      expect.objectContaining({
+        name: 'recibo.pdf',
+        contentType: 'application/pdf',
+        bytes: expect.any(Uint8Array),
+      })
+    );
   });
 
-  it('retorna 400 para tipo de arquivo inválido', async () => {
-    const file = new File(['oi'], 'notas.txt', { type: 'text/plain' });
-
-    const res = await POST(uploadRequest(file), params());
-
-    expect(res.status).toBe(400);
-    expect(mocks.upload).not.toHaveBeenCalled();
-  });
-
-  it('retorna 400 para arquivo acima de 5MB', async () => {
-    const big = new File([new Uint8Array(6 * 1024 * 1024)], 'big.pdf', {
-      type: 'application/pdf',
-    });
-
-    const res = await POST(uploadRequest(big), params());
-
-    expect(res.status).toBe(400);
-    expect(mocks.upload).not.toHaveBeenCalled();
-  });
-
-  it('faz upload, cria o anexo no banco e retorna 201', async () => {
-    const res = await POST(uploadRequest(pdf('recibo.pdf')), params());
-
-    expect(res.status).toBe(201);
-    expect(mocks.upload).toHaveBeenCalledOnce();
-    expect(mocks.upload).toHaveBeenCalledWith(expect.any(File), USER_ID);
-    expect(mocks.createAttachment).toHaveBeenCalledWith({
-      transactionId: TX_ID,
-      url: 'https://blob.test/file.pdf',
-      name: 'recibo.pdf',
-      size: 1024,
-      mimeType: 'application/pdf',
-    });
-    await expect(res.json()).resolves.toMatchObject({
-      id: 'att-1',
-      url: 'https://blob.test/file.pdf',
-    });
-  });
-});
-
-describe('GET /api/transactions/[id]/attachments', () => {
-  it('retorna 401 sem sessão', async () => {
-    mocks.auth.mockResolvedValue(null);
-
-    const req = new Request('http://localhost/api/transactions/tx-1/attachments') as NextRequest;
-    const res = await GET(req, params());
-
-    expect(res.status).toBe(401);
-    expect(mocks.listAttachments).not.toHaveBeenCalled();
-  });
-
-  it('lista os anexos do usuário autenticado', async () => {
-    const attachments = [
-      {
-        id: 'att-1',
-        url: 'https://blob.test/a.pdf',
-        name: 'a.pdf',
-        size: 1,
-        mimeType: 'application/pdf',
-      },
-    ];
-    mocks.listAttachments.mockResolvedValue(attachments);
-
-    const req = new Request('http://localhost/api/transactions/tx-1/attachments') as NextRequest;
-    const res = await GET(req, params());
-
-    expect(res.status).toBe(200);
-    expect(mocks.listAttachments).toHaveBeenCalledWith(TX_ID, USER_ID);
-    await expect(res.json()).resolves.toEqual(attachments);
+  it('lists only public attachment fields and keeps CORS', async () => {
+    const response = await GET(request(), context);
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual([publicAttachment]);
+    expect(mocks.list).toHaveBeenCalledWith(actor, 'tx-1');
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3002');
   });
 });

@@ -1,95 +1,70 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { NextRequest } from 'next/server';
+import { ConflictError, ValidationError } from '@bytebank/core';
+import { registerSchema } from '@bytebank/core/schemas';
 
-vi.mock('@/db/users', () => ({
-  findUserByEmail: vi.fn(),
-  createUser: vi.fn(),
+const mocks = vi.hoisted(() => ({ register: vi.fn(), auth: vi.fn() }));
+vi.mock('@/auth', () => ({ auth: mocks.auth }));
+vi.mock('@/server/container', () => ({
+  container: { registerUser: { execute: mocks.register } },
 }));
 
 import { POST } from './route';
-import { findUserByEmail, createUser } from '@/db/users';
 
-const mockFindUserByEmail = vi.mocked(findUserByEmail);
-const mockCreateUser = vi.mocked(createUser);
-
-const validInput = { name: 'Ana Souza', email: 'ana@bytebank.com', password: 'segredo123' };
-
-function postRequest(body: unknown) {
-  return new Request('http://localhost/api/auth/register', {
+const input = { name: 'Ana Souza', email: 'ana@bytebank.com', password: 'segredo123' };
+const user = { id: 'user-1', name: input.name, email: input.email, passwordHash: 'secret-hash' };
+const request = (body: string) =>
+  new Request('http://localhost/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: typeof body === 'string' ? body : JSON.stringify(body),
-  });
-}
+    body,
+  }) as NextRequest;
 
-function userRow(overrides: Partial<{ id: string; name: string; email: string }> = {}) {
-  return {
-    id: overrides.id ?? 'uuid-1',
-    name: overrides.name ?? validInput.name,
-    email: overrides.email ?? validInput.email,
-    passwordHash: 'hashed',
-    image: null,
-    createdAt: new Date(),
-  };
-}
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.register.mockResolvedValue(user);
+});
 
 describe('POST /api/auth/register', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  it('is public and returns only id, name and email with 201', async () => {
+    const response = await POST(request(JSON.stringify(input)));
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    });
+    expect(mocks.register).toHaveBeenCalledWith(input);
   });
 
-  it('retorna 201 com { id, name, email } (sem expor passwordHash) num cadastro válido', async () => {
-    mockFindUserByEmail.mockResolvedValue(undefined);
-    mockCreateUser.mockResolvedValue(userRow());
+  it('maps an existing email to the Phase 2 conflict message', async () => {
+    mocks.register.mockRejectedValue(new ConflictError('E-mail'));
+    const response = await POST(request(JSON.stringify(input)));
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({ error: 'E-mail já cadastrado' });
+  });
 
-    const res = await POST(postRequest(validInput));
-
-    expect(res.status).toBe(201);
-    await expect(res.json()).resolves.toEqual({
-      id: 'uuid-1',
-      name: validInput.name,
-      email: validInput.email,
+  it('returns flattened 422 issues for invalid registration', async () => {
+    const invalid = { ...input, password: '123' };
+    const parsed = registerSchema.safeParse(invalid);
+    if (parsed.success) throw new Error('test setup');
+    mocks.register.mockRejectedValue(new ValidationError(parsed.error.issues));
+    const response = await POST(request(JSON.stringify(invalid)));
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toMatchObject({
+      issues: { fieldErrors: { password: expect.any(Array) } },
     });
   });
 
-  it('retorna 409 quando o e-mail já existe (pre-check) e não tenta inserir', async () => {
-    mockFindUserByEmail.mockResolvedValue(userRow({ id: 'uuid-existing' }));
-
-    const res = await POST(postRequest(validInput));
-
-    expect(res.status).toBe(409);
-    expect(mockCreateUser).not.toHaveBeenCalled();
+  it('returns 400 for malformed JSON before registration', async () => {
+    const response = await POST(request('{'));
+    expect(response.status).toBe(400);
+    expect(mocks.register).not.toHaveBeenCalled();
   });
 
-  it('retorna 409 na corrida: pre-check passa mas o insert vira no-op (onConflictDoNothing)', async () => {
-    mockFindUserByEmail.mockResolvedValue(undefined);
-    mockCreateUser.mockResolvedValue(undefined);
-
-    const res = await POST(postRequest(validInput));
-
-    expect(res.status).toBe(409);
-  });
-
-  it('retorna 422 com issues por campo para payload inválido (senha curta)', async () => {
-    const res = await POST(postRequest({ ...validInput, password: '123' }));
-
-    expect(res.status).toBe(422);
-    const body = await res.json();
-    expect(body.issues.fieldErrors.password).toBeDefined();
-    expect(mockFindUserByEmail).not.toHaveBeenCalled();
-  });
-
-  it('retorna 400 para JSON malformado', async () => {
-    const res = await POST(postRequest('not json'));
-
-    expect(res.status).toBe(400);
-  });
-
-  it('retorna 413 para corpo JSON maior que 16 KB', async () => {
-    const res = await POST(
-      postRequest(JSON.stringify({ ...validInput, name: 'x'.repeat(17_000) }))
-    );
-
-    expect(res.status).toBe(413);
-    expect(mockCreateUser).not.toHaveBeenCalled();
+  it('returns 413 for JSON above 16 KB', async () => {
+    const response = await POST(request(JSON.stringify({ ...input, name: 'x'.repeat(17000) })));
+    expect(response.status).toBe(413);
+    expect(mocks.register).not.toHaveBeenCalled();
   });
 });

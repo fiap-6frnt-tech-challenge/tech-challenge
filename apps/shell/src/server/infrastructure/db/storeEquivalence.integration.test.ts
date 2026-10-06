@@ -11,7 +11,7 @@ import {
   type Transaction,
   type TransactionFilter,
 } from '@bytebank/core';
-import * as store from '@/app/api/transactions/store';
+import * as store from '@/server/testing/legacyTransactionStore';
 import { db } from '@/db';
 import { attachments, transactions } from '@/db/schema';
 import { integrationScope } from '@/server/testing/integrationScope';
@@ -90,7 +90,7 @@ beforeAll(async () => {
 
 afterAll(() => scope.cleanup());
 
-describe('equivalência com app/api/transactions/store.ts (seed)', () => {
+describe('equivalência com o store legado (seed)', () => {
   it('carrega o seed inteiro para o usuário', async () => {
     const page = await transactionRepository.list(userId, all, { page: 1, perPage: 100 });
     expect(page.total).toBe(seed.transactions.length);
