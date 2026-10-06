@@ -59,6 +59,18 @@ export class DrizzleTransactionRepository implements TransactionRepository {
     return row ? toTransaction(row) : null;
   }
 
+  async all(ownerId: string, range: Partial<DateRange> = {}): Promise<Transaction[]> {
+    const conditions = [eq(transactions.userId, ownerId)];
+    if (range.from) conditions.push(gte(transactions.date, range.from));
+    if (range.to) conditions.push(lte(transactions.date, range.to));
+    const rows = await this.db.query.transactions.findMany({
+      where: and(...conditions),
+      orderBy: [desc(transactions.date)],
+      with: { attachments: true },
+    });
+    return rows.map((row) => toTransaction(row));
+  }
+
   async list(
     ownerId: string,
     filter: TransactionFilter,
