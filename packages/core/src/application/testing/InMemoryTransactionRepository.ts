@@ -6,7 +6,13 @@ import type {
   TransactionFilter,
   PageRequest,
 } from '../../domain';
-import type { AccountOverview, NewTransactionData, Page, TransactionPatch } from '../types';
+import type {
+  AccountOverview,
+  DateRange,
+  NewTransactionData,
+  Page,
+  TransactionPatch,
+} from '../types';
 import type { TransactionRepository } from '../ports';
 
 export class InMemoryTransactionRepository implements TransactionRepository {
@@ -14,6 +20,16 @@ export class InMemoryTransactionRepository implements TransactionRepository {
 
   async findById(id: string, ownerId: string): Promise<Transaction | null> {
     return this.items.find((item) => item.id === id && item.userId === ownerId) ?? null;
+  }
+  async all(ownerId: string, range: Partial<DateRange> = {}): Promise<Transaction[]> {
+    return this.items
+      .filter(
+        (item) =>
+          item.userId === ownerId &&
+          (!range.from || item.date >= range.from) &&
+          (!range.to || item.date <= range.to)
+      )
+      .sort((a, b) => b.date.localeCompare(a.date));
   }
   async list(
     ownerId: string,

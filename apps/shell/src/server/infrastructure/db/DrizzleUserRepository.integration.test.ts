@@ -1,5 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { afterAll, describe, expect, it } from 'vitest';
 import { db } from '@/db';
+import { users } from '@/db/schema';
 import { integrationScope } from '@/server/testing/integrationScope';
 import { DrizzleUserRepository } from './DrizzleUserRepository';
 
@@ -23,6 +25,15 @@ describe('DrizzleUserRepository', () => {
 
     expect(await repository.create(ana)).toEqual(ana);
     expect(await repository.findByEmail(ana.email)).toEqual(ana);
+  });
+
+  it('preserva a imagem salva para a sessão de credenciais', async () => {
+    const ana = user('avatar');
+    await repository.create(ana);
+    const image = 'https://example.com/avatar.png';
+    await db.update(users).set({ image }).where(eq(users.id, ana.id));
+
+    await expect(repository.findByEmail(ana.email)).resolves.toEqual({ ...ana, image });
   });
 
   it('devolve null para e-mail já cadastrado, sem sobrescrever o usuário', async () => {

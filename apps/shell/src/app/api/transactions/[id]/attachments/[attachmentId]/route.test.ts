@@ -1,82 +1,55 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
+import { NotFoundError } from '@bytebank/core';
 
-const mocks = vi.hoisted(() => ({
-  auth: vi.fn(),
-  getAttachment: vi.fn(),
-  deleteAttachment: vi.fn(),
-  remove: vi.fn(),
-}));
-
+const mocks = vi.hoisted(() => ({ auth: vi.fn(), remove: vi.fn() }));
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
-vi.mock('../../../store', () => ({
-  getAttachment: mocks.getAttachment,
-  deleteAttachment: mocks.deleteAttachment,
+vi.mock('@/server/container', () => ({
+  container: { removeAttachment: { execute: mocks.remove } },
 }));
-vi.mock('@/lib/storage', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/storage')>('@/lib/storage');
-  return {
-    ...actual,
-    storage: { upload: vi.fn(), delete: mocks.remove },
-  };
-});
 
-import { DELETE } from './route';
+import { DELETE, OPTIONS } from './route';
 
-const USER_ID = 'user-123';
-const TX_ID = 'tx-1';
-const ATT_ID = 'att-1';
-
-function params() {
-  return { params: Promise.resolve({ id: TX_ID, attachmentId: ATT_ID }) };
-}
-
-function deleteRequest(): NextRequest {
-  return new Request(`http://localhost/api/transactions/${TX_ID}/attachments/${ATT_ID}`, {
+const actor = { userId: 'owner' };
+const context = { params: Promise.resolve({ id: 'tx-1', attachmentId: 'att-1' }) };
+const request = () =>
+  new Request('http://localhost/api/transactions/tx-1/attachments/att-1', {
     method: 'DELETE',
+    headers: { origin: 'http://localhost:3003' },
   }) as NextRequest;
-}
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.auth.mockResolvedValue({ user: { id: USER_ID } });
-  mocks.getAttachment.mockResolvedValue({
-    id: ATT_ID,
-    url: 'https://blob.test/file.pdf',
-    name: 'file.pdf',
-    size: 1024,
-    mimeType: 'application/pdf',
-  });
-  mocks.deleteAttachment.mockResolvedValue(undefined);
+  mocks.auth.mockResolvedValue({ user: { id: actor.userId } });
   mocks.remove.mockResolvedValue(undefined);
 });
 
-describe('DELETE /api/transactions/[id]/attachments/[attachmentId]', () => {
-  it('retorna 401 e não remove nada sem sessão', async () => {
+describe('DELETE attachment route', () => {
+  it('answers preflight without a session', async () => {
+    const response = await OPTIONS(request());
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3003');
+    expect(mocks.auth).not.toHaveBeenCalled();
+  });
+
+  it('does not delete without a session', async () => {
     mocks.auth.mockResolvedValue(null);
-
-    const res = await DELETE(deleteRequest(), params());
-
-    expect(res.status).toBe(401);
+    const response = await DELETE(request(), context);
+    expect(response.status).toBe(401);
     expect(mocks.remove).not.toHaveBeenCalled();
-    expect(mocks.deleteAttachment).not.toHaveBeenCalled();
   });
 
-  it('retorna 404 quando o anexo não existe ou não pertence ao usuário', async () => {
-    mocks.getAttachment.mockResolvedValue(null);
-
-    const res = await DELETE(deleteRequest(), params());
-
-    expect(res.status).toBe(404);
-    expect(mocks.remove).not.toHaveBeenCalled();
-    expect(mocks.deleteAttachment).not.toHaveBeenCalled();
+  it('maps an absent or foreign attachment to 404', async () => {
+    mocks.remove.mockRejectedValue(new NotFoundError('Anexo'));
+    const response = await DELETE(request(), context);
+    expect(response.status).toBe(404);
+    expect(mocks.remove).toHaveBeenCalledWith(actor, 'att-1');
   });
 
-  it('remove do storage e do banco e retorna 204', async () => {
-    const res = await DELETE(deleteRequest(), params());
-
-    expect(res.status).toBe(204);
-    expect(mocks.remove).toHaveBeenCalledWith('https://blob.test/file.pdf');
-    expect(mocks.deleteAttachment).toHaveBeenCalledWith(ATT_ID, USER_ID);
+  it('returns 204 and CORS after removal through the use case', async () => {
+    const response = await DELETE(request(), context);
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3003');
+    expect(mocks.remove).toHaveBeenCalledWith(actor, 'att-1');
   });
 });

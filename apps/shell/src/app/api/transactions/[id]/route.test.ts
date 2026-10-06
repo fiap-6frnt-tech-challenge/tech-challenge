@@ -1,146 +1,99 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NotFoundError, ValidationError } from '@bytebank/core';
+import { updateTransactionSchema } from '@bytebank/core/schemas';
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
-  getById: vi.fn(),
+  get: vi.fn(),
   update: vi.fn(),
   remove: vi.fn(),
 }));
-
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
-vi.mock('../store', () => ({
-  getById: mocks.getById,
-  update: mocks.update,
-  remove: mocks.remove,
+vi.mock('@/server/container', () => ({
+  container: {
+    getTransaction: { execute: mocks.get },
+    updateTransaction: { execute: mocks.update },
+    deleteTransaction: { execute: mocks.remove },
+  },
 }));
 
 import { DELETE, GET, PATCH } from './route';
 
-const USER_A = 'user-a';
-const USER_B = 'user-b';
-const TX_ID = 'tx-1';
-
-function params(id = TX_ID) {
-  return { params: Promise.resolve({ id }) };
-}
-
-function getRequest(): NextRequest {
-  return new NextRequest(`http://localhost/api/transactions/${TX_ID}`);
-}
-
-function patchRequest(body: unknown): NextRequest {
-  return new Request(`http://localhost/api/transactions/${TX_ID}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  }) as NextRequest;
-}
-
-function rawPatchRequest(body: string, headers: Record<string, string> = {}): NextRequest {
-  return new Request(`http://localhost/api/transactions/${TX_ID}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...headers },
+const actor = { userId: 'owner' };
+const tx = { id: 'tx-1', userId: actor.userId, description: 'Mercado' };
+const context = { params: Promise.resolve({ id: tx.id }) };
+const request = (method: string, body?: string): NextRequest =>
+  new Request(`http://localhost/api/transactions/${tx.id}`, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body,
   }) as NextRequest;
-}
-
-function deleteRequest(): NextRequest {
-  return new Request(`http://localhost/api/transactions/${TX_ID}`, {
-    method: 'DELETE',
-  }) as NextRequest;
-}
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.auth.mockResolvedValue({ user: { id: USER_A } });
-  mocks.getById.mockResolvedValue({ id: TX_ID, userId: USER_A });
-  mocks.update.mockResolvedValue({ id: TX_ID, userId: USER_A });
-  mocks.remove.mockResolvedValue(true);
+  mocks.auth.mockResolvedValue({ user: { id: actor.userId } });
+  mocks.get.mockResolvedValue(tx);
+  mocks.update.mockResolvedValue({ ...tx, description: 'Novo' });
+  mocks.remove.mockResolvedValue(undefined);
 });
 
 describe('/api/transactions/[id]', () => {
   it.each([
-    ['GET', () => GET(getRequest(), params())],
-    ['PATCH', () => PATCH(patchRequest({ description: 'updated' }), params())],
-    ['DELETE', () => DELETE(deleteRequest(), params())],
-  ])('retorna 401 para %s sem sessão', async (_method, invoke) => {
+    ['GET', () => GET(request('GET'), context)],
+    ['PATCH', () => PATCH(request('PATCH', JSON.stringify({ description: 'Novo' })), context)],
+    ['DELETE', () => DELETE(request('DELETE'), context)],
+  ])('returns 401 for %s without calling the use case', async (_method, call) => {
     mocks.auth.mockResolvedValue(null);
-
-    const response = await invoke();
-
+    const response = await call();
     expect(response.status).toBe(401);
-    expect(mocks.getById).not.toHaveBeenCalled();
+    expect(mocks.get).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();
     expect(mocks.remove).not.toHaveBeenCalled();
   });
 
-  it('retorna 404 no GET quando a transação não pertence ao usuário', async () => {
-    mocks.getById.mockResolvedValue(null);
-
-    const response = await GET(getRequest(), params());
-
-    expect(response.status).toBe(404);
-    expect(mocks.getById).toHaveBeenCalledWith(TX_ID, USER_A);
-  });
-
-  it('retorna 404 no PATCH quando a transação não pertence ao usuário', async () => {
-    mocks.update.mockResolvedValue(null);
-
-    const response = await PATCH(patchRequest({ description: 'updated' }), params());
-
-    expect(response.status).toBe(404);
-    expect(mocks.update).toHaveBeenCalledWith(TX_ID, USER_A, { description: 'updated' });
-  });
-
-  it('retorna 404 no DELETE quando a transação não pertence ao usuário', async () => {
-    mocks.remove.mockResolvedValue(false);
-
-    const response = await DELETE(deleteRequest(), params());
-
-    expect(response.status).toBe(404);
-    expect(mocks.remove).toHaveBeenCalledWith(TX_ID, USER_A);
-  });
-
-  it.each(['userId', 'id', 'attachments'])('rejeita o campo extra %s no PATCH', async (field) => {
-    const response = await PATCH(
-      patchRequest({ description: 'updated', [field]: USER_B }),
-      params()
-    );
-    expect(response.status).toBe(422);
-    expect(mocks.update).not.toHaveBeenCalled();
-  });
-
-  it('rejeita PATCH vazio', async () => {
-    const response = await PATCH(patchRequest({}), params());
-    expect(response.status).toBe(422);
-    expect(mocks.update).not.toHaveBeenCalled();
-  });
-
-  it('rejeita byte NUL na descrição antes de atualizar o banco', async () => {
-    const response = await PATCH(patchRequest({ description: 'Compra\u0000extra' }), params());
-    expect(response.status).toBe(422);
-    expect(mocks.update).not.toHaveBeenCalled();
-  });
-
-  it('aceita PATCH parcial e mantém o dono da sessão', async () => {
-    const response = await PATCH(patchRequest({ description: '  updated  ' }), params());
+  it('gets only the transaction authorized by the actor', async () => {
+    const response = await GET(request('GET'), context);
     expect(response.status).toBe(200);
-    expect(mocks.update).toHaveBeenCalledWith(TX_ID, USER_A, { description: 'updated' });
+    await expect(response.json()).resolves.toEqual(tx);
+    expect(mocks.get).toHaveBeenCalledWith(actor, tx.id);
   });
 
-  it('retorna 400 para JSON malformado', async () => {
-    const response = await PATCH(rawPatchRequest('{'), params());
+  it('maps a missing transaction to generic 404', async () => {
+    mocks.get.mockRejectedValue(new NotFoundError('Transação'));
+    const response = await GET(request('GET'), context);
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: 'Não encontrado' });
+  });
+
+  it('passes the raw patch to the use case and returns its result', async () => {
+    const response = await PATCH(
+      request('PATCH', JSON.stringify({ description: ' Novo ' })),
+      context
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.update).toHaveBeenCalledWith(actor, tx.id, { description: ' Novo ' });
+  });
+
+  it('maps validation errors from the use case to 422', async () => {
+    const parsed = updateTransactionSchema.safeParse({ userId: 'intruder' });
+    if (parsed.success) throw new Error('test setup');
+    mocks.update.mockRejectedValue(new ValidationError(parsed.error.issues));
+    const response = await PATCH(request('PATCH', JSON.stringify({ userId: 'intruder' })), context);
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toMatchObject({ error: 'Dados inválidos' });
+  });
+
+  it('returns 400 for malformed JSON before calling the use case', async () => {
+    const response = await PATCH(request('PATCH', '{'), context);
     expect(response.status).toBe(400);
     expect(mocks.update).not.toHaveBeenCalled();
   });
 
-  it('retorna 413 para corpo declarado maior que 16 KB', async () => {
-    const response = await PATCH(
-      rawPatchRequest('{"description":"updated"}', { 'content-length': '16385' }),
-      params()
-    );
-    expect(response.status).toBe(413);
-    expect(mocks.update).not.toHaveBeenCalled();
+  it('returns 204 for delete and 404 for a missing transaction', async () => {
+    expect((await DELETE(request('DELETE'), context)).status).toBe(204);
+    expect(mocks.remove).toHaveBeenCalledWith(actor, tx.id);
+    mocks.remove.mockRejectedValue(new NotFoundError('Transação'));
+    expect((await DELETE(request('DELETE'), context)).status).toBe(404);
   });
 });

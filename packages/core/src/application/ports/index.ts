@@ -25,6 +25,7 @@ export interface Actor {
 
 export interface TransactionRepository {
   findById(id: string, ownerId: string): Promise<Transaction | null>;
+  all(ownerId: string, range?: Partial<DateRange>): Promise<Transaction[]>;
   list(ownerId: string, filter: TransactionFilter, page: PageRequest): Promise<Page<Transaction>>;
   create(data: NewTransactionData, ownerId: string): Promise<Transaction>;
   update(id: string, ownerId: string, patch: TransactionPatch): Promise<Transaction | null>;

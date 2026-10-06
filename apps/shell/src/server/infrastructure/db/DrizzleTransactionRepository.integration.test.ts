@@ -123,6 +123,16 @@ describe('DrizzleTransactionRepository — leitura', () => {
     expect(await repository.findById(scope.id('foreign'), owner)).toBeNull();
   });
 
+  it('lista todo o histórico do dono com filtro opcional de datas', async () => {
+    const history = await repository.all(owner);
+    expect(names(history)).toEqual(['bonus', 'savings', 'uber', 'market', 'salary']);
+    expect(history.find((row) => row.id === scope.id('foreign'))).toBeUndefined();
+    expect(names(await repository.all(owner, { from: '2026-02-01', to: '2026-02-28' }))).toEqual([
+      'savings',
+      'uber',
+    ]);
+  });
+
   it('pagina só as transações do dono, da mais recente para a mais antiga', async () => {
     const page = await repository.list(owner, all, { page: 1, perPage: 2 });
 

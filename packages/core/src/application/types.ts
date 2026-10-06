@@ -26,6 +26,7 @@ export interface User {
   name: string;
   email: string;
   passwordHash: string;
+  image?: string;
 }
 
 export type NewUser = User;

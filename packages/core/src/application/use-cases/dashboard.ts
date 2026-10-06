@@ -1,4 +1,10 @@
-import type { DashboardSummary } from '../../domain';
+import {
+  aggregateByMonth,
+  calculateBalance,
+  cumulativeBalance,
+  groupByCategory,
+  type DashboardSummary,
+} from '../../domain';
 import type { Actor, Clock, TransactionRepository } from '../ports';
 import type { AccountOverview, DateRange } from '../types';
 
@@ -44,6 +50,31 @@ export class GetDashboardSummary {
       byMonth,
       balanceOverTime,
       byCategory,
+    };
+  }
+}
+
+/** Preserves the public Phase 2 summary contract while routes migrate to use cases. */
+export class GetTransactionsSummary {
+  constructor(private readonly transactions: TransactionRepository) {}
+
+  async execute(actor: Actor, range?: Partial<DateRange>): Promise<DashboardSummary> {
+    const all = await this.transactions.all(actor.userId, range);
+    const byMonth = aggregateByMonth(all);
+    const current = byMonth.at(-1);
+    const previous = byMonth.at(-2);
+    const incomeMonth = current?.income ?? 0;
+    const expenseMonth = current?.expense ?? 0;
+    return {
+      balance: calculateBalance(all),
+      incomeMonth,
+      expenseMonth,
+      savingsMonth: incomeMonth - expenseMonth,
+      deltaIncome: incomeMonth - (previous?.income ?? 0),
+      deltaExpense: expenseMonth - (previous?.expense ?? 0),
+      byMonth,
+      balanceOverTime: cumulativeBalance(all),
+      byCategory: groupByCategory(all),
     };
   }
 }

@@ -8,7 +8,7 @@ import {
 import { createTransactionSchemaForDate, updateTransactionSchema } from '../../schemas';
 import type { Actor, Clock, IdGenerator, TransactionRepository } from '../ports';
 import { parseOrThrow } from '../parseOrThrow';
-import type { TransactionPatch } from '../types';
+import type { DateRange, TransactionPatch } from '../types';
 
 export class CreateTransaction {
   constructor(
@@ -59,5 +59,12 @@ export class ListTransactions {
       perPage: Math.min(100, Math.max(1, Math.floor(page.perPage))),
     };
     return this.transactions.list(actor.userId, filter, safePage);
+  }
+}
+
+export class GetAllTransactions {
+  constructor(private readonly transactions: TransactionRepository) {}
+  execute(actor: Actor, range?: Partial<DateRange>): Promise<Transaction[]> {
+    return this.transactions.all(actor.userId, range);
   }
 }
