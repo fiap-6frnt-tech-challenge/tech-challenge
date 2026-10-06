@@ -44,15 +44,15 @@
 
 | #   | Status | Task                                          | Owner | Duração | Prio | Paralela?        | Arquivo                                                      |
 | --- | ------ | --------------------------------------------- | ----- | ------- | ---- | ---------------- | ------------------------------------------------------------ |
-| 01  | ⏳     | `@bytebank/core`: camada de domínio           | Dev 2 | 2 dias  | P0   | ✅ dia 1         | [01-core-domain.md](./01-core-domain.md)                     |
-| 02  | ⏳     | Camada de aplicação: portas + casos de uso    | Dev 1 | 2 dias  | P0   | ⬅ 01 (esqueleto) | [02-application-use-cases.md](./02-application-use-cases.md) |
-| 03  | 🟢     | Infraestrutura do servidor + composition root | Dev 1 | 1.5 dia | P0   | ⬅ 02             | [03-server-infrastructure.md](./03-server-infrastructure.md) |
-| 04  | 🟢     | Rotas finas + mapeamento de erros             | Dev 1 | 1 dia   | P0   | ⬅ 03             | [04-thin-route-handlers.md](./04-thin-route-handlers.md)     |
-| 05  | ⏳     | Tempo de resposta: índices, SQL, overview     | Dev 3 | 1.5 dia | P0   | ⬅ 03             | [05-db-response-time.md](./05-db-response-time.md)           |
+| 01  | ✅     | `@bytebank/core`: camada de domínio           | Dev 2 | 2 dias  | P0   | ✅ dia 1         | [01-core-domain.md](./01-core-domain.md)                     |
+| 02  | ✅     | Camada de aplicação: portas + casos de uso    | Dev 1 | 2 dias  | P0   | ⬅ 01 (esqueleto) | [02-application-use-cases.md](./02-application-use-cases.md) |
+| 03  | ✅     | Infraestrutura do servidor + composition root | Dev 1 | 1.5 dia | P0   | ⬅ 02             | [03-server-infrastructure.md](./03-server-infrastructure.md) |
+| 04  | ✅     | Rotas finas + mapeamento de erros             | Dev 1 | 1 dia   | P0   | ⬅ 03             | [04-thin-route-handlers.md](./04-thin-route-handlers.md)     |
+| 05  | 🟢     | Tempo de resposta: índices, SQL, overview     | Dev 3 | 1.5 dia | P0   | ⬅ 03             | [05-db-response-time.md](./05-db-response-time.md)           |
 | 06  | ⏳     | Front em camadas: gateways, queries, MFEs     | Dev 2 | 2 dias  | P0   | ⬅ 01             | [06-front-layers.md](./06-front-layers.md)                   |
 | 07  | ⏳     | View-models e casos de uso de cliente         | Dev 2 | 1.5 dia | P0   | ⬅ 06             | [07-view-models.md](./07-view-models.md)                     |
 | 08  | ⏳     | Fronteiras de módulos (lint + grafo)          | Dev 3 | 1 dia   | P0   | ⬅ 01             | [08-module-boundaries.md](./08-module-boundaries.md)         |
-| 09  | 🟢     | Design System em Atomic Design                | Dev 3 | 1 dia   | P1   | ✅ dia 1         | [09-ds-atomic-design.md](./09-ds-atomic-design.md)           |
+| 09  | ✅     | Design System em Atomic Design                | Dev 3 | 1 dia   | P1   | ✅ dia 1         | [09-ds-atomic-design.md](./09-ds-atomic-design.md)           |
 | 10  | ⏳     | Testes + smoke                                | Todos | 0.5 dia | P0   | ⬅ impl           | [10-tests-smoke.md](./10-tests-smoke.md)                     |
 
 **Legenda:** ✅ mergeada · 🟢 implementada · ⏳ pendente
