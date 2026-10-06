@@ -5,7 +5,13 @@ import type { Database } from '@/db';
 import { users, type UserRow } from '@/db/schema';
 
 function toUser(row: UserRow): User {
-  return { id: row.id, name: row.name, email: row.email, passwordHash: row.passwordHash };
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    passwordHash: row.passwordHash,
+    ...(row.image !== null ? { image: row.image } : {}),
+  };
 }
 
 export class DrizzleUserRepository implements UserRepository {

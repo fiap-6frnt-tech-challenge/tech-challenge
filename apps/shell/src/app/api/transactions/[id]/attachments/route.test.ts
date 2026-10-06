@@ -109,6 +109,13 @@ describe('attachments route', () => {
     );
   });
 
+  it('preserves the Phase 2 empty list for a missing or foreign transaction', async () => {
+    mocks.list.mockRejectedValue(new NotFoundError('Transação'));
+    const response = await GET(request(), context);
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual([]);
+  });
+
   it('lists only public attachment fields and keeps CORS', async () => {
     const response = await GET(request(), context);
     expect(response.status).toBe(200);

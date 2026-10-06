@@ -1,12 +1,10 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  nextAuth: vi.fn((_config: unknown) => ({
-    handlers: {},
-    auth: vi.fn(),
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-  })),
+  nextAuth: vi.fn((config: unknown) => {
+    void config;
+    return { handlers: {}, auth: vi.fn(), signIn: vi.fn(), signOut: vi.fn() };
+  }),
   authenticate: vi.fn(),
 }));
 vi.mock('next-auth', () => ({ default: mocks.nextAuth }));
@@ -40,6 +38,21 @@ describe('credentials authorize', () => {
     expect(mocks.authenticate).toHaveBeenCalledWith('ana@example.com', 'secret');
     expect(result).toMatchObject({ id: 'user-1', name: 'Ana', email: 'ana@example.com' });
     expect(result).not.toHaveProperty('passwordHash');
+  });
+
+  it('keeps the saved avatar in the credentials session', async () => {
+    mocks.authenticate.mockResolvedValue({
+      id: 'user-1',
+      name: 'Ana',
+      email: 'ana@example.com',
+      passwordHash: 'private-hash',
+      image: 'https://example.com/avatar.png',
+    });
+    await expect(
+      authorize({ email: 'ana@example.com', password: 'secret' })
+    ).resolves.toMatchObject({
+      image: 'https://example.com/avatar.png',
+    });
   });
 
   it('rejects missing credentials without calling the container', async () => {

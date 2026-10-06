@@ -77,10 +77,10 @@ export const DELETE = route<{ id: string }>(async ({ actor, params }) => {
 
 ## Validação
 
-- [ ] Todas as rotas usam `route()`/`publicRoute()` e o `container`
-- [ ] Nenhum import de `@/db` ou `drizzle-orm` em `app/api/**`
-- [ ] Testes de contrato verdes; E2E verdes
-- [ ] Erro inesperado devolve só `requestId`, sem stack nem SQL
+- [x] Todas as rotas migradas usam `route()`/`publicRoute()` e o `container` (NextAuth mantém seus handlers próprios)
+- [x] Nenhum import de `@/db` ou `drizzle-orm` em `app/api/**`
+- [x] Testes de contrato verdes; E2E verdes
+- [x] Erro inesperado devolve só `requestId`, sem stack nem SQL
 
 ## Gotchas
 
@@ -88,3 +88,7 @@ export const DELETE = route<{ id: string }>(async ({ actor, params }) => {
 2. Os `corsHeaders` das rotas de anexo viram um helper, mantendo o comportamento (o S3-05 restringe ao ambiente de dev).
 3. `register` e as rotas do NextAuth continuam públicas; o `proxy.ts` segue barrando `/api/*` sem sessão.
 4. Rotas `multipart/form-data` (upload) usam `req.formData()` em vez de `readJson` — trate as duas formas no helper.
+
+## Limite conhecido desta etapa
+
+Em ambiente local ou Docker sem Blob, `LocalFileStorage` devolve uma referência interna no campo `url`. O download autenticado e o novo `downloadUrl` estão previstos na S3-01. Com Vercel Blob, a URL pública continua sendo retornada.

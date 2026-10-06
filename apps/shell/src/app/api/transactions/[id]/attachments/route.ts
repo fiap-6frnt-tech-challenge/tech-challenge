@@ -1,3 +1,4 @@
+import { NotFoundError } from '@bytebank/core';
 import { container } from '@/server/container';
 import { publicAttachment } from '@/server/http/attachment';
 import { corsHeaders } from '@/server/http/cors';
@@ -21,7 +22,13 @@ export const POST = route<Params>(
 );
 
 export const GET = route<Params>(
-  async ({ actor, params }) =>
-    (await container.listAttachments.execute(actor, params.id)).map(publicAttachment),
+  async ({ actor, params }) => {
+    try {
+      return (await container.listAttachments.execute(actor, params.id)).map(publicAttachment);
+    } catch (error) {
+      if (error instanceof NotFoundError) return [];
+      throw error;
+    }
+  },
   { headers: cors }
 );
