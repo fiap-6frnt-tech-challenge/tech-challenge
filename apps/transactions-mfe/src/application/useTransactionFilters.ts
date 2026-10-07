@@ -1,6 +1,6 @@
-import type { TransactionFiltersValue } from '../components/TransactionFilters';
+import type { TransactionFiltersValue } from '../presentation/components/TransactionFilters';
 import { fromSearchParams, toSearchParams } from '@bytebank/core';
-import { DEFAULT_FILTERS } from '../components/TransactionFilters';
+import { DEFAULT_FILTERS } from '../presentation/components/TransactionFilters';
 import { useCallback, useState } from 'react';
 
 function decodeBrowserSearch(search: string): { filters: TransactionFiltersValue; page: number } {

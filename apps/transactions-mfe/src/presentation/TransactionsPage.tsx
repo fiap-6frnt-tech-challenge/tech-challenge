@@ -13,7 +13,7 @@ import type { Transaction } from '@bytebank/shared';
 import { TransactionFilters, DEFAULT_FILTERS } from './components/TransactionFilters';
 import { TransactionList } from './components/TransactionList';
 import type { TransactionFormValues } from './components/TransactionForm/ITransactionForm';
-import { useTransactionFilters } from './hooks/useTransactionFilters';
+import { useTransactionFilters } from '../application/useTransactionFilters';
 
 const DeleteTransactionModal = lazy(() =>
   import('./components/DeleteTransactionModal').then((m) => ({

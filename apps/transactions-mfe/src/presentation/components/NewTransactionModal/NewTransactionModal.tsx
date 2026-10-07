@@ -11,7 +11,7 @@ import type {
   TransactionFormValues,
 } from '../TransactionForm/ITransactionForm';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
-import { useAttachments } from '../../hooks/useAttachments';
+import { useAttachments } from '../../../application/useAttachments';
 import type { NewTransactionModalProps } from './INewTransactionModal';
 
 const SUCCESS_FEEDBACK = {

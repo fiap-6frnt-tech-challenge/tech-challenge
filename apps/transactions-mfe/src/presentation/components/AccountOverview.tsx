@@ -1,21 +1,20 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Plus, ReceiptText } from 'lucide-react';
 import { Button, EmptyState, ErrorState } from '@bytebank/design-system';
-import { useTransactions } from '@bytebank/api-client';
+import { useAccountOverview } from '@bytebank/api-client';
 import { selectUser, useAppSelector } from '@bytebank/stores';
-import { calculateBalance, getRecent } from '@bytebank/shared';
 import { BalanceCard } from './BalanceCard';
 import { TransactionList } from './TransactionList';
 import { NewTransactionModal } from './NewTransactionModal';
 
 export default function AccountOverview() {
-  const { data, isLoading, isError } = useTransactions();
+  const { data, isLoading, isError } = useAccountOverview();
   const user = useAppSelector(selectUser);
   const firstName = user?.name?.split(' ')[0];
-  const recentTransactions = useMemo(() => getRecent(data ?? [], 5), [data]);
-  const balance = useMemo(() => calculateBalance(data ?? []), [data]);
+  const recentTransactions = data?.recent ?? [];
+  const balance = data?.balance ?? 0;
   const [isNewTransactionVisible, setIsNewTransactionVisible] = useState(false);
 
   if (isError) {

@@ -27,8 +27,8 @@ export default defineConfig({
       manifest: { filePath: '', fileName: 'mf-manifest.json' },
       dts: false,
       exposes: {
-        './TransactionsPage': './src/TransactionsPage.tsx',
-        './AccountOverview': './src/components/AccountOverview.tsx',
+        './TransactionsPage': './src/presentation/TransactionsPage.tsx',
+        './AccountOverview': './src/presentation/components/AccountOverview.tsx',
       },
       shared: {
         react: { singleton: true, requiredVersion: false },
