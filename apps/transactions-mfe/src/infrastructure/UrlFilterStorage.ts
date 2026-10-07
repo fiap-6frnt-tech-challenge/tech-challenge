@@ -1,8 +1,4 @@
-export interface FilterStateStorage {
-  read(): URLSearchParams;
-  write(params: URLSearchParams): void;
-  subscribe(callback: () => void): () => void;
-}
+import type { FilterStateStorage } from '../application/ports/FilterStateStorage';
 
 export class UrlFilterStorage implements FilterStateStorage {
   read(): URLSearchParams {

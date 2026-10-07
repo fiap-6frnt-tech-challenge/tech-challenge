@@ -2,7 +2,6 @@
 
 import { ConfirmTransactionModal } from '../ConfirmTransactionModal';
 import { FileUpload, Modal } from '@bytebank/design-system';
-import { useCreateTransaction } from '@bytebank/api-client';
 import { showFeedback, useAppDispatch } from '@bytebank/stores';
 import type { ReactElement } from 'react';
 import { useRef, useState } from 'react';
@@ -11,7 +10,7 @@ import type {
   TransactionFormValues,
 } from '../TransactionForm/ITransactionForm';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
-import { useAttachments } from '../../../application/useAttachments';
+import { useSaveTransactionWithAttachments } from '../../../application/useSaveTransactionWithAttachments';
 import type { NewTransactionModalProps } from './INewTransactionModal';
 
 const SUCCESS_FEEDBACK = {
@@ -27,13 +26,13 @@ const ERROR_FEEDBACK = {
 };
 
 export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalProps): ReactElement {
-  const { mutateAsync: createTransaction } = useCreateTransaction();
+  const saveTransaction = useSaveTransactionWithAttachments();
   const dispatch = useAppDispatch();
 
   const formRef = useRef<TransactionFormRef>(null);
   const [pendingData, setPendingData] = useState<TransactionFormValues | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { pendingFiles, setPendingFiles, flushPending, resetAttachments } = useAttachments();
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   const handleFormSubmit = (data: TransactionFormValues): void => {
     setPendingData(data);
@@ -45,16 +44,15 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
     setIsSubmitting(true);
 
     try {
-      const createdTransaction = await createTransaction(pendingData);
-      const { failed } = await flushPending(createdTransaction.id);
+      const { failedFiles } = await saveTransaction(pendingData, pendingFiles);
 
       setPendingData(null);
       formRef.current?.reset();
-      resetAttachments();
+      setPendingFiles([]);
 
       dispatch(
         showFeedback(
-          failed.length > 0
+          failedFiles.length > 0
             ? {
                 type: 'info',
                 title: 'Transação criada com anexos pendentes',
@@ -76,7 +74,7 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
 
   const handleCancel = (): void => {
     setPendingData(null);
-    resetAttachments();
+    setPendingFiles([]);
     onCancel();
   };
 

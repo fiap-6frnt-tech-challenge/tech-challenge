@@ -10,6 +10,8 @@ export default defineConfig({
       'packages/core/vitest.config.ts',
       'packages/stores/vitest.config.ts',
       'packages/api-client/vitest.config.ts',
+      'apps/dashboard-mfe/vitest.config.ts',
+      'apps/transactions-mfe/vitest.config.ts',
     ],
   },
 });

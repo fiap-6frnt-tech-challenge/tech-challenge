@@ -1,13 +1,14 @@
-import { useMemo } from 'react';
 import { DashboardWidget, KpiCard, BarChart, LineChart, PieChart } from '@bytebank/design-system';
-import { useDashboardSummary } from '@bytebank/api-client';
-import { computeKpiDeltas, topCategoriesWithOthers } from '@bytebank/core';
+import { EMPTY_DASHBOARD_VIEW_MODEL } from '../application/toDashboardViewModel';
+import { useDashboardViewModel } from '../application/useDashboardViewModel';
 
 export default function Dashboard() {
-  const { data, isLoading, isError, refetch } = useDashboardSummary();
-
-  const deltas = useMemo(() => computeKpiDeltas(data), [data]);
-  const processedPieData = useMemo(() => topCategoriesWithOthers(data?.byCategory ?? []), [data]);
+  const {
+    data: viewModel = EMPTY_DASHBOARD_VIEW_MODEL,
+    isLoading,
+    isError,
+    refetch,
+  } = useDashboardViewModel();
 
   return (
     <div className="flex flex-col gap-lg">
@@ -19,24 +20,24 @@ export default function Dashboard() {
         <KpiCard
           className="w-full"
           label="Receita do mês"
-          value={data?.incomeMonth ?? 0}
-          delta={deltas.income}
+          value={viewModel.income.value}
+          delta={viewModel.income.delta}
           loading={isLoading}
           error={isError}
         />
         <KpiCard
           label="Despesa do mês"
           className="w-full"
-          value={data?.expenseMonth ?? 0}
-          delta={deltas.expense !== undefined ? -deltas.expense : undefined}
+          value={viewModel.expense.value}
+          delta={viewModel.expense.delta}
           loading={isLoading}
           error={isError}
         />
         <KpiCard
           label="Economia do mês"
           className="w-full"
-          value={data?.savingsMonth ?? 0}
-          delta={deltas.savings}
+          value={viewModel.savings.value}
+          delta={viewModel.savings.delta}
           loading={isLoading}
           error={isError}
         />
@@ -50,11 +51,11 @@ export default function Dashboard() {
             error={isError}
             onRefresh={refetch}
             skeletonType="bar"
-            empty={!data?.byMonth || data.byMonth.length === 0}
+            empty={viewModel.byMonth.length === 0}
           >
             <div role="group" aria-label="Gráfico de barras mostrando receita e despesa por mês">
               <BarChart
-                data={data?.byMonth ?? []}
+                data={viewModel.byMonth}
                 xKey="month"
                 bars={[
                   { key: 'income', label: 'Receita', color: 'var(--color-chart-green)' },
@@ -74,11 +75,11 @@ export default function Dashboard() {
             error={isError}
             onRefresh={refetch}
             skeletonType="pie"
-            empty={!data?.byCategory || data.byCategory.length === 0}
+            empty={viewModel.byCategory.length === 0}
           >
             <div role="group" aria-label="Gráfico de pizza mostrando despesas por categoria">
               <PieChart
-                data={processedPieData}
+                data={viewModel.byCategory}
                 height={300}
                 accessibleCaption="Distribuição de despesas por categoria de consumo"
               />
@@ -93,14 +94,14 @@ export default function Dashboard() {
             error={isError}
             onRefresh={refetch}
             skeletonType="line"
-            empty={!data?.balanceOverTime || data.balanceOverTime.length === 0}
+            empty={viewModel.balanceOverTime.length === 0}
           >
             <div
               role="group"
               aria-label="Gráfico de linha mostrando a evolução do saldo ao longo do tempo"
             >
               <LineChart
-                data={data?.balanceOverTime ?? []}
+                data={viewModel.balanceOverTime}
                 xKey="date"
                 lines={[{ key: 'balance', label: 'Saldo', color: 'var(--color-brand-primary)' }]}
                 height={300}

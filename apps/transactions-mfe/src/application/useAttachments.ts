@@ -2,13 +2,7 @@ import { useCallback, useState } from 'react';
 import { AttachmentService } from '@bytebank/api-client';
 import type { Attachment } from '@bytebank/shared';
 
-export interface FlushPendingResult {
-  uploaded: Attachment[];
-  failed: File[];
-}
-
 export function useAttachments(transactionId?: string) {
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [uploadedAttachments, setUploadedAttachments] = useState<Attachment[]>([]);
   const [removing, setRemoving] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -71,30 +65,12 @@ export function useAttachments(transactionId?: string) {
     [transactionId]
   );
 
-  const flushPending = useCallback(
-    async (id: string): Promise<FlushPendingResult> => {
-      const files = pendingFiles;
-      const results = await Promise.allSettled(files.map((file) => uploadFile(file, id)));
-      const uploaded = results.flatMap((result) =>
-        result.status === 'fulfilled' ? [result.value] : []
-      );
-      const failed = files.filter((_, index) => results[index].status === 'rejected');
-
-      setPendingFiles(failed);
-      return { uploaded, failed };
-    },
-    [pendingFiles, uploadFile]
-  );
-
   const resetAttachments = useCallback(() => {
-    setPendingFiles([]);
     setUploadedAttachments([]);
     setRemoving(null);
   }, []);
 
   return {
-    pendingFiles,
-    setPendingFiles,
     uploadedAttachments,
     removing,
     isLoading,
@@ -102,7 +78,6 @@ export function useAttachments(transactionId?: string) {
     loadAttachments,
     uploadFiles,
     removeAttachment,
-    flushPending,
     resetAttachments,
   };
 }

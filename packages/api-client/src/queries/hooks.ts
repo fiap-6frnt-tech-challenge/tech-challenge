@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import type { NewTransaction, UpdateTransaction } from '@bytebank/shared';
+import type { DashboardSummary } from '@bytebank/core';
 import type { GetPaginatedParams, PaginatedResponse, SummaryRange } from '../http';
 import { attachmentKeys, overviewKeys, summaryKeys, transactionKeys } from '../keys';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
@@ -25,16 +26,24 @@ function getDefaultSummaryRange(now = new Date()): Required<SummaryRange> {
   };
 }
 
-export function useDashboardSummary(range?: SummaryRange) {
+export interface DashboardSummaryOptions<TData> extends SummaryRange {
+  select?: (summary: DashboardSummary) => TData;
+}
+
+export function useDashboardSummary<TData = DashboardSummary>({
+  select,
+  ...range
+}: DashboardSummaryOptions<TData> = {}) {
   const effectiveRange = useMemo(
     () => ({ ...getDefaultSummaryRange(), ...range }),
-    [range?.from, range?.to]
+    [range.from, range.to]
   );
 
   return useQuery({
     queryKey: summaryKeys.range(effectiveRange),
     queryFn: ({ signal }) => transactions.summary(effectiveRange, { signal }),
     staleTime: 60_000,
+    select,
   });
 }
 

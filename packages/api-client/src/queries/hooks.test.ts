@@ -94,6 +94,16 @@ describe('useDashboardSummary', () => {
     await expect(options.queryFn({ signal })).resolves.toEqual(summary);
     expect(summarySpy).toHaveBeenCalledWith({ from: '2026-01-01', to: '2026-06-30' }, { signal });
   });
+
+  it('repassa o select ao TanStack sem alterar a chave de cache', () => {
+    const select = vi.fn();
+
+    useDashboardSummary({ from: '2026-01-01', to: '2026-06-30', select });
+
+    const options = mocks.useQuery.mock.calls[0][0];
+    expect(options.select).toBe(select);
+    expect(options.queryKey).toEqual(summaryKeys.range({ from: '2026-01-01', to: '2026-06-30' }));
+  });
 });
 
 describe('useAccountOverview', () => {

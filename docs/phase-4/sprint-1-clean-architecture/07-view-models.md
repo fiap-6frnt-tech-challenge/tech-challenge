@@ -50,16 +50,16 @@ Três pontos concentram regra de negócio ou infraestrutura dentro da apresenta�
 
 ## Testes
 
-- [ ] `toDashboardViewModel`: deltas com mês anterior zerado, mais de 5 categorias, lista vazia
-- [ ] Codec: ida e volta URL ↔ filtro; ordem estável dos parâmetros
-- [ ] `UrlFilterStorage` (jsdom): escreve na URL e notifica em `popstate`
-- [ ] `saveTransactionWithAttachments` com gateways fake: sucesso total e falha parcial
+- [x] `toDashboardViewModel`: deltas com mês anterior zerado, mais de 5 categorias, lista vazia
+- [x] Codec: ida e volta URL ↔ filtro; ordem estável dos parâmetros
+- [x] `UrlFilterStorage` (jsdom): escreve na URL e notifica em `popstate`
+- [x] `saveTransactionWithAttachments` com gateways fake: sucesso total e falha parcial
 
 ## Validação
 
-- [ ] `Dashboard.tsx` sem `useMemo` de cálculo
-- [ ] `useTransactionFilters` sem `window.history` direto
-- [ ] Comportamento idêntico ao da Fase 2 (E2E de filtros verde)
+- [x] `Dashboard.tsx` sem `useMemo` de cálculo
+- [x] `useTransactionFilters` sem `window.history` direto
+- [x] Comportamento idêntico ao da Fase 2 (E2E de filtros verde)
 
 ## Gotchas
 
