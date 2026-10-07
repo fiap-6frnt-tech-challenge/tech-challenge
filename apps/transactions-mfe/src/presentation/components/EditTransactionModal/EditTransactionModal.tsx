@@ -5,7 +5,7 @@ import { AttachmentList, FileUpload, Modal } from '@bytebank/design-system';
 import { showFeedback, useAppDispatch } from '@bytebank/stores';
 import { EditTransactionModalProps } from './IEditTransactionModal';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
-import { useAttachments } from '../../hooks/useAttachments';
+import { useAttachments } from '../../../application/useAttachments';
 
 export function EditTransactionModal({
   transaction,

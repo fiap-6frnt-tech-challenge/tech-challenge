@@ -4,8 +4,8 @@ import { Provider } from 'react-redux';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { store } from '@bytebank/stores';
 import { queryClient } from '@bytebank/api-client';
-import TransactionsPage from './TransactionsPage';
-import AccountOverview from './components/AccountOverview';
+import TransactionsPage from './presentation/TransactionsPage';
+import AccountOverview from './presentation/components/AccountOverview';
 import './index.css';
 
 const rootEl = document.getElementById('root');
