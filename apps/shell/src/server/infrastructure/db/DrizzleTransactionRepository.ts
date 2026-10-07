@@ -1,10 +1,7 @@
 import 'server-only';
-import { and, asc, count, desc, eq, gte, ilike, inArray, lte, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, ilike, inArray, lte, sql, type SQL } from 'drizzle-orm';
 import {
-  aggregateByMonth,
-  calculateBalance,
-  cumulativeBalance,
-  groupByCategory,
+  TRANSACTION_TYPE,
   type BalancePoint,
   type CategoryAggregate,
   type MonthlyAggregate,
@@ -25,6 +22,23 @@ import { transactions } from '@/db/schema';
 import { toTransaction } from './mappers';
 
 const newestFirst = [desc(transactions.date), desc(transactions.createdAt), desc(transactions.id)];
+const chronological = [asc(transactions.date), asc(transactions.createdAt), asc(transactions.id)];
+
+const deposit = sql.raw(`'${TRANSACTION_TYPE.DEPOSIT}'`);
+const withdrawal = sql.raw(`'${TRANSACTION_TYPE.WITHDRAWAL}'`);
+const amount = sql`${transactions.amount}::numeric`;
+const signedAmount = sql`case ${transactions.type} when ${deposit} then ${amount} when ${withdrawal} then -${amount} else 0 end`;
+
+function money(total: SQL) {
+  return sql<number>`round(coalesce(${total}, 0), 2)`.mapWith(Number);
+}
+
+function inRange(ownerId: string, range: Partial<DateRange>) {
+  const conditions = [eq(transactions.userId, ownerId)];
+  if (range.from) conditions.push(gte(transactions.date, range.from));
+  if (range.to) conditions.push(lte(transactions.date, range.to));
+  return and(...conditions);
+}
 
 function owned(id: string, ownerId: string) {
   return and(eq(transactions.id, id), eq(transactions.userId, ownerId));
@@ -57,18 +71,6 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       with: { attachments: true },
     });
     return row ? toTransaction(row) : null;
-  }
-
-  async all(ownerId: string, range: Partial<DateRange> = {}): Promise<Transaction[]> {
-    const conditions = [eq(transactions.userId, ownerId)];
-    if (range.from) conditions.push(gte(transactions.date, range.from));
-    if (range.to) conditions.push(lte(transactions.date, range.to));
-    const rows = await this.db.query.transactions.findMany({
-      where: and(...conditions),
-      orderBy: [desc(transactions.date)],
-      with: { attachments: true },
-    });
-    return rows.map((row) => toTransaction(row));
   }
 
   async list(
@@ -137,8 +139,11 @@ export class DrizzleTransactionRepository implements TransactionRepository {
   }
 
   async overview(ownerId: string, recentLimit: number): Promise<AccountOverview> {
-    const [all, recent] = await Promise.all([
-      this.history(ownerId),
+    const [[{ balance }], recent] = await Promise.all([
+      this.db
+        .select({ balance: money(sql`sum(${signedAmount})`) })
+        .from(transactions)
+        .where(eq(transactions.userId, ownerId)),
       this.db.query.transactions.findMany({
         where: eq(transactions.userId, ownerId),
         orderBy: newestFirst,
@@ -146,31 +151,43 @@ export class DrizzleTransactionRepository implements TransactionRepository {
         with: { attachments: true },
       }),
     ]);
-    return { balance: calculateBalance(all), recent: recent.map((row) => toTransaction(row)) };
+    return { balance, recent: recent.map((row) => toTransaction(row)) };
   }
 
-  async monthlyTotals(ownerId: string, range: DateRange): Promise<MonthlyAggregate[]> {
-    return aggregateByMonth(await this.history(ownerId, range));
-  }
-
-  async categoryTotals(ownerId: string, range: DateRange): Promise<CategoryAggregate[]> {
-    return groupByCategory(await this.history(ownerId, range));
-  }
-
-  async balanceSeries(ownerId: string, range: DateRange): Promise<BalancePoint[]> {
-    return cumulativeBalance(await this.history(ownerId, range));
-  }
-
-  private async history(ownerId: string, range?: DateRange): Promise<Transaction[]> {
-    const conditions = [eq(transactions.userId, ownerId)];
-    if (range) {
-      conditions.push(gte(transactions.date, range.from), lte(transactions.date, range.to));
-    }
-    const rows = await this.db
-      .select()
+  async monthlyTotals(ownerId: string, range: Partial<DateRange>): Promise<MonthlyAggregate[]> {
+    const month = sql<string>`to_char(${transactions.date}::date, 'YYYY-MM')`;
+    return this.db
+      .select({
+        month,
+        income: money(sql`sum(case when ${transactions.type} = ${deposit} then ${amount} end)`),
+        expense: money(sql`sum(case when ${transactions.type} = ${withdrawal} then ${amount} end)`),
+      })
       .from(transactions)
-      .where(and(...conditions))
-      .orderBy(...newestFirst);
-    return rows.map((row) => toTransaction(row));
+      .where(inRange(ownerId, range))
+      .groupBy(month)
+      .orderBy(month);
+  }
+
+  async categoryTotals(ownerId: string, range: Partial<DateRange>): Promise<CategoryAggregate[]> {
+    const total = money(sql`sum(${amount})`);
+    return this.db
+      .select({ category: transactions.category, total })
+      .from(transactions)
+      .where(and(inRange(ownerId, range), eq(transactions.type, TRANSACTION_TYPE.WITHDRAWAL)))
+      .groupBy(transactions.category)
+      .orderBy(desc(total), asc(transactions.category));
+  }
+
+  async balanceSeries(ownerId: string, range: Partial<DateRange>): Promise<BalancePoint[]> {
+    return this.db
+      .select({
+        date: transactions.date,
+        balance: money(
+          sql`sum(${signedAmount}) over (order by ${transactions.date}, ${transactions.createdAt}, ${transactions.id} rows unbounded preceding)`
+        ),
+      })
+      .from(transactions)
+      .where(inRange(ownerId, range))
+      .orderBy(...chronological);
   }
 }

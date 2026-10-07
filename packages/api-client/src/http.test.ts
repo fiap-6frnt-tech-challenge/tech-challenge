@@ -71,6 +71,21 @@ describe('TransactionService', () => {
     mockFetch({ error: 'boom' }, false);
     await expect(TransactionService.getById('1')).rejects.toThrow('Falha ao buscar transação');
   });
+
+  it('getOverview busca saldo e recentes no endpoint dedicado', async () => {
+    const overview = { balance: 100, recent: [] };
+    const fetchMock = mockFetch(overview);
+
+    await expect(TransactionService.getOverview()).resolves.toEqual(overview);
+    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/overview');
+  });
+
+  it('getOverview lança erro quando a resposta não é ok', async () => {
+    mockFetch({ error: 'boom' }, false);
+    await expect(TransactionService.getOverview()).rejects.toThrow(
+      'Falha ao buscar resumo da conta'
+    );
+  });
 });
 
 describe('SummaryService', () => {

@@ -1,5 +1,6 @@
 import { toSearchParams, type TransactionType } from '@bytebank/core';
 import type {
+  AccountOverview,
   Attachment,
   DashboardSummary,
   NewTransaction,
@@ -51,9 +52,9 @@ function transactionWritePayload(data: UpdateTransaction): UpdateTransaction {
 }
 
 export const TransactionService = {
-  async getAll(): Promise<Transaction[]> {
-    const res = await fetch(`${apiBaseUrl}/transactions`);
-    if (!res.ok) throw new Error('Falha ao buscar transações');
+  async getOverview(): Promise<AccountOverview> {
+    const res = await fetch(`${apiBaseUrl}/transactions/overview`);
+    if (!res.ok) throw new Error('Falha ao buscar resumo da conta');
     return res.json();
   },
 

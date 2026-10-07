@@ -32,7 +32,8 @@ const cookie = readFileSync(cookiePath, 'utf-8').trim();
 
 const ENDPOINTS = [
   { name: 'lista paginada (10 itens)', path: '/api/transactions?_page=1&_per_page=10' },
-  { name: 'lista completa (sem paginação)', path: '/api/transactions' },
+  { name: 'lista paginada (100 itens)', path: '/api/transactions?_page=1&_per_page=100' },
+  { name: 'overview da home (saldo + 5 recentes)', path: '/api/transactions/overview' },
   { name: 'resumo / gráficos', path: '/api/transactions/summary' },
   { name: 'busca paginada (q=mercado)', path: '/api/transactions?q=mercado&_page=1&_per_page=10' },
 ];

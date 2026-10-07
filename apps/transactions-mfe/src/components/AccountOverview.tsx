@@ -1,21 +1,18 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Plus, ReceiptText } from 'lucide-react';
 import { Button, EmptyState, ErrorState } from '@bytebank/design-system';
-import { useTransactions } from '@bytebank/api-client';
+import { useAccountOverview } from '@bytebank/api-client';
 import { selectUser, useAppSelector } from '@bytebank/stores';
-import { calculateBalance, getRecent } from '@bytebank/shared';
 import { BalanceCard } from './BalanceCard';
 import { TransactionList } from './TransactionList';
 import { NewTransactionModal } from './NewTransactionModal';
 
 export default function AccountOverview() {
-  const { data, isLoading, isError } = useTransactions();
+  const { data, isLoading, isError } = useAccountOverview();
   const user = useAppSelector(selectUser);
   const firstName = user?.name?.split(' ')[0];
-  const recentTransactions = useMemo(() => getRecent(data ?? [], 5), [data]);
-  const balance = useMemo(() => calculateBalance(data ?? []), [data]);
   const [isNewTransactionVisible, setIsNewTransactionVisible] = useState(false);
 
   if (isError) {
@@ -25,14 +22,14 @@ export default function AccountOverview() {
   return (
     <>
       <section aria-labelledby="recent-tx-heading" className="flex flex-col gap-lg">
-        <BalanceCard balance={balance} owner={firstName} isLoading={isLoading} />
+        <BalanceCard balance={data?.balance ?? 0} owner={firstName} isLoading={isLoading} />
 
         <h2 id="recent-tx-heading" className="sr-only">
           Transações recentes
         </h2>
 
         <TransactionList
-          transactions={recentTransactions}
+          transactions={data?.recent ?? []}
           onEdit={() => {}}
           onDelete={() => {}}
           title="Transações recentes"

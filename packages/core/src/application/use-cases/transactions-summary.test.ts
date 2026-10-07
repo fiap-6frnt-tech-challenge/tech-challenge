@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { Transaction } from '../../domain';
 import { InMemoryTransactionRepository } from '../testing';
 import { GetTransactionsSummary } from './dashboard';
-import { GetAllTransactions } from './transactions';
 
 function transaction(
   id: string,
@@ -21,30 +20,7 @@ function transaction(
   };
 }
 
-describe('legacy query use cases', () => {
-  it('returns every owned transaction beyond the 100-item page limit', async () => {
-    const rows = Array.from({ length: 125 }, (_, index) => transaction(`tx-${index}`, 'owner'));
-    rows.push(transaction('foreign', 'other'));
-    const useCase = new GetAllTransactions(new InMemoryTransactionRepository(rows));
-
-    const result = await useCase.execute({ userId: 'owner' });
-
-    expect(result).toHaveLength(125);
-    expect(result.some((row) => row.id === 'foreign')).toBe(false);
-  });
-
-  it('filters the full list by the optional date range', async () => {
-    const rows = [
-      transaction('jan', 'owner', { date: '2026-01-10' }),
-      transaction('feb', 'owner', { date: '2026-02-10' }),
-    ];
-    const result = await new GetAllTransactions(new InMemoryTransactionRepository(rows)).execute(
-      { userId: 'owner' },
-      { from: '2026-02-01' }
-    );
-    expect(result.map((row) => row.id)).toEqual(['feb']);
-  });
-
+describe('GetTransactionsSummary', () => {
   it('preserves Phase 2 summary values and treats transfers as neutral', async () => {
     const rows = [
       transaction('income-jan', 'owner', {
@@ -90,6 +66,18 @@ describe('legacy query use cases', () => {
       ],
       byCategory: [{ category: 'food', total: 50 }],
     });
+  });
+
+  it('subtracts monthly totals in cents, without floating-point noise', async () => {
+    const rows = [
+      transaction('income-jan', 'owner', { type: 'deposit', amount: 0.3, date: '2026-01-05' }),
+      transaction('income-feb', 'owner', { type: 'deposit', amount: 0.1, date: '2026-02-05' }),
+      transaction('expense-feb', 'owner', { amount: 0.3, date: '2026-02-10' }),
+    ];
+    const result = await new GetTransactionsSummary(
+      new InMemoryTransactionRepository(rows)
+    ).execute({ userId: 'owner' });
+    expect(result).toMatchObject({ savingsMonth: -0.2, deltaIncome: -0.2, deltaExpense: 0.3 });
   });
 
   it('returns the zero summary for an empty range', async () => {

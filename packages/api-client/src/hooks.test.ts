@@ -32,6 +32,7 @@ vi.mock('@tanstack/react-query', () => ({
 }));
 
 import {
+  useAccountOverview,
   useCreateTransaction,
   useDashboardSummary,
   useDeleteTransaction,
@@ -39,7 +40,7 @@ import {
   useUpdateTransaction,
 } from './hooks';
 import { TransactionService } from './http';
-import { summaryKeys, transactionKeys } from './keys';
+import { overviewKeys, summaryKeys, transactionKeys } from './keys';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -97,18 +98,33 @@ describe('useDashboardSummary', () => {
   });
 });
 
+describe('useAccountOverview', () => {
+  it('busca saldo e recentes no endpoint de overview, sem baixar a lista', async () => {
+    const overview = { balance: 4679.5, recent: [] };
+    const getOverviewSpy = vi.spyOn(TransactionService, 'getOverview').mockResolvedValue(overview);
+
+    useAccountOverview();
+    const options = mocks.useQuery.mock.calls[0][0];
+
+    expect(options.queryKey).toEqual(overviewKeys.all);
+    await expect(options.queryFn()).resolves.toEqual(overview);
+    expect(getOverviewSpy).toHaveBeenCalledOnce();
+  });
+});
+
 describe('transaction mutations summary invalidation', () => {
-  it('useCreateTransaction invalida listas e summary no sucesso', () => {
+  it('useCreateTransaction invalida listas, overview e summary no sucesso', () => {
     useCreateTransaction();
     const options = mocks.useMutation.mock.calls[0][0];
 
     options.onSuccess();
 
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.lists() });
+    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: overviewKeys.all });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: summaryKeys.all });
   });
 
-  it('useUpdateTransaction invalida listas, detalhe e summary no sucesso', () => {
+  it('useUpdateTransaction invalida listas, detalhe, overview e summary no sucesso', () => {
     useUpdateTransaction();
     const options = mocks.useMutation.mock.calls[0][0];
 
@@ -118,10 +134,11 @@ describe('transaction mutations summary invalidation', () => {
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
       queryKey: transactionKeys.detail('tx-1'),
     });
+    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: overviewKeys.all });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: summaryKeys.all });
   });
 
-  it('useDeleteTransaction invalida listas, detalhe e summary no settled', () => {
+  it('useDeleteTransaction invalida listas, detalhe, overview e summary no settled', () => {
     useDeleteTransaction();
     const options = mocks.useMutation.mock.calls[0][0];
 
@@ -131,6 +148,7 @@ describe('transaction mutations summary invalidation', () => {
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
       queryKey: transactionKeys.detail('tx-1'),
     });
+    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: overviewKeys.all });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: summaryKeys.all });
   });
 });

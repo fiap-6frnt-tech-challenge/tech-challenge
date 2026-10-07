@@ -11,6 +11,7 @@ import {
   type Transaction,
   type TransactionFilter,
 } from '@bytebank/core';
+import { GetTransactionsSummary } from '@bytebank/core/application';
 import * as store from '@/server/testing/legacyTransactionStore';
 import { db } from '@/db';
 import { attachments, transactions } from '@/db/schema';
@@ -31,6 +32,7 @@ const withPhoto = scope.id('txn-104');
 const receiptId = scope.id('att-receipt');
 
 const byId = (items: Transaction[]) => [...items].sort((a, b) => a.id.localeCompare(b.id));
+const cents = (value: number) => Math.round(value * 100) / 100;
 const toDto = ({ id, url, name, size, mimeType }: Attachment): Attachment => ({
   id,
   url,
@@ -156,7 +158,10 @@ describe('equivalência com o store legado (seed)', () => {
       store.getAllByUser(userId),
       transactionRepository.overview(userId, 5),
     ]);
-    expect(current).toEqual({ balance: calculateBalance(legacy), recent: getRecent(legacy, 5) });
+    expect(current).toEqual({
+      balance: cents(calculateBalance(legacy)),
+      recent: getRecent(legacy, 5),
+    });
   });
 
   it.each([
@@ -171,9 +176,53 @@ describe('equivalência com o store legado (seed)', () => {
       transactionRepository.balanceSeries(userId, range),
     ]);
 
-    expect(byMonth).toEqual(aggregateByMonth(legacy));
-    expect(byCategory).toEqual(groupByCategory(legacy));
-    expect(balanceOverTime).toEqual(cumulativeBalance(legacy));
+    expect(byMonth).toEqual(
+      aggregateByMonth(legacy).map((entry) => ({
+        ...entry,
+        income: cents(entry.income),
+        expense: cents(entry.expense),
+      }))
+    );
+    expect(byCategory).toEqual(
+      groupByCategory(legacy).map((entry) => ({ ...entry, total: cents(entry.total) }))
+    );
+    expect(balanceOverTime).toEqual(
+      cumulativeBalance(legacy).map((point) => ({ ...point, balance: cents(point.balance) }))
+    );
+  });
+
+  it.each([
+    ['sem período', {}],
+    ['período do dashboard', { from: '2026-01-01', to: '2026-06-30' }],
+    ['só o início', { from: '2026-03-01' }],
+  ])('resumo do dashboard (%s) = agregação JS da Fase 2', async (_name, range) => {
+    const legacy = await store.getAllByUser(userId, range);
+    const byMonth = aggregateByMonth(legacy);
+    const incomeMonth = byMonth.at(-1)?.income ?? 0;
+    const expenseMonth = byMonth.at(-1)?.expense ?? 0;
+    const summary = await new GetTransactionsSummary(transactionRepository).execute(
+      { userId },
+      range
+    );
+
+    expect(summary).toEqual({
+      balance: cents(calculateBalance(legacy)),
+      incomeMonth: cents(incomeMonth),
+      expenseMonth: cents(expenseMonth),
+      savingsMonth: cents(incomeMonth - expenseMonth),
+      deltaIncome: cents(incomeMonth - (byMonth.at(-2)?.income ?? 0)),
+      deltaExpense: cents(expenseMonth - (byMonth.at(-2)?.expense ?? 0)),
+      byMonth: byMonth.map((entry) => ({
+        ...entry,
+        income: cents(entry.income),
+        expense: cents(entry.expense),
+      })),
+      balanceOverTime: cumulativeBalance(legacy).map((point) => ({
+        ...point,
+        balance: cents(point.balance),
+      })),
+      byCategory: groupByCategory(legacy).map((entry) => ({ ...entry, total: cents(entry.total) })),
+    });
   });
 
   it('anexos: list/findById = listAttachments/getAttachment (campos do DTO)', async () => {

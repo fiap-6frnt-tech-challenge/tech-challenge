@@ -4,10 +4,7 @@ import { route } from '@/server/http/route';
 import { readJson } from '../read-json';
 
 export const GET = route(async ({ actor, req }) => {
-  const { searchParams } = req.nextUrl;
-  const { filter, page } = fromSearchParams(searchParams);
-  if (!searchParams.has('_page')) return container.getAllTransactions.execute(actor);
-
+  const { filter, page } = fromSearchParams(req.nextUrl.searchParams);
   const result = await container.listTransactions.execute(actor, filter, page);
   return { data: result.items, pages: result.totalPages, items: result.total };
 });

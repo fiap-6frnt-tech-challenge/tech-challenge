@@ -1,10 +1,13 @@
-import type {
-  BalancePoint,
-  CategoryAggregate,
-  MonthlyAggregate,
-  Transaction,
-  TransactionFilter,
-  PageRequest,
+import {
+  aggregateByMonth,
+  cumulativeBalance,
+  groupByCategory,
+  type BalancePoint,
+  type CategoryAggregate,
+  type MonthlyAggregate,
+  type Transaction,
+  type TransactionFilter,
+  type PageRequest,
 } from '../../domain';
 import type {
   AccountOverview,
@@ -21,7 +24,7 @@ export class InMemoryTransactionRepository implements TransactionRepository {
   async findById(id: string, ownerId: string): Promise<Transaction | null> {
     return this.items.find((item) => item.id === id && item.userId === ownerId) ?? null;
   }
-  async all(ownerId: string, range: Partial<DateRange> = {}): Promise<Transaction[]> {
+  private inRange(ownerId: string, range: Partial<DateRange>): Transaction[] {
     return this.items
       .filter(
         (item) =>
@@ -73,13 +76,13 @@ export class InMemoryTransactionRepository implements TransactionRepository {
     );
     return { balance, recent: items.slice(0, recentLimit) };
   }
-  async monthlyTotals(): Promise<MonthlyAggregate[]> {
-    return [];
+  async monthlyTotals(ownerId: string, range: Partial<DateRange>): Promise<MonthlyAggregate[]> {
+    return aggregateByMonth(this.inRange(ownerId, range));
   }
-  async categoryTotals(): Promise<CategoryAggregate[]> {
-    return [];
+  async categoryTotals(ownerId: string, range: Partial<DateRange>): Promise<CategoryAggregate[]> {
+    return groupByCategory(this.inRange(ownerId, range));
   }
-  async balanceSeries(): Promise<BalancePoint[]> {
-    return [];
+  async balanceSeries(ownerId: string, range: Partial<DateRange>): Promise<BalancePoint[]> {
+    return cumulativeBalance(this.inRange(ownerId, range));
   }
 }

@@ -6,6 +6,10 @@ export const transactionKeys = {
   detail: (id: string) => [...transactionKeys.details(), id] as const,
 };
 
+export const overviewKeys = {
+  all: ['overview'] as const,
+};
+
 export const summaryKeys = {
   all: ['summary'] as const,
   range: (range: { from?: string; to?: string }) => [...summaryKeys.all, range] as const,

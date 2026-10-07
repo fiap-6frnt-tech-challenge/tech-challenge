@@ -23,7 +23,18 @@ const api = (path, init) =>
     headers: { Cookie: cookie, 'Content-Type': 'application/json', ...init?.headers },
   });
 
-const existing = await api('/api/transactions').then((response) => response.json());
+async function listAll() {
+  const items = [];
+  for (let page = 1; ; page += 1) {
+    const { data, pages } = await api(`/api/transactions?_page=${page}&_per_page=100`).then(
+      (response) => response.json()
+    );
+    items.push(...data);
+    if (page >= pages) return items;
+  }
+}
+
+const existing = await listAll();
 console.log(`Conta tem ${existing.length} transações em ${baseUrl}.`);
 
 if (clear) {

@@ -123,16 +123,6 @@ describe('DrizzleTransactionRepository — leitura', () => {
     expect(await repository.findById(scope.id('foreign'), owner)).toBeNull();
   });
 
-  it('lista todo o histórico do dono com filtro opcional de datas', async () => {
-    const history = await repository.all(owner);
-    expect(names(history)).toEqual(['bonus', 'savings', 'uber', 'market', 'salary']);
-    expect(history.find((row) => row.id === scope.id('foreign'))).toBeUndefined();
-    expect(names(await repository.all(owner, { from: '2026-02-01', to: '2026-02-28' }))).toEqual([
-      'savings',
-      'uber',
-    ]);
-  });
-
   it('pagina só as transações do dono, da mais recente para a mais antiga', async () => {
     const page = await repository.list(owner, all, { page: 1, perPage: 2 });
 
@@ -167,7 +157,7 @@ describe('DrizzleTransactionRepository — leitura', () => {
   it('resume saldo e recentes só do dono, com a transferência neutra', async () => {
     const overview = await repository.overview(owner, 2);
 
-    expect(overview.balance).toBeCloseTo(5000 - 320.5 - 45.9 + 800, 2);
+    expect(overview.balance).toBe(5433.6);
     expect(names(overview.recent)).toEqual(['bonus', 'savings']);
   });
 
@@ -185,9 +175,61 @@ describe('DrizzleTransactionRepository — leitura', () => {
     expect(await repository.balanceSeries(owner, range)).toEqual([
       { date: '2026-01-05', balance: 5000 },
       { date: '2026-01-10', balance: 4679.5 },
-      { date: '2026-02-03', balance: expect.closeTo(4633.6, 2) },
-      { date: '2026-02-15', balance: expect.closeTo(4633.6, 2) },
+      { date: '2026-02-03', balance: 4633.6 },
+      { date: '2026-02-15', balance: 4633.6 },
     ]);
+  });
+
+  it('agrega todo o histórico quando o período não tem limites', async () => {
+    expect(await repository.monthlyTotals(owner, {})).toEqual([
+      { month: '2026-01', income: 5000, expense: 320.5 },
+      { month: '2026-02', income: 0, expense: 45.9 },
+      { month: '2026-03', income: 800, expense: 0 },
+    ]);
+    expect((await repository.balanceSeries(owner, { from: '2026-02-01' })).at(-1)).toEqual({
+      date: '2026-03-01',
+      balance: 754.1,
+    });
+  });
+
+  it('acumula o saldo do dia na ordem de criação e arredonda em centavos', async () => {
+    const day = scope.id('same-day');
+    await db.insert(transactions).values([
+      {
+        id: scope.id('day-1'),
+        userId: day,
+        type: 'deposit',
+        amount: 0.1,
+        date: '2026-04-01',
+        description: 'Primeiro',
+        createdAt: new Date('2026-04-01T10:00:00Z'),
+      },
+      {
+        id: scope.id('day-2'),
+        userId: day,
+        type: 'deposit',
+        amount: 0.2,
+        date: '2026-04-01',
+        description: 'Segundo',
+        createdAt: new Date('2026-04-01T11:00:00Z'),
+      },
+      {
+        id: scope.id('day-3'),
+        userId: day,
+        type: 'withdrawal',
+        amount: 0.05,
+        date: '2026-04-01',
+        description: 'Terceiro',
+        createdAt: new Date('2026-04-01T12:00:00Z'),
+      },
+    ]);
+
+    expect(await repository.balanceSeries(day, {})).toEqual([
+      { date: '2026-04-01', balance: 0.1 },
+      { date: '2026-04-01', balance: 0.3 },
+      { date: '2026-04-01', balance: 0.25 },
+    ]);
+    expect((await repository.overview(day, 0)).balance).toBe(0.25);
   });
 });
 

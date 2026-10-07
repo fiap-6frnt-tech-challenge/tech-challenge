@@ -1,12 +1,10 @@
-import {
-  aggregateByMonth,
-  calculateBalance,
-  cumulativeBalance,
-  groupByCategory,
-  type DashboardSummary,
-} from '../../domain';
+import { Money, type DashboardSummary } from '../../domain';
 import type { Actor, Clock, TransactionRepository } from '../ports';
 import type { AccountOverview, DateRange } from '../types';
+
+function difference(minuend: number, subtrahend: number): number {
+  return Money.fromDecimal(minuend).subtract(Money.fromDecimal(subtrahend)).toDecimal();
+}
 
 export class GetAccountOverview {
   constructor(private readonly transactions: TransactionRepository) {}
@@ -38,15 +36,13 @@ export class GetDashboardSummary {
     const previousMonth = byMonth.find((entry) => entry.month === previousMonthKey);
     const incomeMonth = currentMonth?.income ?? 0;
     const expenseMonth = currentMonth?.expense ?? 0;
-    const deltaIncome = incomeMonth - (previousMonth?.income ?? 0);
-    const deltaExpense = expenseMonth - (previousMonth?.expense ?? 0);
     return {
       balance: overview.balance,
       incomeMonth,
       expenseMonth,
-      savingsMonth: incomeMonth - expenseMonth,
-      deltaIncome,
-      deltaExpense,
+      savingsMonth: difference(incomeMonth, expenseMonth),
+      deltaIncome: difference(incomeMonth, previousMonth?.income ?? 0),
+      deltaExpense: difference(expenseMonth, previousMonth?.expense ?? 0),
       byMonth,
       balanceOverTime,
       byCategory,
@@ -58,23 +54,26 @@ export class GetDashboardSummary {
 export class GetTransactionsSummary {
   constructor(private readonly transactions: TransactionRepository) {}
 
-  async execute(actor: Actor, range?: Partial<DateRange>): Promise<DashboardSummary> {
-    const all = await this.transactions.all(actor.userId, range);
-    const byMonth = aggregateByMonth(all);
+  async execute(actor: Actor, range: Partial<DateRange> = {}): Promise<DashboardSummary> {
+    const [byMonth, byCategory, balanceOverTime] = await Promise.all([
+      this.transactions.monthlyTotals(actor.userId, range),
+      this.transactions.categoryTotals(actor.userId, range),
+      this.transactions.balanceSeries(actor.userId, range),
+    ]);
     const current = byMonth.at(-1);
     const previous = byMonth.at(-2);
     const incomeMonth = current?.income ?? 0;
     const expenseMonth = current?.expense ?? 0;
     return {
-      balance: calculateBalance(all),
+      balance: balanceOverTime.at(-1)?.balance ?? 0,
       incomeMonth,
       expenseMonth,
-      savingsMonth: incomeMonth - expenseMonth,
-      deltaIncome: incomeMonth - (previous?.income ?? 0),
-      deltaExpense: expenseMonth - (previous?.expense ?? 0),
+      savingsMonth: difference(incomeMonth, expenseMonth),
+      deltaIncome: difference(incomeMonth, previous?.income ?? 0),
+      deltaExpense: difference(expenseMonth, previous?.expense ?? 0),
       byMonth,
-      balanceOverTime: cumulativeBalance(all),
-      byCategory: groupByCategory(all),
+      balanceOverTime,
+      byCategory,
     };
   }
 }
