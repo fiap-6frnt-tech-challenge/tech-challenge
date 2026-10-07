@@ -5,6 +5,10 @@ import type {
   PageRequest,
   Transaction,
   TransactionFilter,
+  DashboardSummary,
+  Attachment,
+  NewTransaction,
+  UpdateTransaction,
 } from '../../domain';
 import type {
   AccountOverview,
@@ -21,6 +25,37 @@ import type {
 
 export interface Actor {
   userId: string;
+}
+
+export interface GatewayRequestOptions {
+  signal?: AbortSignal;
+}
+
+export interface TransactionGatewayPage {
+  data: Transaction[];
+  pages: number;
+  items: number;
+}
+
+/** Client-side port implemented by HTTP adapters in @bytebank/api-client. */
+export interface TransactionGateway {
+  list(
+    filter: Partial<TransactionFilter>,
+    page: PageRequest,
+    options?: GatewayRequestOptions
+  ): Promise<TransactionGatewayPage>;
+  get(id: string, options?: GatewayRequestOptions): Promise<Transaction>;
+  create(data: NewTransaction): Promise<Transaction>;
+  update(id: string, data: UpdateTransaction): Promise<Transaction>;
+  remove(id: string): Promise<void>;
+  overview(options?: GatewayRequestOptions): Promise<AccountOverview>;
+  summary(range?: Partial<DateRange>, options?: GatewayRequestOptions): Promise<DashboardSummary>;
+}
+
+export interface AttachmentGateway {
+  list(transactionId: string, options?: GatewayRequestOptions): Promise<Attachment[]>;
+  upload(transactionId: string, file: File): Promise<Attachment>;
+  remove(transactionId: string, attachmentId: string): Promise<void>;
 }
 
 export interface TransactionRepository {

@@ -1,157 +1,33 @@
-import { toSearchParams, type TransactionType } from '@bytebank/core';
-import type {
-  AccountOverview,
-  Attachment,
-  DashboardSummary,
-  NewTransaction,
-  Transaction,
-  UpdateTransaction,
-} from '@bytebank/shared';
-
-let apiBaseUrl = '/api';
-
-export function configureApiBaseUrl(baseUrl: string): void {
-  apiBaseUrl = (baseUrl || '/api').replace(/\/+$/, '');
-}
-
+import { AttachmentHttpGateway } from './gateways/AttachmentHttpGateway';
+import { TransactionHttpGateway } from './gateways/TransactionHttpGateway';
+import { configureApiBaseUrl } from './http/httpClient';
+import type { RequestOptions, TransactionListFilter } from './gateways/types';
+export { configureApiBaseUrl };
+export { HttpError } from './http/httpClient';
+export type { TransactionListFilter as GetPaginatedParams, SummaryRange } from './gateways/types';
+export type PaginatedResponse = import('./gateways/types').Page<
+  import('@bytebank/shared').Transaction
+>;
 export const TRANSACTIONS_PER_PAGE = 10;
-
-export interface PaginatedResponse {
-  data: Transaction[];
-  pages: number;
-  items: number;
-}
-
-export interface GetPaginatedParams {
-  page: number;
-  perPage?: number;
-  type?: TransactionType | 'all';
-  dateFrom?: string;
-  dateTo?: string;
-  sortBy?: 'date' | 'amount';
-  sortOrder?: 'asc' | 'desc';
-  q?: string;
-  amount_gte?: number;
-  amount_lte?: number;
-  category?: string[];
-}
-
-export interface SummaryRange {
-  from?: string;
-  to?: string;
-}
-
-function transactionWritePayload(data: UpdateTransaction): UpdateTransaction {
-  return {
-    type: data.type,
-    category: data.category,
-    amount: data.amount,
-    date: data.date,
-    description: data.description,
-  };
-}
-
+const transactions = new TransactionHttpGateway();
+const attachments = new AttachmentHttpGateway();
 export const TransactionService = {
-  async getOverview(): Promise<AccountOverview> {
-    const res = await fetch(`${apiBaseUrl}/transactions/overview`);
-    if (!res.ok) throw new Error('Falha ao buscar resumo da conta');
-    return res.json();
-  },
-
-  async getById(id: string): Promise<Transaction> {
-    const res = await fetch(`${apiBaseUrl}/transactions/${id}`);
-    if (!res.ok) throw new Error('Falha ao buscar transação');
-    return res.json();
-  },
-
-  async create(data: NewTransaction): Promise<Transaction> {
-    const res = await fetch(`${apiBaseUrl}/transactions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(transactionWritePayload(data)),
-    });
-    if (!res.ok) throw new Error('Falha ao criar transação');
-    return res.json();
-  },
-
-  async update(id: string, data: UpdateTransaction): Promise<Transaction> {
-    const res = await fetch(`${apiBaseUrl}/transactions/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(transactionWritePayload(data)),
-    });
-    if (!res.ok) throw new Error('Falha ao atualizar transação');
-    return res.json();
-  },
-
-  async remove(id: string): Promise<void> {
-    const res = await fetch(`${apiBaseUrl}/transactions/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Falha ao deletar transação');
-  },
-
-  async getPaginated({
-    page,
-    perPage = TRANSACTIONS_PER_PAGE,
-    type,
-    dateFrom,
-    dateTo,
-    sortBy = 'date',
-    sortOrder = 'desc',
-    q,
-    amount_gte,
-    amount_lte,
-    category,
-  }: GetPaginatedParams): Promise<PaginatedResponse> {
-    const query = toSearchParams(
-      { type, dateFrom, dateTo, sortBy, sortOrder, q, amount_gte, amount_lte, category },
-      { page, perPage }
-    );
-
-    const res = await fetch(`${apiBaseUrl}/transactions?${query.toString()}`);
-    if (!res.ok) throw new Error('Falha ao buscar transações');
-    return res.json();
+  getOverview: (options?: RequestOptions) => transactions.overview(options),
+  getById: (id: string) => transactions.get(id),
+  create: (data: Parameters<typeof transactions.create>[0]) => transactions.create(data),
+  update: (id: string, data: Parameters<typeof transactions.update>[1]) =>
+    transactions.update(id, data),
+  remove: (id: string) => transactions.remove(id),
+  getPaginated: (filter: TransactionListFilter) => {
+    const { page, perPage, ...criteria } = filter;
+    return transactions.list(criteria, { page, perPage: perPage ?? 10 });
   },
 };
-
 export const SummaryService = {
-  async get({ from, to }: SummaryRange = {}): Promise<DashboardSummary> {
-    const query = new URLSearchParams();
-    if (from) query.set('from', from);
-    if (to) query.set('to', to);
-
-    const qs = query.toString();
-    const res = await fetch(`${apiBaseUrl}/transactions/summary${qs ? `?${qs}` : ''}`);
-    if (!res.ok) throw new Error('Falha ao buscar resumo financeiro');
-    return res.json();
-  },
+  get: (range?: import('./gateways/types').SummaryRange) => transactions.summary(range),
 };
-
 export const AttachmentService = {
-  async list(transactionId: string): Promise<Attachment[]> {
-    const res = await fetch(`${apiBaseUrl}/transactions/${transactionId}/attachments`);
-    if (!res.ok) throw new Error('Falha ao buscar anexos');
-    return res.json();
-  },
-
-  async upload(transactionId: string, file: File): Promise<Attachment> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const res = await fetch(`${apiBaseUrl}/transactions/${transactionId}/attachments`, {
-      method: 'POST',
-      body: formData,
-    });
-    if (!res.ok) throw new Error('Falha ao enviar anexo');
-    return res.json();
-  },
-
-  async remove(transactionId: string, attachmentId: string): Promise<void> {
-    const res = await fetch(
-      `${apiBaseUrl}/transactions/${transactionId}/attachments/${attachmentId}`,
-      {
-        method: 'DELETE',
-      }
-    );
-    if (!res.ok) throw new Error('Falha ao remover anexo');
-  },
+  list: (id: string) => attachments.list(id),
+  upload: (id: string, file: File) => attachments.upload(id, file),
+  remove: (id: string, attachmentId: string) => attachments.remove(id, attachmentId),
 };

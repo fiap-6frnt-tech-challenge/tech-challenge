@@ -60,10 +60,10 @@ Atualize os caminhos em `exposes` nos `rsbuild.config.ts`.
 
 ## Validação
 
-- [ ] `api-client` separado em `http/`, `gateways/` e `queries/`, com testes do `httpClient` (mapeamento de status) e dos gateways (URL gerada)
-- [ ] Hooks usam `signal` do TanStack
-- [ ] MFEs reorganizados; `exposes` atualizados; shell carrega os remotes normalmente
-- [ ] Testes existentes do `api-client` (`hooks.test.ts`, `http.test.ts`, `keys.test.ts`) migrados e verdes
+- [x] `api-client` separado em `http/`, `gateways/` e `queries/`, com testes do `httpClient` (mapeamento de status) e dos gateways (URL gerada)
+- [x] Hooks usam `signal` do TanStack
+- [x] MFEs reorganizados; `exposes` atualizados; shell carrega os remotes normalmente
+- [x] Testes existentes do `api-client` (`hooks.test.ts`, `http.test.ts`, `keys.test.ts`) migrados e verdes
 - [ ] E2E verdes
 
 ## Gotchas

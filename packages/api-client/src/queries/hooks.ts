@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import type { NewTransaction, UpdateTransaction } from '@bytebank/shared';
-import {
-  SummaryService,
-  TransactionService,
-  type GetPaginatedParams,
-  type PaginatedResponse,
-  type SummaryRange,
-} from './http';
-import { overviewKeys, summaryKeys, transactionKeys } from './keys';
+import type { GetPaginatedParams, PaginatedResponse, SummaryRange } from '../http';
+import { attachmentKeys, overviewKeys, summaryKeys, transactionKeys } from '../keys';
+import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
+import { AttachmentHttpGateway } from '../gateways/AttachmentHttpGateway';
+
+const transactions = new TransactionHttpGateway();
+const attachments = new AttachmentHttpGateway();
 
 type ListCache = PaginatedResponse | undefined;
 
@@ -34,7 +33,7 @@ export function useDashboardSummary(range?: SummaryRange) {
 
   return useQuery({
     queryKey: summaryKeys.range(effectiveRange),
-    queryFn: () => SummaryService.get(effectiveRange),
+    queryFn: ({ signal }) => transactions.summary(effectiveRange, { signal }),
     staleTime: 60_000,
   });
 }
@@ -42,11 +41,11 @@ export function useDashboardSummary(range?: SummaryRange) {
 export function useAccountOverview() {
   return useQuery({
     queryKey: overviewKeys.all,
-    queryFn: () => TransactionService.getOverview(),
+    queryFn: ({ signal }) => transactions.overview({ signal }),
   });
 }
 
-export function usePaginatedTransactions(params: GetPaginatedParams) {
+export function useTransactionsPage(params: GetPaginatedParams) {
   // Normalize params so the cache key matches the actual request (defaults + omitting "all"/empty filters).
   const normalizedParams: GetPaginatedParams = {
     page: params.page,
@@ -64,7 +63,10 @@ export function usePaginatedTransactions(params: GetPaginatedParams) {
 
   return useQuery({
     queryKey: transactionKeys.list({ ...normalizedParams }),
-    queryFn: () => TransactionService.getPaginated(normalizedParams),
+    queryFn: ({ signal }) => {
+      const { page, perPage, ...filter } = normalizedParams;
+      return transactions.list(filter, { page, perPage: perPage ?? 10 }, { signal });
+    },
     placeholderData: (prev) => prev,
   });
 }
@@ -72,7 +74,7 @@ export function usePaginatedTransactions(params: GetPaginatedParams) {
 export function useTransaction(id: string) {
   return useQuery({
     queryKey: transactionKeys.detail(id),
-    queryFn: () => TransactionService.getById(id),
+    queryFn: ({ signal }) => transactions.get(id, { signal }),
     enabled: !!id,
   });
 }
@@ -80,7 +82,7 @@ export function useTransaction(id: string) {
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (newTx: NewTransaction) => TransactionService.create(newTx),
+    mutationFn: (newTx: NewTransaction) => transactions.create(newTx),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: overviewKeys.all });
@@ -93,7 +95,7 @@ export function useUpdateTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTransaction }) =>
-      TransactionService.update(id, data),
+      transactions.update(id, data),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: transactionKeys.detail(updated.id) });
@@ -106,7 +108,7 @@ export function useUpdateTransaction() {
 export function useDeleteTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => TransactionService.remove(id),
+    mutationFn: (id: string) => transactions.remove(id),
 
     onMutate: async (idToDelete) => {
       await queryClient.cancelQueries({ queryKey: transactionKeys.lists() });
@@ -136,3 +138,33 @@ export function useDeleteTransaction() {
     },
   });
 }
+
+export function useTransactionAttachments(id: string) {
+  return useQuery({
+    queryKey: attachmentKeys.list(id),
+    queryFn: ({ signal }) => attachments.list(id, { signal }),
+    enabled: !!id,
+  });
+}
+
+export function useUploadAttachment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => attachments.upload(id, file),
+    onSuccess: (_attachment, { id }) =>
+      queryClient.invalidateQueries({ queryKey: attachmentKeys.list(id) }),
+  });
+}
+
+export function useDeleteAttachment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, attachmentId }: { id: string; attachmentId: string }) =>
+      attachments.remove(id, attachmentId),
+    onSuccess: (_data, { id }) =>
+      queryClient.invalidateQueries({ queryKey: attachmentKeys.list(id) }),
+  });
+}
+
+// New names describe the query use cases; legacy names remain public through Sprint 2.
+export const usePaginatedTransactions = useTransactionsPage;

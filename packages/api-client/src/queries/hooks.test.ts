@@ -39,8 +39,8 @@ import {
   usePaginatedTransactions,
   useUpdateTransaction,
 } from './hooks';
-import { TransactionService } from './http';
-import { overviewKeys, summaryKeys, transactionKeys } from './keys';
+import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
+import { overviewKeys, summaryKeys, transactionKeys } from '../keys';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -71,7 +71,7 @@ describe('useDashboardSummary', () => {
     vi.useRealTimers();
   });
 
-  it('queryFn busca o summary via fetch (com o range efetivo) e retorna o shape', async () => {
+  it('queryFn delega ao gateway com range e signal', async () => {
     const summary = {
       balance: 1000,
       incomeMonth: 2000,
@@ -83,32 +83,33 @@ describe('useDashboardSummary', () => {
       balanceOverTime: [],
       byCategory: [],
     };
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => summary });
-    vi.stubGlobal('fetch', fetchMock);
+    const summarySpy = vi
+      .spyOn(TransactionHttpGateway.prototype, 'summary')
+      .mockResolvedValue(summary);
 
     useDashboardSummary({ from: '2026-01-01', to: '2026-06-30' });
     const options = mocks.useQuery.mock.calls[0][0];
 
-    await expect(options.queryFn()).resolves.toEqual(summary);
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/transactions/summary?from=2026-01-01&to=2026-06-30'
-    );
-
-    vi.unstubAllGlobals();
+    const signal = new AbortController().signal;
+    await expect(options.queryFn({ signal })).resolves.toEqual(summary);
+    expect(summarySpy).toHaveBeenCalledWith({ from: '2026-01-01', to: '2026-06-30' }, { signal });
   });
 });
 
 describe('useAccountOverview', () => {
   it('busca saldo e recentes no endpoint de overview, sem baixar a lista', async () => {
     const overview = { balance: 4679.5, recent: [] };
-    const getOverviewSpy = vi.spyOn(TransactionService, 'getOverview').mockResolvedValue(overview);
+    const overviewSpy = vi
+      .spyOn(TransactionHttpGateway.prototype, 'overview')
+      .mockResolvedValue(overview);
 
     useAccountOverview();
     const options = mocks.useQuery.mock.calls[0][0];
 
+    const signal = new AbortController().signal;
     expect(options.queryKey).toEqual(overviewKeys.all);
-    await expect(options.queryFn()).resolves.toEqual(overview);
-    expect(getOverviewSpy).toHaveBeenCalledOnce();
+    await expect(options.queryFn({ signal })).resolves.toEqual(overview);
+    expect(overviewSpy).toHaveBeenCalledWith({ signal });
   });
 });
 
@@ -154,14 +155,14 @@ describe('transaction mutations summary invalidation', () => {
 });
 
 describe('usePaginatedTransactions', () => {
-  const getPaginatedSpy = vi.spyOn(TransactionService, 'getPaginated');
+  const listSpy = vi.spyOn(TransactionHttpGateway.prototype, 'list');
 
   function lastQueryOptions() {
     return mocks.useQuery.mock.calls.at(-1)![0];
   }
 
   beforeEach(() => {
-    getPaginatedSpy.mockResolvedValue({ data: [], pages: 1, items: 0 });
+    listSpy.mockResolvedValue({ data: [], pages: 1, items: 0 });
   });
 
   it('normaliza defaults (perPage=10, sort -date) na queryKey e expõe queryFn', () => {
@@ -215,22 +216,25 @@ describe('usePaginatedTransactions', () => {
     );
   });
 
-  it('queryFn delega para TransactionService.getPaginated com os params normalizados', async () => {
+  it('queryFn delega para o gateway com filtro, paginação e signal', async () => {
     const response = { data: [], pages: 3, items: 25 };
-    getPaginatedSpy.mockResolvedValue(response);
+    listSpy.mockResolvedValue(response);
 
     usePaginatedTransactions({ page: 2, perPage: 3, q: 'uber', category: ['food'] });
     const options = lastQueryOptions();
 
-    await expect(options.queryFn()).resolves.toBe(response);
-    expect(getPaginatedSpy).toHaveBeenCalledWith({
-      page: 2,
-      perPage: 3,
-      sortBy: 'date',
-      sortOrder: 'desc',
-      q: 'uber',
-      category: ['food'],
-    });
+    const signal = new AbortController().signal;
+    await expect(options.queryFn({ signal })).resolves.toBe(response);
+    expect(listSpy).toHaveBeenCalledWith(
+      {
+        sortBy: 'date',
+        sortOrder: 'desc',
+        q: 'uber',
+        category: ['food'],
+      },
+      { page: 2, perPage: 3 },
+      { signal }
+    );
   });
 
   it('mantém a queryKey estável para os mesmos filtros e a altera ao mudar a página', () => {

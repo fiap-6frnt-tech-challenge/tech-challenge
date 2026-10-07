@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { AttachmentService, SummaryService, TransactionService } from './http';
+import { AttachmentService, SummaryService, TransactionService } from '../http';
 
 function mockFetch(body: unknown, ok = true) {
   const fn = vi.fn().mockResolvedValue({
     ok,
+    status: ok ? 200 : 500,
+    headers: new Headers(),
     json: async () => body,
   });
   vi.stubGlobal('fetch', fn);
@@ -69,7 +71,11 @@ describe('TransactionService', () => {
 
   it('lança erro quando a resposta não é ok', async () => {
     mockFetch({ error: 'boom' }, false);
-    await expect(TransactionService.getById('1')).rejects.toThrow('Falha ao buscar transação');
+    await expect(TransactionService.getById('1')).rejects.toMatchObject({
+      name: 'HttpError',
+      status: 500,
+      message: 'boom',
+    });
   });
 
   it('getOverview busca saldo e recentes no endpoint dedicado', async () => {
@@ -77,14 +83,16 @@ describe('TransactionService', () => {
     const fetchMock = mockFetch(overview);
 
     await expect(TransactionService.getOverview()).resolves.toEqual(overview);
-    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/overview');
+    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/overview', {});
   });
 
   it('getOverview lança erro quando a resposta não é ok', async () => {
     mockFetch({ error: 'boom' }, false);
-    await expect(TransactionService.getOverview()).rejects.toThrow(
-      'Falha ao buscar resumo da conta'
-    );
+    await expect(TransactionService.getOverview()).rejects.toMatchObject({
+      name: 'HttpError',
+      status: 500,
+      message: 'boom',
+    });
   });
 });
 
@@ -105,7 +113,7 @@ describe('SummaryService', () => {
 
     await expect(SummaryService.get()).resolves.toEqual(summary);
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/summary');
+    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/summary', {});
   });
 
   it('get inclui from/to quando o range é informado', async () => {
@@ -124,14 +132,19 @@ describe('SummaryService', () => {
     await SummaryService.get({ from: '2026-01-01', to: '2026-06-30' });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/transactions/summary?from=2026-01-01&to=2026-06-30'
+      '/api/transactions/summary?from=2026-01-01&to=2026-06-30',
+      {}
     );
   });
 
   it('lança erro quando o summary não retorna ok', async () => {
     mockFetch({ error: 'boom' }, false);
 
-    await expect(SummaryService.get()).rejects.toThrow('Falha ao buscar resumo financeiro');
+    await expect(SummaryService.get()).rejects.toMatchObject({
+      name: 'HttpError',
+      status: 500,
+      message: 'boom',
+    });
   });
 });
 
@@ -148,7 +161,7 @@ describe('AttachmentService', () => {
     const fetchMock = mockFetch([attachment]);
 
     await expect(AttachmentService.list('tx-1')).resolves.toEqual([attachment]);
-    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/tx-1/attachments');
+    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/tx-1/attachments', {});
   });
 
   it('upload envia multipart/form-data sem forçar Content-Type', async () => {
@@ -165,7 +178,7 @@ describe('AttachmentService', () => {
   });
 
   it('remove usa DELETE no anexo informado', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(AttachmentService.remove('tx-1', 'attachment-1')).resolves.toBeUndefined();
@@ -178,6 +191,10 @@ describe('AttachmentService', () => {
     mockFetch({ error: 'boom' }, false);
     const file = new File(['pdf'], 'recibo.pdf', { type: 'application/pdf' });
 
-    await expect(AttachmentService.upload('tx-1', file)).rejects.toThrow('Falha ao enviar anexo');
+    await expect(AttachmentService.upload('tx-1', file)).rejects.toMatchObject({
+      name: 'HttpError',
+      status: 500,
+      message: 'boom',
+    });
   });
 });

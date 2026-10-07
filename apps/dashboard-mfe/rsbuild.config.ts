@@ -22,7 +22,7 @@ export default defineConfig({
       manifest: { filePath: '', fileName: 'mf-manifest.json' },
       dts: false,
       exposes: {
-        './Dashboard': './src/Dashboard.tsx',
+        './Dashboard': './src/presentation/Dashboard.tsx',
       },
       shared: {
         react: { singleton: true, requiredVersion: false },
