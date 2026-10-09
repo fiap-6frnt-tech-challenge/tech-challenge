@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { TransactionFilters } from './TransactionFilters';
 import { DEFAULT_FILTERS } from './ITransactionFilters';
@@ -27,7 +27,7 @@ type Story = StoryObj<typeof TransactionFilters>;
 
 function Controlled({ initialValue }: { initialValue: TransactionFiltersValue }) {
   const [filters, setFilters] = useState<TransactionFiltersValue>(initialValue);
-  return <TransactionFilters value={filters} onChange={setFilters} />;
+  return <TransactionFilters value={filters} isFilterVisible onChange={setFilters} />;
 }
 
 export const Default: Story = {

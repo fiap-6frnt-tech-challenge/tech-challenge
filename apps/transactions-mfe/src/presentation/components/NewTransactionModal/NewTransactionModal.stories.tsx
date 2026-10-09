@@ -1,12 +1,7 @@
 import { useState } from 'react';
-import { Provider } from 'react-redux';
-import { store } from '@bytebank/stores';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from '@bytebank/api-client';
-import type { Meta, StoryObj, Decorator } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { Button } from '@bytebank/design-system';
-import { ReactElement } from 'react';
 import { NewTransactionModal } from './NewTransactionModal';
 
 const meta: Meta<typeof NewTransactionModal> = {
@@ -24,19 +19,10 @@ const meta: Meta<typeof NewTransactionModal> = {
     docs: {
       description: {
         component:
-          'Feature section for creating a transaction, combining TransactionForm and confirmation flow. Requires the Redux store and the TanStack Query client (applied via story decorator).',
+          'Feature section for creating a transaction, combining TransactionForm and confirmation flow. Requires the Redux store and the TanStack Query client (applied globally in .storybook/preview.tsx).',
       },
     },
   },
-  decorators: [
-    ((Story): ReactElement => (
-      <Provider store={store}>
-        <QueryClientProvider client={queryClient}>
-          <Story />
-        </QueryClientProvider>
-      </Provider>
-    )) as Decorator,
-  ],
 };
 
 export default meta;
@@ -69,7 +55,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          'Default state with provider-wrapped form and confirmation modal flow for creating a new transaction. This story includes the required Redux store and TanStack Query client decorators.',
+          'Default state with provider-wrapped form and confirmation modal flow for creating a new transaction.',
       },
     },
   },

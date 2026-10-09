@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { Button } from '@bytebank/design-system';
 import { ConfirmTransactionModal } from './ConfirmTransactionModal';
 
 const mockTransaction = {
   type: 'deposit' as const,
+  category: 'salary',
   amount: 1500,
   date: '2026-03-26',
   description: 'Salário março',

@@ -1,15 +1,49 @@
 import { useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
-import type { Transaction } from '@bytebank/shared';
+import type { Transaction } from '@bytebank/core';
 import { Button } from '@bytebank/design-system';
 import { DeleteTransactionModal } from './DeleteTransactionModal';
-import {
-  DELETE_DEPOSIT_TRANSACTION,
-  DELETE_LONG_DESCRIPTION_TRANSACTION,
-  DELETE_TRANSFER_TRANSACTION,
-  DELETE_WITHDRAWAL_TRANSACTION,
-} from '../../../../stories/mocks/transactions';
+
+const DELETE_DEPOSIT_TRANSACTION: Transaction = {
+  id: '1',
+  userId: 'user-1',
+  type: 'deposit',
+  category: 'salary',
+  description: 'Salário mensal',
+  amount: 5000,
+  date: '2025-03-01',
+};
+
+const DELETE_WITHDRAWAL_TRANSACTION: Transaction = {
+  id: '2',
+  userId: 'user-1',
+  type: 'withdrawal',
+  category: 'housing',
+  description: 'Aluguel',
+  amount: 1500,
+  date: '2025-03-05',
+};
+
+const DELETE_TRANSFER_TRANSACTION: Transaction = {
+  id: '3',
+  userId: 'user-1',
+  type: 'transfer',
+  category: 'transfer',
+  description: 'Transferência para conta poupança',
+  amount: 800,
+  date: '2025-03-10',
+};
+
+const DELETE_LONG_DESCRIPTION_TRANSACTION: Transaction = {
+  id: '4',
+  userId: 'user-1',
+  type: 'withdrawal',
+  category: 'other',
+  description: 'Pagamento de fatura do cartão de crédito referente ao mês de fevereiro de 2025',
+  amount: 3200,
+  date: '2025-03-15',
+};
 
 const meta: Meta<typeof DeleteTransactionModal> = {
   title: 'Features/DeleteTransactionModal',
