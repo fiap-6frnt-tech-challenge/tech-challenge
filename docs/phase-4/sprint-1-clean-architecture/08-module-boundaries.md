@@ -58,7 +58,7 @@ CI: adicionar `npm run arch:check` ao job `ci`.
 - **Scripts:** `arch:check` usa `--output-type err-long`, que mostra o motivo de cada regra. `arch:graph` usa `--include-only "^(apps|packages)/"` (pacotes npm ficam fora do grafo) e `--output-to` em vez de `>`.
 - **CI:** step `Architecture check` depois do Lint, sem `--affected` (repo inteiro).
 - **Grafo:** [`docs/phase-4/assets/dependency-graph.mmd`](../assets/dependency-graph.mmd). O GitHub renderiza `.mmd` ao abrir o arquivo (aba Preview), mas não no diff do PR nem como imagem dentro de um Markdown: o S4-06 precisa colar o conteúdo num bloco ` ```mermaid `.
-- **Achado fora do escopo:** `DeleteTransactionModal.stories.tsx` e `EditTransactionModal.stories.tsx` (transactions-mfe) importam `../../../../stories/mocks/transactions`, que não existe. Ninguém percebeu porque o tsconfig e o ESLint do MFE ignoram stories.
+- **Achado fora do escopo (resolvido no mesmo PR):** `DeleteTransactionModal.stories.tsx` e `EditTransactionModal.stories.tsx` (transactions-mfe) importavam `../../../../stories/mocks/transactions`, que não existe. Ninguém percebeu porque o tsconfig do MFE ignorava stories e nenhum Storybook os carregava. Os dados de exemplo agora ficam dentro de cada story, os stories entram no `type-check` e o MFE ganhou um Storybook próprio (`@storybook/react-vite`, porta 6007) que roda os stories como testes no `npm run test`.
 
 ## Validação
 
