@@ -12,6 +12,7 @@ export default defineConfig({
       'packages/api-client/vitest.config.ts',
       'apps/dashboard-mfe/vitest.config.ts',
       'apps/transactions-mfe/vitest.config.ts',
+      'apps/transactions-mfe/vitest.storybook.config.ts',
     ],
   },
 });
