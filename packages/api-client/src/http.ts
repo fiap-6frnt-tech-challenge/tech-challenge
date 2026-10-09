@@ -1,8 +1,7 @@
 import { AttachmentHttpGateway } from './gateways/AttachmentHttpGateway';
 import { TransactionHttpGateway } from './gateways/TransactionHttpGateway';
 import { configureApiBaseUrl } from './http/httpClient';
-import { httpRequest } from './http/httpClient';
-import type { TransactionListFilter } from './gateways/types';
+import type { RequestOptions, TransactionListFilter } from './gateways/types';
 export { configureApiBaseUrl };
 export { HttpError } from './http/httpClient';
 export type { TransactionListFilter as GetPaginatedParams, SummaryRange } from './gateways/types';
@@ -13,8 +12,7 @@ export const TRANSACTIONS_PER_PAGE = 10;
 const transactions = new TransactionHttpGateway();
 const attachments = new AttachmentHttpGateway();
 export const TransactionService = {
-  getAll: (options?: { signal?: AbortSignal }) =>
-    httpRequest<import('@bytebank/shared').Transaction[]>('/transactions', options),
+  getOverview: (options?: RequestOptions) => transactions.overview(options),
   getById: (id: string) => transactions.get(id),
   create: (data: Parameters<typeof transactions.create>[0]) => transactions.create(data),
   update: (id: string, data: Parameters<typeof transactions.update>[1]) =>

@@ -1,6 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
-import { fromSearchParams, normalizeTransactionFilter, toSearchParams } from './TransactionFilter';
+import {
+  fromBrowserSearchParams,
+  fromSearchParams,
+  hasActiveFilter,
+  normalizeTransactionFilter,
+  toBrowserSearchParams,
+  toSearchParams,
+  type TransactionFilter,
+} from './TransactionFilter';
+
+const fullFilter: TransactionFilter = {
+  type: 'withdrawal',
+  dateFrom: '2026-01-01',
+  dateTo: '2026-01-31',
+  sortBy: 'amount',
+  sortOrder: 'asc',
+  q: 'mercado',
+  amount_gte: 10,
+  amount_lte: 50,
+  category: ['food', 'transport'],
+};
 
 describe('transaction filter codec', () => {
   it('normalizes empty and trimmed filters to one canonical shape', () => {
@@ -92,5 +112,61 @@ describe('transaction filter codec', () => {
   it('can omit default pagination from browser URLs', () => {
     const params = toSearchParams({}, { page: 1, perPage: 10 }, { includeDefaults: false });
     expect(params.toString()).toBe('');
+  });
+});
+
+describe('browser URL codec', () => {
+  it('round-trips a filter and page through the URL', () => {
+    const params = toBrowserSearchParams(fullFilter, 3);
+
+    expect(fromBrowserSearchParams(new URLSearchParams(params.toString()))).toEqual({
+      filter: fullFilter,
+      page: 3,
+    });
+  });
+
+  it('round-trips a URL through the filter back to the same string', () => {
+    const url = 'type=deposit&dateFrom=2026-02-01&sortBy=amount&q=salario&category=food&page=2';
+    const { filter, page } = fromBrowserSearchParams(new URLSearchParams(url));
+
+    expect(toBrowserSearchParams(filter, page).toString()).toBe(url);
+  });
+
+  it('encodes the same filter to the same string regardless of key order', () => {
+    const reversed = Object.fromEntries(Object.entries(fullFilter).reverse()) as TransactionFilter;
+
+    expect(toBrowserSearchParams(reversed, 2).toString()).toBe(
+      toBrowserSearchParams(fullFilter, 2).toString()
+    );
+  });
+
+  it('re-encodes shuffled URL parameters in canonical order', () => {
+    const shuffled = new URLSearchParams(
+      'page=2&category=food&q=mercado&sortOrder=asc&type=withdrawal&sortBy=amount&dateTo=2026-01-31'
+    );
+
+    const { filter, page } = fromBrowserSearchParams(shuffled);
+
+    expect(toBrowserSearchParams(filter, page).toString()).toBe(
+      'type=withdrawal&dateTo=2026-01-31&sortBy=amount&sortOrder=asc&q=mercado&category=food&page=2'
+    );
+  });
+
+  it('omits defaults so an untouched filter produces an empty URL', () => {
+    expect(toBrowserSearchParams(normalizeTransactionFilter({}), 1).toString()).toBe('');
+    expect(toBrowserSearchParams({}, 0).toString()).toBe('');
+  });
+
+  it('falls back to the default filter on page 1 for an invalid URL', () => {
+    expect(fromBrowserSearchParams(new URLSearchParams('type=bogus&page=4'))).toEqual({
+      filter: normalizeTransactionFilter({}),
+      page: 1,
+    });
+  });
+
+  it('flags any non-default filter or sorting as active', () => {
+    expect(hasActiveFilter(normalizeTransactionFilter({}))).toBe(false);
+    expect(hasActiveFilter({ sortOrder: 'asc' })).toBe(true);
+    expect(hasActiveFilter({ category: ['food'] })).toBe(true);
   });
 });

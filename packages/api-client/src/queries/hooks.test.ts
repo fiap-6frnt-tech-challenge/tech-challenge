@@ -32,6 +32,7 @@ vi.mock('@tanstack/react-query', () => ({
 }));
 
 import {
+  useAccountOverview,
   useCreateTransaction,
   useDashboardSummary,
   useDeleteTransaction,
@@ -39,7 +40,7 @@ import {
   useUpdateTransaction,
 } from './hooks';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
-import { summaryKeys, transactionKeys } from '../keys';
+import { overviewKeys, summaryKeys, transactionKeys } from '../keys';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -93,45 +94,72 @@ describe('useDashboardSummary', () => {
     await expect(options.queryFn({ signal })).resolves.toEqual(summary);
     expect(summarySpy).toHaveBeenCalledWith({ from: '2026-01-01', to: '2026-06-30' }, { signal });
   });
+
+  it('repassa o select ao TanStack sem alterar a chave de cache', () => {
+    const select = vi.fn();
+
+    useDashboardSummary({ from: '2026-01-01', to: '2026-06-30', select });
+
+    const options = mocks.useQuery.mock.calls[0][0];
+    expect(options.select).toBe(select);
+    expect(options.queryKey).toEqual(summaryKeys.range({ from: '2026-01-01', to: '2026-06-30' }));
+  });
+});
+
+describe('useAccountOverview', () => {
+  it('busca saldo e recentes no endpoint de overview, sem baixar a lista', async () => {
+    const overview = { balance: 4679.5, recent: [] };
+    const overviewSpy = vi
+      .spyOn(TransactionHttpGateway.prototype, 'overview')
+      .mockResolvedValue(overview);
+
+    useAccountOverview();
+    const options = mocks.useQuery.mock.calls[0][0];
+
+    const signal = new AbortController().signal;
+    expect(options.queryKey).toEqual(overviewKeys.all);
+    await expect(options.queryFn({ signal })).resolves.toEqual(overview);
+    expect(overviewSpy).toHaveBeenCalledWith({ signal });
+  });
 });
 
 describe('transaction mutations summary invalidation', () => {
-  it('useCreateTransaction invalida listas e summary no sucesso', () => {
+  it('useCreateTransaction invalida listas, overview e summary no sucesso', () => {
     useCreateTransaction();
     const options = mocks.useMutation.mock.calls[0][0];
 
     options.onSuccess();
 
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.lists() });
-    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.overview() });
+    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: overviewKeys.all });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: summaryKeys.all });
   });
 
-  it('useUpdateTransaction invalida listas, detalhe e summary no sucesso', () => {
+  it('useUpdateTransaction invalida listas, detalhe, overview e summary no sucesso', () => {
     useUpdateTransaction();
     const options = mocks.useMutation.mock.calls[0][0];
 
     options.onSuccess({ id: 'tx-1' });
 
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.lists() });
-    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.overview() });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
       queryKey: transactionKeys.detail('tx-1'),
     });
+    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: overviewKeys.all });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: summaryKeys.all });
   });
 
-  it('useDeleteTransaction invalida listas, detalhe e summary no settled', () => {
+  it('useDeleteTransaction invalida listas, detalhe, overview e summary no settled', () => {
     useDeleteTransaction();
     const options = mocks.useMutation.mock.calls[0][0];
 
     options.onSettled(undefined, undefined, 'tx-1');
 
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.lists() });
-    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.overview() });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
       queryKey: transactionKeys.detail('tx-1'),
     });
+    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: overviewKeys.all });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: summaryKeys.all });
   });
 });

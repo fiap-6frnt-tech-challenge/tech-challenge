@@ -13,8 +13,6 @@ export default function AccountOverview() {
   const { data, isLoading, isError } = useAccountOverview();
   const user = useAppSelector(selectUser);
   const firstName = user?.name?.split(' ')[0];
-  const recentTransactions = data?.recent ?? [];
-  const balance = data?.balance ?? 0;
   const [isNewTransactionVisible, setIsNewTransactionVisible] = useState(false);
 
   if (isError) {
@@ -24,14 +22,14 @@ export default function AccountOverview() {
   return (
     <>
       <section aria-labelledby="recent-tx-heading" className="flex flex-col gap-lg">
-        <BalanceCard balance={balance} owner={firstName} isLoading={isLoading} />
+        <BalanceCard balance={data?.balance ?? 0} owner={firstName} isLoading={isLoading} />
 
         <h2 id="recent-tx-heading" className="sr-only">
           Transações recentes
         </h2>
 
         <TransactionList
-          transactions={recentTransactions}
+          transactions={data?.recent ?? []}
           onEdit={() => {}}
           onDelete={() => {}}
           title="Transações recentes"

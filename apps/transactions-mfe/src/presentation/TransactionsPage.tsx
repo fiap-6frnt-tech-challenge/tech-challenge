@@ -14,6 +14,7 @@ import { TransactionFilters, DEFAULT_FILTERS } from './components/TransactionFil
 import { TransactionList } from './components/TransactionList';
 import type { TransactionFormValues } from './components/TransactionForm/ITransactionForm';
 import { useTransactionFilters } from '../application/useTransactionFilters';
+import { filterStorage } from '../container';
 
 const DeleteTransactionModal = lazy(() =>
   import('./components/DeleteTransactionModal').then((m) => ({
@@ -26,7 +27,7 @@ const EditTransactionModal = lazy(() =>
 
 export default function TransactionsPage() {
   const { filters, setFilters, clearFilters, page, setPage, isFilterVisible, setIsFilterVisible } =
-    useTransactionFilters();
+    useTransactionFilters(filterStorage);
   const {
     data: paginated,
     isLoading,

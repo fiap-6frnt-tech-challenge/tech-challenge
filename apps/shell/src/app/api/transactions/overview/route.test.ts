@@ -10,27 +10,41 @@ vi.mock('@/server/container', () => ({
 import { GET } from './route';
 
 const actor = { userId: 'owner' };
-const result = { balance: 500, recent: [{ id: 'tx-1' }] };
+const overview = {
+  balance: 4679.5,
+  recent: [
+    {
+      id: 'tx-1',
+      userId: actor.userId,
+      type: 'withdrawal',
+      category: 'food',
+      amount: 320.5,
+      date: '2026-01-10',
+      description: 'Mercado',
+      attachments: [],
+    },
+  ],
+};
 const request = () => new Request('http://localhost/api/transactions/overview') as NextRequest;
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.auth.mockResolvedValue({ user: { id: actor.userId } });
-  mocks.overview.mockResolvedValue(result);
+  mocks.overview.mockResolvedValue(overview);
 });
 
 describe('GET /api/transactions/overview', () => {
-  it('requires authentication', async () => {
+  it('returns 401 before calling the use case without a session', async () => {
     mocks.auth.mockResolvedValue(null);
     const response = await GET(request());
     expect(response.status).toBe(401);
     expect(mocks.overview).not.toHaveBeenCalled();
   });
 
-  it('returns the account overview from the use case', async () => {
+  it('returns the balance and recent transactions of the actor', async () => {
     const response = await GET(request());
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual(result);
+    await expect(response.json()).resolves.toEqual(overview);
     expect(mocks.overview).toHaveBeenCalledWith(actor);
   });
 });

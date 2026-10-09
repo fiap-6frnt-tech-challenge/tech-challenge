@@ -60,15 +60,14 @@ export interface AttachmentGateway {
 
 export interface TransactionRepository {
   findById(id: string, ownerId: string): Promise<Transaction | null>;
-  all(ownerId: string, range?: Partial<DateRange>): Promise<Transaction[]>;
   list(ownerId: string, filter: TransactionFilter, page: PageRequest): Promise<Page<Transaction>>;
   create(data: NewTransactionData, ownerId: string): Promise<Transaction>;
   update(id: string, ownerId: string, patch: TransactionPatch): Promise<Transaction | null>;
   delete(id: string, ownerId: string): Promise<boolean>;
   overview(ownerId: string, recentLimit: number): Promise<AccountOverview>;
-  monthlyTotals(ownerId: string, range: DateRange): Promise<MonthlyAggregate[]>;
-  categoryTotals(ownerId: string, range: DateRange): Promise<CategoryAggregate[]>;
-  balanceSeries(ownerId: string, range: DateRange): Promise<BalancePoint[]>;
+  monthlyTotals(ownerId: string, range: Partial<DateRange>): Promise<MonthlyAggregate[]>;
+  categoryTotals(ownerId: string, range: Partial<DateRange>): Promise<CategoryAggregate[]>;
+  balanceSeries(ownerId: string, range: Partial<DateRange>): Promise<BalancePoint[]>;
 }
 
 export interface AttachmentRepository {

@@ -77,6 +77,23 @@ describe('TransactionService', () => {
       message: 'boom',
     });
   });
+
+  it('getOverview busca saldo e recentes no endpoint dedicado', async () => {
+    const overview = { balance: 100, recent: [] };
+    const fetchMock = mockFetch(overview);
+
+    await expect(TransactionService.getOverview()).resolves.toEqual(overview);
+    expect(fetchMock).toHaveBeenCalledWith('/api/transactions/overview', {});
+  });
+
+  it('getOverview lança erro quando a resposta não é ok', async () => {
+    mockFetch({ error: 'boom' }, false);
+    await expect(TransactionService.getOverview()).rejects.toMatchObject({
+      name: 'HttpError',
+      status: 500,
+      message: 'boom',
+    });
+  });
 });
 
 describe('SummaryService', () => {

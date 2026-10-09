@@ -23,8 +23,15 @@ export {
   fromSearchParams,
   toSearchParams,
   normalizeTransactionFilter,
+  fromBrowserSearchParams,
+  toBrowserSearchParams,
+  hasActiveFilter,
 } from './filter/TransactionFilter';
-export type { TransactionFilter, PageRequest } from './filter/TransactionFilter';
+export type {
+  TransactionFilter,
+  PageRequest,
+  BrowserFilterState,
+} from './filter/TransactionFilter';
 export { computeKpiDeltas, topCategoriesWithOthers } from './dashboard/kpis';
 export type { KpiDeltas, CategorySlice } from './dashboard/kpis';
 export { createTransaction } from './transaction/Transaction';

@@ -1,25 +1,19 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
-import type { Transaction, NewTransaction, UpdateTransaction } from '@bytebank/shared';
-import {
-  TransactionService,
-  type GetPaginatedParams,
-  type PaginatedResponse,
-  type SummaryRange,
-} from '../http';
-import { summaryKeys, transactionKeys } from '../keys';
+import type { NewTransaction, UpdateTransaction } from '@bytebank/shared';
+import type { DashboardSummary } from '@bytebank/core';
+import type { GetPaginatedParams, PaginatedResponse, SummaryRange } from '../http';
+import { attachmentKeys, overviewKeys, summaryKeys, transactionKeys } from '../keys';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
 import { AttachmentHttpGateway } from '../gateways/AttachmentHttpGateway';
-import { attachmentKeys } from '../keys';
 
 const transactions = new TransactionHttpGateway();
 const attachments = new AttachmentHttpGateway();
 
-type ListCache = Transaction[] | PaginatedResponse | undefined;
+type ListCache = PaginatedResponse | undefined;
 
 function removeFromListCache(old: ListCache, id: string): ListCache {
   if (!old) return old;
-  if (Array.isArray(old)) return old.filter((t) => t.id !== id);
   return { ...old, data: old.data.filter((t) => t.id !== id), items: Math.max(0, old.items - 1) };
 }
 
@@ -32,23 +26,31 @@ function getDefaultSummaryRange(now = new Date()): Required<SummaryRange> {
   };
 }
 
-export function useDashboardSummary(range?: SummaryRange) {
+export interface DashboardSummaryOptions<TData> extends SummaryRange {
+  select?: (summary: DashboardSummary) => TData;
+}
+
+export function useDashboardSummary<TData = DashboardSummary>({
+  select,
+  ...range
+}: DashboardSummaryOptions<TData> = {}) {
   const effectiveRange = useMemo(
     () => ({ ...getDefaultSummaryRange(), ...range }),
-    [range?.from, range?.to]
+    [range.from, range.to]
   );
 
   return useQuery({
     queryKey: summaryKeys.range(effectiveRange),
     queryFn: ({ signal }) => transactions.summary(effectiveRange, { signal }),
     staleTime: 60_000,
+    select,
   });
 }
 
-export function useTransactions() {
+export function useAccountOverview() {
   return useQuery({
-    queryKey: transactionKeys.list({}),
-    queryFn: ({ signal }) => TransactionService.getAll({ signal }),
+    queryKey: overviewKeys.all,
+    queryFn: ({ signal }) => transactions.overview({ signal }),
   });
 }
 
@@ -92,7 +94,7 @@ export function useCreateTransaction() {
     mutationFn: (newTx: NewTransaction) => transactions.create(newTx),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: transactionKeys.overview() });
+      queryClient.invalidateQueries({ queryKey: overviewKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryKeys.all });
     },
   });
@@ -105,8 +107,8 @@ export function useUpdateTransaction() {
       transactions.update(id, data),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: transactionKeys.overview() });
       queryClient.invalidateQueries({ queryKey: transactionKeys.detail(updated.id) });
+      queryClient.invalidateQueries({ queryKey: overviewKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryKeys.all });
     },
   });
@@ -139,17 +141,10 @@ export function useDeleteTransaction() {
 
     onSettled: (_data, _error, idToDelete) => {
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: transactionKeys.overview() });
       queryClient.invalidateQueries({ queryKey: transactionKeys.detail(idToDelete) });
+      queryClient.invalidateQueries({ queryKey: overviewKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryKeys.all });
     },
-  });
-}
-
-export function useAccountOverview() {
-  return useQuery({
-    queryKey: transactionKeys.overview(),
-    queryFn: ({ signal }) => transactions.overview({ signal }),
   });
 }
 

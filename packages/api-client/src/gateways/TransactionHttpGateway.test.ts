@@ -6,13 +6,11 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('TransactionHttpGateway', () => {
   it('builds list URLs with the core filter codec and passes signal', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({ data: [], pages: 1, items: 0 }),
-      });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [], pages: 1, items: 0 }),
+    });
     vi.stubGlobal('fetch', fetchMock);
     const signal = new AbortController().signal;
     await new TransactionHttpGateway().list(

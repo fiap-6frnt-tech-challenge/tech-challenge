@@ -6,14 +6,12 @@ import { ValidationError } from '@bytebank/core';
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   create: vi.fn(),
-  all: vi.fn(),
   list: vi.fn(),
 }));
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
 vi.mock('@/server/container', () => ({
   container: {
     createTransaction: { execute: mocks.create },
-    getAllTransactions: { execute: mocks.all },
     listTransactions: { execute: mocks.list },
   },
 }));
@@ -45,7 +43,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.auth.mockResolvedValue({ user: { id: actor.userId } });
   mocks.create.mockResolvedValue(tx);
-  mocks.all.mockResolvedValue([tx]);
   mocks.list.mockResolvedValue({ items: [tx], page: 1, perPage: 10, total: 1, totalPages: 1 });
 });
 
@@ -54,15 +51,19 @@ describe('GET /api/transactions', () => {
     mocks.auth.mockResolvedValue(null);
     const response = await GET(getRequest());
     expect(response.status).toBe(401);
-    expect(mocks.all).not.toHaveBeenCalled();
     expect(mocks.list).not.toHaveBeenCalled();
   });
 
-  it('preserves the unpaginated array contract', async () => {
+  it('paginates with the default page when _page is omitted', async () => {
     const response = await GET(getRequest());
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual([tx]);
-    expect(mocks.all).toHaveBeenCalledWith(actor);
+    await expect(response.json()).resolves.toEqual({ data: [tx], pages: 1, items: 1 });
+    expect(mocks.list).toHaveBeenCalledWith(actor, expect.anything(), { page: 1, perPage: 10 });
+  });
+
+  it('rejects pages larger than 100 items', async () => {
+    const response = await GET(getRequest('?_page=1&_per_page=101'));
+    expect(response.status).toBe(422);
     expect(mocks.list).not.toHaveBeenCalled();
   });
 
@@ -82,7 +83,6 @@ describe('GET /api/transactions', () => {
     const response = await GET(getRequest('?_page=0'));
     expect(response.status).toBe(422);
     await expect(response.json()).resolves.toMatchObject({ error: 'Dados inválidos' });
-    expect(mocks.all).not.toHaveBeenCalled();
     expect(mocks.list).not.toHaveBeenCalled();
   });
 });

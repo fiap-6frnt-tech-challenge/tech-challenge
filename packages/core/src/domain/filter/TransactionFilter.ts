@@ -127,3 +127,32 @@ export function toSearchParams(
 export function normalizeTransactionFilter(filter: Partial<TransactionFilter>): TransactionFilter {
   return fromSearchParams(toSearchParams(filter, { page: 1, perPage: 10 })).filter;
 }
+
+export interface BrowserFilterState {
+  filter: TransactionFilter;
+  page: number;
+}
+
+export function toBrowserSearchParams(
+  filter: Partial<TransactionFilter>,
+  page = 1
+): URLSearchParams {
+  return toSearchParams(
+    filter,
+    { page: Math.max(1, page), perPage: 10 },
+    { includeDefaults: false, legacyNames: true }
+  );
+}
+
+export function fromBrowserSearchParams(params: URLSearchParams): BrowserFilterState {
+  try {
+    const decoded = fromSearchParams(params, { allowLegacy: true });
+    return { filter: decoded.filter, page: decoded.page.page };
+  } catch {
+    return { filter: normalizeTransactionFilter({}), page: 1 };
+  }
+}
+
+export function hasActiveFilter(filter: Partial<TransactionFilter>): boolean {
+  return toBrowserSearchParams(filter).size > 0;
+}
