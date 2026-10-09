@@ -8,6 +8,7 @@ import { ConfirmTransactionModal } from './ConfirmTransactionModal';
 
 const mockTransaction = {
   type: 'deposit' as const,
+  category: 'salary',
   amount: 1500,
   date: '2026-03-26',
   description: 'Salário março',

@@ -39,7 +39,9 @@ export const Deposit: Story = {
   args: {
     transaction: {
       id: '1',
+      userId: 'user-1',
       type: 'deposit',
+      category: 'salary',
       description: 'Salário mensal',
       amount: 5000,
       date: '2025-03-01',
@@ -55,7 +57,9 @@ export const Withdrawal: Story = {
   args: {
     transaction: {
       id: '2',
+      userId: 'user-1',
       type: 'withdrawal',
+      category: 'housing',
       description: 'Aluguel',
       amount: 1500,
       date: '2025-03-05',
@@ -71,7 +75,9 @@ export const Transfer: Story = {
   args: {
     transaction: {
       id: '3',
+      userId: 'user-1',
       type: 'transfer',
+      category: 'transfer',
       description: 'Transferência para conta poupança',
       amount: 800,
       date: '2025-03-10',
@@ -87,7 +93,9 @@ export const LongDescription: Story = {
   args: {
     transaction: {
       id: '4',
+      userId: 'user-1',
       type: 'deposit',
+      category: 'other',
       description:
         'Pagamento referente ao projeto de desenvolvimento de software para cliente externo',
       amount: 12000,
@@ -104,7 +112,9 @@ export const WithoutActions: Story = {
   args: {
     transaction: {
       id: '5',
+      userId: 'user-1',
       type: 'deposit',
+      category: 'salary',
       description: 'Salário mensal',
       amount: 5000,
       date: '2025-03-01',

@@ -27,7 +27,7 @@ type Story = StoryObj<typeof TransactionFilters>;
 
 function Controlled({ initialValue }: { initialValue: TransactionFiltersValue }) {
   const [filters, setFilters] = useState<TransactionFiltersValue>(initialValue);
-  return <TransactionFilters value={filters} onChange={setFilters} />;
+  return <TransactionFilters value={filters} isFilterVisible onChange={setFilters} />;
 }
 
 export const Default: Story = {
