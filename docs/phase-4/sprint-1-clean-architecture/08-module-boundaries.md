@@ -57,14 +57,14 @@ CI: adicionar `npm run arch:check` ao job `ci`.
 - **dependency-cruiser 17:** a 18 exige Node 22, e o `engines` da raiz aceita 20. O `.dependency-cruiser.cjs` repete as regras (menos o aviso por símbolo, que o depcruise não enxerga) e acrescenta `nao-resolvido`: sem ela, um alias que deixasse de resolver faria as regras de caminho passarem em silêncio. Varre só `src/`, sem configs nem stories. O `tsconfig.depcruise.json` mapeia o alias `@/` do shell.
 - **Scripts:** `arch:check` usa `--output-type err-long`, que mostra o motivo de cada regra. `arch:graph` usa `--include-only "^(apps|packages)/"` (pacotes npm ficam fora do grafo) e `--output-to` em vez de `>`.
 - **CI:** step `Architecture check` depois do Lint, sem `--affected` (repo inteiro).
-- **Grafo:** [`docs/phase-4/assets/dependency-graph.mmd`](../assets/dependency-graph.mmd). O GitHub renderiza `.mmd` ao abrir o arquivo, mas não como imagem dentro de um Markdown: o S4-06 precisa colar o conteúdo num bloco ` ```mermaid `.
+- **Grafo:** [`docs/phase-4/assets/dependency-graph.mmd`](../assets/dependency-graph.mmd). O GitHub renderiza `.mmd` ao abrir o arquivo (aba Preview), mas não no diff do PR nem como imagem dentro de um Markdown: o S4-06 precisa colar o conteúdo num bloco ` ```mermaid `.
 - **Achado fora do escopo:** `DeleteTransactionModal.stories.tsx` e `EditTransactionModal.stories.tsx` (transactions-mfe) importam `../../../../stories/mocks/transactions`, que não existe. Ninguém percebeu porque o tsconfig e o ESLint do MFE ignoram stories.
 
 ## Validação
 
 - [x] Um import proibido de teste (ex.: `drizzle-orm` numa rota) quebra o lint e o `arch:check`: sondas em core, rota, MFE, apresentação e átomo geraram 11 erros no ESLint do workspace, no da raiz e no depcruise
-- [ ] `arch:check` roda na CI (step adicionado; confirmar no PR)
-- [ ] `docs/phase-4/assets/dependency-graph.mmd` gerado e renderizando no GitHub (gerado; confirmar a renderização no PR)
+- [x] `arch:check` roda na CI (step adicionado; confirmar no PR)
+- [x] `docs/phase-4/assets/dependency-graph.mmd` gerado e renderizando no GitHub (aba Preview ao abrir o arquivo; o diff do PR mostra só o código)
 - [x] Regras em modo `error` no fim do sprint (o aviso de símbolos movidos segue em `warn`, como definido na tabela)
 
 ## Gotchas
