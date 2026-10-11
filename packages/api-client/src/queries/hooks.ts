@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
-import type { NewTransaction, UpdateTransaction } from '@bytebank/shared';
-import type { DashboardSummary } from '@bytebank/core';
+import type { DashboardSummary, NewTransaction, UpdateTransaction } from '@bytebank/core';
+import { publish } from '@bytebank/stores';
 import type { GetPaginatedParams, PaginatedResponse, SummaryRange } from '../http';
 import { attachmentKeys, overviewKeys, summaryKeys, transactionKeys } from '../keys';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
@@ -92,7 +92,8 @@ export function useCreateTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (newTx: NewTransaction) => transactions.create(newTx),
-    onSuccess: () => {
+    onSuccess: (transaction) => {
+      publish({ type: 'transaction.created', version: 1, transaction });
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: overviewKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryKeys.all });
@@ -106,6 +107,7 @@ export function useUpdateTransaction() {
     mutationFn: ({ id, data }: { id: string; data: UpdateTransaction }) =>
       transactions.update(id, data),
     onSuccess: (updated) => {
+      publish({ type: 'transaction.updated', version: 1, transaction: updated });
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: transactionKeys.detail(updated.id) });
       queryClient.invalidateQueries({ queryKey: overviewKeys.all });
@@ -118,6 +120,9 @@ export function useDeleteTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => transactions.remove(id),
+    onSuccess: (_result, id) => {
+      publish({ type: 'transaction.deleted', version: 1, id });
+    },
 
     onMutate: async (idToDelete) => {
       await queryClient.cancelQueries({ queryKey: transactionKeys.lists() });
@@ -160,8 +165,15 @@ export function useUploadAttachment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) => attachments.upload(id, file),
-    onSuccess: (_attachment, { id }) =>
-      queryClient.invalidateQueries({ queryKey: attachmentKeys.list(id) }),
+    onSuccess: (attachment, { id }) => {
+      publish({
+        type: 'attachment.added',
+        version: 1,
+        transactionId: id,
+        attachmentId: attachment.id,
+      });
+      return queryClient.invalidateQueries({ queryKey: attachmentKeys.list(id) });
+    },
   });
 }
 
@@ -170,8 +182,10 @@ export function useDeleteAttachment() {
   return useMutation({
     mutationFn: ({ id, attachmentId }: { id: string; attachmentId: string }) =>
       attachments.remove(id, attachmentId),
-    onSuccess: (_data, { id }) =>
-      queryClient.invalidateQueries({ queryKey: attachmentKeys.list(id) }),
+    onSuccess: (_data, { id, attachmentId }) => {
+      publish({ type: 'attachment.removed', version: 1, transactionId: id, attachmentId });
+      return queryClient.invalidateQueries({ queryKey: attachmentKeys.list(id) });
+    },
   });
 }
 

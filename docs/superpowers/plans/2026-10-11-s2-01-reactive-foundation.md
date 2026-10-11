@@ -60,13 +60,13 @@
 
 ### Task 4: Publish mutation events
 
-**Files:** `packages/api-client/src/queries/hooks.ts`, `hooks.test.ts`.
+**Files:** `packages/api-client/src/queries/hooks.ts`, `hooks.test.ts`, `domainEvents.integration.test.tsx`, `packages/api-client/package.json`.
 
 **Interfaces:** On successful create/update/delete and attachment add/remove, publish the matching `DomainEvent` with `version: 1` and correct IDs or transaction payload.
 
-- [ ] Add real-bus observer tests around all five mutation callbacks and failure cases; run RED.
-- [ ] Publish events after success while preserving cache invalidation and rollback; run focused tests GREEN.
-- [ ] Commit the mutation integration deliverable.
+- [x] Add real-bus observer tests around all five mutation callbacks and failure cases; run RED.
+- [x] Publish events after success while preserving cache invalidation and rollback; run focused tests GREEN.
+- [x] Commit the mutation integration deliverable.
 
 ### Task 5: End-to-end federation verification
 
