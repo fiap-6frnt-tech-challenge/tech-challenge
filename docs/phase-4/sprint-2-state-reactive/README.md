@@ -24,7 +24,7 @@
 ## Pré-requisitos
 
 - [x] Sprint 1 fechado (core, casos de uso, rotas finas, gateways)
-- [ ] Spike A (RxJS singleton) aprovado ou mitigação escolhida
+- [x] Spike A (RxJS singleton) aprovado ou mitigação escolhida
 - [ ] Spike B (preload) aprovado
 
 ---
@@ -33,7 +33,7 @@
 
 | #   | Status | Task                                                 | Owner | Duração | Prio | Paralela?          | Arquivo                                                  |
 | --- | ------ | ---------------------------------------------------- | ----- | ------- | ---- | ------------------ | -------------------------------------------------------- |
-| 01  | ⏳     | Fundação reativa: RxJS, barramento de eventos, hooks | Dev 2 | 1.5 dia | P0   | ✅ dia 1           | [01-reactive-foundation.md](./01-reactive-foundation.md) |
+| 01  | 🟢     | Fundação reativa: RxJS, barramento de eventos, hooks | Dev 2 | 1.5 dia | P0   | ✅ dia 1           | [01-reactive-foundation.md](./01-reactive-foundation.md) |
 | 02  | ⏳     | Busca e filtros reativos + cancelamento              | Dev 3 | 1.5 dia | P0   | ⬅ 01               | [02-reactive-search.md](./02-reactive-search.md)         |
 | 03  | ⏳     | Uploads como stream                                  | Dev 2 | 2 dias  | P0   | ⬅ 01               | [03-upload-stream.md](./03-upload-stream.md)             |
 | 04  | ⏳     | Redux avançado                                       | Dev 2 | 1.5 dia | P0   | ⬅ 01, 03 (parcial) | [04-redux-patterns.md](./04-redux-patterns.md)           |
@@ -65,7 +65,7 @@ tudo ─→ 10 (testes/smoke)
 
 ### Reatividade
 
-- [ ] `rxjs` compartilhado como singleton; um único barramento de eventos entre shell e MFEs
+- [x] `rxjs` compartilhado como singleton; um único barramento de eventos entre shell e MFEs
 - [ ] Busca: digitação rápida gera 1 requisição; requisições obsoletas aparecem como canceladas
 - [ ] Uploads com progresso por arquivo, no máximo 2 simultâneos, retry em erro transitório, cancelamento
 - [ ] Marble tests para os pipelines

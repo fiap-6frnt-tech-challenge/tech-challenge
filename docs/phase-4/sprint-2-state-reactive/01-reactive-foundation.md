@@ -72,9 +72,11 @@ Hoje não há nenhuma programação reativa no projeto: o `rxjs` 7.8.2 só exist
 
 ## Validação
 
-- [ ] `rxjs` aparece uma vez no bundle (shell provê, MFEs consomem)
-- [ ] Evento emitido no transactions-mfe chega ao dashboard-mfe (build de produção)
-- [ ] Hooks com teardown correto (sem vazamento em StrictMode)
+- [x] `rxjs` é uma única instância em execução (shell provê, MFEs consomem)
+- [x] Evento publicado no escopo do transactions-mfe chega ao assinante no escopo do dashboard-mfe (build de produção)
+- [x] Hooks com teardown correto (sem vazamento em StrictMode)
+
+**Evidência (2026-10-11):** `npm run e2e` passou 8/8 cenários em Chromium e Firefox. O teste `e2e/reactive-foundation.spec.ts` confirmou que os três escopos resolvem o RxJS 7.8.2 e `@bytebank/stores` providos pelo shell, que um evento publicado pelo escopo de transactions chega uma vez ao assinante do escopo de dashboard e que nenhum chunk de fallback RxJS dos MFEs foi requisitado. Testes de unidade cobrem `ofType`, os hooks em StrictMode e a emissão após sucesso das cinco mutations; a integração com TanStack confirma que mutations com erro não publicam eventos. O consumo visual no dashboard é escopo da S3-08.
 
 ## Gotchas
 

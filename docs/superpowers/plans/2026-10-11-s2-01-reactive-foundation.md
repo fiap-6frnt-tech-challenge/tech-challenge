@@ -72,6 +72,6 @@
 
 **Files:** Task doc/README status, and a verification script only if needed for repeatability.
 
-- [ ] Run full unit tests, type-check, lint, build and architecture checks.
-- [ ] In a production build, verify the two remote share descriptors resolve to the shell's RxJS/stores instance; publish via one descriptor and receive through the other. Confirm no RxJS fallback chunk is downloaded.
-- [ ] Verify a mutation publishes only on success; update the S2-01 task checklist and record evidence.
+- [x] Run full unit tests, type-check, lint, build and architecture checks.
+- [x] In a production build, verify the two remote share descriptors resolve to the shell's RxJS/stores instance; publish via one descriptor and receive through the other. Confirm no RxJS fallback chunk is downloaded.
+- [x] Verify a mutation publishes only on success; update the S2-01 task checklist and record evidence.
