@@ -4,6 +4,7 @@ import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
+import { mfeBoundaries, sharedDeprecations } from '../../eslint.boundaries.mjs';
 
 export default defineConfig([
   globalIgnores([
@@ -47,4 +48,6 @@ export default defineConfig([
     },
   },
   prettier,
+  ...mfeBoundaries(),
+  ...sharedDeprecations(),
 ]);

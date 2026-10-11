@@ -17,6 +17,8 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "arch:check": "depcruise apps packages --config .dependency-cruiser.cjs --output-type err-long",
+    "arch:graph": "depcruise apps packages --config .dependency-cruiser.cjs --include-only \"^(apps|packages)/\" --collapse \"^(apps|packages)/[^/]+\" --output-type mermaid --output-to docs/phase-4/assets/dependency-graph.mmd",
     "storybook": "turbo run storybook",
     "e2e:build": "NEXT_PUBLIC_DASHBOARD_MFE_URL=http://localhost:3002/mf-manifest.json NEXT_PUBLIC_TRANSACTIONS_MFE_URL=http://localhost:3003/mf-manifest.json NEXT_PUBLIC_API_URL=/api LOCAL_UPLOADS_DIR=.uploads npm run build",
     "e2e": "npm run e2e:build && playwright test",
@@ -29,6 +31,7 @@
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "autocannon": "^8.0.0",
+    "dependency-cruiser": "^17.4.3",
     "husky": "^9.1.7",
     "lint-staged": "^16.3.2",
     "prettier": "^3.8.1",

@@ -146,19 +146,20 @@ Acesse `http://localhost:3000`, crie uma conta em `/register` e faça login. `BL
 
 ### Workspaces
 
-| Comando                                        | Descrição                                     |
-| ---------------------------------------------- | --------------------------------------------- |
-| `npm run dev -w @bytebank/shell`               | Inicia só o shell em `http://localhost:3000`  |
-| `npm run db:generate -w @bytebank/shell`       | Gera arquivos de migration a partir do schema |
-| `npm run db:migrate -w @bytebank/shell`        | Aplica as migrations no banco                 |
-| `npm run db:seed -w @bytebank/shell`           | Popula o banco com dados iniciais             |
-| `npm run storybook -w @bytebank/design-system` | Abre o Storybook em `http://localhost:6006`   |
+| Comando                                           | Descrição                                                        |
+| ------------------------------------------------- | ---------------------------------------------------------------- |
+| `npm run dev -w @bytebank/shell`                  | Inicia só o shell em `http://localhost:3000`                     |
+| `npm run db:generate -w @bytebank/shell`          | Gera arquivos de migration a partir do schema                    |
+| `npm run db:migrate -w @bytebank/shell`           | Aplica as migrations no banco                                    |
+| `npm run db:seed -w @bytebank/shell`              | Popula o banco com dados iniciais                                |
+| `npm run storybook -w @bytebank/design-system`    | Abre o Storybook em `http://localhost:6006`                      |
+| `npm run storybook -w @bytebank/transactions-mfe` | Abre o Storybook do MFE de transações em `http://localhost:6007` |
 
 ---
 
 ## Testes
 
-- **Componentes** — as stories do Storybook são executadas como testes num Chromium headless (`@storybook/addon-vitest`); pacotes `shared`/`stores` têm testes unitários Vitest. Rode tudo com `npm run test`.
+- **Componentes** — as stories do Storybook (design system e `transactions-mfe`) são executadas como testes num Chromium headless (`@storybook/addon-vitest`); pacotes `shared`/`stores` têm testes unitários Vitest. Rode tudo com `npm run test`.
 - **E2E** — Playwright cobre os fluxos críticos (auth + CRUD, filtros, anexos) contra builds de produção locais. Requer Postgres migrado e browsers instalados (`npx playwright install chromium firefox`); rode com `npm run e2e`. Detalhes em [e2e/README.md](e2e/README.md). No Windows, rode via Git Bash ou WSL — o script `e2e:build` usa sintaxe de variáveis inline (`VAR=valor …`) que não funciona no PowerShell/CMD.
 - **CI** — GitHub Actions roda lint, type-check, build e testes (Turbo `--affected` + cache remoto) em PRs e pushes; o workflow do Chromatic publica o Storybook e faz review visual.
 
