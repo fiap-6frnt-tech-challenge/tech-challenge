@@ -36,6 +36,10 @@ export default defineConfig([
       ...reactHooks.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off', // React 17+ não precisa importar React
       'react/prop-types': 'off', // usamos TypeScript
+      'no-restricted-imports': [
+        'error',
+        { patterns: [{ group: ['rxjs/*'], message: "Importe operadores apenas de 'rxjs'." }] },
+      ],
     },
     settings: {
       react: { version: '19' },

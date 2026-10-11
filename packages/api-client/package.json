@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@bytebank/core": "*",
-    "@bytebank/shared": "^0.1.0"
+    "@bytebank/shared": "^0.1.0",
+    "@bytebank/stores": "*"
   }
 }

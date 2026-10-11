@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import * as Rx from 'rxjs';
 import * as DS from '@bytebank/design-system';
 import * as Shared from '@bytebank/shared';
 import * as Core from '@bytebank/core';
@@ -57,6 +58,12 @@ function ensureInstance(): MFInstance {
           scope: 'default',
           lib: () => ReactDOM,
           shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
+        },
+        rxjs: {
+          version: '7.8.2',
+          scope: 'default',
+          lib: () => Rx,
+          shareConfig: { singleton: true, requiredVersion: '^7.8.0' },
         },
         '@bytebank/design-system': {
           version: '0.1.0',
