@@ -40,13 +40,13 @@
 
 ### Task 2: Domain event bus
 
-**Files:** `packages/stores/src/events/domainEvents.ts`, `domainEvents.test.ts`, `packages/stores/src/index.ts`.
+**Files:** `packages/stores/src/events/domainEvents.ts`, `domainEvents.test.ts`, `packages/stores/src/index.ts`, `packages/stores/package.json`.
 
 **Interfaces:** `domainEvents$: Observable<DomainEvent>`, `publish(event: DomainEvent): void`, `ofType<T extends DomainEvent['type']>(type: T)` as a narrowing RxJS filter operator.
 
-- [ ] Write marble tests for type filtering, ordered synchronous publication, and no replay; run them RED.
-- [ ] Implement the bus and export it; run focused tests GREEN.
-- [ ] Commit the event bus deliverable.
+- [x] Write marble tests for type filtering, ordered synchronous publication, and no replay; run them RED.
+- [x] Implement the bus and export it; run focused tests GREEN.
+- [x] Commit the event bus deliverable.
 
 ### Task 3: React Observable hooks
 
