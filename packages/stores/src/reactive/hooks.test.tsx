@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { StrictMode } from 'react';
+import { StrictMode, useLayoutEffect } from 'react';
 import { Observable, Subject } from 'rxjs';
 import { TestScheduler } from 'rxjs/testing';
-import { act, cleanup, renderHook } from '@testing-library/react';
+import { act, cleanup, render, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useEventStream, useObservable, useSubscription } from './hooks';
 
@@ -18,6 +18,21 @@ describe('useObservable', () => {
       act(() => flush());
       expect(result.current).toBe(2);
     });
+  });
+
+  it('preserves a function-valued initial state', () => {
+    const initial = () => 1;
+    const source = new Subject<() => number>();
+    const { result } = renderHook(() => useObservable(source, initial));
+    expect(result.current).toBe(initial);
+  });
+
+  it('preserves function values emitted by an Observable', () => {
+    const source = new Subject<() => number>();
+    const { result } = renderHook(() => useObservable(source, () => 0));
+    const next = () => 2;
+    act(() => source.next(next));
+    expect(result.current).toBe(next);
   });
 
   it('unsubscribes from the old source when the Observable changes', () => {
@@ -56,6 +71,39 @@ describe('useObservable', () => {
 });
 
 describe('useSubscription', () => {
+  it('tears down the StrictMode rehearsal and final subscription', () => {
+    let active = 0;
+    const source$ = new Observable<number>(() => {
+      active += 1;
+      return () => {
+        active -= 1;
+      };
+    });
+    const { unmount } = renderHook(() => useSubscription(source$, () => {}), {
+      wrapper: StrictMode,
+    });
+    expect(active).toBe(1);
+    unmount();
+    expect(active).toBe(0);
+  });
+
+  it('uses the latest callback when a layout effect publishes during commit', () => {
+    const source = new Subject<number>();
+    const previous = vi.fn();
+    const latest = vi.fn();
+    function Probe({ next, value }: { next: (value: number) => void; value: number }) {
+      useSubscription(source, next);
+      useLayoutEffect(() => {
+        if (value > 0) source.next(value);
+      }, [value]);
+      return null;
+    }
+    const view = render(<Probe next={previous} value={0} />);
+    view.rerender(<Probe next={latest} value={1} />);
+    expect(previous).not.toHaveBeenCalled();
+    expect(latest).toHaveBeenCalledExactlyOnceWith(1);
+  });
+
   it('uses the latest callback without resubscribing on rerender', () => {
     const source = new Subject<number>();
     const first = vi.fn();

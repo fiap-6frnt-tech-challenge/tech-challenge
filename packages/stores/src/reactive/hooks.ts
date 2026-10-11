@@ -1,22 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { Subject, type Observable } from 'rxjs';
 
 export function useObservable<T>(source$: Observable<T>, initial: T): T {
-  const [value, setValue] = useState(initial);
+  const [value, setValue] = useState<T>(() => initial);
   useEffect(() => {
-    const subscription = source$.subscribe(setValue);
+    const subscription = source$.subscribe((next) => setValue(() => next));
     return () => subscription.unsubscribe();
   }, [source$]);
   return value;
 }
 
 export function useSubscription<T>(source$: Observable<T>, next: (value: T) => void): void {
-  const callback = useRef(next);
+  const onValue = useEffectEvent(next);
   useEffect(() => {
-    callback.current = next;
-  }, [next]);
-  useEffect(() => {
-    const subscription = source$.subscribe((value) => callback.current(value));
+    const subscription = source$.subscribe((value) => onValue(value));
     return () => subscription.unsubscribe();
   }, [source$]);
 }
