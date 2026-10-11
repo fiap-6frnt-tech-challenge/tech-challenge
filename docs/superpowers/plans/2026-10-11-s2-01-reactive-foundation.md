@@ -54,9 +54,9 @@
 
 **Interfaces:** `useObservable<T>(source$: Observable<T>, initial: T): T`; `useSubscription<T>(source$: Observable<T>, next: (value: T) => void): void`; `useEventStream<T>(): [emit: (value: T) => void, stream$: Observable<T>]`.
 
-- [ ] Write renderHook tests for values, source replacement, callback replacement, stable stream identity, unmount cleanup, and StrictMode; run RED.
-- [ ] Implement the three hooks with React effects and a stable Subject; run focused tests GREEN.
-- [ ] Commit the hooks deliverable.
+- [x] Write renderHook tests for values, source replacement, callback replacement, stable stream identity, unmount cleanup, and StrictMode; run RED.
+- [x] Implement the three hooks with React effects and a stable Subject; run focused tests GREEN.
+- [x] Commit the hooks deliverable.
 
 ### Task 4: Publish mutation events
 
