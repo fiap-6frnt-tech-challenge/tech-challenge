@@ -35,8 +35,8 @@
 
 **Interfaces:** `searchPipeline(input$: Observable<string>, scheduler: SchedulerLike = asyncScheduler): Observable<string>` and `amountPipeline(input$: Observable<number | undefined>, scheduler: SchedulerLike = asyncScheduler): Observable<number | undefined>`.
 
-- [ ] Write TestScheduler tests for rapid input, trimmed duplicate, one character, empty clear, 400 ms amount debounce, duplicate suppression, and zero/undefined values.
-- [ ] Run focused tests RED, implement pipelines, run GREEN, and commit.
+- [x] Write TestScheduler tests for rapid input, trimmed duplicate, one character, empty clear, 400 ms amount debounce, duplicate suppression, and zero/undefined values.
+- [x] Run focused tests RED, implement pipelines, run GREEN, and commit.
 
 ### Task 2: React stream adapters
 
