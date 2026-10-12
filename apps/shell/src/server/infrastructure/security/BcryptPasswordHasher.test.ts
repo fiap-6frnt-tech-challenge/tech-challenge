@@ -23,4 +23,13 @@ describe('BcryptPasswordHasher', () => {
   it('confere hashes já gravados com outro custo', async () => {
     await expect(hasher.verify('Senha123!', storedCost10Hash)).resolves.toBe(true);
   });
+
+  it('compara contra hash fictício para e-mails inexistentes', async () => {
+    await expect(
+      new BcryptPasswordHasher(10).verifyDummy('senha-qualquer')
+    ).resolves.toBeUndefined();
+    await expect(
+      new BcryptPasswordHasher(12).verifyDummy('senha-qualquer')
+    ).resolves.toBeUndefined();
+  });
 });

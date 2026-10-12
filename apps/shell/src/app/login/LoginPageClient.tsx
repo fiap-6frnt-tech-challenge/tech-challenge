@@ -24,7 +24,9 @@ export function LoginPageClient({
       const result = await loginWithCredentials(data);
 
       if (!result.ok) {
-        window.location.assign('/auth/error?error=CredentialsSignin');
+        const params = new URLSearchParams({ error: 'CredentialsSignin' });
+        if (result.code === 'rate_limited') params.set('code', result.code);
+        window.location.assign(`/auth/error?${params.toString()}`);
         return;
       }
 

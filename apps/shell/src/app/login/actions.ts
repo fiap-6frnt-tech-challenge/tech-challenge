@@ -18,7 +18,18 @@ export async function loginWithCredentialsAction({ email, password }: LoginFormF
     }
 
     if (isCredentialsSigninError(error)) {
-      redirect('/auth/error?error=CredentialsSignin');
+      const code =
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        typeof error.code === 'string'
+          ? error.code
+          : undefined;
+      redirect(
+        code === 'rate_limited'
+          ? '/auth/error?error=CredentialsSignin&code=rate_limited'
+          : '/auth/error?error=CredentialsSignin'
+      );
     }
 
     throw error;

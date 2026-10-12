@@ -1,7 +1,13 @@
-import NextAuth from 'next-auth';
+import NextAuth, { CredentialsSignin } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { RateLimitedError } from '@bytebank/core';
 import { authConfig } from './auth.config';
 import { container } from '@/server/container';
+import { getClientIp } from '@/server/http/clientIp';
+
+class RateLimitedSignin extends CredentialsSignin {
+  code = 'rate_limited';
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -13,7 +19,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: 'Email', type: 'email' },
         password: { label: 'Senha', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) return null;
 
         let user: Awaited<ReturnType<typeof container.authenticateUser.execute>> = null;
@@ -21,9 +27,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           user = await container.authenticateUser.execute(
             credentials.email as string,
-            credentials.password as string
+            credentials.password as string,
+            getClientIp(request.headers)
           );
         } catch (error) {
+          if (error instanceof RateLimitedError) throw new RateLimitedSignin();
           console.error('[auth] Falha ao verificar credenciais no banco:', error);
         }
 

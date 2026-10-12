@@ -60,16 +60,19 @@ describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => 
   it('registra e autentica um usuário com a senha em bcrypt', async () => {
     const email = `${scope.id('ana')}@bytebank.test`;
 
-    const user = await container.registerUser.execute({
-      name: 'Ana Souza',
-      email,
-      password: 'Senha123!',
-    });
+    const user = await container.registerUser.execute(
+      {
+        name: 'Ana Souza',
+        email,
+        password: 'Senha123!',
+      },
+      '127.0.0.1'
+    );
 
     expect(user.passwordHash).toMatch(/^\$2[aby]\$10\$/);
-    expect(await container.authenticateUser.execute(email.toUpperCase(), 'Senha123!')).toEqual(
-      user
-    );
-    expect(await container.authenticateUser.execute(email, 'senha-errada')).toBeNull();
+    expect(
+      await container.authenticateUser.execute(email.toUpperCase(), 'Senha123!', '127.0.0.1')
+    ).toEqual(user);
+    expect(await container.authenticateUser.execute(email, 'senha-errada', '127.0.0.1')).toBeNull();
   });
 });

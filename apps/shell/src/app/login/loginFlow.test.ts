@@ -39,4 +39,12 @@ describe('loginWithCredentials', () => {
 
     expect(result).toEqual({ ok: false, error: 'CredentialsSignin' });
   });
+
+  it('preserva o código de bloqueio retornado pelo NextAuth', async () => {
+    mocks.signIn.mockResolvedValue({ ok: false, error: 'CredentialsSignin', code: 'rate_limited' });
+
+    await expect(
+      loginWithCredentials({ email: 'ana@bytebank.com', password: 'senha-errada' })
+    ).resolves.toEqual({ ok: false, error: 'CredentialsSignin', code: 'rate_limited' });
+  });
 });

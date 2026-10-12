@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "@types/node": "^26.6.5",
     "autocannon": "^8.0.0",
     "dependency-cruiser": "^17.4.3",
     "husky": "^9.1.7",
