@@ -29,6 +29,12 @@ export class RateLimitedError extends DomainError {
   }
 }
 
+export class TurnstileRequiredError extends DomainError {
+  constructor() {
+    super('Confirme o desafio de segurança');
+  }
+}
+
 export class AuthenticationError extends DomainError {
   constructor() {
     super('Não autenticado');

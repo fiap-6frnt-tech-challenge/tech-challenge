@@ -97,8 +97,14 @@ export interface PasswordHasher {
 
 export interface RateLimiter {
   check(key: string): Promise<{ allowed: boolean; retryAfterSeconds: number }>;
+  failureCount(key: string): Promise<number>;
   registerFailure(key: string): Promise<void>;
   reset(key: string): Promise<void>;
+}
+
+export interface CaptchaVerifier {
+  isEnabled(): boolean;
+  verify(token: string): Promise<boolean>;
 }
 
 export interface RateLimitKeyGenerator {

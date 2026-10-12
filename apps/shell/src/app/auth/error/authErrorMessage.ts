@@ -3,6 +3,9 @@ export function getAuthErrorMessage(error: string | null, code: string | null = 
     if (code === 'rate_limited') {
       return 'Muitas tentativas. Tente novamente em alguns minutos.';
     }
+    if (code === 'turnstile_required') {
+      return 'Confirme o desafio de segurança na tela de login para continuar.';
+    }
     return 'Usuário ou senha inválidos. Por favor, verifique suas credenciais.';
   }
 

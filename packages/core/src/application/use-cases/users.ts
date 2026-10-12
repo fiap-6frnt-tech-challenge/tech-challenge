@@ -1,6 +1,7 @@
-import { ConflictError, RateLimitedError } from '../../domain';
+import { ConflictError, RateLimitedError, TurnstileRequiredError } from '../../domain';
 import { registerSchema } from '../../schemas';
 import type {
+  CaptchaVerifier,
   IdGenerator,
   PasswordHasher,
   RateLimiter,
@@ -44,14 +45,22 @@ export class RegisterUser {
 }
 
 export class AuthenticateUser {
+  private readonly captchaThreshold = 3;
+
   constructor(
     private readonly users: UserRepository,
     private readonly passwords: PasswordHasher,
     private readonly rateLimiter: RateLimiter,
-    private readonly rateLimitKeys: RateLimitKeyGenerator
+    private readonly rateLimitKeys: RateLimitKeyGenerator,
+    private readonly captchaVerifier?: CaptchaVerifier
   ) {}
 
-  async execute(email: string, password: string, ipAddress: string): Promise<User | null> {
+  async execute(
+    email: string,
+    password: string,
+    ipAddress: string,
+    turnstileToken?: string
+  ): Promise<User | null> {
     const normalizedEmail = email.trim().toLowerCase();
     const emailKey = this.rateLimitKeys.loginEmail(normalizedEmail);
     const ipKey = this.rateLimitKeys.loginIp(ipAddress);
@@ -64,21 +73,39 @@ export class AuthenticateUser {
       throw new RateLimitedError(Math.max(...blocked.map((limit) => limit.retryAfterSeconds)));
     }
 
-    const user = await this.users.findByEmail(normalizedEmail);
-    if (!user) {
-      await this.passwords.verifyDummy(password);
+    const captchaVerifier = this.captchaVerifier;
+    const captchaEnabled = captchaVerifier?.isEnabled() ?? false;
+    if (
+      captchaEnabled &&
+      (await this.rateLimiter.failureCount(emailKey)) >= this.captchaThreshold
+    ) {
+      if (!turnstileToken || !captchaVerifier || !(await captchaVerifier.verify(turnstileToken))) {
+        throw new TurnstileRequiredError();
+      }
+    }
+
+    const registerFailure = async () => {
       await Promise.all([
         this.rateLimiter.registerFailure(emailKey),
         this.rateLimiter.registerFailure(ipKey),
       ]);
+      if (
+        captchaEnabled &&
+        (await this.rateLimiter.failureCount(emailKey)) >= this.captchaThreshold
+      ) {
+        throw new TurnstileRequiredError();
+      }
+    };
+
+    const user = await this.users.findByEmail(normalizedEmail);
+    if (!user) {
+      await this.passwords.verifyDummy(password);
+      await registerFailure();
       return null;
     }
 
     if (!(await this.passwords.verify(password, user.passwordHash))) {
-      await Promise.all([
-        this.rateLimiter.registerFailure(emailKey),
-        this.rateLimiter.registerFailure(ipKey),
-      ]);
+      await registerFailure();
       return null;
     }
 

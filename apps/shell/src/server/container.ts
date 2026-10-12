@@ -21,6 +21,7 @@ import { DrizzleTransactionRepository } from './infrastructure/db/DrizzleTransac
 import { DrizzleUserRepository } from './infrastructure/db/DrizzleUserRepository';
 import { PostgresRateLimiter } from './infrastructure/db/PostgresRateLimiter';
 import { BcryptPasswordHasher } from './infrastructure/security/BcryptPasswordHasher';
+import { CloudflareTurnstileVerifier } from './infrastructure/security/CloudflareTurnstileVerifier';
 import { HmacRateLimitKeyGenerator } from './infrastructure/security/HmacRateLimitKeyGenerator';
 import { getRateLimitPolicies } from './infrastructure/security/rateLimitPolicy';
 import { LocalFileStorage } from './infrastructure/storage/LocalFileStorage';
@@ -52,6 +53,7 @@ const rateLimitKeys = new HmacRateLimitKeyGenerator(
     (process.env.NODE_ENV === 'production' ? '' : 'bytebank-local-rate-limit-secret')
 );
 const rateLimiter = new PostgresRateLimiter(db, getRateLimitPolicies(), clock);
+const turnstileVerifier = new CloudflareTurnstileVerifier();
 const storage = resolveFileStorage();
 
 export const container = {
@@ -67,5 +69,12 @@ export const container = {
   listAttachments: new ListAttachments(attachments),
   removeAttachment: new RemoveAttachment(attachments, storage),
   registerUser: new RegisterUser(users, passwords, ids, rateLimiter, rateLimitKeys),
-  authenticateUser: new AuthenticateUser(users, passwords, rateLimiter, rateLimitKeys),
+  authenticateUser: new AuthenticateUser(
+    users,
+    passwords,
+    rateLimiter,
+    rateLimitKeys,
+    turnstileVerifier
+  ),
+  turnstileVerifier,
 };

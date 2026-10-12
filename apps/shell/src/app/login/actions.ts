@@ -5,11 +5,18 @@ import type { LoginFormFields } from '@bytebank/design-system';
 import { signIn } from '../../auth';
 import { isCredentialsSigninError, isNextRedirectError } from './authErrors';
 
-export async function loginWithCredentialsAction({ email, password }: LoginFormFields) {
+type CredentialsWithTurnstile = LoginFormFields & { turnstileToken?: string };
+
+export async function loginWithCredentialsAction({
+  email,
+  password,
+  turnstileToken,
+}: CredentialsWithTurnstile) {
   try {
     await signIn('credentials', {
       email,
       password,
+      ...(turnstileToken ? { turnstileToken } : {}),
       redirectTo: '/',
     });
   } catch (error) {
@@ -26,8 +33,8 @@ export async function loginWithCredentialsAction({ email, password }: LoginFormF
           ? error.code
           : undefined;
       redirect(
-        code === 'rate_limited'
-          ? '/auth/error?error=CredentialsSignin&code=rate_limited'
+        code === 'rate_limited' || code === 'turnstile_required'
+          ? `/auth/error?error=CredentialsSignin&code=${code}`
           : '/auth/error?error=CredentialsSignin'
       );
     }

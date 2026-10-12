@@ -1,29 +1,55 @@
 'use client';
 
 import Link from 'next/link';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import type { LoginFormFields } from '@bytebank/design-system';
 import { GoogleAuthButton, LoginForm } from '@bytebank/design-system';
 import { loginWithCredentials } from './loginFlow';
+import { TurnstileWidget } from './TurnstileWidget';
 
 interface LoginPageClientProps {
   isGoogleAuthEnabled: boolean;
+  turnstileSiteKey?: string;
   loginWithGoogleAction: () => void | Promise<void>;
 }
 
 export function LoginPageClient({
   isGoogleAuthEnabled,
+  turnstileSiteKey,
   loginWithGoogleAction,
 }: LoginPageClientProps) {
   const [isCredentialsPending, startCredentialsTransition] = useTransition();
   const [isGooglePending, startGoogleTransition] = useTransition();
+  const [isTurnstileRequired, setIsTurnstileRequired] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileWidgetVersion, setTurnstileWidgetVersion] = useState(0);
+  const [turnstileMessage, setTurnstileMessage] = useState('');
   const isPending = isCredentialsPending || isGooglePending;
 
   function handleCredentialsSubmit(data: LoginFormFields) {
     startCredentialsTransition(async () => {
-      const result = await loginWithCredentials(data);
+      const result = await loginWithCredentials(data, turnstileToken || undefined);
 
       if (!result.ok) {
+        if (result.code === 'turnstile_required') {
+          setIsTurnstileRequired(true);
+          setTurnstileToken('');
+          setTurnstileWidgetVersion((version) => version + 1);
+          setTurnstileMessage('Confirme o desafio de segurança para continuar.');
+          return;
+        }
+
+        if (isTurnstileRequired) {
+          setTurnstileToken('');
+          setTurnstileWidgetVersion((version) => version + 1);
+          setTurnstileMessage('Credenciais inválidas. Confirme novamente o desafio.');
+          if (result.code === 'rate_limited') {
+            const params = new URLSearchParams({ error: 'CredentialsSignin', code: result.code });
+            window.location.assign(`/auth/error?${params.toString()}`);
+          }
+          return;
+        }
+
         const params = new URLSearchParams({ error: 'CredentialsSignin' });
         if (result.code === 'rate_limited') params.set('code', result.code);
         window.location.assign(`/auth/error?${params.toString()}`);
@@ -75,6 +101,19 @@ export function LoginPageClient({
           </h1>
 
           <LoginForm onSubmit={handleCredentialsSubmit} isLoading={isPending} />
+
+          {isTurnstileRequired && turnstileSiteKey ? (
+            <div className="mt-md flex flex-col gap-sm" aria-live="polite">
+              <p className="text-center text-sm text-content-secondary">
+                {turnstileMessage || 'Confirme o desafio para continuar.'}
+              </p>
+              <TurnstileWidget
+                key={turnstileWidgetVersion}
+                siteKey={turnstileSiteKey}
+                onToken={setTurnstileToken}
+              />
+            </div>
+          ) : null}
 
           {isGoogleAuthEnabled ? (
             <>

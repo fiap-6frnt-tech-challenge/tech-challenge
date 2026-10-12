@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RateLimitedError } from '@bytebank/core';
+import { RateLimitedError, TurnstileRequiredError } from '@bytebank/core';
 
 const mocks = vi.hoisted(() => ({
   nextAuth: vi.fn((config: unknown) => {
@@ -48,7 +48,12 @@ describe('credentials authorize', () => {
       passwordHash: 'private-hash',
     });
     const result = await authorize({ email: 'ana@example.com', password: 'secret' }, request);
-    expect(mocks.authenticate).toHaveBeenCalledWith('ana@example.com', 'secret', '203.0.113.12');
+    expect(mocks.authenticate).toHaveBeenCalledWith(
+      'ana@example.com',
+      'secret',
+      '203.0.113.12',
+      undefined
+    );
     expect(result).toMatchObject({ id: 'user-1', name: 'Ana', email: 'ana@example.com' });
     expect(result).not.toHaveProperty('passwordHash');
   });
@@ -87,5 +92,13 @@ describe('credentials authorize', () => {
     await expect(
       authorize({ email: 'ana@example.com', password: 'secret' }, request)
     ).rejects.toMatchObject({ type: 'CredentialsSignin', code: 'rate_limited' });
+  });
+
+  it('translates a Turnstile challenge into the safe CredentialsSignin code', async () => {
+    mocks.authenticate.mockRejectedValue(new TurnstileRequiredError());
+
+    await expect(
+      authorize({ email: 'ana@example.com', password: 'secret' }, request)
+    ).rejects.toMatchObject({ type: 'CredentialsSignin', code: 'turnstile_required' });
   });
 });

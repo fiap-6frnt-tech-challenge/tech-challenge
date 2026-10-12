@@ -1,12 +1,16 @@
 import NextAuth, { CredentialsSignin } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { RateLimitedError } from '@bytebank/core';
+import { RateLimitedError, TurnstileRequiredError } from '@bytebank/core';
 import { authConfig } from './auth.config';
 import { container } from '@/server/container';
 import { getClientIp } from '@/server/http/clientIp';
 
 class RateLimitedSignin extends CredentialsSignin {
   code = 'rate_limited';
+}
+
+class TurnstileRequiredSignin extends CredentialsSignin {
+  code = 'turnstile_required';
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -18,6 +22,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Senha', type: 'password' },
+        turnstileToken: { label: 'Turnstile token', type: 'text' },
       },
       async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) return null;
@@ -28,10 +33,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user = await container.authenticateUser.execute(
             credentials.email as string,
             credentials.password as string,
-            getClientIp(request.headers)
+            getClientIp(request.headers),
+            typeof credentials.turnstileToken === 'string' ? credentials.turnstileToken : undefined
           );
         } catch (error) {
           if (error instanceof RateLimitedError) throw new RateLimitedSignin();
+          if (error instanceof TurnstileRequiredError) throw new TurnstileRequiredSignin();
           console.error('[auth] Falha ao verificar credenciais no banco:', error);
         }
 

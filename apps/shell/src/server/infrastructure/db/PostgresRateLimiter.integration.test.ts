@@ -27,6 +27,21 @@ afterAll(async () => {
 });
 
 describe('PostgresRateLimiter', () => {
+  it('returns the number of failures inside the active window', async () => {
+    const key = `login:ip:${keyMarker}-captcha`;
+    const initialTime = clock.now();
+
+    await expect(limiter.failureCount(key)).resolves.toBe(0);
+    await limiter.registerFailure(key);
+    await limiter.registerFailure(key);
+    await expect(limiter.failureCount(key)).resolves.toBe(2);
+
+    clock.set(new Date(initialTime.getTime() + 61_000));
+    await expect(limiter.failureCount(key)).resolves.toBe(0);
+    clock.set(initialTime);
+    await limiter.reset(key);
+  });
+
   it('applies an atomic threshold and doubles consecutive email locks up to the cap', async () => {
     const key = `login:email:${keyMarker}-progressive`;
 

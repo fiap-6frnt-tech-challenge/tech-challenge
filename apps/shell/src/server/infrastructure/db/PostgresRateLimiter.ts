@@ -46,6 +46,19 @@ export class PostgresRateLimiter implements RateLimiter {
     };
   }
 
+  async failureCount(key: string): Promise<number> {
+    const policy = policyForKey(key, this.policies);
+    const [row] = await this.db
+      .select({ failures: authAttempts.failures, windowStart: authAttempts.windowStart })
+      .from(authAttempts)
+      .where(eq(authAttempts.key, key))
+      .limit(1);
+
+    if (!row) return 0;
+    const cutoff = new Date(this.clock.now().getTime() - policy.windowSeconds * 1000);
+    return row.windowStart <= cutoff ? 0 : row.failures;
+  }
+
   async registerFailure(key: string): Promise<void> {
     const policy = policyForKey(key, this.policies);
     const now = this.clock.now();

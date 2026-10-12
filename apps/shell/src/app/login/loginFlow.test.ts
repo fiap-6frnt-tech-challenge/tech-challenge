@@ -47,4 +47,18 @@ describe('loginWithCredentials', () => {
       loginWithCredentials({ email: 'ana@bytebank.com', password: 'senha-errada' })
     ).resolves.toEqual({ ok: false, error: 'CredentialsSignin', code: 'rate_limited' });
   });
+
+  it('envia o token Turnstile quando o desafio já foi solicitado', async () => {
+    await loginWithCredentials(
+      { email: 'ana@bytebank.com', password: 'segredo123' },
+      'challenge-token'
+    );
+
+    expect(mocks.signIn).toHaveBeenCalledWith('credentials', {
+      email: 'ana@bytebank.com',
+      password: 'segredo123',
+      turnstileToken: 'challenge-token',
+      redirect: false,
+    });
+  });
 });

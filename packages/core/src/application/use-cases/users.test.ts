@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ConflictError, RateLimitedError } from '../../domain';
-import type { PasswordHasher, RateLimiter, RateLimitKeyGenerator, UserRepository } from '../ports';
+import { ConflictError, RateLimitedError, TurnstileRequiredError } from '../../domain';
+import type {
+  CaptchaVerifier,
+  PasswordHasher,
+  RateLimiter,
+  RateLimitKeyGenerator,
+  UserRepository,
+} from '../ports';
 import { FakeClock, SequentialIdGenerator } from '../testing';
 import type { User } from '../types';
 import { AuthenticateUser, RegisterUser } from './users';
@@ -29,6 +35,7 @@ function setup(existing: User | null = null) {
       const allowed = count < maxFailuresFor(key);
       return { allowed, retryAfterSeconds: allowed ? 0 : 30 };
     },
+    failureCount: async (key) => attempts.get(key) ?? 0,
     registerFailure: async (key) => {
       const count = (attempts.get(key) ?? 0) + 1;
       if (count >= maxFailuresFor(key)) {
@@ -169,6 +176,53 @@ describe('user use cases', () => {
       new RateLimitedError(30)
     );
     expect(deps.dummyVerifications).toBe(0);
+  });
+
+  it('requires Turnstile after three failures and verifies each subsequent attempt', async () => {
+    const existing: User = {
+      id: 'u1',
+      name: 'Ana',
+      email: 'ana@example.com',
+      passwordHash: 'hashed:correct-password',
+    };
+    const deps = setup(existing);
+    const verifiedTokens: string[] = [];
+    const captcha: CaptchaVerifier = {
+      isEnabled: () => true,
+      verify: async (token) => {
+        verifiedTokens.push(token);
+        return token === 'valid-token';
+      },
+    };
+    const authenticate = new AuthenticateUser(
+      deps.users,
+      deps.passwords,
+      deps.rateLimiter,
+      deps.rateLimitKeys,
+      captcha
+    );
+
+    await expect(
+      authenticate.execute('ana@example.com', 'wrong-password', '203.0.113.4')
+    ).resolves.toBeNull();
+    await expect(
+      authenticate.execute('ana@example.com', 'wrong-password', '203.0.113.4')
+    ).resolves.toBeNull();
+    await expect(
+      authenticate.execute('ana@example.com', 'wrong-password', '203.0.113.4')
+    ).rejects.toBeInstanceOf(TurnstileRequiredError);
+    await expect(
+      authenticate.execute('ana@example.com', 'correct-password', '203.0.113.4')
+    ).rejects.toBeInstanceOf(TurnstileRequiredError);
+    await expect(
+      authenticate.execute('ana@example.com', 'correct-password', '203.0.113.4', 'bad-token')
+    ).rejects.toBeInstanceOf(TurnstileRequiredError);
+    expect(verifiedTokens).toEqual(['bad-token']);
+
+    await expect(
+      authenticate.execute('ana@example.com', 'correct-password', '203.0.113.4', 'valid-token')
+    ).resolves.toEqual(existing);
+    expect(verifiedTokens).toEqual(['bad-token', 'valid-token']);
   });
 
   it('blocks the sixth login attempt until the lock expires on the fake clock', async () => {
