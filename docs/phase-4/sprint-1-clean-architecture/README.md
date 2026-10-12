@@ -35,8 +35,8 @@
 ## Pré-requisitos
 
 - [x] Sprint 0 fechado (IDOR corrigido, ADRs aceitos, spikes resolvidos)
-- [ ] Baseline de performance disponível (S0-04)
-- [ ] Schemas de API do S0-03 mergeados
+- [x] Baseline de performance disponível (S0-04)
+- [x] Schemas de API do S0-03 mergeados
 
 ---
 
@@ -51,9 +51,9 @@
 | 05  | ✅     | Tempo de resposta: índices, SQL, overview     | Dev 3 | 1.5 dia | P0   | ⬅ 03             | [05-db-response-time.md](./05-db-response-time.md)           |
 | 06  | ✅     | Front em camadas: gateways, queries, MFEs     | Dev 2 | 2 dias  | P0   | ⬅ 01             | [06-front-layers.md](./06-front-layers.md)                   |
 | 07  | ✅     | View-models e casos de uso de cliente         | Dev 2 | 1.5 dia | P0   | ⬅ 06             | [07-view-models.md](./07-view-models.md)                     |
-| 08  | 🟢     | Fronteiras de módulos (lint + grafo)          | Dev 3 | 1 dia   | P0   | ⬅ 01             | [08-module-boundaries.md](./08-module-boundaries.md)         |
+| 08  | ✅     | Fronteiras de módulos (lint + grafo)          | Dev 3 | 1 dia   | P0   | ⬅ 01             | [08-module-boundaries.md](./08-module-boundaries.md)         |
 | 09  | ✅     | Design System em Atomic Design                | Dev 3 | 1 dia   | P1   | ✅ dia 1         | [09-ds-atomic-design.md](./09-ds-atomic-design.md)           |
-| 10  | ⏳     | Testes + smoke                                | Todos | 0.5 dia | P0   | ⬅ impl           | [10-tests-smoke.md](./10-tests-smoke.md)                     |
+| 10  | 🟢     | Testes + smoke                                | Todos | 0.5 dia | P0   | ⬅ impl           | [10-tests-smoke.md](./10-tests-smoke.md)                     |
 
 **Legenda:** ✅ mergeada · 🟢 implementada · ⏳ pendente
 
@@ -76,23 +76,23 @@ tudo ─→ 10 (testes/smoke)
 
 ### Camadas
 
-- [ ] `@bytebank/core` não importa `react`, `next`, `drizzle-orm`, `@vercel/blob` nem `node:*` (o lint falha se importar)
-- [ ] Nenhuma rota em `app/api/**` importa `@/db` ou `drizzle-orm`; todas usam o `container`
-- [ ] Todo caso de uso tem teste unitário com fakes (sem banco), inclusive o de autorização (outro usuário → `NotFoundError`)
-- [ ] Contratos HTTP idênticos aos da Fase 2 (testes de contrato das rotas verdes; E2E verdes)
+- [x] `@bytebank/core` não importa `react`, `next`, `drizzle-orm`, `@vercel/blob` nem `node:*` (o lint falha se importar)
+- [x] Nenhuma rota em `app/api/**` importa `@/db` ou `drizzle-orm`; todas usam o `container`
+- [x] Todo caso de uso tem teste unitário com fakes (sem banco), inclusive o de autorização (outro usuário → `NotFoundError`)
+- [x] Contratos HTTP idênticos aos da Fase 2 (testes de contrato das rotas verdes; E2E verdes)
 
 ### Front
 
-- [ ] `Dashboard.tsx` só renderiza (cálculos no view-model)
-- [ ] Filtros via `TransactionFilter` (codec único, usado também pelo servidor)
-- [ ] `api-client` separado em `http/`, `gateways/` e `queries/`; MFEs em `presentation/`, `application/` e `infrastructure/`
+- [x] `Dashboard.tsx` só renderiza (cálculos no view-model)
+- [x] Filtros via `TransactionFilter` (codec único, usado também pelo servidor)
+- [x] `api-client` separado em `http/`, `gateways/` e `queries/`; MFEs em `presentation/`, `application/` e `infrastructure/`
 
 ### Performance
 
-- [ ] Home não baixa mais a lista completa (endpoint de overview)
-- [ ] Índices criados; p95 do resumo e da lista melhor que a baseline (anotado no PR)
+- [x] Home não baixa mais a lista completa (endpoint de overview)
+- [x] Índices criados; p95 do resumo e da lista melhor que a baseline (anotado no PR)
 
 ### Modularidade
 
-- [ ] `npm run arch:check` roda na CI; grafo de dependências gerado
-- [ ] DS reorganizado em atoms/molecules/organisms com o barrel público intacto; Storybook com a nova hierarquia
+- [x] `npm run arch:check` roda na CI; grafo de dependências gerado
+- [x] DS reorganizado em atoms/molecules/organisms com o barrel público intacto; Storybook com a nova hierarquia

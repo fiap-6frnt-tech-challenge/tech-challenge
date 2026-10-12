@@ -57,3 +57,7 @@ export const CATEGORIES = [
 
 export type CategoryId = (typeof CATEGORIES)[number]['id'];
 export type Category = (typeof CATEGORIES)[number];
+
+export function categoryLabel(category: string): string {
+  return CATEGORIES.find((item) => item.id === category)?.label ?? category;
+}

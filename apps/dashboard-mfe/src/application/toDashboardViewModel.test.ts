@@ -67,6 +67,23 @@ describe('toDashboardViewModel', () => {
     ]);
   });
 
+  it('names the pie slices with the category label, not the stored id', () => {
+    const viewModel = toDashboardViewModel(
+      summary({
+        byCategory: [
+          { category: 'housing', total: 1850 },
+          { category: 'food', total: 312.47 },
+          { category: 'Alimentação', total: 100 },
+        ],
+      })
+    );
+
+    expect(viewModel.byCategory).toEqual([
+      { label: 'Moradia', value: 1850 },
+      { label: 'Alimentação', value: 412.47 },
+    ]);
+  });
+
   it('returns empty chart series for an empty summary', () => {
     const viewModel = toDashboardViewModel(
       summary({ byMonth: [], balanceOverTime: [], byCategory: [] })

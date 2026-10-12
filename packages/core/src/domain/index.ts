@@ -16,7 +16,7 @@ export {
   groupByCategory,
 } from './transaction/rules';
 export type { MonthlyAggregate, BalancePoint, CategoryAggregate } from './transaction/rules';
-export { CATEGORIES, type Category, type CategoryId } from './category/categories';
+export { CATEGORIES, categoryLabel, type Category, type CategoryId } from './category/categories';
 export { suggestCategory } from './category/suggestCategory';
 export type { DashboardSummary } from './dashboard/DashboardSummary';
 export {
