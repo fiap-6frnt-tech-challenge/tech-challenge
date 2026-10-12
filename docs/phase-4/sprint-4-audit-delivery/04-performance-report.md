@@ -24,7 +24,7 @@ A spec pede "melhorias no tempo de resposta da aplicação". O relatório prova 
 
 1. **Lighthouse** (best-of-3, produção e local), páginas `/login`, `/` e `/transactions`, desktop e mobile: Perf, LCP, TBT, CLS.
 2. **Bundle:** chunk da federação (com e sem recharts), JS inicial por rota, onde está o zod.
-3. **API** (5 mil transações): p50/p95 de lista, busca, overview e resumo; efeito do cache (304 e cache do servidor).
+3. **API** (5 mil transações): p50/p95 de lista, busca, overview e resumo; efeito do cache (304 e cache do servidor). Para a lista paginada, as metas são o tempo de resposta (p95 com 1 conexão) e a vazão (req/s com 10 conexões, comparada com a baseline na mesma máquina); o `api-bench.mjs` mede as duas. O p95 com 10 conexões não serve de meta, porque mede a fila do servidor ([s1-05 § 5](../perf/s1-05-db-response-time.md#5-reavaliação-da-meta-da-lista-paginada-s1-10)).
 4. **Payload da home:** lista completa → overview.
 5. **Busca:** requisições por termo; requisições canceladas.
 6. **Navegação:** tempo clique → conteúdo em "Transações" (com e sem preload).

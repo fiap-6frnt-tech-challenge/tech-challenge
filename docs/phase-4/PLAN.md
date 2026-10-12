@@ -185,19 +185,21 @@ flowchart TB
 
 ### Metas (KPIs)
 
-| Métrica                                     | Ponto de partida             | Meta da Fase 4                            |
-| ------------------------------------------- | ---------------------------- | ----------------------------------------- |
-| Lighthouse mobile `/`                       | 67 (Fase 2, local best-of-3) | **≥ 85**                                  |
-| Lighthouse mobile `/transactions`           | 72                           | **≥ 85**                                  |
-| Lighthouse desktop (todas)                  | 97–100                       | ≥ 95 (sem regressão), CLS = 0             |
-| recharts no carregamento de `/transactions` | sim (~138 KB gzip)           | **não**                                   |
-| p95 do resumo e da lista (5 mil transações) | medir no S0-04               | **−50%**                                  |
-| Payload da home                             | lista completa               | saldo + 5 recentes                        |
-| Requisições por termo de busca              | medir no S0-04               | 1 por termo estável; obsoletas canceladas |
-| ZAP baseline                                | —                            | 0 achados High                            |
-| `npm audit` (dependências de produção)      | medir                        | 0 High/Critical                           |
-| Rotas com autorização testada               | parcial                      | 100%                                      |
-| Cobertura de linhas do `@bytebank/core`     | —                            | ≥ 90%                                     |
+| Métrica                                              | Ponto de partida             | Meta da Fase 4                            |
+| ---------------------------------------------------- | ---------------------------- | ----------------------------------------- |
+| Lighthouse mobile `/`                                | 67 (Fase 2, local best-of-3) | **≥ 85**                                  |
+| Lighthouse mobile `/transactions`                    | 72                           | **≥ 85**                                  |
+| Lighthouse desktop (todas)                           | 97–100                       | ≥ 95 (sem regressão), CLS = 0             |
+| recharts no carregamento de `/transactions`          | sim (~138 KB gzip)           | **não**                                   |
+| p95 do resumo e da lista (5 mil transações)          | medir no S0-04               | **−50%**                                  |
+| Tempo de resposta da lista paginada (p95, 1 conexão) | não medido no S0-04          | **≤ 100 ms**                              |
+| Vazão da lista paginada (req/s, 10 conexões)         | 80 req/s (S0-04)             | acima da baseline, na mesma máquina       |
+| Payload da home                                      | lista completa               | saldo + 5 recentes                        |
+| Requisições por termo de busca                       | medir no S0-04               | 1 por termo estável; obsoletas canceladas |
+| ZAP baseline                                         | —                            | 0 achados High                            |
+| `npm audit` (dependências de produção)               | medir                        | 0 High/Critical                           |
+| Rotas com autorização testada                        | parcial                      | 100%                                      |
+| Cobertura de linhas do `@bytebank/core`              | —                            | ≥ 90%                                     |
 
 ---
 

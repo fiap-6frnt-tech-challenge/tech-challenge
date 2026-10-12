@@ -296,8 +296,11 @@ precisa cobrir (S2-02).
 
 Duas metas novas que os números sugerem, para o time decidir:
 
-- **p95 da lista paginada ≤ 100 ms** (hoje 245 ms) — é a rota mais usada, e um índice em
-  `(user_id, date)` deve resolver sozinho.
+- ~~**p95 da lista paginada ≤ 100 ms** (hoje 245 ms) — é a rota mais usada, e um índice em
+  `(user_id, date)` deve resolver sozinho.~~ **Substituída em 12/10/2026 (S1-10)** por duas metas:
+  tempo de resposta da lista (p95 com 1 conexão ≤ 100 ms) e vazão com 10 conexões acima dos 80
+  req/s desta baseline, na mesma máquina. Com 10 conexões, o p95 mede a fila do servidor, não a
+  consulta. Ver [s1-05 § 5](./s1-05-db-response-time.md#5-reavaliação-da-meta-da-lista-paginada-s1-10).
 - **JS inicial das páginas federadas ≤ 300 kB** (hoje 469–486 kB, contra 288 kB de `/login`) — é a
   métrica que fecha o ciclo com a meta de mobile ≥ 85.
 

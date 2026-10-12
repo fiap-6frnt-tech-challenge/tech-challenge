@@ -32,6 +32,11 @@ const cookie = readFileSync(cookiePath, 'utf-8').trim();
 
 const ENDPOINTS = [
   { name: 'lista paginada (10 itens)', path: '/api/transactions?_page=1&_per_page=10' },
+  {
+    name: 'lista paginada (10 itens), tempo de resposta',
+    path: '/api/transactions?_page=1&_per_page=10',
+    connections: 1,
+  },
   { name: 'lista paginada (100 itens)', path: '/api/transactions?_page=1&_per_page=100' },
   { name: 'overview da home (saldo + 5 recentes)', path: '/api/transactions/overview' },
   { name: 'resumo / gráficos', path: '/api/transactions/summary' },
@@ -55,18 +60,27 @@ for (const endpoint of ENDPOINTS) {
     );
   }
 
+  const endpointConnections = endpoint.connections ?? connections;
+
   process.stdout.write(
-    `\n> ${endpoint.name}\n  ${url}\n  payload: ${(check.bytes / 1024).toFixed(1)} kB\n`
+    `\n> ${endpoint.name}\n  ${url}\n  payload: ${(check.bytes / 1024).toFixed(1)} kB · ` +
+      `${endpointConnections} conexão(ões)\n`
   );
 
   const result = await autocannon({
     url,
-    connections,
+    connections: endpointConnections,
     duration,
     headers: { Cookie: cookie },
   });
 
-  results.push({ ...endpoint, url, payloadBytes: check.bytes, result });
+  results.push({
+    ...endpoint,
+    connections: endpointConnections,
+    url,
+    payloadBytes: check.bytes,
+    result,
+  });
 
   process.stdout.write(
     `  p50 ${result.latency.p50} ms · p95 ${result.latency.p95} ms · p99 ${result.latency.p99} ms · ` +
@@ -81,11 +95,11 @@ writeFileSync(
   `${JSON.stringify({ baseUrl, connections, duration, results }, null, 2)}\n`
 );
 
-console.log('\n| Endpoint | Payload | p50 | p95 | p99 | req/s | Erros |');
-console.log('| -------- | ------: | --: | --: | --: | ----: | ----: |');
+console.log('\n| Endpoint | Conexões | Payload | p50 | p95 | p99 | req/s | Erros |');
+console.log('| -------- | -------: | ------: | --: | --: | --: | ----: | ----: |');
 for (const row of results) {
   console.log(
-    `| \`${row.path}\` | ${(row.payloadBytes / 1024).toFixed(1)} kB | ${row.result.latency.p50} ms | ` +
+    `| \`${row.path}\` | ${row.connections} | ${(row.payloadBytes / 1024).toFixed(1)} kB | ${row.result.latency.p50} ms | ` +
       `${row.result.latency.p95} ms | ${row.result.latency.p99} ms | ${row.result.requests.average.toFixed(0)} | ` +
       `${row.result.non2xx + row.result.errors} |`
   );
