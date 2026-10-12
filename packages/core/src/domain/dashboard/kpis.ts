@@ -1,3 +1,5 @@
+import { categoryLabel } from '../category/categories';
+import { Money } from '../money/Money';
 import type { CategoryAggregate } from '../transaction/rules';
 import type { DashboardSummary } from './DashboardSummary';
 
@@ -36,10 +38,19 @@ export function computeKpiDeltas(summary: MonthlyKpis | undefined): KpiDeltas {
 }
 
 export function topCategoriesWithOthers(categories: readonly CategoryAggregate[]): CategorySlice[] {
-  if (categories.length === 0) return [];
-  const sorted = [...categories].sort((a, b) => b.total - a.total);
-  const top = sorted.slice(0, 5).map(({ category, total }) => ({ label: category, value: total }));
-  const othersTotal = sorted.slice(5).reduce((total, category) => total + category.total, 0);
-  if (othersTotal > 0) top.push({ label: 'Outros', value: othersTotal });
-  return top;
+  const totals = new Map<string, Money>();
+  for (const { category, total } of categories) {
+    const label = categoryLabel(category);
+    totals.set(label, (totals.get(label) ?? Money.zero()).add(Money.fromDecimal(total)));
+  }
+
+  const othersLabel = categoryLabel('other');
+  const others = totals.get(othersLabel) ?? Money.zero();
+  totals.delete(othersLabel);
+
+  const ranked = [...totals].sort(([, a], [, b]) => b.cents - a.cents);
+  const rest = ranked.slice(5).reduce((sum, [, total]) => sum.add(total), others);
+  const slices = ranked.slice(0, 5).map(([label, total]) => ({ label, value: total.toDecimal() }));
+  if (rest.cents > 0) slices.push({ label: othersLabel, value: rest.toDecimal() });
+  return slices;
 }
