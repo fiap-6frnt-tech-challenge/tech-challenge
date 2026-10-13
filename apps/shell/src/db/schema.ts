@@ -33,6 +33,14 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const authAttempts = pgTable('auth_attempts', {
+  key: text('key').primaryKey(),
+  failures: integer('failures').notNull().default(0),
+  windowStart: timestamp('window_start', { withTimezone: true }).notNull().defaultNow(),
+  lockedUntil: timestamp('locked_until', { withTimezone: true }),
+  lockCount: integer('lock_count').notNull().default(0),
+});
+
 export const attachments = pgTable(
   'attachments',
   {
@@ -66,3 +74,4 @@ export type AttachmentRow = typeof attachments.$inferSelect;
 export type NewAttachmentRow = typeof attachments.$inferInsert;
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;
+export type AuthAttemptRow = typeof authAttempts.$inferSelect;

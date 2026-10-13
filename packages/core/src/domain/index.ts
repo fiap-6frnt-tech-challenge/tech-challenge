@@ -41,6 +41,7 @@ export {
   NotFoundError,
   ConflictError,
   RateLimitedError,
+  TurnstileRequiredError,
   AuthenticationError,
 } from './errors';
 export type { DomainEvent } from './events';

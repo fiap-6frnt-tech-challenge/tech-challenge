@@ -3,7 +3,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from '../apps/shell/src/db/schema';
-import { attachments, transactions, users } from '../apps/shell/src/db/schema';
+import { attachments, authAttempts, transactions, users } from '../apps/shell/src/db/schema';
 
 export const E2E_USER = {
   id: 'e2e-user',
@@ -59,6 +59,7 @@ async function globalSetup() {
   const db = drizzle(pool, { schema });
 
   try {
+    await db.delete(authAttempts);
     const e2eRows = await db
       .select({ id: transactions.id })
       .from(transactions)

@@ -39,4 +39,26 @@ describe('loginWithCredentials', () => {
 
     expect(result).toEqual({ ok: false, error: 'CredentialsSignin' });
   });
+
+  it('preserva o código de bloqueio retornado pelo NextAuth', async () => {
+    mocks.signIn.mockResolvedValue({ ok: false, error: 'CredentialsSignin', code: 'rate_limited' });
+
+    await expect(
+      loginWithCredentials({ email: 'ana@bytebank.com', password: 'senha-errada' })
+    ).resolves.toEqual({ ok: false, error: 'CredentialsSignin', code: 'rate_limited' });
+  });
+
+  it('envia o token Turnstile quando o desafio já foi solicitado', async () => {
+    await loginWithCredentials(
+      { email: 'ana@bytebank.com', password: 'segredo123' },
+      'challenge-token'
+    );
+
+    expect(mocks.signIn).toHaveBeenCalledWith('credentials', {
+      email: 'ana@bytebank.com',
+      password: 'segredo123',
+      turnstileToken: 'challenge-token',
+      redirect: false,
+    });
+  });
 });

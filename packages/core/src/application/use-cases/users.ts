@@ -1,6 +1,13 @@
-import { ConflictError } from '../../domain';
+import { ConflictError, RateLimitedError, TurnstileRequiredError } from '../../domain';
 import { registerSchema } from '../../schemas';
-import type { IdGenerator, PasswordHasher, UserRepository } from '../ports';
+import type {
+  CaptchaVerifier,
+  IdGenerator,
+  PasswordHasher,
+  RateLimiter,
+  RateLimitKeyGenerator,
+  UserRepository,
+} from '../ports';
 import type { NewUser, User } from '../types';
 import { parseOrThrow } from '../parseOrThrow';
 
@@ -8,9 +15,17 @@ export class RegisterUser {
   constructor(
     private readonly users: UserRepository,
     private readonly passwords: PasswordHasher,
-    private readonly ids: IdGenerator
+    private readonly ids: IdGenerator,
+    private readonly rateLimiter: RateLimiter,
+    private readonly rateLimitKeys: RateLimitKeyGenerator
   ) {}
-  async execute(input: unknown): Promise<User> {
+
+  async execute(input: unknown, ipAddress: string): Promise<User> {
+    const rateLimitKey = this.rateLimitKeys.registerIp(ipAddress);
+    const limit = await this.rateLimiter.check(rateLimitKey);
+    if (!limit.allowed) throw new RateLimitedError(limit.retryAfterSeconds);
+    await this.rateLimiter.registerFailure(rateLimitKey);
+
     const data = parseOrThrow<{ name: string; email: string; password: string }>(
       registerSchema,
       input
@@ -30,13 +45,71 @@ export class RegisterUser {
 }
 
 export class AuthenticateUser {
+  private readonly captchaThreshold = 3;
+
   constructor(
     private readonly users: UserRepository,
-    private readonly passwords: PasswordHasher
+    private readonly passwords: PasswordHasher,
+    private readonly rateLimiter: RateLimiter,
+    private readonly rateLimitKeys: RateLimitKeyGenerator,
+    private readonly captchaVerifier?: CaptchaVerifier
   ) {}
-  async execute(email: string, password: string): Promise<User | null> {
-    const user = await this.users.findByEmail(email.trim().toLowerCase());
-    if (!user || !(await this.passwords.verify(password, user.passwordHash))) return null;
+
+  async execute(
+    email: string,
+    password: string,
+    ipAddress: string,
+    turnstileToken?: string
+  ): Promise<User | null> {
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailKey = this.rateLimitKeys.loginEmail(normalizedEmail);
+    const ipKey = this.rateLimitKeys.loginIp(ipAddress);
+    const limits = await Promise.all([
+      this.rateLimiter.check(emailKey),
+      this.rateLimiter.check(ipKey),
+    ]);
+    const blocked = limits.filter((limit) => !limit.allowed);
+    if (blocked.length > 0) {
+      throw new RateLimitedError(Math.max(...blocked.map((limit) => limit.retryAfterSeconds)));
+    }
+
+    const captchaVerifier = this.captchaVerifier;
+    const captchaEnabled = captchaVerifier?.isEnabled() ?? false;
+    if (
+      captchaEnabled &&
+      (await this.rateLimiter.failureCount(emailKey)) >= this.captchaThreshold
+    ) {
+      if (!turnstileToken || !captchaVerifier || !(await captchaVerifier.verify(turnstileToken))) {
+        throw new TurnstileRequiredError();
+      }
+    }
+
+    const registerFailure = async () => {
+      await Promise.all([
+        this.rateLimiter.registerFailure(emailKey),
+        this.rateLimiter.registerFailure(ipKey),
+      ]);
+      if (
+        captchaEnabled &&
+        (await this.rateLimiter.failureCount(emailKey)) >= this.captchaThreshold
+      ) {
+        throw new TurnstileRequiredError();
+      }
+    };
+
+    const user = await this.users.findByEmail(normalizedEmail);
+    if (!user) {
+      await this.passwords.verifyDummy(password);
+      await registerFailure();
+      return null;
+    }
+
+    if (!(await this.passwords.verify(password, user.passwordHash))) {
+      await registerFailure();
+      return null;
+    }
+
+    await this.rateLimiter.reset(emailKey);
     return user;
   }
 }

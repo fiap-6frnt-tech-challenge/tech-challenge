@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
-import { ConflictError, ValidationError } from '@bytebank/core';
+import { ConflictError, RateLimitedError, ValidationError } from '@bytebank/core';
 import { registerSchema } from '@bytebank/core/schemas';
 
 const mocks = vi.hoisted(() => ({ register: vi.fn(), auth: vi.fn() }));
@@ -13,10 +13,10 @@ import { POST } from './route';
 
 const input = { name: 'Ana Souza', email: 'ana@bytebank.com', password: 'segredo123' };
 const user = { id: 'user-1', name: input.name, email: input.email, passwordHash: 'secret-hash' };
-const request = (body: string) =>
+const request = (body: string, forwardedFor = '203.0.113.20, 10.0.0.1') =>
   new Request('http://localhost/api/auth/register', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-forwarded-for': forwardedFor },
     body,
   }) as NextRequest;
 
@@ -34,7 +34,7 @@ describe('POST /api/auth/register', () => {
       name: user.name,
       email: user.email,
     });
-    expect(mocks.register).toHaveBeenCalledWith(input);
+    expect(mocks.register).toHaveBeenCalledWith(input, '203.0.113.20');
   });
 
   it('maps an existing email to the Phase 2 conflict message', async () => {
@@ -66,5 +66,15 @@ describe('POST /api/auth/register', () => {
     const response = await POST(request(JSON.stringify({ ...input, name: 'x'.repeat(17000) })));
     expect(response.status).toBe(413);
     expect(mocks.register).not.toHaveBeenCalled();
+  });
+
+  it('returns 429 and Retry-After when the registration IP is limited', async () => {
+    mocks.register.mockRejectedValue(new RateLimitedError(3600));
+
+    const response = await POST(request(JSON.stringify(input)));
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get('Retry-After')).toBe('3600');
+    await expect(response.json()).resolves.toEqual({ error: 'Muitas tentativas' });
   });
 });

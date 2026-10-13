@@ -47,6 +47,9 @@ export default defineConfig({
         NEXT_PUBLIC_TRANSACTIONS_MFE_URL: transactionsManifestUrl,
         AUTH_URL: shellUrl,
         AUTH_SECRET: process.env.AUTH_SECRET ?? 'bytebank-e2e-auth-secret-bytebank-e2e-auth-secret',
+        AUTH_MAX_FAILURES: process.env.AUTH_MAX_FAILURES ?? '3',
+        AUTH_LOCK_SECONDS: process.env.AUTH_LOCK_SECONDS ?? '60',
+        AUTH_MAX_LOCK_SECONDS: process.env.AUTH_MAX_LOCK_SECONDS ?? '300',
         DATABASE_URL:
           process.env.DATABASE_URL ?? 'postgres://bytebank:bytebank@localhost:5432/bytebank',
         BLOB_READ_WRITE_TOKEN: '',

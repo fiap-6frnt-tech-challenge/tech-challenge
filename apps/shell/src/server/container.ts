@@ -19,7 +19,11 @@ import { db } from '@/db';
 import { DrizzleAttachmentRepository } from './infrastructure/db/DrizzleAttachmentRepository';
 import { DrizzleTransactionRepository } from './infrastructure/db/DrizzleTransactionRepository';
 import { DrizzleUserRepository } from './infrastructure/db/DrizzleUserRepository';
+import { PostgresRateLimiter } from './infrastructure/db/PostgresRateLimiter';
 import { BcryptPasswordHasher } from './infrastructure/security/BcryptPasswordHasher';
+import { CloudflareTurnstileVerifier } from './infrastructure/security/CloudflareTurnstileVerifier';
+import { HmacRateLimitKeyGenerator } from './infrastructure/security/HmacRateLimitKeyGenerator';
+import { getRateLimitPolicies } from './infrastructure/security/rateLimitPolicy';
 import { LocalFileStorage } from './infrastructure/storage/LocalFileStorage';
 import { VercelBlobFileStorage } from './infrastructure/storage/VercelBlobFileStorage';
 import { CryptoIdGenerator } from './infrastructure/system/CryptoIdGenerator';
@@ -42,6 +46,14 @@ const users = new DrizzleUserRepository(db);
 const clock = new SystemClock('America/Sao_Paulo');
 const ids = new CryptoIdGenerator();
 const passwords = new BcryptPasswordHasher(10);
+const rateLimitKeys = new HmacRateLimitKeyGenerator(
+  () =>
+    process.env.BLIND_INDEX_KEY ??
+    process.env.AUTH_SECRET ??
+    (process.env.NODE_ENV === 'production' ? '' : 'bytebank-local-rate-limit-secret')
+);
+const rateLimiter = new PostgresRateLimiter(db, getRateLimitPolicies(), clock);
+const turnstileVerifier = new CloudflareTurnstileVerifier();
 const storage = resolveFileStorage();
 
 export const container = {
@@ -56,6 +68,13 @@ export const container = {
   addAttachment: new AddAttachment(transactions, attachments, storage, ids),
   listAttachments: new ListAttachments(attachments),
   removeAttachment: new RemoveAttachment(attachments, storage),
-  registerUser: new RegisterUser(users, passwords, ids),
-  authenticateUser: new AuthenticateUser(users, passwords),
+  registerUser: new RegisterUser(users, passwords, ids, rateLimiter, rateLimitKeys),
+  authenticateUser: new AuthenticateUser(
+    users,
+    passwords,
+    rateLimiter,
+    rateLimitKeys,
+    turnstileVerifier
+  ),
+  turnstileVerifier,
 };

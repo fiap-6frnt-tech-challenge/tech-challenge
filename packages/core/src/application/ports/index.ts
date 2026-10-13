@@ -92,6 +92,25 @@ export interface FileStorage {
 export interface PasswordHasher {
   hash(plain: string): Promise<string>;
   verify(plain: string, hash: string): Promise<boolean>;
+  verifyDummy(plain: string): Promise<void>;
+}
+
+export interface RateLimiter {
+  check(key: string): Promise<{ allowed: boolean; retryAfterSeconds: number }>;
+  failureCount(key: string): Promise<number>;
+  registerFailure(key: string): Promise<void>;
+  reset(key: string): Promise<void>;
+}
+
+export interface CaptchaVerifier {
+  isEnabled(): boolean;
+  verify(token: string): Promise<boolean>;
+}
+
+export interface RateLimitKeyGenerator {
+  loginEmail(email: string): string;
+  loginIp(ipAddress: string): string;
+  registerIp(ipAddress: string): string;
 }
 export interface Clock {
   now(): Date;
