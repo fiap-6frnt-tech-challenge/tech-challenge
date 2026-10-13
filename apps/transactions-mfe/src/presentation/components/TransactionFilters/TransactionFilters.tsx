@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Select } from '@bytebank/design-system';
 import { DatePicker } from '@bytebank/design-system';
 import { Button } from '@bytebank/design-system';
@@ -35,18 +36,36 @@ export function TransactionFilters({
   value,
   isFilterVisible,
   onChange,
+  onSearchChange,
+  onMinChange,
+  onMaxChange,
   onClear,
 }: TransactionFiltersProps) {
+  const [minDraft, setMinDraft] = useState(value.amount_gte);
+  const [maxDraft, setMaxDraft] = useState(value.amount_lte);
+  const [searchResetKey, setSearchResetKey] = useState(0);
+
+  useEffect(() => setMinDraft(value.amount_gte), [value.amount_gte]);
+  useEffect(() => setMaxDraft(value.amount_lte), [value.amount_lte]);
+
+  function handleClear() {
+    setMinDraft(undefined);
+    setMaxDraft(undefined);
+    setSearchResetKey((key) => key + 1);
+    onClear?.();
+  }
+
   const sortOrderOptions =
     value.sortBy === 'amount' ? SORT_ORDER_AMOUNT_OPTIONS : SORT_ORDER_DATE_OPTIONS;
 
   return (
     <div className="flex flex-col gap-md">
       <SearchInput
+        key={searchResetKey}
         value={value.q}
-        onValueChange={(q) => onChange({ ...value, q })}
+        onValueChange={onSearchChange}
         placeholder="Buscar por descrição..."
-        debounceMs={300}
+        debounceMs={0}
         maxLength={100}
       />
       <div
@@ -104,10 +123,16 @@ export function TransactionFilters({
         </div>
 
         <RangeInput
-          minValue={value.amount_gte}
-          maxValue={value.amount_lte}
-          onMinChange={(v) => onChange({ ...value, amount_gte: v })}
-          onMaxChange={(v) => onChange({ ...value, amount_lte: v })}
+          minValue={minDraft}
+          maxValue={maxDraft}
+          onMinChange={(next) => {
+            setMinDraft(next);
+            onMinChange(next);
+          }}
+          onMaxChange={(next) => {
+            setMaxDraft(next);
+            onMaxChange(next);
+          }}
         />
 
         <MultiSelect
@@ -119,7 +144,7 @@ export function TransactionFilters({
         />
 
         {onClear && (
-          <Button variant="ghost" size="sm" onClick={onClear} className="w-full sm:w-auto">
+          <Button variant="ghost" size="sm" onClick={handleClear} className="w-full sm:w-auto">
             Limpar filtros
           </Button>
         )}

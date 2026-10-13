@@ -53,8 +53,8 @@
 
 **Interfaces:** Add `patchFilters(patch: Partial<TransactionFilter>)` that reads storage at emission time; expose search/min/max stream emitters and a clear action that resets pending streams.
 
-- [ ] Write tests that pending search preserves a newer category update, clear cancels pending values, reload initializes URL values, and amount drafts stay visible before commit; run RED.
-- [ ] Wire stream handlers to SearchInput (`debounceMs={0}`) and RangeInput; keep other controls immediate. Run GREEN and commit.
+- [x] Write tests that pending search preserves a newer category update, clear cancels pending values, reload initializes URL values, and amount drafts stay visible before commit; run RED.
+- [x] Wire stream handlers to SearchInput (`debounceMs={0}`) and RangeInput; keep other controls immediate. Run GREEN and commit.
 
 ### Task 4: Cancellation, production validation, and evidence
 
