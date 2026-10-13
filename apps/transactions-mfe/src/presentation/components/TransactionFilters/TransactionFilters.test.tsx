@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TransactionFilters } from './TransactionFilters';
 import { DEFAULT_FILTERS } from './ITransactionFilters';
@@ -14,7 +14,7 @@ function renderFilters(onClear = vi.fn()) {
   const onSearchChange = vi.fn();
   const onMinChange = vi.fn();
   const onMaxChange = vi.fn();
-  render(
+  const view = render(
     <TransactionFilters
       value={DEFAULT_FILTERS}
       isFilterVisible
@@ -25,15 +25,46 @@ function renderFilters(onClear = vi.fn()) {
       onClear={onClear}
     />
   );
-  return { onSearchChange, onMinChange, onMaxChange, onClear };
+  return { view, onSearchChange, onMinChange, onMaxChange, onClear };
 }
 
 describe('TransactionFilters reactive controls', () => {
   it('forwards search input immediately to the stream adapter', () => {
     const { onSearchChange } = renderFilters();
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'uber' } });
-    act(() => vi.advanceTimersByTime(0));
     expect(onSearchChange).toHaveBeenCalledExactlyOnceWith('uber');
+  });
+
+  it('keeps newer typing when an older URL search value arrives', () => {
+    const { view, onSearchChange, onMinChange, onMaxChange } = renderFilters();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'su' } });
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'sup' } });
+    view.rerender(
+      <TransactionFilters
+        value={{ ...DEFAULT_FILTERS, q: 'su' }}
+        isFilterVisible
+        onChange={vi.fn()}
+        onSearchChange={onSearchChange}
+        onMinChange={onMinChange}
+        onMaxChange={onMaxChange}
+      />
+    );
+    expect((screen.getByRole('searchbox') as HTMLInputElement).value).toBe('sup');
+  });
+
+  it('loads an external URL search value into the field', () => {
+    const { view, onSearchChange, onMinChange, onMaxChange } = renderFilters();
+    view.rerender(
+      <TransactionFilters
+        value={{ ...DEFAULT_FILTERS, q: 'mercado' }}
+        isFilterVisible
+        onChange={vi.fn()}
+        onSearchChange={onSearchChange}
+        onMinChange={onMinChange}
+        onMaxChange={onMaxChange}
+      />
+    );
+    expect((screen.getByRole('searchbox') as HTMLInputElement).value).toBe('mercado');
   });
 
   it('keeps an amount draft visible when the field blurs before URL debounce', () => {

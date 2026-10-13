@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Select } from '@bytebank/design-system';
 import { DatePicker } from '@bytebank/design-system';
 import { Button } from '@bytebank/design-system';
@@ -41,14 +41,35 @@ export function TransactionFilters({
   onMaxChange,
   onClear,
 }: TransactionFiltersProps) {
+  const [searchDraft, setSearchDraft] = useState(value.q);
+  const pendingSearchValues = useRef<string[]>([]);
   const [minDraft, setMinDraft] = useState(value.amount_gte);
   const [maxDraft, setMaxDraft] = useState(value.amount_lte);
   const [searchResetKey, setSearchResetKey] = useState(0);
 
+  useEffect(() => {
+    const acknowledged = pendingSearchValues.current.indexOf(value.q);
+    if (acknowledged >= 0) {
+      pendingSearchValues.current.splice(0, acknowledged + 1);
+      return;
+    }
+    setSearchDraft(value.q);
+  }, [value.q]);
   useEffect(() => setMinDraft(value.amount_gte), [value.amount_gte]);
   useEffect(() => setMaxDraft(value.amount_lte), [value.amount_lte]);
 
+  function handleSearchChange(next: string) {
+    setSearchDraft(next);
+    const normalized = next.trim();
+    if (normalized.length === 0 || normalized.length >= 2) {
+      pendingSearchValues.current.push(normalized);
+    }
+    onSearchChange(next);
+  }
+
   function handleClear() {
+    pendingSearchValues.current = [];
+    setSearchDraft('');
     setMinDraft(undefined);
     setMaxDraft(undefined);
     setSearchResetKey((key) => key + 1);
@@ -62,8 +83,8 @@ export function TransactionFilters({
     <div className="flex flex-col gap-md">
       <SearchInput
         key={searchResetKey}
-        value={value.q}
-        onValueChange={onSearchChange}
+        value={searchDraft}
+        onValueChange={handleSearchChange}
         placeholder="Buscar por descrição..."
         debounceMs={0}
         maxLength={100}
