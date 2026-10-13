@@ -14,9 +14,9 @@ describe('useSearchStream', () => {
   it('debounces edits and delivers the trimmed search once', () => {
     const onSearch = vi.fn();
     const { result } = renderHook(() => useSearchStream(onSearch));
-    act(() => result.current('  su'));
+    act(() => result.current.emit('  su'));
     act(() => vi.advanceTimersByTime(100));
-    act(() => result.current('  supermercado  '));
+    act(() => result.current.emit('  supermercado  '));
     act(() => vi.advanceTimersByTime(299));
     expect(onSearch).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
@@ -30,7 +30,7 @@ describe('useSearchStream', () => {
       initialProps: { onSearch: first },
     });
     const emit = result.current;
-    act(() => emit('uber'));
+    act(() => emit.emit('uber'));
     rerender({ onSearch: latest });
     expect(result.current).toBe(emit);
     act(() => vi.advanceTimersByTime(300));
@@ -41,7 +41,7 @@ describe('useSearchStream', () => {
   it('does not deliver a pending search after unmount', () => {
     const onSearch = vi.fn();
     const { result, unmount } = renderHook(() => useSearchStream(onSearch));
-    act(() => result.current('uber'));
+    act(() => result.current.emit('uber'));
     unmount();
     act(() => vi.advanceTimersByTime(300));
     expect(onSearch).not.toHaveBeenCalled();
@@ -52,12 +52,12 @@ describe('useAmountStream', () => {
   it('debounces numeric edits and emits a clear value', () => {
     const onAmount = vi.fn();
     const { result } = renderHook(() => useAmountStream(onAmount));
-    act(() => result.current(1));
+    act(() => result.current.emit(1));
     act(() => vi.advanceTimersByTime(100));
-    act(() => result.current(120));
+    act(() => result.current.emit(120));
     act(() => vi.advanceTimersByTime(400));
     expect(onAmount).toHaveBeenCalledExactlyOnceWith(120);
-    act(() => result.current(undefined));
+    act(() => result.current.emit(undefined));
     act(() => vi.advanceTimersByTime(400));
     expect(onAmount).toHaveBeenNthCalledWith(2, undefined);
   });

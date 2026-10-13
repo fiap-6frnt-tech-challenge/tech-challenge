@@ -31,6 +31,7 @@ export default function TransactionsPage() {
     setFilters,
     clearFilters,
     emitSearch,
+    searchEmission,
     emitMinAmount,
     emitMaxAmount,
     page,
@@ -187,6 +188,7 @@ export default function TransactionsPage() {
             value={filters}
             onChange={setFilters}
             onSearchChange={emitSearch}
+            searchEmission={searchEmission}
             onMinChange={emitMinAmount}
             onMaxChange={emitMaxAmount}
             onClear={clearFilters}

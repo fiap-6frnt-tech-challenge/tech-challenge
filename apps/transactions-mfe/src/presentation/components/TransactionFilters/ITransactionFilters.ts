@@ -17,6 +17,7 @@ export interface TransactionFiltersProps {
   isFilterVisible: boolean;
   onChange: (filters: TransactionFiltersValue) => void;
   onSearchChange: (value: string) => void;
+  searchEmission?: { q: string; sequence: number };
   onMinChange: (value: number | undefined) => void;
   onMaxChange: (value: number | undefined) => void;
   onClear?: () => void;

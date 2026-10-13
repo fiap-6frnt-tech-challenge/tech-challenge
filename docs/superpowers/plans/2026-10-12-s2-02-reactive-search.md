@@ -23,8 +23,9 @@
 
 - A pending search must not overwrite a newer category, date, or amount URL update.
 - Clearing all filters must reset pending search and amount streams and visible drafts, including when the URL was already empty.
+- Re-entering the same committed search or amount immediately after clearing must commit it again.
 - Restoring `/transactions?q=...&amount_gte=...` on reload must initialize fields without issuing extra stream updates.
-- Rapid typing must not lose characters when an older URL search value arrives.
+- Rapid typing must not lose characters when an older URL search value arrives; an external URL value matching a canceled prefix must still update the field.
 - Aborted requests must be observed as cancellations, not mistaken for successful responses.
 
 ---
@@ -42,7 +43,7 @@
 
 **Files:** Create `apps/transactions-mfe/src/application/useSearchStream.ts`, `useAmountStream.ts`, and hook tests; add Testing Library dev dependency if needed.
 
-**Interfaces:** `useSearchStream(onSearch: (value: string) => void): (value: string) => void`; `useAmountStream(onAmount: (value: number | undefined) => void): (value: number | undefined) => void`.
+**Interfaces:** `useSearchStream(onSearch)` and `useAmountStream(onAmount)` return stable `{ emit, reset }` adapters. `reset` synchronously replaces the pipeline subscription, canceling pending debounces and clearing `distinctUntilChanged` history.
 
 - [x] Test debounced delivery, latest callback, and teardown on unmount; run RED.
 - [x] Compose `useEventStream`, pure pipelines, and `useSubscription`; run GREEN and commit.
@@ -51,7 +52,7 @@
 
 **Files:** Modify `useTransactionFilters.ts`, `TransactionsPage.tsx`, `TransactionFilters.tsx`, filter props/stories, and add integration tests.
 
-**Interfaces:** Add `patchFilters(patch: Partial<TransactionFilter>)` that reads storage at emission time; expose search/min/max stream emitters and a clear action that resets pending streams.
+**Interfaces:** Add `patchFilters(patch: Partial<TransactionFilter>)` that reads storage at emission time; expose search/min/max stream emitters, an explicit stream reset on clear, and a sequence marker for search values actually emitted into the URL.
 
 - [x] Write tests that pending search preserves a newer category update, clear cancels pending values, reload initializes URL values, and amount drafts stay visible before commit; run RED.
 - [x] Wire stream handlers to SearchInput (`debounceMs={0}`) and RangeInput; keep other controls immediate. Run GREEN and commit.

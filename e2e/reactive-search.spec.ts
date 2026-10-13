@@ -34,6 +34,10 @@ test('debounces rapid search and amount edits while preserving URL state', async
   await page.getByRole('button', { name: 'Limpar filtros' }).click();
   await expect(page).not.toHaveURL(/q=|amount_gte=/);
   await expect(page.getByRole('searchbox', { name: /buscar transações/i })).toHaveValue('');
+  await search.fill('supermercado');
+  await min.fill('120');
+  await expect(page).toHaveURL(/q=supermercado/);
+  await expect(page).toHaveURL(/amount_gte=120/);
 });
 
 test('aborts an obsolete search request when the query key changes', async ({ page }, testInfo) => {
@@ -91,9 +95,10 @@ test('issues at most one request per stable term during slow typing', async ({ p
   await search.pressSequentially('supermercado', { delay: 400 });
   await expect(page).toHaveURL(/q=supermercado/);
   await expect(search).toHaveValue('supermercado');
-  expect(searchRequests.length).toBeGreaterThan(0);
-  expect(searchRequests.length).toBeLessThanOrEqual(11);
-  expect(new Set(searchRequests).size).toBe(searchRequests.length);
+  const expected = Array.from({ length: 'supermercado'.length - 1 }, (_, index) =>
+    'supermercado'.slice(0, index + 2)
+  );
+  await expect.poll(() => searchRequests).toEqual(expected);
   console.log(
     `S2-02 slow typing: ${searchRequests.length} requests for supermercado at 400 ms/key`
   );

@@ -60,5 +60,5 @@ Hoje o `SearchInput` do DS faz debounce com `setTimeout` (300 ms) e o filtro de 
 
 1. O input é a fonte do stream e a URL é consequência. Inicialize o input a partir da URL uma única vez, para evitar o loop input → URL → input.
 2. `distinctUntilChanged` vem **depois** do `trim`, senão "me" e "me " contam como termos diferentes.
-3. O botão "Limpar filtros" também precisa emitir o valor limpo no stream, senão o próximo `distinctUntilChanged` bloqueia a nova digitação do mesmo termo.
+3. O botão "Limpar filtros" reinicia as assinaturas dos streams imediatamente. Isso cancela debounces pendentes e limpa o histórico do `distinctUntilChanged`, permitindo digitar o mesmo termo ou valor após limpar.
 4. O cancelamento só acontece se o `queryFn` repassar o `signal` ao `fetch` — confirme no gateway.

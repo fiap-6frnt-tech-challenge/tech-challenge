@@ -37,38 +37,36 @@ export function TransactionFilters({
   isFilterVisible,
   onChange,
   onSearchChange,
+  searchEmission,
   onMinChange,
   onMaxChange,
   onClear,
 }: TransactionFiltersProps) {
   const [searchDraft, setSearchDraft] = useState(value.q);
-  const pendingSearchValues = useRef<string[]>([]);
+  const acknowledgedSearchSequence = useRef(0);
   const [minDraft, setMinDraft] = useState(value.amount_gte);
   const [maxDraft, setMaxDraft] = useState(value.amount_lte);
   const [searchResetKey, setSearchResetKey] = useState(0);
 
   useEffect(() => {
-    const acknowledged = pendingSearchValues.current.indexOf(value.q);
-    if (acknowledged >= 0) {
-      pendingSearchValues.current.splice(0, acknowledged + 1);
+    if (
+      searchEmission?.q === value.q &&
+      searchEmission.sequence > acknowledgedSearchSequence.current
+    ) {
+      acknowledgedSearchSequence.current = searchEmission.sequence;
       return;
     }
     setSearchDraft(value.q);
-  }, [value.q]);
+  }, [value.q, searchEmission]);
   useEffect(() => setMinDraft(value.amount_gte), [value.amount_gte]);
   useEffect(() => setMaxDraft(value.amount_lte), [value.amount_lte]);
 
   function handleSearchChange(next: string) {
     setSearchDraft(next);
-    const normalized = next.trim();
-    if (normalized.length === 0 || normalized.length >= 2) {
-      pendingSearchValues.current.push(normalized);
-    }
     onSearchChange(next);
   }
 
   function handleClear() {
-    pendingSearchValues.current = [];
     setSearchDraft('');
     setMinDraft(undefined);
     setMaxDraft(undefined);

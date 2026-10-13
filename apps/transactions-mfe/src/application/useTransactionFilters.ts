@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { fromBrowserSearchParams, hasActiveFilter, toBrowserSearchParams } from '@bytebank/core';
 import type { TransactionFilter } from '@bytebank/core';
 import type { FilterStateStorage } from './ports/FilterStateStorage';
@@ -31,9 +31,18 @@ export function useTransactionFilters(storage: FilterStateStorage) {
     [storage]
   );
 
-  const emitSearch = useSearchStream((q) => patchFilters({ q }));
-  const emitMinAmount = useAmountStream((amount_gte) => patchFilters({ amount_gte }));
-  const emitMaxAmount = useAmountStream((amount_lte) => patchFilters({ amount_lte }));
+  const searchEmissionRef = useRef<{ q: string; sequence: number } | undefined>(undefined);
+  const { emit: emitSearch, reset: resetSearch } = useSearchStream((q) => {
+    if (q === fromBrowserSearchParams(storage.read()).filter.q) return;
+    searchEmissionRef.current = { q, sequence: (searchEmissionRef.current?.sequence ?? 0) + 1 };
+    patchFilters({ q });
+  });
+  const { emit: emitMinAmount, reset: resetMinAmount } = useAmountStream((amount_gte) =>
+    patchFilters({ amount_gte })
+  );
+  const { emit: emitMaxAmount, reset: resetMaxAmount } = useAmountStream((amount_lte) =>
+    patchFilters({ amount_lte })
+  );
 
   const setPage = useCallback(
     (nextPage: number) => {
@@ -44,11 +53,11 @@ export function useTransactionFilters(storage: FilterStateStorage) {
   );
 
   const clearFilters = useCallback(() => {
-    emitSearch('');
-    emitMinAmount(undefined);
-    emitMaxAmount(undefined);
+    resetSearch();
+    resetMinAmount();
+    resetMaxAmount();
     storage.write(new URLSearchParams());
-  }, [emitSearch, emitMinAmount, emitMaxAmount, storage]);
+  }, [resetSearch, resetMinAmount, resetMaxAmount, storage]);
 
   const [isFilterVisible, setIsFilterVisible] = useState(() => hasActiveFilter(filters));
 
@@ -57,6 +66,7 @@ export function useTransactionFilters(storage: FilterStateStorage) {
     setFilters,
     clearFilters,
     emitSearch,
+    searchEmission: searchEmissionRef.current,
     emitMinAmount,
     emitMaxAmount,
     page,
