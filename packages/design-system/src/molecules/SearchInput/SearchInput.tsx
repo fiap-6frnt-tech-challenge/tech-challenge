@@ -40,6 +40,15 @@ export function SearchInput({
     return () => window.clearTimeout(timeoutId);
   }, [debounceMs, draftValue, onValueChange, value]);
 
+  function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const next = event.target.value;
+    setDraftValue(next);
+    if (debounceMs === 0) {
+      immediateEmitRef.current = next;
+      onValueChange(next);
+    }
+  }
+
   function handleClear() {
     immediateEmitRef.current = '';
     setDraftValue('');
@@ -64,7 +73,7 @@ export function SearchInput({
         placeholder={placeholder}
         disabled={disabled}
         maxLength={maxLength}
-        onChange={(event) => setDraftValue(event.target.value)}
+        onChange={handleInputChange}
         className={cn(
           'w-full rounded-default border border-border bg-surface py-md pl-[44px]',
           'body-default text-content-primary placeholder:text-content-secondary',

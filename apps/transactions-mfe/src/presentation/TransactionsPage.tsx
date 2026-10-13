@@ -26,8 +26,19 @@ const EditTransactionModal = lazy(() =>
 );
 
 export default function TransactionsPage() {
-  const { filters, setFilters, clearFilters, page, setPage, isFilterVisible, setIsFilterVisible } =
-    useTransactionFilters(filterStorage);
+  const {
+    filters,
+    setFilters,
+    clearFilters,
+    emitSearch,
+    searchEmission,
+    emitMinAmount,
+    emitMaxAmount,
+    page,
+    setPage,
+    isFilterVisible,
+    setIsFilterVisible,
+  } = useTransactionFilters(filterStorage);
   const {
     data: paginated,
     isLoading,
@@ -176,6 +187,10 @@ export default function TransactionsPage() {
           <TransactionFilters
             value={filters}
             onChange={setFilters}
+            onSearchChange={emitSearch}
+            searchEmission={searchEmission}
+            onMinChange={emitMinAmount}
+            onMaxChange={emitMaxAmount}
             onClear={clearFilters}
             isFilterVisible={isFilterVisible}
           />
