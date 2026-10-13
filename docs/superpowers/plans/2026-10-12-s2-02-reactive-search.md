@@ -60,6 +60,6 @@
 
 **Files:** Add `e2e/reactive-search.spec.ts`; update S2-02 task and Sprint 2 README status/evidence.
 
-- [ ] Test rapid `supermercado` typing yields one filtered request, URL and reload restore state, and delayed obsolete requests are aborted when a newer key replaces them.
-- [ ] Compare request counts with S0-04 baseline (1 fast, 12 slow, 0 canceled), recording conditions and results without claiming one request for slow typing separated by more than 300 ms.
-- [ ] Run full tests, type-check, lint, architecture check, production build, and Chromium/Firefox E2E; update checkboxes and commit.
+- [x] Test rapid `supermercado` typing yields one filtered request, URL and reload restore state, and delayed obsolete requests are aborted when a newer key replaces them.
+- [x] Compare request counts with S0-04 baseline (1 fast, 12 slow, 0 canceled), recording conditions and results without claiming one request for slow typing separated by more than 300 ms.
+- [x] Run full tests, type-check, lint, architecture check, production build, and Chromium/Firefox E2E; update checkboxes and commit.

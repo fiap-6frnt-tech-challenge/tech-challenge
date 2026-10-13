@@ -42,17 +42,19 @@ Hoje o `SearchInput` do DS faz debounce com `setTimeout` (300 ms) e o filtro de 
 
 ## Testes (marble, com `TestScheduler`)
 
-- [ ] Digitação rápida emite só o último termo
-- [ ] O mesmo termo com espaços extras não reemite
-- [ ] Termo de 1 caractere não emite
-- [ ] Limpar o campo emite `''` (volta para a lista completa)
+- [x] Digitação rápida emite só o último termo
+- [x] O mesmo termo com espaços extras não reemite
+- [x] Termo de 1 caractere não emite
+- [x] Limpar o campo emite `''` (volta para a lista completa)
 
 ## Validação
 
-- [ ] 1 requisição por termo estável
-- [ ] Requisições obsoletas canceladas (print da aba Network para o vídeo)
-- [ ] Filtros continuam refletidos na URL; recarregar a página restaura o estado
-- [ ] E2E de filtros verde
+- [x] 1 requisição por termo estável
+- [x] Requisições obsoletas canceladas (evento `requestfailed` anexado ao relatório Playwright; captura da aba Network pode ser feita durante o vídeo)
+- [x] Filtros continuam refletidos na URL; recarregar a página restaura o estado
+- [x] E2E de filtros verde
+
+**Evidência (2026-10-12):** no build de produção, o E2E digitou `supermercado` em 120 ms/tecla e observou **1 requisição**, igual ao baseline S0-04. Em 400 ms/tecla observou **11 requisições**, uma por prefixo válido de 2 a 12 caracteres, contra **12** no baseline (que também enviava o termo de 1 caractere). Cada prefixo já ficou estável por mais de 300 ms; o resultado correto aqui é uma chamada por prefixo, não uma única chamada para a palavra inteira. Uma resposta retida artificialmente foi abortada ao trocar a chave da query; o E2E registra a falha de rede como anexo. O build e os 14 cenários E2E passaram em Chromium e Firefox, sem perda de caracteres. URL, reload e limpeza foram testados com busca e valor mínimo.
 
 ## Gotchas
 
