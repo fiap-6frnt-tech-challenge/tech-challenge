@@ -1,4 +1,4 @@
-# Task 05 — Login: limite de tentativas e bloqueio progressivo
+# Task 05 — Login: limite de tentativas e bloqueio progressivo ✅
 
 |                 |                                                                                                                                                |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -57,11 +57,11 @@ Hoje dá para tentar senhas indefinidamente no `authorize()` do provider de cred
 
 ## Validação
 
-- [ ] 5 senhas erradas → 6ª tentativa bloqueada mesmo com a senha certa; libera após o tempo
-- [ ] Login certo zera o contador do e-mail
-- [ ] Mensagem igual para e-mail inexistente e senha errada
-- [ ] Registro em massa do mesmo IP → 429
-- [ ] Testes unitários do caso de uso (com `FakeClock`) e do limiter (integração com Postgres)
+- [x] 5 senhas erradas → 6ª tentativa bloqueada mesmo com a senha certa; libera após o tempo
+- [x] Login certo zera o contador do e-mail
+- [x] Mensagem igual para e-mail inexistente e senha errada
+- [x] Registro em massa do mesmo IP → 429
+- [x] Testes unitários do caso de uso (com `FakeClock`) e do limiter (integração com Postgres)
 
 ## Gotchas
 
