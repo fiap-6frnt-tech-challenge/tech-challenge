@@ -34,6 +34,10 @@ const mfeDatabase = {
   group: ['drizzle-orm', 'drizzle-orm/*', 'pg'],
   message: 'MFEs não acessam o banco: use os gateways do @bytebank/api-client.',
 };
+const mfeRxjsSubpath = {
+  group: ['rxjs/*'],
+  message: "Importe operadores apenas de 'rxjs' para usar o singleton compartilhado.",
+};
 const presentationInfrastructure = {
   group: ['**/infrastructure', '**/infrastructure/**'],
   message:
@@ -101,11 +105,11 @@ export function mfeBoundaries(root = '') {
   return [
     {
       files: [`${root}src/**/*.{ts,tsx}`],
-      rules: restrict(mfeShell, mfeNext, mfeDatabase),
+      rules: restrict(mfeShell, mfeNext, mfeDatabase, mfeRxjsSubpath),
     },
     {
       files: [`${root}src/**/presentation/**/*.{ts,tsx}`],
-      rules: restrict(mfeShell, mfeNext, mfeDatabase, presentationInfrastructure),
+      rules: restrict(mfeShell, mfeNext, mfeDatabase, mfeRxjsSubpath, presentationInfrastructure),
     },
   ];
 }

@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { domainEvents$ } from '@bytebank/stores';
+import type { DomainEvent } from '@bytebank/core';
 
 const mocks = vi.hoisted(() => ({
   useMemo: vi.fn((factory: () => unknown) => factory()),
@@ -34,9 +36,11 @@ vi.mock('@tanstack/react-query', () => ({
 import {
   useAccountOverview,
   useCreateTransaction,
+  useDeleteAttachment,
   useDashboardSummary,
   useDeleteTransaction,
   usePaginatedTransactions,
+  useUploadAttachment,
   useUpdateTransaction,
 } from './hooks';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
@@ -265,5 +269,77 @@ describe('usePaginatedTransactions', () => {
     const prev = { data: [], pages: 3, items: 25 };
 
     expect(lastQueryOptions().placeholderData(prev)).toBe(prev);
+  });
+});
+
+const transaction = {
+  id: 'tx-1',
+  userId: 'user-1',
+  type: 'withdrawal' as const,
+  category: 'food',
+  amount: 24,
+  date: '2026-10-11',
+  description: 'Almoço',
+};
+const attachment = {
+  id: 'att-1',
+  url: 'https://blob.example/receipt.pdf',
+  name: 'receipt.pdf',
+  size: 4,
+  mimeType: 'application/pdf',
+};
+
+function observeEvents(run: () => void): DomainEvent[] {
+  const received: DomainEvent[] = [];
+  const subscription = domainEvents$.subscribe((event) => received.push(event));
+  try {
+    run();
+    return received;
+  } finally {
+    subscription.unsubscribe();
+  }
+}
+
+describe('mutation domain events', () => {
+  it('publishes the created transaction after create succeeds', () => {
+    useCreateTransaction();
+    const options = mocks.useMutation.mock.calls.at(-1)![0];
+    const received = observeEvents(() => options.onSuccess(transaction));
+    expect(received).toEqual([{ type: 'transaction.created', version: 1, transaction }]);
+  });
+
+  it('publishes the updated transaction after update succeeds', () => {
+    useUpdateTransaction();
+    const options = mocks.useMutation.mock.calls.at(-1)![0];
+    const received = observeEvents(() => options.onSuccess(transaction));
+    expect(received).toEqual([{ type: 'transaction.updated', version: 1, transaction }]);
+  });
+
+  it('publishes the deleted id only after delete succeeds', () => {
+    useDeleteTransaction();
+    const options = mocks.useMutation.mock.calls.at(-1)![0];
+    const received = observeEvents(() => options.onSuccess(undefined, 'tx-1'));
+    expect(received).toEqual([{ type: 'transaction.deleted', version: 1, id: 'tx-1' }]);
+  });
+
+  it('publishes the attachment id and transaction id after upload succeeds', () => {
+    useUploadAttachment();
+    const options = mocks.useMutation.mock.calls.at(-1)![0];
+    const file = new File(['%PDF'], 'receipt.pdf', { type: 'application/pdf' });
+    const received = observeEvents(() => options.onSuccess(attachment, { id: 'tx-1', file }));
+    expect(received).toEqual([
+      { type: 'attachment.added', version: 1, transactionId: 'tx-1', attachmentId: 'att-1' },
+    ]);
+  });
+
+  it('publishes the attachment id and transaction id after remove succeeds', () => {
+    useDeleteAttachment();
+    const options = mocks.useMutation.mock.calls.at(-1)![0];
+    const received = observeEvents(() =>
+      options.onSuccess(undefined, { id: 'tx-1', attachmentId: 'att-1' })
+    );
+    expect(received).toEqual([
+      { type: 'attachment.removed', version: 1, transactionId: 'tx-1', attachmentId: 'att-1' },
+    ]);
   });
 });
