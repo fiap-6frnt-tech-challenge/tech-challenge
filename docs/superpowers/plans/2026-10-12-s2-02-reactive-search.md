@@ -44,8 +44,8 @@
 
 **Interfaces:** `useSearchStream(onSearch: (value: string) => void): (value: string) => void`; `useAmountStream(onAmount: (value: number | undefined) => void): (value: number | undefined) => void`.
 
-- [ ] Test debounced delivery, latest callback, and teardown on unmount; run RED.
-- [ ] Compose `useEventStream`, pure pipelines, and `useSubscription`; run GREEN and commit.
+- [x] Test debounced delivery, latest callback, and teardown on unmount; run RED.
+- [x] Compose `useEventStream`, pure pipelines, and `useSubscription`; run GREEN and commit.
 
 ### Task 3: URL and filter UI wiring
 
