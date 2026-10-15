@@ -16,67 +16,97 @@ function file(name: string): File {
   return new File(['conteúdo'], name, { type: 'application/pdf' });
 }
 
-function attachment(transactionId: string, name: string): Attachment {
+function fakeDeps(
+  result = {
+    succeededFiles: [] as File[],
+    failedFiles: [] as File[],
+    cancelledFiles: [] as File[],
+  },
+  reconciled: Attachment[] = []
+) {
   return {
-    id: `${transactionId}-${name}`,
-    url: `/attachments/${name}`,
-    name,
-    size: 8,
-    mimeType: 'application/pdf',
+    transactions: { create: vi.fn(async () => created) },
+    attachments: {
+      uploadFiles: vi.fn(async () => result),
+      reconcile: vi.fn(async () => reconciled),
+    },
   };
-}
-
-function fakeGateways(failing: string[] = []) {
-  const transactions = { create: vi.fn(async () => created) };
-  const attachments = {
-    upload: vi.fn(async (transactionId: string, upload: File) => {
-      if (failing.includes(upload.name)) throw new Error('upload falhou');
-      return attachment(transactionId, upload.name);
-    }),
-  };
-  return { transactions, attachments };
 }
 
 describe('saveTransactionWithAttachments', () => {
-  it('creates the transaction and uploads every file to it', async () => {
-    const deps = fakeGateways();
+  it('creates the transaction and uploads every file through the queue', async () => {
+    const deps = fakeDeps();
     const files = [file('recibo.pdf'), file('nota.pdf')];
 
     const result = await saveTransactionWithAttachments(deps)(input, files);
 
     expect(deps.transactions.create).toHaveBeenCalledWith(input);
-    expect(deps.attachments.upload).toHaveBeenCalledTimes(2);
-    expect(deps.attachments.upload).toHaveBeenCalledWith('tx-1', files[0]);
-    expect(deps.attachments.upload).toHaveBeenCalledWith('tx-1', files[1]);
-    expect(result).toEqual({ transaction: created, failedFiles: [] });
+    expect(deps.attachments.uploadFiles).toHaveBeenCalledWith('tx-1', files);
+    expect(deps.attachments.reconcile).toHaveBeenCalledWith('tx-1');
+    expect(result).toEqual({
+      transaction: created,
+      failedFiles: [],
+      cancelledFiles: [],
+    });
   });
 
-  it('returns only the files that failed to upload', async () => {
-    const deps = fakeGateways(['nota.pdf']);
-    const files = [file('recibo.pdf'), file('nota.pdf'), file('extrato.pdf')];
+  it('returns failed and cancelled files for retry', async () => {
+    const failed = file('nota.pdf');
+    const cancelled = file('extrato.pdf');
+    const deps = fakeDeps({
+      succeededFiles: [],
+      failedFiles: [failed],
+      cancelledFiles: [cancelled],
+    });
 
-    const result = await saveTransactionWithAttachments(deps)(input, files);
+    const result = await saveTransactionWithAttachments(deps)(input, [
+      file('recibo.pdf'),
+      failed,
+      cancelled,
+    ]);
 
-    expect(result.transaction).toBe(created);
-    expect(result.failedFiles).toEqual([files[1]]);
+    expect(result).toEqual({
+      transaction: created,
+      failedFiles: [failed],
+      cancelledFiles: [cancelled],
+    });
   });
 
-  it('skips uploads when there are no files', async () => {
-    const deps = fakeGateways();
+  it('does not offer a cancelled file for retry if reconciliation found it on the server', async () => {
+    const cancelled = file('late.pdf');
+    const deps = fakeDeps({ succeededFiles: [], failedFiles: [], cancelledFiles: [cancelled] }, [
+      {
+        id: 'late-attachment',
+        url: '/attachments/late',
+        name: 'late.pdf',
+        size: cancelled.size,
+        mimeType: 'application/pdf',
+      },
+    ]);
+
+    const result = await saveTransactionWithAttachments(deps)(input, [cancelled]);
+
+    expect(result.cancelledFiles).toEqual([]);
+  });
+
+  it('skips uploads and reconciliation when there are no files', async () => {
+    const deps = fakeDeps();
 
     const result = await saveTransactionWithAttachments(deps)(input, []);
 
-    expect(deps.attachments.upload).not.toHaveBeenCalled();
+    expect(deps.attachments.uploadFiles).not.toHaveBeenCalled();
+    expect(deps.attachments.reconcile).not.toHaveBeenCalled();
     expect(result.failedFiles).toEqual([]);
+    expect(result.cancelledFiles).toEqual([]);
   });
 
   it('does not upload anything when the transaction cannot be created', async () => {
-    const deps = fakeGateways();
+    const deps = fakeDeps();
     deps.transactions.create.mockRejectedValueOnce(new Error('falhou'));
 
     await expect(saveTransactionWithAttachments(deps)(input, [file('recibo.pdf')])).rejects.toThrow(
       'falhou'
     );
-    expect(deps.attachments.upload).not.toHaveBeenCalled();
+    expect(deps.attachments.uploadFiles).not.toHaveBeenCalled();
   });
 });

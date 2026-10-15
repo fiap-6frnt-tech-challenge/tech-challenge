@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
-import { FileText, UploadCloud, X } from 'lucide-react';
+import { FileText, RotateCcw, UploadCloud, X } from 'lucide-react';
 import { cn, formatFileSize } from '@bytebank/shared';
 import { IconButton } from '../../atoms/Button';
 import type { IFileUpload } from './IFileUpload';
 
 const DEFAULT_ACCEPT = 'image/png,image/jpeg,image/webp,application/pdf';
-const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
+const DEFAULT_MAX_SIZE = 4 * 1024 * 1024;
 const DEFAULT_MAX_FILES = 5;
 
 function fileKey(file: File): string {
@@ -36,6 +36,9 @@ export function FileUpload({
   onChange,
   onError,
   progress,
+  uploadItems = [],
+  onCancel,
+  onRetry,
   disabled = false,
   className,
 }: IFileUpload) {
@@ -174,10 +177,15 @@ export function FileUpload({
           aria-label={`${value.length} arquivo(s) selecionado(s)`}
           className="flex flex-col gap-sm"
         >
-          {value.map((file) => {
-            const key = fileKey(file);
-            const previewUrl = previews[key];
-            const progressValue = progress?.[file.name];
+          {value.map((file, selectedIndex) => {
+            const uploadItem = uploadItems.find((item) => item.file === file);
+            const key = uploadItem?.id ?? `${fileKey(file)}-${selectedIndex}`;
+            const previewUrl = previews[fileKey(file)];
+            const progressValue = uploadItem?.progress ?? progress?.[file.name];
+            const isInFlight = uploadItem
+              ? uploadItem.status === 'queued' || uploadItem.status === 'uploading'
+              : progressValue !== undefined;
+            const canRetry = uploadItem?.status === 'failed' || uploadItem?.status === 'cancelled';
 
             return (
               <li
@@ -201,7 +209,7 @@ export function FileUpload({
                   <p className="label-default text-content-secondary">
                     {formatFileSize(file.size)}
                   </p>
-                  {progressValue !== undefined && (
+                  {isInFlight && progressValue !== undefined && (
                     <div
                       role="progressbar"
                       aria-valuenow={progressValue}
@@ -216,15 +224,39 @@ export function FileUpload({
                       />
                     </div>
                   )}
+                  {uploadItem && (
+                    <p role="status" className="label-default text-content-secondary">
+                      {uploadStatusLabel(uploadItem.status)}
+                    </p>
+                  )}
                 </div>
 
-                <IconButton
-                  type="button"
-                  icon={<X size={16} />}
-                  aria-label={`Remover ${file.name}`}
-                  disabled={disabled}
-                  onClick={() => handleRemove(file)}
-                />
+                {isInFlight && uploadItem && onCancel ? (
+                  <IconButton
+                    type="button"
+                    icon={<X size={16} />}
+                    aria-label={`Cancelar envio de ${file.name}`}
+                    onClick={() => onCancel(uploadItem!.id)}
+                  />
+                ) : canRetry && onRetry ? (
+                  <IconButton
+                    type="button"
+                    icon={<RotateCcw size={16} />}
+                    aria-label={`Tentar novamente ${file.name}`}
+                    disabled={uploadItems.some(
+                      (item) => item.status === 'queued' || item.status === 'uploading'
+                    )}
+                    onClick={() => onRetry(uploadItem!.id)}
+                  />
+                ) : (
+                  <IconButton
+                    type="button"
+                    icon={<X size={16} />}
+                    aria-label={`Remover ${file.name}`}
+                    disabled={disabled || isInFlight}
+                    onClick={() => handleRemove(file)}
+                  />
+                )}
               </li>
             );
           })}
@@ -232,4 +264,19 @@ export function FileUpload({
       )}
     </div>
   );
+}
+
+function uploadStatusLabel(status: NonNullable<IFileUpload['uploadItems']>[number]['status']) {
+  switch (status) {
+    case 'queued':
+      return 'Aguardando envio';
+    case 'uploading':
+      return 'Enviando';
+    case 'done':
+      return 'Enviado';
+    case 'failed':
+      return 'Falhou';
+    case 'cancelled':
+      return 'Cancelado';
+  }
 }

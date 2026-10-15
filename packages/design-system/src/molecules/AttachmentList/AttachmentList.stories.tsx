@@ -3,6 +3,10 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import type { Attachment } from '@bytebank/shared';
 import { AttachmentList } from './AttachmentList';
 
+function makePdf(name: string): File {
+  return new File(['%PDF-1.4 conteúdo'], name, { type: 'application/pdf' });
+}
+
 const IMAGE_ATTACHMENT: Attachment = {
   id: 'attachment-image',
   name: 'comprovante.png',
@@ -100,5 +104,35 @@ export const Removendo: Story = {
     await expect(
       canvas.getByRole('button', { name: 'Remover anexo: comprovante.png' })
     ).toBeDisabled();
+  },
+};
+
+export const Enviando: Story = {
+  args: {
+    attachments: [],
+    uploadItems: [
+      { id: 'upload-sending', file: makePdf('enviando.pdf'), progress: 62, status: 'uploading' },
+    ],
+    onCancel: fn(),
+  },
+};
+
+export const Falhou: Story = {
+  args: {
+    attachments: [],
+    uploadItems: [
+      { id: 'upload-failed', file: makePdf('falhou.pdf'), progress: 36, status: 'failed' },
+    ],
+    onRetry: fn(),
+  },
+};
+
+export const Cancelado: Story = {
+  args: {
+    attachments: [],
+    uploadItems: [
+      { id: 'upload-cancelled', file: makePdf('cancelado.pdf'), progress: 18, status: 'cancelled' },
+    ],
+    onRetry: fn(),
   },
 };

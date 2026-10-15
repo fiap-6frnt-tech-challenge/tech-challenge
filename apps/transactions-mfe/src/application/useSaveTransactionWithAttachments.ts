@@ -1,17 +1,31 @@
 import { useMemo } from 'react';
-import { useCreateTransaction, useUploadAttachment } from '@bytebank/api-client';
+import { useCreateTransaction } from '@bytebank/api-client';
 import { saveTransactionWithAttachments } from './use-cases/saveTransactionWithAttachments';
+import { useUploadQueue } from './useUploadQueue';
 
 export function useSaveTransactionWithAttachments() {
   const { mutateAsync: create } = useCreateTransaction();
-  const { mutateAsync: upload } = useUploadAttachment();
+  const queue = useUploadQueue();
+  const { uploadFiles, reconcile } = queue;
 
-  return useMemo(
+  const saveTransaction = useMemo(
     () =>
       saveTransactionWithAttachments({
         transactions: { create },
-        attachments: { upload: (id, file) => upload({ id, file }) },
+        attachments: {
+          uploadFiles: async (id, files) => {
+            const result = await uploadFiles(id, files);
+            return {
+              succeededFiles: result.succeededFiles,
+              failedFiles: result.failedFiles,
+              cancelledFiles: result.cancelledFiles,
+            };
+          },
+          reconcile: (id) => reconcile(id),
+        },
       }),
-    [create, upload]
+    [create, reconcile, uploadFiles]
   );
+
+  return { saveTransaction, ...queue };
 }
