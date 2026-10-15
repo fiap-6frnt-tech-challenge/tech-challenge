@@ -39,10 +39,10 @@
 
 **Files:** `apps/shell/src/app/{eventBridges,clientListeners,ClientEffects,FeedbackHost,providers}.ts(x)` and tests; transaction UI success dispatches.
 
-**Interfaces:** `registerEventBridges(dispatch, events$?)` returns cleanup; `registerClientListeners({ startListening, queryClient, cancelUploads })` returns cleanup. `ClientEffects` registers these at mount and guards beforeunload while uploads are queued/uploading.
+**Interfaces:** `registerEventBridges(store, events$?)` returns cleanup and checks the current authenticated state before notifying; `registerClientListeners({ startListening, queryClient, cancelUploads })` returns cleanup. `ClientEffects` registers these at mount and guards beforeunload while uploads are queued/uploading. The external cancellation registry is introduced here so the shell composition is complete before queue integration.
 
-- [ ] Test domain-event notification mapping and teardown; logout clears a real QueryClient and Redux; upload failure adds one error; mount cleanup prevents duplicates. Run RED.
-- [ ] Implement composition and FIFO host; remove duplicate success feedback from consumers; run focused tests GREEN and commit.
+- [x] Test domain-event notification mapping and teardown; logout clears a real QueryClient and Redux; upload failure adds one error; mount cleanup prevents duplicates. Run RED.
+- [x] Implement composition and FIFO host; remove duplicate success feedback from consumers; run focused tests GREEN and commit.
 
 ### Task 3: Upload metadata and logout cancellation
 

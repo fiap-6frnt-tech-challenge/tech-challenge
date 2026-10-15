@@ -82,15 +82,6 @@ export function EditTransactionModal({
     try {
       const result = await retryUpload(uploadId, transactionId);
       if (result.succeededFiles.length > 0) setHasAttachmentChanges(true);
-      if (result.unresolvedUploads.length === 0) {
-        dispatch(
-          showFeedback({
-            type: 'success',
-            title: 'Anexos enviados',
-            message: 'A lista de anexos foi atualizada.',
-          })
-        );
-      }
     } catch {
       dispatch(
         showFeedback({

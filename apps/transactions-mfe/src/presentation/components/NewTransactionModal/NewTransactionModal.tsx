@@ -13,12 +13,6 @@ import { TransactionForm } from '../TransactionForm/TransactionForm';
 import { useSaveTransactionWithAttachments } from '../../../application/useSaveTransactionWithAttachments';
 import type { NewTransactionModalProps } from './INewTransactionModal';
 
-const SUCCESS_FEEDBACK = {
-  type: 'success' as const,
-  title: 'Transação adicionada!',
-  message: 'Seu extrato foi atualizado.',
-};
-
 const ERROR_FEEDBACK = {
   type: 'error' as const,
   title: 'Erro ao adicionar transação',
@@ -71,7 +65,6 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
       setPendingFiles([]);
       setSavedTransactionId(null);
       resetUploads();
-      dispatch(showFeedback(SUCCESS_FEEDBACK));
       onCancel();
     } catch {
       dispatch(showFeedback(ERROR_FEEDBACK));
@@ -89,7 +82,6 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
         setSavedTransactionId(null);
         setPendingFiles([]);
         resetUploads();
-        dispatch(showFeedback(SUCCESS_FEEDBACK));
         onCancel();
       }
     } catch {

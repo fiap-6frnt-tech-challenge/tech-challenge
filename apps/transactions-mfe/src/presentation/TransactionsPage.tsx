@@ -81,13 +81,6 @@ export default function TransactionsPage() {
     setIsDeleting(true);
     try {
       await deleteTransaction(pendingDelete.id);
-      dispatch(
-        showFeedback({
-          type: 'success',
-          title: 'Transação excluída',
-          message: 'A transação foi removida com sucesso.',
-        })
-      );
       setPendingDelete(null);
     } catch {
       dispatch(
@@ -107,13 +100,6 @@ export default function TransactionsPage() {
     setIsUpdating(true);
     try {
       await updateTransaction({ id: pendingEdit.id, data });
-      dispatch(
-        showFeedback({
-          type: 'success',
-          title: 'Transação atualizada',
-          message: 'A transação foi atualizada com sucesso.',
-        })
-      );
       setPendingEdit(null);
     } catch {
       dispatch(
