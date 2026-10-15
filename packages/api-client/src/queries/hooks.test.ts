@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { of } from 'rxjs';
 import { domainEvents$ } from '@bytebank/stores';
 import type { DomainEvent } from '@bytebank/core';
 
 const mocks = vi.hoisted(() => ({
   useMemo: vi.fn((factory: () => unknown) => factory()),
+  useCallback: vi.fn(<T extends (...args: never[]) => unknown>(callback: T): T => callback),
   useQuery: vi.fn(),
   useMutation: vi.fn((options) => options),
   invalidateQueries: vi.fn(),
@@ -18,6 +20,7 @@ vi.mock('react', async () => {
   return {
     ...actual,
     useMemo: mocks.useMemo,
+    useCallback: mocks.useCallback,
   };
 });
 
@@ -44,11 +47,15 @@ import {
   useUpdateTransaction,
 } from './hooks';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
-import { overviewKeys, summaryKeys, transactionKeys } from '../keys';
+import { AttachmentHttpGateway } from '../gateways/AttachmentHttpGateway';
+import { attachmentKeys, overviewKeys, summaryKeys, transactionKeys } from '../keys';
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.useMemo.mockImplementation((factory: () => unknown) => factory());
+  mocks.useCallback.mockImplementation(
+    <T extends (...args: never[]) => unknown>(callback: T) => callback
+  );
   mocks.useMutation.mockImplementation((options) => options);
   mocks.getQueriesData.mockReturnValue([]);
 });
@@ -330,6 +337,29 @@ describe('mutation domain events', () => {
     expect(received).toEqual([
       { type: 'attachment.added', version: 1, transactionId: 'tx-1', attachmentId: 'att-1' },
     ]);
+  });
+
+  it('publishes and invalidates when the progress stream completes an upload', () => {
+    const attachment = {
+      id: 'att-stream',
+      url: '/attachments/att-stream',
+      name: 'receipt.pdf',
+      size: 4,
+      mimeType: 'application/pdf',
+    };
+    const file = new File(['%PDF'], 'receipt.pdf', { type: 'application/pdf' });
+    const uploadSpy = vi
+      .spyOn(AttachmentHttpGateway.prototype, 'upload$')
+      .mockReturnValue(of({ type: 'done', attachment }));
+    const { uploadStream } = useUploadAttachment();
+
+    const received = observeEvents(() => uploadStream('tx-1', file).subscribe());
+
+    expect(received).toEqual([
+      { type: 'attachment.added', version: 1, transactionId: 'tx-1', attachmentId: 'att-stream' },
+    ]);
+    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: attachmentKeys.list('tx-1') });
+    uploadSpy.mockRestore();
   });
 
   it('publishes the attachment id and transaction id after remove succeeds', () => {

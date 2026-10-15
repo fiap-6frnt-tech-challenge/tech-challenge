@@ -21,8 +21,12 @@ export function EditTransactionModal({
     removing,
     isLoading,
     isUploading,
+    uploads,
     loadAttachments,
     uploadFiles,
+    cancelUpload,
+    retryUpload,
+    cancelAllUploads,
     removeAttachment,
     resetAttachments,
   } = useAttachments(transactionId);
@@ -50,8 +54,17 @@ export function EditTransactionModal({
     if (!transactionId) return;
 
     try {
-      await uploadFiles(files, transactionId);
-      setHasAttachmentChanges(true);
+      const result = await uploadFiles(files, transactionId);
+      if (result.succeededFiles.length > 0) setHasAttachmentChanges(true);
+      if (result.failedFiles.length > 0 || result.cancelledFiles.length > 0) {
+        dispatch(
+          showFeedback({
+            type: 'info',
+            title: 'Alguns anexos ficaram pendentes',
+            message: 'Os arquivos continuam disponíveis para tentar novamente.',
+          })
+        );
+      }
     } catch {
       dispatch(
         showFeedback({
@@ -61,6 +74,37 @@ export function EditTransactionModal({
         })
       );
     }
+  };
+
+  const handleRetryUpload = async (uploadId: string) => {
+    if (!transactionId) return;
+
+    try {
+      const result = await retryUpload(uploadId, transactionId);
+      if (result.succeededFiles.length > 0) setHasAttachmentChanges(true);
+      if (result.unresolvedUploads.length === 0) {
+        dispatch(
+          showFeedback({
+            type: 'success',
+            title: 'Anexos enviados',
+            message: 'A lista de anexos foi atualizada.',
+          })
+        );
+      }
+    } catch {
+      dispatch(
+        showFeedback({
+          type: 'error',
+          title: 'Erro ao tentar novamente',
+          message: 'O arquivo continua disponível para nova tentativa.',
+        })
+      );
+    }
+  };
+
+  const handleCancel = () => {
+    cancelAllUploads();
+    onCancel();
   };
 
   const handleRemove = async (attachmentId: string) => {
@@ -81,7 +125,7 @@ export function EditTransactionModal({
   };
 
   return (
-    <Modal isOpen={!!transaction} onClose={onCancel} title="Editar Transação">
+    <Modal isOpen={!!transaction} onClose={handleCancel} title="Editar Transação">
       <TransactionForm
         onSubmit={onConfirm}
         onCancel={onCancel}
@@ -96,7 +140,10 @@ export function EditTransactionModal({
             ) : (
               <AttachmentList
                 attachments={uploadedAttachments}
+                uploadItems={uploads.filter((item) => item.status !== 'done')}
                 onRemove={handleRemove}
+                onCancel={cancelUpload}
+                onRetry={(id) => void handleRetryUpload(id)}
                 isRemoving={removing}
               />
             )}
@@ -104,7 +151,12 @@ export function EditTransactionModal({
               value={[]}
               onChange={handleUpload}
               onError={(title) => dispatch(showFeedback({ type: 'error', title }))}
-              maxFiles={Math.max(0, 5 - uploadedAttachments.length)}
+              maxFiles={Math.max(
+                0,
+                5 -
+                  uploadedAttachments.length -
+                  uploads.filter((item) => item.status !== 'done').length
+              )}
               disabled={isSubmitting || isUploading || uploadedAttachments.length >= 5}
             />
           </div>

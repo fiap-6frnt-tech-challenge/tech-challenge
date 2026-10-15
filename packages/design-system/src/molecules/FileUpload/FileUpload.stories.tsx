@@ -74,6 +74,9 @@ const meta: Meta<typeof FileUpload> = {
     onChange: { control: false },
     onError: { control: false },
     progress: { control: false },
+    uploadItems: { control: false },
+    onCancel: { control: false },
+    onRetry: { control: false },
     accept: { control: 'text' },
     maxSizeBytes: { control: 'number' },
     maxFiles: { control: 'number' },
@@ -120,6 +123,45 @@ export const ComProgresso: Story = {
       progress={{ 'enviando.png': 65, 'recibo.pdf': 100 }}
     />
   ),
+};
+
+export const Enviando: Story = {
+  render: () => {
+    const file = makePdf('comprovante.pdf');
+    return (
+      <Demo
+        initialFiles={[file]}
+        uploadItems={[{ id: 'upload-sending', file, progress: 62, status: 'uploading' }]}
+        onCancel={fn()}
+      />
+    );
+  },
+};
+
+export const Falhou: Story = {
+  render: () => {
+    const file = makePdf('falhou.pdf');
+    return (
+      <Demo
+        initialFiles={[file]}
+        uploadItems={[{ id: 'upload-failed', file, progress: 36, status: 'failed' }]}
+        onRetry={fn()}
+      />
+    );
+  },
+};
+
+export const Cancelado: Story = {
+  render: () => {
+    const file = makePdf('cancelado.pdf');
+    return (
+      <Demo
+        initialFiles={[file]}
+        uploadItems={[{ id: 'upload-cancelled', file, progress: 18, status: 'cancelled' }]}
+        onRetry={fn()}
+      />
+    );
+  },
 };
 
 export const Disabled: Story = {

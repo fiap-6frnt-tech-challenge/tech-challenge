@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { tap, type Observable } from 'rxjs';
 import type { DashboardSummary, NewTransaction, UpdateTransaction } from '@bytebank/core';
 import { publish } from '@bytebank/stores';
 import type { GetPaginatedParams, PaginatedResponse, SummaryRange } from '../http';
+import type { AttachmentUploadEvent } from '../gateways/types';
 import { attachmentKeys, overviewKeys, summaryKeys, transactionKeys } from '../keys';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
 import { AttachmentHttpGateway } from '../gateways/AttachmentHttpGateway';
@@ -163,7 +165,7 @@ export function useTransactionAttachments(id: string) {
 
 export function useUploadAttachment() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) => attachments.upload(id, file),
     onSuccess: (attachment, { id }) => {
       publish({
@@ -175,6 +177,35 @@ export function useUploadAttachment() {
       return queryClient.invalidateQueries({ queryKey: attachmentKeys.list(id) });
     },
   });
+
+  const uploadStream = useCallback(
+    (id: string, file: File): Observable<AttachmentUploadEvent> =>
+      attachments.upload$(id, file).pipe(
+        tap((event) => {
+          if (event.type !== 'done') return;
+          publish({
+            type: 'attachment.added',
+            version: 1,
+            transactionId: id,
+            attachmentId: event.attachment.id,
+          });
+          void queryClient.invalidateQueries({ queryKey: attachmentKeys.list(id) });
+        })
+      ),
+    [queryClient]
+  );
+
+  const reconcileAttachments = useCallback(
+    (id: string) =>
+      queryClient.fetchQuery({
+        queryKey: attachmentKeys.list(id),
+        queryFn: ({ signal }) => attachments.list(id, { signal }),
+        staleTime: 0,
+      }),
+    [queryClient]
+  );
+
+  return { ...mutation, uploadStream, reconcileAttachments };
 }
 
 export function useDeleteAttachment() {
