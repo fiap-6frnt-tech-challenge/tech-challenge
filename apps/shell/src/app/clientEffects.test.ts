@@ -13,7 +13,7 @@ import {
   uploadCancelled,
 } from '@bytebank/stores';
 import { registerEventBridges } from './eventBridges';
-import { registerClientListeners } from './clientListeners';
+import { registerClientListeners, registerPendingUploadWarning } from './clientListeners';
 
 const transaction = {
   id: 'tx',
@@ -91,10 +91,29 @@ describe('domain event bridge', () => {
 });
 
 describe('client listener composition', () => {
+  it('warns before leaving only while a queued or active upload exists and removes its handler', () => {
+    const { store } = createAppStore();
+    const target = new EventTarget();
+    const stop = registerPendingUploadWarning(store, target);
+    const unload = () => {
+      const event = new Event('beforeunload', { cancelable: true });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(unload()).toBe(false);
+    store.dispatch(uploadQueued(metadata));
+    expect(unload()).toBe(true);
+    store.dispatch(uploadCancelled('upload'));
+    expect(unload()).toBe(false);
+    store.dispatch(uploadQueued(metadata));
+    stop();
+    expect(unload()).toBe(false);
+  });
   it('cancels transfers and empties Redux and TanStack as soon as logout starts', () => {
     const { store, startListening } = createAppStore();
     const queryClient = new QueryClient();
     queryClient.setQueryData(['transactions'], [{ id: 'private' }]);
+    queryClient.getMutationCache().build(queryClient, { mutationKey: ['private'] });
     store.dispatch(setSession({ id: 'u1', name: 'Name', email: 'email@example.com' }));
     store.dispatch(notificationAdded({ type: 'success', title: 'Private feedback' }));
     store.dispatch(uploadQueued(metadata));
@@ -110,6 +129,7 @@ describe('client listener composition', () => {
     store.dispatch(logout.pending('request'));
     expect(cancelled).toBe(true);
     expect(queryClient.getQueryCache().getAll()).toEqual([]);
+    expect(queryClient.getMutationCache().getAll()).toEqual([]);
     expect(store.getState()).toEqual(createAppStore().store.getState());
     stop();
   });

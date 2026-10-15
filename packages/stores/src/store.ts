@@ -32,5 +32,6 @@ export function createAppStore() {
 }
 
 export const { store, startListening } = createAppStore();
+export type AppStore = typeof store;
 export type AppStartListening = typeof startListening;
 export type AppDispatch = typeof store.dispatch;

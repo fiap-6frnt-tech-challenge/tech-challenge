@@ -7,7 +7,22 @@ import {
   resetClientState,
   uploadFailed,
   type AppStartListening,
+  type AppStore,
+  selectHasPendingUploads,
 } from '@bytebank/stores';
+
+export function registerPendingUploadWarning(
+  store: Pick<AppStore, 'getState'>,
+  target: EventTarget
+): () => void {
+  const beforeUnload = (event: Event) => {
+    if (!selectHasPendingUploads(store.getState())) return;
+    event.preventDefault();
+    (event as BeforeUnloadEvent).returnValue = '';
+  };
+  target.addEventListener('beforeunload', beforeUnload);
+  return () => target.removeEventListener('beforeunload', beforeUnload);
+}
 
 export function registerClientListeners({
   startListening,

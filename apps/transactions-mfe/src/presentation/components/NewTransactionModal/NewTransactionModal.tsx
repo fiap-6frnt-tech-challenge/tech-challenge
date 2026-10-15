@@ -11,6 +11,7 @@ import type {
 } from '../TransactionForm/ITransactionForm';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
 import { useSaveTransactionWithAttachments } from '../../../application/useSaveTransactionWithAttachments';
+import { UploadSessionEndedError } from '../../../application/uploadSession';
 import type { NewTransactionModalProps } from './INewTransactionModal';
 
 const ERROR_FEEDBACK = {
@@ -66,7 +67,8 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
       setSavedTransactionId(null);
       resetUploads();
       onCancel();
-    } catch {
+    } catch (error) {
+      if (error instanceof UploadSessionEndedError) return;
       dispatch(showFeedback(ERROR_FEEDBACK));
     } finally {
       setIsSubmitting(false);
@@ -84,7 +86,8 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
         resetUploads();
         onCancel();
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof UploadSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',

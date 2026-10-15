@@ -50,8 +50,8 @@
 
 **Interfaces:** `registerUploadCancellation(callback)` returns cleanup; `cancelPendingUploads()` invokes registered queues. Session cancellation rejects pending batch work with a recognizable application error; normal per-file cancellation preserves retry behavior.
 
-- [ ] Test metadata through real queue events, globally unique IDs across hook instances, retry/failure/cancel status, beforeunload state, and logout with active work plus stale reconciliation; run RED.
-- [ ] Dispatch serializable metadata and wire cancellation/cleanup; prevent session-ended async completions from restoring notifications or queries. Run tests GREEN and commit.
+- [x] Test metadata through real queue events, globally unique IDs across hook instances, retry/failure/cancel status, beforeunload state, and logout with active work plus stale reconciliation; run RED.
+- [x] Dispatch serializable metadata and wire cancellation/cleanup; prevent session-ended async completions from restoring notifications or queries. Run tests GREEN and commit.
 
 ### Task 4: Production validation and evidence
 

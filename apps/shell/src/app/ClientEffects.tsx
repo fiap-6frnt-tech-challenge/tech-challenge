@@ -1,15 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import {
-  store,
-  startListening,
-  cancelPendingUploads,
-  selectHasPendingUploads,
-} from '@bytebank/stores';
+import { store, startListening, cancelPendingUploads } from '@bytebank/stores';
 import { queryClient } from '@bytebank/api-client';
 import { registerEventBridges } from './eventBridges';
-import { registerClientListeners } from './clientListeners';
+import { registerClientListeners, registerPendingUploadWarning } from './clientListeners';
 
 export function ClientEffects() {
   useEffect(() => {
@@ -19,16 +14,11 @@ export function ClientEffects() {
       queryClient,
       cancelUploads: cancelPendingUploads,
     });
-    const beforeUnload = (event: BeforeUnloadEvent) => {
-      if (!selectHasPendingUploads(store.getState())) return;
-      event.preventDefault();
-      event.returnValue = '';
-    };
-    window.addEventListener('beforeunload', beforeUnload);
+    const stopWarning = registerPendingUploadWarning(store, window);
     return () => {
       stopBridge();
       stopListeners();
-      window.removeEventListener('beforeunload', beforeUnload);
+      stopWarning();
     };
   }, []);
   return null;

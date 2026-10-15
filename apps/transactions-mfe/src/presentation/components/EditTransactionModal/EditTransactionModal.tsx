@@ -6,6 +6,7 @@ import { showFeedback, useAppDispatch } from '@bytebank/stores';
 import { EditTransactionModalProps } from './IEditTransactionModal';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
 import { useAttachments } from '../../../application/useAttachments';
+import { UploadSessionEndedError } from '../../../application/uploadSession';
 
 export function EditTransactionModal({
   transaction,
@@ -39,7 +40,8 @@ export function EditTransactionModal({
       return;
     }
 
-    void loadAttachments(transactionId).catch(() => {
+    void loadAttachments(transactionId).catch((error: unknown) => {
+      if (error instanceof UploadSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',
@@ -65,7 +67,8 @@ export function EditTransactionModal({
           })
         );
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof UploadSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',
@@ -82,7 +85,8 @@ export function EditTransactionModal({
     try {
       const result = await retryUpload(uploadId, transactionId);
       if (result.succeededFiles.length > 0) setHasAttachmentChanges(true);
-    } catch {
+    } catch (error) {
+      if (error instanceof UploadSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',

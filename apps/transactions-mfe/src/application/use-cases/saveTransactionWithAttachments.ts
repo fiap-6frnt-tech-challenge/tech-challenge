@@ -1,5 +1,6 @@
 import type { Attachment, NewTransaction, Transaction } from '@bytebank/core';
 import type { TransactionGateway } from '@bytebank/core/application';
+import { UploadSessionEndedError } from '../uploadSession';
 
 export interface SaveTransactionDeps {
   transactions: Pick<TransactionGateway, 'create'>;
@@ -35,7 +36,8 @@ export const saveTransactionWithAttachments =
     let reconciled: Attachment[] | undefined;
     try {
       reconciled = await deps.attachments.reconcile?.(transaction.id);
-    } catch {
+    } catch (error) {
+      if (error instanceof UploadSessionEndedError) throw error;
       // A failed reconciliation must not discard the original upload outcomes.
     }
 
