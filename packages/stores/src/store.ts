@@ -1,13 +1,36 @@
-import { configureStore } from '@reduxjs/toolkit';
+import {
+  combineReducers,
+  configureStore,
+  createAction,
+  createListenerMiddleware,
+  type UnknownAction,
+} from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import uiReducer from './uiSlice';
+import notificationsReducer from './notificationsSlice';
+import uploadsReducer from './uploadsSlice';
 
-export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    ui: uiReducer,
-  },
+const combinedReducer = combineReducers({
+  auth: authReducer,
+  ui: uiReducer,
+  notifications: notificationsReducer,
+  uploads: uploadsReducer,
 });
+export type RootState = ReturnType<typeof combinedReducer>;
+export const resetClientState = createAction('client/resetClientState');
+const rootReducer = (state: RootState | undefined, action: UnknownAction) =>
+  combinedReducer(resetClientState.match(action) ? undefined : state, action);
 
-export type RootState = ReturnType<typeof store.getState>;
+export function createAppStore() {
+  const listeners = createListenerMiddleware<RootState>();
+  const store = configureStore({
+    reducer: rootReducer,
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware().prepend(listeners.middleware),
+    devTools: process.env.NODE_ENV !== 'production',
+  });
+  return { store, startListening: listeners.startListening };
+}
+
+export const { store, startListening } = createAppStore();
+export type AppStartListening = typeof startListening;
 export type AppDispatch = typeof store.dispatch;

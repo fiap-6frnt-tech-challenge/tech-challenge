@@ -32,8 +32,8 @@
 
 **Interfaces:** Notification actions `notificationAdded(input)` and `notificationDismissed(id?)`; upload actions for queued/started/progress/completed/failed/cancelled/removed metadata. `selectActiveUploads`, `selectHasPendingUploads`, and `selectOverallUploadProgress` consume `{ uploads }`. `createAppStore()` returns `{ store, startListening }`; `resetClientState()` restores all initial slices.
 
-- [ ] Write tests for FIFO notifications/aliases, upload transitions, weighted progress, selector reference stability, and root reset; run RED.
-- [ ] Implement adapters, selectors, resettable root reducer, listener middleware and production DevTools guard; run focused tests GREEN and commit.
+- [x] Write tests for FIFO notifications/aliases, upload transitions, weighted progress, selector reference stability, and root reset; run RED.
+- [x] Implement adapters, selectors, resettable root reducer, listener middleware and production DevTools guard; run focused tests GREEN and commit.
 
 ### Task 2: Shell composition and notification host
 
