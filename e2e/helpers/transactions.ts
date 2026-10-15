@@ -10,7 +10,7 @@ export async function openTransactionsPage(page: Page) {
   await expect(page.getByRole('heading', { name: 'Transações' })).toBeVisible();
 }
 
-export async function createWithdrawal(page: Page, description: string, amount: string) {
+export async function submitWithdrawal(page: Page, description: string, amount: string) {
   await page.getByRole('button', { name: /nova transação/i }).click();
   await expect(page.getByRole('dialog', { name: /nova transação/i })).toBeVisible();
 
@@ -26,6 +26,10 @@ export async function createWithdrawal(page: Page, description: string, amount: 
 
   await expect(page.getByRole('dialog', { name: /confirmar transação/i })).toBeVisible();
   await page.getByRole('button', { name: /^Confirmar$/ }).click();
+}
+
+export async function createWithdrawal(page: Page, description: string, amount: string) {
+  await submitWithdrawal(page, description, amount);
   await expect(page.getByText('Transação adicionada!')).toBeVisible();
 }
 

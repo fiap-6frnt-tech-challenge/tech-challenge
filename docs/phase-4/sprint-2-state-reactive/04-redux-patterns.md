@@ -16,7 +16,7 @@
 
 ## Contexto
 
-A store (`packages/stores`) tem dois slices simples: `ui` (um único `feedback` e o painel de filtros) e `auth`. Não há normalização, seletores memoizados nem efeitos centralizados — os componentes disparam `showFeedback` espalhados. E o `configureStore` usa o padrão do RTK, que liga o Redux DevTools em produção.
+Antes desta task, a store (`packages/stores`) tinha dois slices simples: `ui` (um único `feedback` e o painel de filtros) e `auth`, sem normalização, seletores memoizados nem efeitos centralizados. Os componentes disparavam `showFeedback` espalhados e o `configureStore` usava o padrão do RTK, que liga o Redux DevTools em produção.
 
 ## Implementação
 
@@ -58,21 +58,38 @@ A store (`packages/stores`) tem dois slices simples: `ui` (um único `feedback` 
    - `logout.pending` → `queryClient.clear()` + `resetClientState()` + cancelar uploads
    - `uploads/uploadFailed` → notificação de erro
 5. **Ponte RxJS → Redux** (`apps/shell/src/app/eventBridges.ts`): `domainEvents$` (Task 01) → `notificationAdded` para os sucessos ("Transação criada"). Remover o `dispatch(showFeedback(...))` de sucesso duplicado nos componentes; erros continuam locais (o componente conhece o contexto).
-6. **Reset no logout:** root reducer responde a `resetClientState` devolvendo o estado inicial — nenhum dado do usuário fica na memória depois do logout.
-7. **DevTools:** `configureStore({ devTools: process.env.NODE_ENV !== 'production' })`.
+6. **Reset no logout:** root reducer responde a `resetClientState` devolvendo o estado inicial. O shell invalida a geração da sessão antes de cancelar uploads e limpar caches; as mutations ignoram eventos e rollbacks de operações anteriores e retornam `ClientSessionEndedError` aos consumidores. O conteúdo privado é desmontado assim que a autenticação é limpa, evitando que observers recriem queries durante o redirecionamento.
+7. **DevTools:** `configureStore({ devTools: process.env.NODE_ENV !== 'production' })`. A mesma política é aplicada às stores internas do Recharts; `chartRuntime.ts` está declarado em `sideEffects` para ser preservado pelo build.
 
 ## Testes
 
-- [ ] Reducers dos slices novos
-- [ ] Memoização: mesma entrada → mesma referência de saída
-- [ ] Listener: `logout.pending` chama `queryClient.clear()` (mock) e reseta o estado
-- [ ] Ponte: evento `transaction.created` gera uma notificação
+- [x] Reducers dos slices novos
+- [x] Memoização: mesma entrada → mesma referência de saída
+- [x] Listener: `logout.pending` limpa um QueryClient real (queries e mutations) e reseta o estado
+- [x] Ponte: evento `transaction.created` gera uma notificação
 
 ## Validação
 
-- [ ] Redux DevTools mostra o estado normalizado (`ids`/`entities`) em dev e não conecta em produção
-- [ ] Toast único por evento (sem duplicata)
-- [ ] Logout zera Redux e TanStack (React Query Devtools vazio)
+- [x] Estado normalizado (`ids`/`entities`), DevTools habilitado em dev e sem conexão em produção
+- [x] Toast único por evento (sem duplicata)
+- [x] Logout zera Redux e TanStack; operações tardias não restauram cache ou notificações
+
+### Evidências — 2026-10-15
+
+Implementada em `dev2-arch/redux-patterns`, a partir de `origin/upload-stream` (`41bf718`), que contém `phase-4` (`46f5102`). A integração na `phase-4` depende da entrada da S2-03; esta task não inclui o endurecimento completo de sessão da S2-07.
+
+| Verificação                  | Resultado                                                                        |
+| ---------------------------- | -------------------------------------------------------------------------------- |
+| `CI=1 npm test`              | 13/13 tarefas Turbo, testes unitários, integração de hooks e stories aprovados   |
+| `npx turbo run type-check`   | 13/13 tarefas aprovadas                                                          |
+| `npm run lint`               | 13/13 tarefas aprovadas, sem erros; avisos preexistentes de imports legados      |
+| `npm run arch:check`         | Sem violações: 442 módulos e 1181 dependências                                   |
+| `DATABASE_URL=… npm run e2e` | Build de produção 8/8 e E2E 20/20, Chromium e Firefox, PostgreSQL 16 descartável |
+| `git diff --check`           | Sem erros                                                                        |
+
+O E2E de Redux cobre notificação única, FIFO, ausência de conexões DevTools, metadados normalizados e logout com dois uploads ativos mais um em espera. Também mantém uma criação pendente durante o logout, libera sua falha e confirma que o conteúdo privado foi desmontado e os caches/notificações permanecem vazios.
+
+A revisão independente encontrou e motivou regressões para rollback de exclusão, sucesso/erro tardio de criação e remoção de anexo após logout. A validação em produção revelou a conexão DevTools das stores internas do Recharts e o refetch de `overview` por um consumidor ainda montado; ambos foram corrigidos e os cenários passaram. Nenhum bloqueio permaneceu na revisão final.
 
 ## Gotchas
 

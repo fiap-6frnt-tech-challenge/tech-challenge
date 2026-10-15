@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "sideEffects": [
-    "**/*.css"
+    "**/*.css",
+    "./src/organisms/chartRuntime.ts"
   ],
   "description": "Bytebank Design System — componentes, tokens e estilos compartilhados",
   "main": "./src/index.ts",

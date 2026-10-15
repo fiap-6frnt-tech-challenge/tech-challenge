@@ -1,18 +1,30 @@
 import { useCallback, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { tap, type Observable } from 'rxjs';
 import type { DashboardSummary, NewTransaction, UpdateTransaction } from '@bytebank/core';
-import { publish } from '@bytebank/stores';
+import { publish, createClientSessionGuard, ClientSessionEndedError } from '@bytebank/stores';
 import type { GetPaginatedParams, PaginatedResponse, SummaryRange } from '../http';
 import type { AttachmentUploadEvent } from '../gateways/types';
 import { attachmentKeys, overviewKeys, summaryKeys, transactionKeys } from '../keys';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
 import { AttachmentHttpGateway } from '../gateways/AttachmentHttpGateway';
+import { useSessionMutation } from './useSessionMutation';
 
 const transactions = new TransactionHttpGateway();
 const attachments = new AttachmentHttpGateway();
 
 type ListCache = PaginatedResponse | undefined;
+type MutationSession = { assertSession: () => void };
+const beginMutation = (): MutationSession => ({ assertSession: createClientSessionGuard() });
+function canApplyMutation(context: MutationSession | undefined): boolean {
+  try {
+    context?.assertSession();
+    return true;
+  } catch (error) {
+    if (error instanceof ClientSessionEndedError) return false;
+    throw error;
+  }
+}
 
 function removeFromListCache(old: ListCache, id: string): ListCache {
   if (!old) return old;
@@ -92,9 +104,11 @@ export function useTransaction(id: string) {
 
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useSessionMutation({
+    onMutate: beginMutation,
     mutationFn: (newTx: NewTransaction) => transactions.create(newTx),
-    onSuccess: (transaction) => {
+    onSuccess: (transaction, _input, context) => {
+      if (!canApplyMutation(context)) return;
       publish({ type: 'transaction.created', version: 1, transaction });
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: overviewKeys.all });
@@ -105,10 +119,12 @@ export function useCreateTransaction() {
 
 export function useUpdateTransaction() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useSessionMutation({
+    onMutate: beginMutation,
     mutationFn: ({ id, data }: { id: string; data: UpdateTransaction }) =>
       transactions.update(id, data),
-    onSuccess: (updated) => {
+    onSuccess: (updated, _input, context) => {
+      if (!canApplyMutation(context)) return;
       publish({ type: 'transaction.updated', version: 1, transaction: updated });
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: transactionKeys.detail(updated.id) });
@@ -120,14 +136,17 @@ export function useUpdateTransaction() {
 
 export function useDeleteTransaction() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useSessionMutation<void, string, MutationSession & { previous: [QueryKey, ListCache][] }>({
     mutationFn: (id: string) => transactions.remove(id),
-    onSuccess: (_result, id) => {
+    onSuccess: (_result, id, context) => {
+      if (!canApplyMutation(context)) return;
       publish({ type: 'transaction.deleted', version: 1, id });
     },
 
     onMutate: async (idToDelete) => {
+      const assertSession = createClientSessionGuard();
       await queryClient.cancelQueries({ queryKey: transactionKeys.lists() });
+      assertSession();
 
       const previous = queryClient.getQueriesData<ListCache>({
         queryKey: transactionKeys.lists(),
@@ -137,16 +156,18 @@ export function useDeleteTransaction() {
         removeFromListCache(old, idToDelete)
       );
 
-      return { previous };
+      return { previous, assertSession };
     },
 
     onError: (_err, _id, context) => {
+      if (!canApplyMutation(context)) return;
       context?.previous?.forEach(([key, data]: [QueryKey, ListCache]) => {
         queryClient.setQueryData(key, data);
       });
     },
 
-    onSettled: (_data, _error, idToDelete) => {
+    onSettled: (_data, error, idToDelete, context) => {
+      if (error instanceof ClientSessionEndedError || !canApplyMutation(context)) return;
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: transactionKeys.detail(idToDelete) });
       queryClient.invalidateQueries({ queryKey: overviewKeys.all });
@@ -165,9 +186,11 @@ export function useTransactionAttachments(id: string) {
 
 export function useUploadAttachment() {
   const queryClient = useQueryClient();
-  const mutation = useMutation({
+  const mutation = useSessionMutation({
+    onMutate: beginMutation,
     mutationFn: ({ id, file }: { id: string; file: File }) => attachments.upload(id, file),
-    onSuccess: (attachment, { id }) => {
+    onSuccess: (attachment, { id }, context) => {
+      if (!canApplyMutation(context)) return;
       publish({
         type: 'attachment.added',
         version: 1,
@@ -210,10 +233,12 @@ export function useUploadAttachment() {
 
 export function useDeleteAttachment() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useSessionMutation({
+    onMutate: beginMutation,
     mutationFn: ({ id, attachmentId }: { id: string; attachmentId: string }) =>
       attachments.remove(id, attachmentId),
-    onSuccess: (_data, { id, attachmentId }) => {
+    onSuccess: (_data, { id, attachmentId }, context) => {
+      if (!canApplyMutation(context)) return;
       publish({ type: 'attachment.removed', version: 1, transactionId: id, attachmentId });
       return queryClient.invalidateQueries({ queryKey: attachmentKeys.list(id) });
     },

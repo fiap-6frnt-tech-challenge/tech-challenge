@@ -1,68 +1,138 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ReplaySubject, Subscription } from 'rxjs';
 import { useUploadAttachment } from '@bytebank/api-client';
 import type { Attachment } from '@bytebank/core';
+import {
+  registerUploadCancellation,
+  selectAllUploads,
+  uploadQueued,
+  uploadStarted,
+  uploadProgress,
+  uploadCompleted,
+  uploadFailed,
+  uploadCancelled,
+  uploadsRemoved,
+  useAppSelector,
+  useAppStore,
+  type UploadMetadata,
+  type UploadStatus,
+} from '@bytebank/stores';
 import { uploadQueue$, type UploadQueueEvent, type UploadQueueJob } from './uploadQueue';
+import { UploadSessionEndedError } from './uploadSession';
 
-export type UploadStatus = 'queued' | 'uploading' | 'done' | 'failed' | 'cancelled';
-
+export type { UploadStatus } from '@bytebank/stores';
 export interface UploadItemState {
   id: string;
   file: File;
   progress: number;
   status: UploadStatus;
-  error?: unknown;
+  error?: string;
 }
-
 export interface UploadBatchResult {
   succeededFiles: File[];
   failedFiles: File[];
   cancelledFiles: File[];
   unresolvedUploads: UploadItemState[];
 }
-
 const RETRYABLE_STATUSES = new Set<UploadStatus>(['queued', 'uploading', 'failed', 'cancelled']);
+const errorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : 'Não foi possível enviar o arquivo. Tente novamente.';
 
-function progressPercent(loaded: number, total: number): number {
-  if (total <= 0) return 0;
-  return Math.max(0, Math.min(100, Math.round((loaded / total) * 100)));
+function ownUploads(metadata: UploadMetadata[], files: Map<string, File>): UploadItemState[] {
+  return metadata.flatMap((item) => {
+    const file = files.get(item.id);
+    return file
+      ? [
+          {
+            id: item.id,
+            file,
+            status: item.status,
+            error: item.error,
+            progress:
+              item.status === 'done'
+                ? 100
+                : item.total <= 0
+                  ? 0
+                  : Math.round((item.loaded / item.total) * 100),
+          },
+        ]
+      : [];
+  });
 }
 
 export function useUploadQueue() {
   const { uploadStream, reconcileAttachments } = useUploadAttachment();
-  const [uploads, setUploads] = useState<UploadItemState[]>([]);
-  const uploadsRef = useRef(uploads);
-  const nextId = useRef(0);
+  const store = useAppStore();
+  const metadata = useAppSelector(selectAllUploads);
+  const files = useRef(new Map<string, File>());
+  const sessionEnded = useRef(false);
   const cancelSignals = useRef(new Map<string, ReplaySubject<void>>());
-  const activeSubscriptions = useRef(new Set<Subscription>());
+  const activeBatches = useRef(
+    new Set<{ subscription: Subscription; reject: (error: Error) => void }>()
+  );
+  const uploads = useMemo(() => ownUploads(metadata, files.current), [metadata]);
+  const readUploads = useCallback(
+    () => ownUploads(selectAllUploads(store.getState()), files.current),
+    [store]
+  );
 
-  const updateUploads = useCallback((update: (current: UploadItemState[]) => UploadItemState[]) => {
-    const next = update(uploadsRef.current);
-    uploadsRef.current = next;
-    setUploads(next);
+  const removeUploads = useCallback(
+    (ids: string[]) => {
+      ids.forEach((id) => files.current.delete(id));
+      store.dispatch(uploadsRemoved(ids));
+    },
+    [store]
+  );
+  const assertSessionActive = useCallback(() => {
+    if (sessionEnded.current) throw new UploadSessionEndedError();
   }, []);
+
+  const applyEvent = useCallback(
+    (event: UploadQueueEvent) => {
+      if (sessionEnded.current) return;
+      switch (event.type) {
+        case 'started':
+          store.dispatch(uploadStarted(event.id));
+          break;
+        case 'progress':
+          store.dispatch(
+            uploadProgress({ id: event.id, loaded: event.loaded, total: event.total })
+          );
+          break;
+        case 'done':
+          store.dispatch(uploadCompleted(event.id));
+          break;
+        case 'failed':
+          store.dispatch(uploadFailed({ id: event.id, message: errorMessage(event.error) }));
+          break;
+        case 'cancelled':
+          store.dispatch(uploadCancelled(event.id));
+          break;
+      }
+      if (event.type === 'done' || event.type === 'failed' || event.type === 'cancelled')
+        cancelSignals.current.delete(event.id);
+    },
+    [store]
+  );
 
   const startJobs = useCallback(
     (transactionId: string, jobs: UploadQueueJob[]): Promise<UploadBatchResult> =>
-      new Promise((resolve) => {
-        if (jobs.length === 0) {
-          resolve({
-            succeededFiles: [],
-            failedFiles: [],
-            cancelledFiles: [],
-            unresolvedUploads: [],
-          });
+      new Promise((resolve, reject) => {
+        if (sessionEnded.current) {
+          reject(new UploadSessionEndedError());
           return;
         }
-
-        const holder = new Subscription();
-        activeSubscriptions.current.add(holder);
-
+        const batch = { subscription: new Subscription(), reject };
+        activeBatches.current.add(batch);
         const finish = () => {
-          activeSubscriptions.current.delete(holder);
-          const states = jobs
-            .map((job) => uploadsRef.current.find((item) => item.id === job.id))
-            .filter((item): item is UploadItemState => item !== undefined);
+          activeBatches.current.delete(batch);
+          if (sessionEnded.current) {
+            reject(new UploadSessionEndedError());
+            return;
+          }
+          const current = readUploads();
+          const ids = new Set(jobs.map((job) => job.id));
+          const states = current.filter((item) => ids.has(item.id));
           resolve({
             succeededFiles: states
               .filter((item) => item.status === 'done')
@@ -71,27 +141,15 @@ export function useUploadQueue() {
             cancelledFiles: states
               .filter((item) => item.status === 'cancelled')
               .map((item) => item.file),
-            unresolvedUploads: uploadsRef.current.filter((item) =>
-              RETRYABLE_STATUSES.has(item.status)
-            ),
+            unresolvedUploads: current.filter((item) => RETRYABLE_STATUSES.has(item.status)),
           });
         };
-
-        holder.add(
+        batch.subscription.add(
           uploadQueue$(jobs, (file) => uploadStream(transactionId, file)).subscribe({
-            next: (event) => {
-              updateUploads((current) => applyQueueEvent(current, event));
-              if (event.type === 'done' || event.type === 'failed' || event.type === 'cancelled') {
-                cancelSignals.current.delete(event.id);
-              }
-            },
+            next: applyEvent,
             error: (error: unknown) => {
-              updateUploads((current) =>
-                current.map((item) =>
-                  jobs.some((job) => job.id === item.id) && RETRYABLE_STATUSES.has(item.status)
-                    ? { ...item, status: 'failed', error }
-                    : item
-                )
+              jobs.forEach((job) =>
+                applyEvent({ type: 'failed', id: job.id, file: job.file, error })
               );
               finish();
             },
@@ -99,99 +157,132 @@ export function useUploadQueue() {
           })
         );
       }),
-    [updateUploads, uploadStream]
+    [applyEvent, readUploads, uploadStream]
   );
 
   const uploadFiles = useCallback(
-    (transactionId: string, files: File[]) => {
+    (transactionId: string, nextFiles: File[]) => {
+      assertSessionActive();
       if (!transactionId) throw new Error('Transação não encontrada para envio do anexo');
-      const jobs = files.map((file) => {
-        const id = `upload-${Date.now().toString(36)}-${nextId.current++}`;
+      removeUploads(
+        readUploads()
+          .filter((item) => item.status === 'done')
+          .map((item) => item.id)
+      );
+      const jobs = nextFiles.map((file) => {
+        const id = crypto.randomUUID();
         const cancel$ = new ReplaySubject<void>(1);
+        files.current.set(id, file);
         cancelSignals.current.set(id, cancel$);
+        store.dispatch(
+          uploadQueued({
+            id,
+            transactionId,
+            fileName: file.name,
+            loaded: 0,
+            total: file.size,
+            status: 'queued',
+          })
+        );
         return { id, file, cancel$ };
       });
-
-      updateUploads((current) => [
-        ...current.filter((item) => item.status !== 'done'),
-        ...jobs.map(({ id, file }) => ({ id, file, progress: 0, status: 'queued' as const })),
-      ]);
       return startJobs(transactionId, jobs);
     },
-    [startJobs, updateUploads]
+    [assertSessionActive, readUploads, removeUploads, startJobs, store]
   );
 
   const cancelUpload = useCallback((id: string) => {
     const signal = cancelSignals.current.get(id);
-    if (!signal) return;
-    signal.next();
-    signal.complete();
+    signal?.next();
+    signal?.complete();
   }, []);
-
   const cancelAllUploads = useCallback(() => {
-    for (const id of cancelSignals.current.keys()) cancelUpload(id);
-  }, [cancelUpload]);
+    const current = readUploads();
+    // Signal queued jobs first so dequeuing them cannot start an unwanted request.
+    current.filter((item) => item.status === 'queued').forEach((item) => cancelUpload(item.id));
+    current.filter((item) => item.status === 'uploading').forEach((item) => cancelUpload(item.id));
+  }, [cancelUpload, readUploads]);
+  const resetUploads = useCallback(() => {
+    cancelAllUploads();
+    removeUploads([...files.current.keys()]);
+  }, [cancelAllUploads, removeUploads]);
 
   const retryUpload = useCallback(
     (id: string, transactionId: string) => {
-      const item = uploadsRef.current.find((upload) => upload.id === id);
-      if (!item || !['failed', 'cancelled'].includes(item.status)) {
+      assertSessionActive();
+      const item = readUploads().find((upload) => upload.id === id);
+      if (!item || !['failed', 'cancelled'].includes(item.status))
         return Promise.resolve({
           succeededFiles: [],
           failedFiles: [],
           cancelledFiles: [],
-          unresolvedUploads: uploadsRef.current.filter((upload) =>
+          unresolvedUploads: readUploads().filter((upload) =>
             RETRYABLE_STATUSES.has(upload.status)
           ),
         });
-      }
-
       const cancel$ = new ReplaySubject<void>(1);
       cancelSignals.current.set(id, cancel$);
-      updateUploads((current) =>
-        current.map((upload) =>
-          upload.id === id ? { ...upload, progress: 0, status: 'queued', error: undefined } : upload
-        )
+      store.dispatch(
+        uploadQueued({
+          id,
+          transactionId,
+          fileName: item.file.name,
+          loaded: 0,
+          total: item.file.size,
+          status: 'queued',
+          error: undefined,
+        })
       );
       return startJobs(transactionId, [{ id, file: item.file, cancel$ }]);
     },
-    [startJobs, updateUploads]
+    [assertSessionActive, readUploads, startJobs, store]
   );
 
   const reconcile = useCallback(
-    (transactionId: string): Promise<Attachment[]> => reconcileAttachments(transactionId),
-    [reconcileAttachments]
+    async (transactionId: string): Promise<Attachment[]> => {
+      assertSessionActive();
+      try {
+        const result = await reconcileAttachments(transactionId);
+        assertSessionActive();
+        return result;
+      } catch (error) {
+        assertSessionActive();
+        throw error;
+      }
+    },
+    [assertSessionActive, reconcileAttachments]
   );
-
-  const resetUploads = useCallback(() => {
-    cancelAllUploads();
-    uploadsRef.current = [];
-    setUploads([]);
-  }, [cancelAllUploads]);
-
   const markAlreadyUploaded = useCallback(
-    (files: File[]) => {
-      const resolved = new Set(files);
-      updateUploads((current) =>
-        current.map((item) =>
-          resolved.has(item.file) && (item.status === 'failed' || item.status === 'cancelled')
-            ? { ...item, status: 'done', progress: 100, error: undefined }
-            : item
+    (resolvedFiles: File[]) => {
+      readUploads()
+        .filter(
+          (item) =>
+            resolvedFiles.includes(item.file) && ['failed', 'cancelled'].includes(item.status)
         )
-      );
+        .forEach((item) => store.dispatch(uploadCompleted(item.id)));
     },
-    [updateUploads]
+    [readUploads, store]
   );
 
-  useEffect(
-    () => () => {
-      activeSubscriptions.current.forEach((subscription) => subscription.unsubscribe());
-      activeSubscriptions.current.clear();
-      cancelSignals.current.forEach((signal) => signal.complete());
-      cancelSignals.current.clear();
-    },
-    []
-  );
+  const endSession = useCallback(() => {
+    sessionEnded.current = true;
+    for (const batch of activeBatches.current) {
+      batch.subscription.unsubscribe();
+      batch.reject(new UploadSessionEndedError());
+    }
+    activeBatches.current.clear();
+    cancelSignals.current.forEach((signal) => signal.complete());
+    cancelSignals.current.clear();
+    removeUploads([...files.current.keys()]);
+  }, [removeUploads]);
+  useEffect(() => {
+    sessionEnded.current = false;
+    const unregister = registerUploadCancellation(endSession);
+    return () => {
+      unregister();
+      endSession();
+    };
+  }, [endSession]);
 
   return {
     uploads,
@@ -204,26 +295,4 @@ export function useUploadQueue() {
     resetUploads,
     markAlreadyUploaded,
   };
-}
-
-function applyQueueEvent(current: UploadItemState[], event: UploadQueueEvent): UploadItemState[] {
-  return current.map((item) => {
-    if (item.id !== event.id) return item;
-    switch (event.type) {
-      case 'started':
-        return { ...item, status: 'uploading', error: undefined };
-      case 'progress':
-        return {
-          ...item,
-          status: 'uploading',
-          progress: progressPercent(event.loaded, event.total),
-        };
-      case 'done':
-        return { ...item, status: 'done', progress: 100, error: undefined };
-      case 'failed':
-        return { ...item, status: 'failed', error: event.error };
-      case 'cancelled':
-        return { ...item, status: 'cancelled' };
-    }
-  });
 }

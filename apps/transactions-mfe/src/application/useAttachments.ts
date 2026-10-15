@@ -1,9 +1,11 @@
 import { useCallback, useState } from 'react';
-import { AttachmentService } from '@bytebank/api-client';
+import { useDeleteAttachment } from '@bytebank/api-client';
 import type { Attachment } from '@bytebank/core';
 import { useUploadQueue, type UploadBatchResult } from './useUploadQueue';
+import { UploadSessionEndedError } from './uploadSession';
 
 export function useAttachments(transactionId?: string) {
+  const { mutateAsync: deleteAttachment } = useDeleteAttachment();
   const [uploadedAttachments, setUploadedAttachments] = useState<Attachment[]>([]);
   const [removing, setRemoving] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +18,7 @@ export function useAttachments(transactionId?: string) {
     cancelAllUploads,
     resetUploads,
     markAlreadyUploaded,
+    reconcile,
   } = useUploadQueue();
 
   const loadAttachments = useCallback(
@@ -27,14 +30,14 @@ export function useAttachments(transactionId?: string) {
 
       setIsLoading(true);
       try {
-        const attachments = await AttachmentService.list(id);
+        const attachments = await reconcile(id);
         setUploadedAttachments(attachments);
         return attachments;
       } finally {
         setIsLoading(false);
       }
     },
-    [transactionId]
+    [reconcile, transactionId]
   );
 
   const reconcileUploadResult = useCallback(
@@ -62,7 +65,8 @@ export function useAttachments(transactionId?: string) {
           cancelledFiles: result.cancelledFiles.filter((file) => !resolved.has(file)),
           unresolvedUploads: result.unresolvedUploads.filter((item) => !resolved.has(item.file)),
         };
-      } catch {
+      } catch (error) {
+        if (error instanceof UploadSessionEndedError) throw error;
         // Keep per-file upload results visible if reconciliation itself fails.
         return result;
       }
@@ -98,7 +102,7 @@ export function useAttachments(transactionId?: string) {
 
       setRemoving(attachmentId);
       try {
-        await AttachmentService.remove(id, attachmentId);
+        await deleteAttachment({ id, attachmentId });
         setUploadedAttachments((current) =>
           current.filter((attachment) => attachment.id !== attachmentId)
         );
@@ -106,7 +110,7 @@ export function useAttachments(transactionId?: string) {
         setRemoving(null);
       }
     },
-    [transactionId]
+    [deleteAttachment, transactionId]
   );
 
   const resetAttachments = useCallback(() => {

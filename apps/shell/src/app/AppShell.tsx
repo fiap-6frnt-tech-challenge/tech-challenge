@@ -2,11 +2,13 @@
 
 import { usePathname } from 'next/navigation';
 import { Sidebar } from '@bytebank/design-system';
+import { selectIsAuthenticated, useAppSelector } from '@bytebank/stores';
 import { AppHeader } from '../components/AppHeader';
 import { isPublicAuthRoute } from './AppShell.routes';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   if (isPublicAuthRoute(pathname)) {
     return <div className="h-dvh overflow-y-auto bg-background">{children}</div>;
@@ -29,7 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <main id="main" tabIndex={-1} className="w-full py-lg h-full overflow-y-auto">
-            {children}
+            {isAuthenticated ? children : null}
           </main>
         </div>
       </div>

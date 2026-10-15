@@ -36,7 +36,7 @@
 | 01  | 🟢     | Fundação reativa: RxJS, barramento de eventos, hooks | Dev 2 | 1.5 dia | P0   | ✅ dia 1           | [01-reactive-foundation.md](./01-reactive-foundation.md) |
 | 02  | 🟢     | Busca e filtros reativos + cancelamento              | Dev 3 | 1.5 dia | P0   | ⬅ 01               | [02-reactive-search.md](./02-reactive-search.md)         |
 | 03  | ⏳     | Uploads como stream                                  | Dev 2 | 2 dias  | P0   | ⬅ 01               | [03-upload-stream.md](./03-upload-stream.md)             |
-| 04  | ⏳     | Redux avançado                                       | Dev 2 | 1.5 dia | P0   | ⬅ 01, 03 (parcial) | [04-redux-patterns.md](./04-redux-patterns.md)           |
+| 04  | 🟢     | Redux avançado                                       | Dev 2 | 1.5 dia | P0   | ⬅ 01, 03 (parcial) | [04-redux-patterns.md](./04-redux-patterns.md)           |
 | 05  | ⏳     | Login: limite de tentativas e bloqueio               | Dev 1 | 1.5 dia | P0   | ✅ dia 1           | [05-login-rate-limit.md](./05-login-rate-limit.md)       |
 | 06  | ⏳     | Política de senha + HIBP + bcrypt 12                 | Dev 1 | 1 dia   | P0   | ✅                 | [06-password-policy.md](./06-password-policy.md)         |
 | 07  | ⏳     | Sessão: expiração, revogação, logout, inatividade    | Dev 1 | 1.5 dia | P0   | ⬅ 01, 04           | [07-session-hardening.md](./07-session-hardening.md)     |
@@ -72,9 +72,9 @@ tudo ─→ 10 (testes/smoke)
 
 ### Estado
 
-- [ ] Notificações e uploads normalizados com `createEntityAdapter`; seletores com `createSelector`
-- [ ] Listener middleware: logout limpa TanStack, Redux e uploads
-- [ ] Redux DevTools desligado em produção
+- [x] Notificações e uploads normalizados com `createEntityAdapter`; seletores com `createSelector`
+- [x] Listener middleware: logout limpa TanStack, Redux e uploads
+- [x] Redux DevTools desligado em produção
 
 ### Autenticação
 

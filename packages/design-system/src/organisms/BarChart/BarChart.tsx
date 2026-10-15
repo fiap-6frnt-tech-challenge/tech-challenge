@@ -1,5 +1,7 @@
 'use client';
 
+import '../chartRuntime';
+
 import {
   BarChart as RechartsBarChart,
   Bar,

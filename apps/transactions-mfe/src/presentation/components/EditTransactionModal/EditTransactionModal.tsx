@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AttachmentList, FileUpload, Modal } from '@bytebank/design-system';
-import { showFeedback, useAppDispatch } from '@bytebank/stores';
+import { showFeedback, useAppDispatch, ClientSessionEndedError } from '@bytebank/stores';
 import { EditTransactionModalProps } from './IEditTransactionModal';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
 import { useAttachments } from '../../../application/useAttachments';
@@ -39,7 +39,8 @@ export function EditTransactionModal({
       return;
     }
 
-    void loadAttachments(transactionId).catch(() => {
+    void loadAttachments(transactionId).catch((error: unknown) => {
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',
@@ -65,7 +66,8 @@ export function EditTransactionModal({
           })
         );
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',
@@ -82,16 +84,8 @@ export function EditTransactionModal({
     try {
       const result = await retryUpload(uploadId, transactionId);
       if (result.succeededFiles.length > 0) setHasAttachmentChanges(true);
-      if (result.unresolvedUploads.length === 0) {
-        dispatch(
-          showFeedback({
-            type: 'success',
-            title: 'Anexos enviados',
-            message: 'A lista de anexos foi atualizada.',
-          })
-        );
-      }
-    } catch {
+    } catch (error) {
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',
@@ -113,7 +107,8 @@ export function EditTransactionModal({
     try {
       await removeAttachment(attachmentId, transactionId);
       setHasAttachmentChanges(true);
-    } catch {
+    } catch (error) {
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',

@@ -2,7 +2,7 @@
 
 import { ConfirmTransactionModal } from '../ConfirmTransactionModal';
 import { Button, FileUpload, Modal } from '@bytebank/design-system';
-import { showFeedback, useAppDispatch } from '@bytebank/stores';
+import { showFeedback, useAppDispatch, ClientSessionEndedError } from '@bytebank/stores';
 import type { ReactElement } from 'react';
 import { useRef, useState } from 'react';
 import type {
@@ -12,12 +12,6 @@ import type {
 import { TransactionForm } from '../TransactionForm/TransactionForm';
 import { useSaveTransactionWithAttachments } from '../../../application/useSaveTransactionWithAttachments';
 import type { NewTransactionModalProps } from './INewTransactionModal';
-
-const SUCCESS_FEEDBACK = {
-  type: 'success' as const,
-  title: 'Transação adicionada!',
-  message: 'Seu extrato foi atualizado.',
-};
 
 const ERROR_FEEDBACK = {
   type: 'error' as const,
@@ -71,9 +65,9 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
       setPendingFiles([]);
       setSavedTransactionId(null);
       resetUploads();
-      dispatch(showFeedback(SUCCESS_FEEDBACK));
       onCancel();
-    } catch {
+    } catch (error) {
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(showFeedback(ERROR_FEEDBACK));
     } finally {
       setIsSubmitting(false);
@@ -89,10 +83,10 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
         setSavedTransactionId(null);
         setPendingFiles([]);
         resetUploads();
-        dispatch(showFeedback(SUCCESS_FEEDBACK));
         onCancel();
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',

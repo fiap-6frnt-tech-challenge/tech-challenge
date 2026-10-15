@@ -8,6 +8,7 @@ import { store } from '@bytebank/stores';
 import { queryClient } from '@bytebank/api-client';
 import { FeedbackHost } from './FeedbackHost';
 import { SessionSync } from './SessionSync';
+import { ClientEffects } from './ClientEffects';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -20,6 +21,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <SessionProvider>
+        <ClientEffects />
         <SessionSync />
         <QueryClientProvider client={queryClient}>
           {children}

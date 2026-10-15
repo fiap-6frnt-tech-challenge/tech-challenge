@@ -1,5 +1,7 @@
 'use client';
 
+import '../chartRuntime';
+
 import { useRef, useEffect } from 'react';
 import {
   PieChart as RechartsPieChart,
