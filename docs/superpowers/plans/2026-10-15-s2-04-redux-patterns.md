@@ -57,6 +57,22 @@
 
 **Files:** `e2e/redux-patterns.spec.ts`, task/sprint status, stores README, this plan.
 
-- [ ] Add E2E for a single success notification per creation, FIFO dismissal, and production DevTools inactivity. Existing auth/upload flows must pass.
-- [ ] Run full tests, types, lint, architecture check, production build and Chromium/Firefox E2E.
-- [ ] Review the full branch independently, fix confirmed blockers with regressions, document evidence and commit. Preserve the worktree for PR review.
+- [x] Add E2E for a single success notification per creation, FIFO dismissal, and production DevTools inactivity. Existing auth/upload flows must pass.
+- [x] Run full tests, types, lint, architecture check, production build and Chromium/Firefox E2E.
+- [x] Review the full branch independently, fix confirmed blockers with regressions, document evidence and commit. Preserve the worktree for PR review.
+
+## Final verification — 2026-10-15
+
+- Full tests, type-check and lint: each completed 13/13 Turbo tasks. Lint retains existing legacy-import warnings, with no errors.
+- Architecture: no violations across 442 modules and 1181 dependencies.
+- Production build: 8/8 tasks; full Playwright suite: 20/20 across Chromium and Firefox, backed by disposable PostgreSQL 16.
+- Independent review: no remaining blockers after follow-up review of confirmed fixes.
+- Evidence and implementation status: `docs/phase-4/sprint-2-state-reactive/04-redux-patterns.md`.
+
+### Adjustments supported by review and production failures
+
+- Added a client-session generation guard to suppress stale mutation events, optimistic deletion rollback and UI feedback. Regression tests cover late success/failure and attachment removal.
+- Unmounted private shell content when auth resets: otherwise a mounted account overview observer refetched private data after QueryClient.clear(). The production E2E failed before this fix and passed after it.
+- Applied the DevTools policy to Recharts' internal Redux stores and marked chartRuntime.ts as a side effect. The initial production E2E observed three extension connections; the final suite observes zero.
+
+The branch remains stacked on S2-03 (`upload-stream`); integrate that dependency before targeting the final S2-04 diff at `phase-4`.

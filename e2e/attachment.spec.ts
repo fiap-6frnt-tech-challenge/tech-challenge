@@ -26,6 +26,9 @@ test('uploads, persists, and removes an attachment from an existing transaction'
   await chooser.setFiles(attachment);
 
   await expect(page.getByText('comprovante.pdf')).toBeVisible();
+  const uploaded = page.getByRole('dialog', { name: 'Anexo enviado' });
+  await expect(uploaded).toBeVisible();
+  await uploaded.getByRole('button', { name: 'Fechar', exact: true }).last().click();
   await expect(page.getByRole('button', { name: /atualizar transação/i })).toBeEnabled();
   await page.getByRole('button', { name: /atualizar transação/i }).click();
   await expect(page.getByText('Transação atualizada')).toBeVisible();
@@ -38,6 +41,9 @@ test('uploads, persists, and removes an attachment from an existing transaction'
 
   await page.getByRole('button', { name: /remover anexo: comprovante.pdf/i }).click();
   await expect(page.getByText('comprovante.pdf')).toBeHidden();
+  const removed = page.getByRole('dialog', { name: 'Anexo removido' });
+  await expect(removed).toBeVisible();
+  await removed.getByRole('button', { name: 'Fechar', exact: true }).last().click();
 
   const updateButton = page.getByRole('button', { name: /atualizar transação/i });
   await expect(updateButton).toBeEnabled();

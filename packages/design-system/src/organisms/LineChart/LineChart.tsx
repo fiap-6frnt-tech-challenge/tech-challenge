@@ -1,5 +1,7 @@
 'use client';
 
+import '../chartRuntime';
+
 import { useId } from 'react';
 import {
   AreaChart as RechartsAreaChart,
