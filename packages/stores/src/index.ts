@@ -3,6 +3,7 @@ export * from './uiSlice';
 export * from './notificationsSlice';
 export * from './uploadsSlice';
 export * from './uploadCancellation';
+export * from './clientSession';
 export * from './store';
 export * from './hooks';
 export * from './events/domainEvents';

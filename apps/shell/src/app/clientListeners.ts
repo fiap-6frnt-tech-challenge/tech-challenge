@@ -9,6 +9,7 @@ import {
   type AppStartListening,
   type AppStore,
   selectHasPendingUploads,
+  invalidateClientSession,
 } from '@bytebank/stores';
 
 export function registerPendingUploadWarning(
@@ -36,6 +37,7 @@ export function registerClientListeners({
   const stopLogout = startListening({
     matcher: isAnyOf(logout.pending, clearSession),
     effect: (_action, api) => {
+      invalidateClientSession();
       try {
         cancelUploads();
       } finally {

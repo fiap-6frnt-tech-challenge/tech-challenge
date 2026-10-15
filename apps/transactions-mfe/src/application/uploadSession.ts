@@ -1,6 +1,8 @@
-export class UploadSessionEndedError extends Error {
+import { ClientSessionEndedError } from '@bytebank/stores';
+
+export class UploadSessionEndedError extends ClientSessionEndedError {
   constructor() {
-    super('A sessão de upload foi encerrada.');
+    super();
     this.name = 'UploadSessionEndedError';
   }
 }

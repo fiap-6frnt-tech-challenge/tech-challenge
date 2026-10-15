@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
-import { AttachmentService } from '@bytebank/api-client';
+import { useDeleteAttachment } from '@bytebank/api-client';
 import type { Attachment } from '@bytebank/core';
 import { useUploadQueue, type UploadBatchResult } from './useUploadQueue';
 import { UploadSessionEndedError } from './uploadSession';
 
 export function useAttachments(transactionId?: string) {
+  const { mutateAsync: deleteAttachment } = useDeleteAttachment();
   const [uploadedAttachments, setUploadedAttachments] = useState<Attachment[]>([]);
   const [removing, setRemoving] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +102,7 @@ export function useAttachments(transactionId?: string) {
 
       setRemoving(attachmentId);
       try {
-        await AttachmentService.remove(id, attachmentId);
+        await deleteAttachment({ id, attachmentId });
         setUploadedAttachments((current) =>
           current.filter((attachment) => attachment.id !== attachmentId)
         );
@@ -109,7 +110,7 @@ export function useAttachments(transactionId?: string) {
         setRemoving(null);
       }
     },
-    [transactionId]
+    [deleteAttachment, transactionId]
   );
 
   const resetAttachments = useCallback(() => {

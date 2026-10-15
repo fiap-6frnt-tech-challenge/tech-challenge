@@ -4,13 +4,19 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Observable, Subject } from 'rxjs';
-import { AttachmentService, type AttachmentUploadEvent } from '@bytebank/api-client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  AttachmentService,
+  AttachmentHttpGateway,
+  type AttachmentUploadEvent,
+} from '@bytebank/api-client';
 import {
   cancelPendingUploads,
   createAppStore,
   selectAllUploads,
   selectHasPendingUploads,
   selectOverallUploadProgress,
+  invalidateClientSession,
 } from '@bytebank/stores';
 import { useUploadQueue } from './useUploadQueue';
 import { useAttachments } from './useAttachments';
@@ -27,24 +33,27 @@ const aborted: File[] = [];
 const file = (name: string) => new File([new Uint8Array(100)], name, { type: 'application/pdf' });
 function setup(strict = false) {
   const { store } = createAppStore();
+  const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <Provider store={store}>{strict ? <StrictMode>{children}</StrictMode> : children}</Provider>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        {strict ? <StrictMode>{children}</StrictMode> : children}
+      </QueryClientProvider>
+    </Provider>
   );
   return { store, wrapper };
 }
 function done(file: File) {
-  transfers
-    .get(file)!
-    .next({
-      type: 'done',
-      attachment: {
-        id: file.name,
-        name: file.name,
-        size: file.size,
-        mimeType: file.type,
-        url: `/uploads/${file.name}`,
-      },
-    });
+  transfers.get(file)!.next({
+    type: 'done',
+    attachment: {
+      id: file.name,
+      name: file.name,
+      size: file.size,
+      mimeType: file.type,
+      url: `/uploads/${file.name}`,
+    },
+  });
   transfers.get(file)!.complete();
 }
 beforeEach(() => {
@@ -72,6 +81,29 @@ afterEach(() => {
 });
 
 describe('normalized upload queue integration', () => {
+  it('rejects attachment removal errors from the session that has ended', async () => {
+    let reject!: (error: Error) => void;
+    vi.spyOn(AttachmentHttpGateway.prototype, 'remove').mockReturnValue(
+      new Promise((_resolve, fail) => {
+        reject = fail;
+      })
+    );
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useAttachments('tx'), { wrapper });
+    let outcome!: Promise<unknown>;
+    act(() => {
+      outcome = result.current.removeAttachment('att').catch((error: unknown) => error);
+    });
+    await act(async () => {});
+    invalidateClientSession();
+    act(() => cancelPendingUploads());
+    let error: unknown;
+    await act(async () => {
+      reject(new Error('Late remove failure'));
+      error = await outcome;
+    });
+    expect(error).toMatchObject({ name: 'ClientSessionEndedError' });
+  });
   it('stores serializable metadata and derives progress from the shared state', async () => {
     const { store, wrapper } = setup(true);
     const { result } = renderHook(() => useUploadQueue(), { wrapper });

@@ -2,7 +2,7 @@
 
 import { ConfirmTransactionModal } from '../ConfirmTransactionModal';
 import { Button, FileUpload, Modal } from '@bytebank/design-system';
-import { showFeedback, useAppDispatch } from '@bytebank/stores';
+import { showFeedback, useAppDispatch, ClientSessionEndedError } from '@bytebank/stores';
 import type { ReactElement } from 'react';
 import { useRef, useState } from 'react';
 import type {
@@ -11,7 +11,6 @@ import type {
 } from '../TransactionForm/ITransactionForm';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
 import { useSaveTransactionWithAttachments } from '../../../application/useSaveTransactionWithAttachments';
-import { UploadSessionEndedError } from '../../../application/uploadSession';
 import type { NewTransactionModalProps } from './INewTransactionModal';
 
 const ERROR_FEEDBACK = {
@@ -68,7 +67,7 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
       resetUploads();
       onCancel();
     } catch (error) {
-      if (error instanceof UploadSessionEndedError) return;
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(showFeedback(ERROR_FEEDBACK));
     } finally {
       setIsSubmitting(false);
@@ -87,7 +86,7 @@ export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalPro
         onCancel();
       }
     } catch (error) {
-      if (error instanceof UploadSessionEndedError) return;
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',

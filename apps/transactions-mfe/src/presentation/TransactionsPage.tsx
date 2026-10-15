@@ -8,7 +8,7 @@ import {
   useDeleteTransaction,
   useUpdateTransaction,
 } from '@bytebank/api-client';
-import { showFeedback, useAppDispatch } from '@bytebank/stores';
+import { showFeedback, useAppDispatch, ClientSessionEndedError } from '@bytebank/stores';
 import type { Transaction } from '@bytebank/shared';
 import { TransactionFilters, DEFAULT_FILTERS } from './components/TransactionFilters';
 import { TransactionList } from './components/TransactionList';
@@ -82,7 +82,8 @@ export default function TransactionsPage() {
     try {
       await deleteTransaction(pendingDelete.id);
       setPendingDelete(null);
-    } catch {
+    } catch (error) {
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',
@@ -101,7 +102,8 @@ export default function TransactionsPage() {
     try {
       await updateTransaction({ id: pendingEdit.id, data });
       setPendingEdit(null);
-    } catch {
+    } catch (error) {
+      if (error instanceof ClientSessionEndedError) return;
       dispatch(
         showFeedback({
           type: 'error',
