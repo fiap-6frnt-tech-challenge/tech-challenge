@@ -81,6 +81,7 @@ export interface AttachmentRepository {
 export interface UserRepository {
   findByEmail(email: string): Promise<User | null>;
   create(data: NewUser): Promise<User | null>;
+  updatePasswordHash(id: string, passwordHash: string): Promise<void>;
 }
 
 export interface FileStorage {
@@ -93,6 +94,11 @@ export interface PasswordHasher {
   hash(plain: string): Promise<string>;
   verify(plain: string, hash: string): Promise<boolean>;
   verifyDummy(plain: string): Promise<void>;
+  needsRehash(hash: string): boolean;
+}
+
+export interface PasswordBreachChecker {
+  isBreached(plain: string): Promise<boolean>;
 }
 
 export interface RateLimiter {

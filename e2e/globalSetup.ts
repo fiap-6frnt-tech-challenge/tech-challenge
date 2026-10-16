@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { hash } from 'bcryptjs';
 import { eq, inArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -5,11 +6,15 @@ import { Pool } from 'pg';
 import * as schema from '../apps/shell/src/db/schema';
 import { attachments, authAttempts, transactions, users } from '../apps/shell/src/db/schema';
 
+// Via env para os workers do Playwright herdarem a mesma senha.
+const e2ePassword =
+  (process.env.E2E_USER_PASSWORD ??= `e2e-${randomBytes(18).toString('base64url')}`);
+
 export const E2E_USER = {
   id: 'e2e-user',
   name: 'E2E User',
   email: 'e2e.user@bytebank.test',
-  password: 'Senha123!',
+  password: e2ePassword,
 };
 
 const databaseUrl =
@@ -77,7 +82,7 @@ async function globalSetup() {
       id: E2E_USER.id,
       name: E2E_USER.name,
       email: E2E_USER.email,
-      passwordHash: await hash(E2E_USER.password, 10),
+      passwordHash: await hash(E2E_USER.password, 12),
     });
 
     await db.insert(transactions).values(seededTransactions);

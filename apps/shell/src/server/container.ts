@@ -22,6 +22,7 @@ import { DrizzleUserRepository } from './infrastructure/db/DrizzleUserRepository
 import { PostgresRateLimiter } from './infrastructure/db/PostgresRateLimiter';
 import { BcryptPasswordHasher } from './infrastructure/security/BcryptPasswordHasher';
 import { CloudflareTurnstileVerifier } from './infrastructure/security/CloudflareTurnstileVerifier';
+import { HibpBreachChecker } from './infrastructure/security/HibpBreachChecker';
 import { HmacRateLimitKeyGenerator } from './infrastructure/security/HmacRateLimitKeyGenerator';
 import { getRateLimitPolicies } from './infrastructure/security/rateLimitPolicy';
 import { LocalFileStorage } from './infrastructure/storage/LocalFileStorage';
@@ -45,7 +46,8 @@ const attachments = new DrizzleAttachmentRepository(db);
 const users = new DrizzleUserRepository(db);
 const clock = new SystemClock('America/Sao_Paulo');
 const ids = new CryptoIdGenerator();
-const passwords = new BcryptPasswordHasher(10);
+const passwords = new BcryptPasswordHasher(12);
+const breachChecker = new HibpBreachChecker();
 const rateLimitKeys = new HmacRateLimitKeyGenerator(
   () =>
     process.env.BLIND_INDEX_KEY ??
@@ -68,7 +70,7 @@ export const container = {
   addAttachment: new AddAttachment(transactions, attachments, storage, ids),
   listAttachments: new ListAttachments(attachments),
   removeAttachment: new RemoveAttachment(attachments, storage),
-  registerUser: new RegisterUser(users, passwords, ids, rateLimiter, rateLimitKeys),
+  registerUser: new RegisterUser(users, passwords, ids, rateLimiter, rateLimitKeys, breachChecker),
   authenticateUser: new AuthenticateUser(
     users,
     passwords,

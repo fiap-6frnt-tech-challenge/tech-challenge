@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
 import { ConflictError, RateLimitedError, ValidationError } from '@bytebank/core';
+import { BREACHED_PASSWORD_MESSAGE } from '@bytebank/core/application';
 import { registerSchema } from '@bytebank/core/schemas';
 
 const mocks = vi.hoisted(() => ({ register: vi.fn(), auth: vi.fn() }));
@@ -11,7 +12,7 @@ vi.mock('@/server/container', () => ({
 
 import { POST } from './route';
 
-const input = { name: 'Ana Souza', email: 'ana@bytebank.com', password: 'segredo123' };
+const input = { name: 'Ana Souza', email: 'ana@bytebank.com', password: 'Bytebank-Teste-2026' };
 const user = { id: 'user-1', name: input.name, email: input.email, passwordHash: 'secret-hash' };
 const request = (body: string, forwardedFor = '203.0.113.20, 10.0.0.1') =>
   new Request('http://localhost/api/auth/register', {
@@ -53,6 +54,20 @@ describe('POST /api/auth/register', () => {
     expect(response.status).toBe(422);
     await expect(response.json()).resolves.toMatchObject({
       issues: { fieldErrors: { password: expect.any(Array) } },
+    });
+  });
+
+  it('returns 422 with a clear password message for a breached password', async () => {
+    mocks.register.mockRejectedValue(
+      new ValidationError([
+        { code: 'custom', path: ['password'], message: BREACHED_PASSWORD_MESSAGE },
+      ])
+    );
+    const response = await POST(request(JSON.stringify(input)));
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({
+      error: 'Dados inválidos',
+      issues: { formErrors: [], fieldErrors: { password: [BREACHED_PASSWORD_MESSAGE] } },
     });
   });
 

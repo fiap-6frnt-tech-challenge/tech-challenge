@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { ConflictError, RateLimitedError, TurnstileRequiredError } from '../../domain';
+import {
+  ConflictError,
+  RateLimitedError,
+  TurnstileRequiredError,
+  ValidationError,
+} from '../../domain';
 import type {
   CaptchaVerifier,
+  PasswordBreachChecker,
   PasswordHasher,
   RateLimiter,
   RateLimitKeyGenerator,
@@ -9,7 +15,9 @@ import type {
 } from '../ports';
 import { FakeClock, SequentialIdGenerator } from '../testing';
 import type { User } from '../types';
-import { AuthenticateUser, RegisterUser } from './users';
+import { AuthenticateUser, BREACHED_PASSWORD_MESSAGE, RegisterUser } from './users';
+
+const strongPassword = 'Bytebank-Teste-2026';
 
 function setup(existing: User | null = null) {
   let stored = existing;
@@ -57,23 +65,41 @@ function setup(existing: User | null = null) {
     registerIp: (ipAddress) => `register:ip:${ipAddress}`,
   };
   let dummyVerifications = 0;
+  const passwordHashUpdates: Array<{ id: string; passwordHash: string }> = [];
   const users: UserRepository = {
     findByEmail: async (email) => (stored?.email === email ? stored : null),
     create: async (data) => {
       stored = data;
       return stored;
     },
+    updatePasswordHash: async (id, passwordHash) => {
+      passwordHashUpdates.push({ id, passwordHash });
+      if (stored?.id === id) stored = { ...stored, passwordHash };
+    },
   };
   const passwords: PasswordHasher = {
     hash: async (value) => `hashed:${value}`,
-    verify: async (plain, hash) => hash === `hashed:${plain}`,
+    verify: async (plain, hash) => hash === `hashed:${plain}` || hash === `legacy:${plain}`,
     verifyDummy: async () => {
       dummyVerifications += 1;
+    },
+    needsRehash: (hash) => hash.startsWith('legacy:'),
+  };
+  const breachedPasswords = new Set<string>();
+  const breachChecks: string[] = [];
+  const breachChecker: PasswordBreachChecker = {
+    isBreached: async (plain) => {
+      breachChecks.push(plain);
+      return breachedPasswords.has(plain);
     },
   };
   return {
     users,
     passwords,
+    breachChecker,
+    breachedPasswords,
+    breachChecks,
+    passwordHashUpdates,
     rateLimiter,
     rateLimitKeys,
     attempts,
@@ -88,22 +114,31 @@ function setup(existing: User | null = null) {
   };
 }
 
+function registerUser(deps: ReturnType<typeof setup>, ids = new SequentialIdGenerator()) {
+  return new RegisterUser(
+    deps.users,
+    deps.passwords,
+    ids,
+    deps.rateLimiter,
+    deps.rateLimitKeys,
+    deps.breachChecker
+  );
+}
+
 describe('user use cases', () => {
   it('registers a normalized user with hashed password and generated id', async () => {
     const deps = setup();
-    const user = await new RegisterUser(
-      deps.users,
-      deps.passwords,
-      new SequentialIdGenerator('user'),
-      deps.rateLimiter,
-      deps.rateLimitKeys
-    ).execute({ name: ' Ana ', email: 'ANA@example.com', password: 'password123' }, '127.0.0.1');
+    const user = await registerUser(deps, new SequentialIdGenerator('user')).execute(
+      { name: ' Ana ', email: 'ANA@example.com', password: strongPassword },
+      '127.0.0.1'
+    );
     expect(user).toEqual({
       id: 'user-1',
       name: 'Ana',
       email: 'ana@example.com',
-      passwordHash: 'hashed:password123',
+      passwordHash: `hashed:${strongPassword}`,
     });
+    expect(deps.breachChecks).toEqual([strongPassword]);
   });
 
   it('rejects duplicate email and invalid registration data', async () => {
@@ -111,19 +146,13 @@ describe('user use cases', () => {
       id: 'u1',
       name: 'Ana',
       email: 'ana@example.com',
-      passwordHash: 'hashed:password123',
+      passwordHash: `hashed:${strongPassword}`,
     };
     const deps = setup(existing);
-    const register = new RegisterUser(
-      deps.users,
-      deps.passwords,
-      new SequentialIdGenerator(),
-      deps.rateLimiter,
-      deps.rateLimitKeys
-    );
+    const register = registerUser(deps);
     await expect(
       register.execute(
-        { name: 'Ana', email: 'ANA@example.com', password: 'password123' },
+        { name: 'Ana', email: 'ANA@example.com', password: strongPassword },
         '127.0.0.1'
       )
     ).rejects.toBeInstanceOf(ConflictError);
@@ -132,15 +161,42 @@ describe('user use cases', () => {
     ).rejects.toHaveProperty('issues');
   });
 
+  it('rejects passwords shorter than 12 characters before checking for breaches', async () => {
+    const deps = setup();
+
+    const error = await registerUser(deps)
+      .execute({ name: 'Ana', email: 'ana@example.com', password: 'segredo1234' }, '127.0.0.1')
+      .catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).issues).toEqual([
+      expect.objectContaining({ path: ['password'], code: 'too_small', minimum: 12 }),
+    ]);
+    expect(deps.breachChecks).toEqual([]);
+    expect(deps.stored).toBeNull();
+  });
+
+  it('rejects a breached password with a clear message and creates no user', async () => {
+    const deps = setup();
+    deps.breachedPasswords.add('password123456');
+
+    const error = await registerUser(deps)
+      .execute({ name: 'Ana', email: 'ana@example.com', password: 'password123456' }, '127.0.0.1')
+      .catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).issues).toEqual([
+      { code: 'custom', path: ['password'], message: BREACHED_PASSWORD_MESSAGE },
+    ]);
+    expect(deps.stored).toBeNull();
+  });
+
   it('authenticates valid credentials and returns null for either failure', async () => {
     const deps = setup();
-    const user = await new RegisterUser(
-      deps.users,
-      deps.passwords,
-      new SequentialIdGenerator(),
-      deps.rateLimiter,
-      deps.rateLimitKeys
-    ).execute({ name: 'Ana', email: 'ana@example.com', password: 'password123' }, '127.0.0.1');
+    const user = await registerUser(deps).execute(
+      { name: 'Ana', email: 'ana@example.com', password: strongPassword },
+      '127.0.0.1'
+    );
     const authenticate = new AuthenticateUser(
       deps.users,
       deps.passwords,
@@ -148,11 +204,12 @@ describe('user use cases', () => {
       deps.rateLimitKeys
     );
     await expect(
-      authenticate.execute('ANA@example.com', 'password123', '127.0.0.1')
+      authenticate.execute('ANA@example.com', strongPassword, '127.0.0.1')
     ).resolves.toEqual(user);
+    expect(deps.passwordHashUpdates).toEqual([]);
     expect(deps.attempts.has('login:email:ana@example.com')).toBe(false);
     await expect(
-      authenticate.execute('missing@example.com', 'password123', '127.0.0.1')
+      authenticate.execute('missing@example.com', strongPassword, '127.0.0.1')
     ).resolves.toBeNull();
     await expect(
       authenticate.execute('ana@example.com', 'wrong-password', '127.0.0.1')
@@ -259,20 +316,47 @@ describe('user use cases', () => {
   it('rejects registration when its IP key is locked', async () => {
     const deps = setup();
     deps.lockedKeys.add('register:ip:203.0.113.4');
-    const register = new RegisterUser(
+    const register = registerUser(deps);
+
+    await expect(
+      register.execute(
+        { name: 'Ana', email: 'ana@example.com', password: strongPassword },
+        '203.0.113.4'
+      )
+    ).rejects.toEqual(new RateLimitedError(30));
+    expect(deps.attempts.has('register:ip:203.0.113.4')).toBe(false);
+    expect(deps.breachChecks).toEqual([]);
+  });
+
+  it('migrates a legacy password hash on the first successful login only', async () => {
+    const legacy: User = {
+      id: 'u1',
+      name: 'Ana',
+      email: 'ana@example.com',
+      passwordHash: 'legacy:Senha123!',
+    };
+    const deps = setup(legacy);
+    const authenticate = new AuthenticateUser(
       deps.users,
       deps.passwords,
-      new SequentialIdGenerator(),
       deps.rateLimiter,
       deps.rateLimitKeys
     );
 
     await expect(
-      register.execute(
-        { name: 'Ana', email: 'ana@example.com', password: 'password123' },
-        '203.0.113.4'
-      )
-    ).rejects.toEqual(new RateLimitedError(30));
-    expect(deps.attempts.has('register:ip:203.0.113.4')).toBe(false);
+      authenticate.execute('ana@example.com', 'wrong-password', '127.0.0.1')
+    ).resolves.toBeNull();
+    expect(deps.passwordHashUpdates).toEqual([]);
+
+    await expect(
+      authenticate.execute('ana@example.com', 'Senha123!', '127.0.0.1')
+    ).resolves.toEqual({ ...legacy, passwordHash: 'hashed:Senha123!' });
+    expect(deps.passwordHashUpdates).toEqual([{ id: 'u1', passwordHash: 'hashed:Senha123!' }]);
+    expect(deps.stored?.passwordHash).toBe('hashed:Senha123!');
+
+    await expect(
+      authenticate.execute('ana@example.com', 'Senha123!', '127.0.0.1')
+    ).resolves.toEqual({ ...legacy, passwordHash: 'hashed:Senha123!' });
+    expect(deps.passwordHashUpdates).toHaveLength(1);
   });
 });

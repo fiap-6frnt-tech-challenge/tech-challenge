@@ -24,6 +24,16 @@ describe('BcryptPasswordHasher', () => {
     await expect(hasher.verify('Senha123!', storedCost10Hash)).resolves.toBe(true);
   });
 
+  it('pede rehash só quando o hash gravado tem custo menor que o configurado', async () => {
+    const hasher12 = new BcryptPasswordHasher(12);
+
+    expect(hasher12.needsRehash(storedCost10Hash)).toBe(true);
+    expect(
+      hasher12.needsRehash('$2b$12$IplSxM7DRgUxQc6VRjJk/u8W5MtEpyoWALM2GdoOLREyWZE.SQjwS')
+    ).toBe(false);
+    expect(new BcryptPasswordHasher(10).needsRehash(storedCost10Hash)).toBe(false);
+  });
+
   it('compara contra hash fictício para e-mails inexistentes', async () => {
     await expect(
       new BcryptPasswordHasher(10).verifyDummy('senha-qualquer')
