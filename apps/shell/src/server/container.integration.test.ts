@@ -63,7 +63,7 @@ describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => 
 
   it('registra e autentica um usuário com a senha em bcrypt custo 12', async () => {
     const email = `${scope.id('ana')}@bytebank.test`;
-    const password = 'cavalo-correto-bateria';
+    const password = 'Bytebank-Teste-2026';
 
     const user = await container.registerUser.execute(
       {

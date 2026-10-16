@@ -12,7 +12,7 @@ vi.mock('@/server/container', () => ({
 
 import { POST } from './route';
 
-const input = { name: 'Ana Souza', email: 'ana@bytebank.com', password: 'cavalo-correto-bateria' };
+const input = { name: 'Ana Souza', email: 'ana@bytebank.com', password: 'Bytebank-Teste-2026' };
 const user = { id: 'user-1', name: input.name, email: input.email, passwordHash: 'secret-hash' };
 const request = (body: string, forwardedFor = '203.0.113.20, 10.0.0.1') =>
   new Request('http://localhost/api/auth/register', {

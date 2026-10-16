@@ -17,7 +17,7 @@ import { FakeClock, SequentialIdGenerator } from '../testing';
 import type { User } from '../types';
 import { AuthenticateUser, BREACHED_PASSWORD_MESSAGE, RegisterUser } from './users';
 
-const strongPassword = 'cavalo-correto-bateria';
+const strongPassword = 'Bytebank-Teste-2026';
 
 function setup(existing: User | null = null) {
   let stored = existing;

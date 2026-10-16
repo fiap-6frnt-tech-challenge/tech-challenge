@@ -6,9 +6,9 @@ const valid = { name: 'Maria Silva', email: 'maria@example.com' };
 
 describe('registerSchema', () => {
   it('accepts the current public registration payload', () => {
-    expect(registerSchema.parse({ ...valid, password: 'cavalo-correto-bateria' })).toEqual({
+    expect(registerSchema.parse({ ...valid, password: 'Bytebank-Teste-2026' })).toEqual({
       ...valid,
-      password: 'cavalo-correto-bateria',
+      password: 'Bytebank-Teste-2026',
     });
   });
 

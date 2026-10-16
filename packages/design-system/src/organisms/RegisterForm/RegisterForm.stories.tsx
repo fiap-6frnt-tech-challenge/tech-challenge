@@ -100,7 +100,7 @@ export const SuccessfulSubmit: Story = {
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText(/nome/i), 'Ana Souza');
     await userEvent.type(canvas.getByLabelText(/email/i), 'ana@bytebank.com');
-    await userEvent.type(canvas.getByLabelText(/senha/i), 'cavalo-correto-bateria');
+    await userEvent.type(canvas.getByLabelText(/senha/i), 'Bytebank-Teste-2026');
     await userEvent.click(canvas.getByRole('button', { name: /criar conta/i }));
 
     await expect(canvas.queryByText('Informe seu nome')).not.toBeInTheDocument();
