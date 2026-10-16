@@ -50,6 +50,7 @@ export default defineConfig({
         AUTH_MAX_FAILURES: process.env.AUTH_MAX_FAILURES ?? '3',
         AUTH_LOCK_SECONDS: process.env.AUTH_LOCK_SECONDS ?? '60',
         AUTH_MAX_LOCK_SECONDS: process.env.AUTH_MAX_LOCK_SECONDS ?? '300',
+        HIBP_ENABLED: process.env.HIBP_ENABLED ?? 'false',
         DATABASE_URL:
           process.env.DATABASE_URL ?? 'postgres://bytebank:bytebank@localhost:5432/bytebank',
         BLOB_READ_WRITE_TOKEN: '',

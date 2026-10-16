@@ -6,7 +6,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { Button } from '../../atoms/Button';
 import { Input } from '../../atoms/Input';
 import type { RegisterFormFields, RegisterFormProps } from './IRegisterForm';
-import { registerFormSchema, type RegisterFormSchemaValues } from './schema';
+import { PASSWORD_HINT, registerFormSchema, type RegisterFormSchemaValues } from './schema';
 
 export function RegisterForm({
   onSubmit,
@@ -107,7 +107,7 @@ export function RegisterForm({
               placeholder="Crie uma senha"
               disabled={isLoading}
               error={!!errors.password}
-              helperText={errors.password?.message}
+              helperText={errors.password?.message ?? PASSWORD_HINT}
               {...fieldProps}
             />
           );

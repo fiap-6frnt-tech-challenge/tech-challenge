@@ -1,7 +1,10 @@
 import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { db } from '@/db';
+import { users } from '@/db/schema';
 import { integrationScope } from './testing/integrationScope';
 
 const scope = integrationScope();
@@ -13,6 +16,7 @@ beforeAll(async () => {
   uploadsDir = await mkdtemp(join(tmpdir(), 'bytebank-uploads-'));
   vi.stubEnv('BLOB_READ_WRITE_TOKEN', '');
   vi.stubEnv('LOCAL_UPLOADS_DIR', uploadsDir);
+  vi.stubEnv('HIBP_ENABLED', 'false');
   ({ container } = await import('./container'));
 });
 
@@ -57,22 +61,46 @@ describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => 
     });
   });
 
-  it('registra e autentica um usuário com a senha em bcrypt', async () => {
+  it('registra e autentica um usuário com a senha em bcrypt custo 12', async () => {
     const email = `${scope.id('ana')}@bytebank.test`;
+    const password = 'cavalo-correto-bateria';
 
     const user = await container.registerUser.execute(
       {
         name: 'Ana Souza',
         email,
-        password: 'Senha123!',
+        password,
       },
       '127.0.0.1'
     );
 
-    expect(user.passwordHash).toMatch(/^\$2[aby]\$10\$/);
+    expect(user.passwordHash).toMatch(/^\$2[aby]\$12\$/);
     expect(
-      await container.authenticateUser.execute(email.toUpperCase(), 'Senha123!', '127.0.0.1')
+      await container.authenticateUser.execute(email.toUpperCase(), password, '127.0.0.1')
     ).toEqual(user);
     expect(await container.authenticateUser.execute(email, 'senha-errada', '127.0.0.1')).toBeNull();
+  });
+
+  it('migra para custo 12 o hash antigo no primeiro login com a senha antiga', async () => {
+    const legacy = {
+      id: scope.id('legado'),
+      name: 'Conta Antiga',
+      email: `${scope.id('legado')}@bytebank.test`,
+      passwordHash: '$2b$10$WOxndslfeNrIgvZqXM9V.OiXmBY1Lch/Eg9QrMqrAz36Xn29dJdzK',
+    };
+    await db.insert(users).values(legacy);
+
+    const authenticated = await container.authenticateUser.execute(
+      legacy.email,
+      'Senha123!',
+      '127.0.0.1'
+    );
+
+    const [row] = await db.select().from(users).where(eq(users.id, legacy.id));
+    expect(row.passwordHash).toMatch(/^\$2[aby]\$12\$/);
+    expect(authenticated).toMatchObject({ id: legacy.id, passwordHash: row.passwordHash });
+    expect(
+      await container.authenticateUser.execute(legacy.email, 'Senha123!', '127.0.0.1')
+    ).toMatchObject({ id: legacy.id, passwordHash: row.passwordHash });
   });
 });

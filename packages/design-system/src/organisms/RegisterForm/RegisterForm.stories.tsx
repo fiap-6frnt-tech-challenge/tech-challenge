@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { action } from 'storybook/actions';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { RegisterForm } from './RegisterForm';
 
 const meta: Meta<typeof RegisterForm> = {
@@ -25,7 +25,7 @@ const meta: Meta<typeof RegisterForm> = {
     docs: {
       description: {
         component:
-          'Accessible account registration form with name, email, password, submit error state, and login navigation link.',
+          'Accessible account registration form with name, email, password (12–128 characters, paste allowed, no composition rules), submit error state, and login navigation link.',
       },
     },
   },
@@ -83,7 +83,7 @@ export const ValidationErrors: Story = {
     await expect(canvas.getByLabelText(/senha/i)).toHaveAttribute('aria-invalid', 'true');
     await expect(canvas.getByText('Informe seu nome')).toBeInTheDocument();
     await expect(canvas.getByText('Informe seu email')).toBeInTheDocument();
-    await expect(canvas.getByText('A senha deve ter no mínimo 8 caracteres')).toBeInTheDocument();
+    await expect(canvas.getByText('A senha deve ter no mínimo 12 caracteres')).toBeInTheDocument();
   },
 };
 
@@ -100,13 +100,51 @@ export const SuccessfulSubmit: Story = {
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText(/nome/i), 'Ana Souza');
     await userEvent.type(canvas.getByLabelText(/email/i), 'ana@bytebank.com');
-    await userEvent.type(canvas.getByLabelText(/senha/i), 'segredo123');
+    await userEvent.type(canvas.getByLabelText(/senha/i), 'cavalo-correto-bateria');
     await userEvent.click(canvas.getByRole('button', { name: /criar conta/i }));
 
     await expect(canvas.queryByText('Informe seu nome')).not.toBeInTheDocument();
     await expect(canvas.queryByText('Informe seu email')).not.toBeInTheDocument();
     await expect(
-      canvas.queryByText('A senha deve ter no mínimo 8 caracteres')
+      canvas.queryByText('A senha deve ter no mínimo 12 caracteres')
     ).not.toBeInTheDocument();
+  },
+};
+
+export const PasswordPolicy: Story = {
+  args: {
+    onSubmit: fn(),
+  },
+  render: (args) => (
+    <div className="w-96">
+      <RegisterForm {...args} />
+    </div>
+  ),
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const password = canvas.getByLabelText(/senha/i);
+    await expect(password).toHaveAccessibleDescription(
+      'Use ao menos 12 caracteres. Evite senhas que você usa em outros sites.'
+    );
+
+    await userEvent.type(canvas.getByLabelText(/nome/i), 'Ana Souza');
+    await userEvent.type(canvas.getByLabelText(/email/i), 'ana@bytebank.com');
+    await userEvent.type(password, 'segredo1234');
+    await userEvent.click(canvas.getByRole('button', { name: /criar conta/i }));
+
+    await expect(password).toHaveAttribute('aria-invalid', 'true');
+    await expect(password).toHaveAccessibleDescription('A senha deve ter no mínimo 12 caracteres');
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+
+    await userEvent.clear(password);
+    await userEvent.click(password);
+    await userEvent.paste('frase longa sem simbolos');
+    await userEvent.click(canvas.getByRole('button', { name: /criar conta/i }));
+
+    await expect(args.onSubmit).toHaveBeenCalledWith({
+      name: 'Ana Souza',
+      email: 'ana@bytebank.com',
+      password: 'frase longa sem simbolos',
+    });
   },
 };

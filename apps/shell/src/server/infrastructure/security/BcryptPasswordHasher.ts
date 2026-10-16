@@ -1,5 +1,5 @@
 import 'server-only';
-import { compare, hash } from 'bcryptjs';
+import { compare, getRounds, hash } from 'bcryptjs';
 import type { PasswordHasher } from '@bytebank/core/application';
 
 const DUMMY_PASSWORD_HASHES: Record<number, string> = {
@@ -22,5 +22,9 @@ export class BcryptPasswordHasher implements PasswordHasher {
     const digest = DUMMY_PASSWORD_HASHES[this.cost];
     if (!digest) throw new Error(`Não há hash fictício configurado para bcrypt custo ${this.cost}`);
     await compare(plain, digest);
+  }
+
+  needsRehash(digest: string): boolean {
+    return getRounds(digest) < this.cost;
   }
 }

@@ -67,6 +67,37 @@ describe('registerAndSignIn', () => {
     expect(mocks.signIn).not.toHaveBeenCalled();
   });
 
+  it('mostra a mensagem do campo quando a API recusa a senha com 422', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        json: async () => ({
+          error: 'Dados inválidos',
+          issues: {
+            formErrors: [],
+            fieldErrors: {
+              password: ['Esta senha já apareceu em vazamentos de dados. Escolha outra senha.'],
+            },
+          },
+        }),
+      })
+    );
+
+    const result = await registerAndSignIn({
+      name: 'Ana Souza',
+      email: 'ana@bytebank.com',
+      password: 'password123456',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: 'Esta senha já apareceu em vazamentos de dados. Escolha outra senha.',
+    });
+    expect(mocks.signIn).not.toHaveBeenCalled();
+  });
+
   it('retorna erro quando o login automático falha', async () => {
     mocks.signIn.mockResolvedValue({ ok: false, error: 'CredentialsSignin' });
 
