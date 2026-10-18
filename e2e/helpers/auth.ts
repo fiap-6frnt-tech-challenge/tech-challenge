@@ -11,7 +11,8 @@ export async function login(page: Page) {
   await submit.click();
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText(E2E_USER.name)).toBeVisible();
+  // The profile is hidden by the responsive header on mobile.
+  await expect(page.getByText(E2E_USER.name)).toBeAttached();
 }
 
 export async function logout(page: Page) {
