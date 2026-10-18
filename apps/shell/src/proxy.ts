@@ -5,7 +5,7 @@ import { authConfig } from './auth.config';
 const { auth } = NextAuth(authConfig);
 
 export const proxy = auth((req) => {
-  const isLoggedIn = !!req.auth;
+  const isLoggedIn = Boolean(req.auth?.user?.id);
   const { nextUrl } = req;
 
   const isApiRoute = nextUrl.pathname.startsWith('/api/auth');

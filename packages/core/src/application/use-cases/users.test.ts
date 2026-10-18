@@ -126,6 +126,23 @@ function registerUser(deps: ReturnType<typeof setup>, ids = new SequentialIdGene
 }
 
 describe('user use cases', () => {
+  it('rejects OAuth-only accounts through the dummy password check and counts the failed attempt', async () => {
+    const deps = setup({
+      id: 'oauth-user',
+      name: 'Ana',
+      email: 'ana@example.com',
+      passwordHash: '',
+    });
+    const authenticate = new AuthenticateUser(
+      deps.users,
+      deps.passwords,
+      deps.rateLimiter,
+      deps.rateLimitKeys
+    );
+    expect(await authenticate.execute('ana@example.com', strongPassword, '127.0.0.1')).toBeNull();
+    expect(deps.dummyVerifications).toBe(1);
+    expect(deps.attempts.get('login:email:ana@example.com')).toBe(1);
+  });
   it('registers a normalized user with hashed password and generated id', async () => {
     const deps = setup();
     const user = await registerUser(deps, new SequentialIdGenerator('user')).execute(

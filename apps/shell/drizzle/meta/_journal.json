@@ -50,6 +50,13 @@
       "when": 1791842106327,
       "tag": "0006_amusing_overlord",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792360686584,
+      "tag": "0007_session_lifecycle",
+      "breakpoints": true
     }
   ]
 }
