@@ -31,7 +31,7 @@ async function clientState(page: Page, action: 'read' | 'enqueue' | 'logout' = '
     }
     if (action === 'logout') {
       queryClient.setQueryData(['s204-private-probe'], { private: true });
-      stores.store.dispatch(stores.logout.pending('s204-e2e'));
+      stores.store.dispatch(stores.logout.pending('s204-e2e', undefined));
     }
     const state = stores.store.getState();
     return {

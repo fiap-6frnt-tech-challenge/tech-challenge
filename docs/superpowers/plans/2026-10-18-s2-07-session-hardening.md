@@ -32,9 +32,9 @@
 
 **Interfaces:** SessionRepository creates a server session and returns user version, reads current version/session activity, revokes a session or all user sessions. SessionLifecycle.start(userId), validate(claims), revokeCurrent(claims); RevokeSessions.execute(actor). Claims contain userId, sid, authTime, sv, svCheckedAt. Node callbacks return null on invalidity. Edge callback checks identity and absolute age without DB.
 
-- [ ] Add FakeClock tests for 12h expiry, 5min checks, copied-cookie revocation, missing user/session and malformed claims; run RED then implement GREEN.
-- [ ] Add migration users.session_version and auth_sessions, repository and integration tests including atomic version increments and password-hash rotation revocation.
-- [ ] Compose Node JWT/signOut callbacks, preserve verified Google sign-in identity, harden proxy's user-id check and expose authenticated same-origin revoke endpoint. Run callback/route/proxy regressions and commit.
+- [x] Add FakeClock tests for 12h expiry, 5min checks, copied-cookie revocation, missing user/session and malformed claims; run RED then implement GREEN.
+- [x] Add migration users.session_version and auth_sessions, repository and integration tests including atomic version increments and password-hash rotation revocation.
+- [x] Compose Node JWT/signOut callbacks, preserve verified Google sign-in identity, harden proxy's user-id check and expose authenticated same-origin revoke endpoint. Run callback/route/proxy regressions and commit.
 
 ### Task 2: Expiration events and client logout
 
@@ -42,8 +42,8 @@
 
 **Interfaces:** `session.expired` v1 event; HTTP 401 publishes only for the same client session generation. Session effects deduplicate expiry and dispatch logout with a safe reason. Login renders the expiry notice after redirect. SessionProvider refreshes session status; unauthenticated transitions clear and redirect private screens.
 
-- [ ] Test HTTP and XHR 401s, late-generation suppression and one logout for concurrent events; run RED then GREEN.
-- [ ] Preserve existing success bridge and local cleanup; add a safe expiry reason to logout and login feedback; run focused checks and commit.
+- [x] Test HTTP and XHR 401s, late-generation suppression and one logout for concurrent events; run RED then GREEN.
+- [x] Preserve existing success bridge and local cleanup; add a safe expiry reason to logout and login feedback; run focused checks and commit.
 
 ### Task 3: Idle warning and user-menu revocation
 
@@ -51,16 +51,16 @@
 
 **Interfaces:** idle stream consumes activity Observable plus idle/warn durations and emits active/warn/expire; shell subscribes only while authenticated. Continue refreshes the session and resets idle timing. Revoke-all calls the authenticated endpoint before local logout.
 
-- [ ] Add scheduler tests for warning/expiry/reset/background deadlines and cleanup; run RED then GREEN.
-- [ ] Integrate document activity, explicit continue action, focused alertdialog and revoke-all menu action with visible failure handling. Verify keyboard behavior and commit.
+- [x] Add scheduler tests for warning/expiry/reset/background deadlines and cleanup; run RED then GREEN.
+- [x] Integrate document activity, explicit continue action, focused alertdialog and revoke-all menu action with visible failure handling. Verify keyboard behavior and commit.
 
 ### Task 4: End-to-end validation, review and PR handoff
 
 **Files:** session E2E, ADR-006, task/sprint evidence, this plan.
 
-- [ ] E2E: accelerated inactivity/continue/logout/back navigation, HTTP401, two independent sessions/global revocation, copied-cookie rejection and production cookie flags.
-- [ ] Full tests, types, lint, architecture, DB integration and production Chromium/Firefox E2E; inspect outputs.
-- [ ] Independent review and regressions for confirmed findings; update evidence and commit.
+- [x] E2E: accelerated inactivity/continue/logout/back navigation, HTTP401, two independent sessions/global revocation, copied-cookie rejection and HTTPS cookie flags (actual Auth.js configuration; external deployment capture remains pending).
+- [x] Full tests, types, lint, architecture, DB integration and production Chromium/Firefox E2E; inspect outputs.
+- [x] Independent review and regressions for confirmed findings; update evidence and commit.
 - [ ] Push feature branch; use finalizar-task-pr for link targeting phase-4, title and copyable description.
 
 ## Implementation decisions
@@ -68,3 +68,18 @@
 - Add a server session ID to support current-session revocation without logging out every device. It stays inside the encrypted HttpOnly JWT; PostgreSQL stores session identifiers and expiry, not bearer cookies.
 - Password-hash replacement increments session_version atomically, including a transparent bcrypt rehash; the new login reads the updated version. Existing devices may need to log in again after that upgrade.
 - Auth.js updateAge applies to database sessions, not JWT rotation; keep the specified setting and document the JWT behavior explicitly. Absolute expiry remains independent of rotation.
+
+## Review and regression record
+
+- Review found that automatic OAuth linking to an unverified credentials account preserved a possible planted password. Regression RED→GREEN: existing password-bearing accounts reject automatic linking, including concurrent signup conflict recovery. Verified Google users may create/reuse OAuth-only accounts.
+- Review reproduced Auth.js swallowing a failed signOut event while clearing its cookie. Regression RED→GREEN: a same-origin current-session endpoint must confirm revocation before signOut; rejection clears local private state, shows a retry dialog, and cannot restore the old profile through SessionSync.
+- Background timer regression RED→GREEN: a delayed warning callback checks the original absolute deadline and expires immediately if overdue.
+- Reviewed choices retained from the task: per-tab idle activity, JWT renewal during polling with an independent absolute cap, extra DB reads from read-only auth calls, and version changes on bcrypt rehash. Each is documented in ADR-006.
+
+## Final verification — 2026-10-18
+
+- Final source: tests, type-check and lint each passed all 13 Turbo tasks; architecture passed with 463 modules and 1268 dependencies.
+- PostgreSQL 16 integration: 65/65 tests, migrations applied to a disposable database.
+- Production build plus full Chromium/Firefox suite: 32/32 E2E passed after the final OAuth-only password timing regression.
+- Cookie flags checked through actual Auth.js HTTPS handling. An external production screenshot for the video remains deployment evidence, not a local test result.
+- No personal configuration is included in the branch.
