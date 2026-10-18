@@ -1,4 +1,5 @@
-import { DashboardWidget, KpiCard, BarChart, LineChart, PieChart } from '@bytebank/design-system';
+import { DashboardWidget, KpiCard } from '@bytebank/design-system';
+import { BarChart, LineChart, PieChart } from '@bytebank/design-system/charts';
 import { EMPTY_DASHBOARD_VIEW_MODEL } from '../application/toDashboardViewModel';
 import { useDashboardViewModel } from '../application/useDashboardViewModel';
 

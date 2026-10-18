@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import type { LoginFormFields } from '@bytebank/design-system';
-import { GoogleAuthButton, LoginForm } from '@bytebank/design-system';
+import { GoogleAuthButton } from '@bytebank/design-system';
+import { LoginForm } from '@bytebank/design-system/forms';
 import { loginWithCredentials } from './loginFlow';
 import { TurnstileWidget } from './TurnstileWidget';
 

@@ -1,1 +1,1 @@
-export { transactionFormSchema, type TransactionFormValues } from '@bytebank/shared';
+export { transactionFormSchema, type TransactionFormValues } from '@bytebank/core/schemas';

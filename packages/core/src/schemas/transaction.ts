@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { ValidationError } from '../domain/errors';
+import { parseTransactionQuery } from '../domain/filter/parseTransactionQuery';
 import { CATEGORIES } from '../domain/category/categories';
 import { TRANSACTION_TYPE } from '../domain/transaction/TransactionType';
 
@@ -35,15 +37,14 @@ export const updateTransactionSchema = createTransactionSchema
   .partial()
   .refine((value) => Object.keys(value).length > 0, 'Nada para atualizar');
 
-export const listTransactionsQuerySchema = z.strictObject({
-  _page: z.coerce.number().int().min(1).default(1),
-  _per_page: z.coerce.number().int().min(1).max(100).default(10),
-  _sort: z.enum(['date', '-date', 'amount', '-amount']).default('-date'),
-  type: z.enum(transactionTypes).optional(),
-  date_gte: z.iso.date().optional(),
-  date_lte: z.iso.date().optional(),
-  q: z.string().trim().max(100).refine(hasNoNullByte, 'Texto inválido').optional(),
-  category: z.array(z.enum(categoryIds)).max(20).default([]),
-  amount_gte: z.coerce.number().nonnegative().optional(),
-  amount_lte: z.coerce.number().nonnegative().optional(),
+export const listTransactionsQuerySchema = z.unknown().transform((input, context) => {
+  try {
+    return parseTransactionQuery(input);
+  } catch (error) {
+    if (!(error instanceof ValidationError)) throw error;
+    for (const issue of error.issues as { path: string[]; message: string }[]) {
+      context.addIssue({ code: 'custom', path: issue.path, message: issue.message });
+    }
+    return z.NEVER;
+  }
 });

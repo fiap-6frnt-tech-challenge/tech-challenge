@@ -12,7 +12,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./styles/tokens.css": "./src/styles/tokens.css",
-    "./styles/globals.css": "./src/styles/globals.css"
+    "./styles/globals.css": "./src/styles/globals.css",
+    "./charts": "./src/charts.ts",
+    "./forms": "./src/forms.ts"
   },
   "files": [
     "src"
