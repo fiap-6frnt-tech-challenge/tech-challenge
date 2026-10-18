@@ -9,7 +9,7 @@ import {
   type FeedbackMessage,
 } from '@bytebank/stores';
 
-const feedback: Record<DomainEvent['type'], FeedbackMessage> = {
+const feedback: Partial<Record<DomainEvent['type'], FeedbackMessage>> = {
   'transaction.created': {
     type: 'success',
     title: 'Transação adicionada!',
@@ -42,8 +42,9 @@ export function registerEventBridges(
   events$: Observable<DomainEvent> = domainEvents$
 ): () => void {
   const subscription = events$.subscribe((event) => {
-    if (selectIsAuthenticated(store.getState()))
-      store.dispatch(notificationAdded(feedback[event.type]));
+    const message = feedback[event.type];
+    if (message && selectIsAuthenticated(store.getState()))
+      store.dispatch(notificationAdded(message));
   });
   return () => subscription.unsubscribe();
 }

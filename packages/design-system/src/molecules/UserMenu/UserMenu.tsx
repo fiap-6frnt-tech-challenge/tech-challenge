@@ -15,7 +15,13 @@ function getInitials(name: string): string {
     .join('');
 }
 
-export function UserMenu({ user, onLogout, isLoggingOut = false, className }: UserMenuProps) {
+export function UserMenu({
+  user,
+  onLogout,
+  onLogoutAll,
+  isLoggingOut = false,
+  className,
+}: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -49,6 +55,22 @@ export function UserMenu({ user, onLogout, isLoggingOut = false, className }: Us
   };
 
   const handleMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>(
+        'button[role="menuitem"]:not(:disabled)'
+      )
+    );
+    if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key) && items.length) {
+      event.preventDefault();
+      const index = items.indexOf(document.activeElement as HTMLButtonElement);
+      const next =
+        event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? items.length - 1
+            : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      items[next]?.focus();
+    }
     if (event.key === 'Escape') {
       event.preventDefault();
       closeMenu();
@@ -125,6 +147,17 @@ export function UserMenu({ user, onLogout, isLoggingOut = false, className }: Us
               <LogOut aria-hidden="true" size={16} />
               {isLoggingOut ? 'Saindo...' : 'Sair'}
             </button>
+            {onLogoutAll && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={onLogoutAll}
+                disabled={isLoggingOut}
+                className="flex w-full items-center gap-sm rounded-default px-sm py-sm text-left label-semibold text-content-primary hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-60"
+              >
+                Sair de todos os dispositivos
+              </button>
+            )}
           </div>
         </>
       )}

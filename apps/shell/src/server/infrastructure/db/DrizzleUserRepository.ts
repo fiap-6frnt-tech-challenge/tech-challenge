@@ -1,5 +1,5 @@
 import 'server-only';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { NewUser, User, UserRepository } from '@bytebank/core/application';
 import type { Database } from '@/db';
 import { users, type UserRow } from '@/db/schema';
@@ -30,6 +30,7 @@ export class DrizzleUserRepository implements UserRepository {
         name: data.name,
         email: data.email,
         passwordHash: data.passwordHash,
+        image: data.image,
       })
       .onConflictDoNothing({ target: users.email })
       .returning();
@@ -37,6 +38,9 @@ export class DrizzleUserRepository implements UserRepository {
   }
 
   async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
-    await this.db.update(users).set({ passwordHash }).where(eq(users.id, id));
+    await this.db
+      .update(users)
+      .set({ passwordHash, sessionVersion: sql`${users.sessionVersion} + 1` })
+      .where(eq(users.id, id));
   }
 }

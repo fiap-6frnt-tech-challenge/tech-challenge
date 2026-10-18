@@ -84,6 +84,13 @@ export interface UserRepository {
   updatePasswordHash(id: string, passwordHash: string): Promise<void>;
 }
 
+export interface SessionRepository {
+  create(userId: string, sid: string, expiresAt: Date): Promise<number | null>;
+  find(userId: string, sid: string): Promise<{ version: number; expiresAt: Date } | null>;
+  revokeCurrent(userId: string, sid: string): Promise<void>;
+  revokeAll(userId: string): Promise<boolean>;
+}
+
 export interface FileStorage {
   put(key: string, bytes: Uint8Array, contentType: string): Promise<StoredFile>;
   get(ref: string): Promise<Uint8Array>;

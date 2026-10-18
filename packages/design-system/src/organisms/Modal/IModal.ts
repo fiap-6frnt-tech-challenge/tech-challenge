@@ -1,4 +1,6 @@
 export interface ModalProps {
+  role?: 'dialog' | 'alertdialog';
+  descriptionId?: string;
   isOpen: boolean;
   onClose: () => void;
   title?: string;

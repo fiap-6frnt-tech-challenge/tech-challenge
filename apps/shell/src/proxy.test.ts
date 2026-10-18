@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { proxy } from './proxy';
 import { NextRequest } from 'next/server';
 
-type MockSession = { user: { id: string } } | null;
+type MockSession = { user: { id: string } } | { message: string } | null;
 type AuthenticatedRequest = NextRequest & { auth: MockSession };
 type AuthCallback = (
   req: AuthenticatedRequest
@@ -15,7 +15,11 @@ vi.mock('next-auth', () => ({
       return async (req: NextRequest) => {
         // Simula o wrapper do NextAuth injetando a sessão conforme o teste
         const isAuthed = req.headers.get('x-mock-auth') === 'true';
-        const mockSession: MockSession = isAuthed ? { user: { id: 'joana' } } : null;
+        const mockSession: MockSession = req.headers.has('x-mock-auth-error')
+          ? { message: 'UntrustedHost' }
+          : isAuthed
+            ? { user: { id: 'joana' } }
+            : null;
         return callback(Object.assign(req, { auth: mockSession }));
       };
     },
@@ -25,6 +29,13 @@ vi.mock('next-auth', () => ({
 const proxyEvent = {} as ProxyEvent;
 
 describe('Proxy de Autenticação', () => {
+  it('fails closed when Auth.js supplies a configuration error object', async () => {
+    const req = new NextRequest('http://localhost:3000/');
+    req.headers.set('x-mock-auth-error', 'true');
+    const res = await proxy(req, proxyEvent);
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get('location')).toBe('http://localhost:3000/login');
+  });
   const createMockRequest = (path: string, isAuthed = false) => {
     const url = `http://localhost:3000${path}`;
     const req = new NextRequest(url);

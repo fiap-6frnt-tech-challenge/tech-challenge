@@ -8,12 +8,14 @@ import { loginWithCredentials } from './loginFlow';
 import { TurnstileWidget } from './TurnstileWidget';
 
 interface LoginPageClientProps {
+  sessionNotice?: string;
   isGoogleAuthEnabled: boolean;
   turnstileSiteKey?: string;
   loginWithGoogleAction: () => void | Promise<void>;
 }
 
 export function LoginPageClient({
+  sessionNotice,
   isGoogleAuthEnabled,
   turnstileSiteKey,
   loginWithGoogleAction,
@@ -100,6 +102,11 @@ export function LoginPageClient({
             Login
           </h1>
 
+          {sessionNotice && (
+            <p role="status" className="mb-md text-center text-content-secondary">
+              {sessionNotice}
+            </p>
+          )}
           <LoginForm onSubmit={handleCredentialsSubmit} isLoading={isPending} />
 
           {isTurnstileRequired && turnstileSiteKey ? (

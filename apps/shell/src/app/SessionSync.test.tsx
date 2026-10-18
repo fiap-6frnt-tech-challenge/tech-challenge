@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
   useSession: vi.fn(),
+  pathname: vi.fn(() => '/login'),
+  logout: vi.fn((reason: string) => ({ type: 'auth/logout', payload: reason })),
   setSession: vi.fn((payload: unknown) => ({ type: 'auth/setSession', payload })),
   clearSession: vi.fn(() => ({ type: 'auth/clearSession' })),
 }));
@@ -16,8 +18,13 @@ vi.mock('react', async () => {
 });
 
 vi.mock('next-auth/react', () => ({ useSession: mocks.useSession }));
+vi.mock('next/navigation', () => ({ usePathname: mocks.pathname }));
 
 vi.mock('@bytebank/stores', () => ({
+  useAppStore: () => ({ getState: () => ({ auth: { isAuthenticated: false } }) }),
+  publish: vi.fn(),
+  logout: mocks.logout,
+  isClientLogoutInProgress: () => false,
   useAppDispatch: () => mocks.dispatch,
   setSession: mocks.setSession,
   clearSession: mocks.clearSession,
@@ -34,9 +41,16 @@ const fullUser = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.pathname.mockReturnValue('/login');
 });
 
 describe('SessionSync', () => {
+  it('ends an invalid session on an initial private-page load instead of leaving an empty screen', () => {
+    mocks.pathname.mockReturnValue('/transactions');
+    mocks.useSession.mockReturnValue({ data: null, status: 'unauthenticated' });
+    SessionSync();
+    expect(mocks.logout).toHaveBeenCalledWith('expired');
+  });
   it('não renderiza nada (retorna null)', () => {
     mocks.useSession.mockReturnValue({ data: null, status: 'loading' });
     expect(SessionSync()).toBeNull();
