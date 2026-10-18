@@ -11,6 +11,9 @@ import {
   ListAttachments,
   ListTransactions,
   RegisterUser,
+  SessionLifecycle,
+  RevokeSessions,
+  ResolveOAuthUser,
   RemoveAttachment,
   UpdateTransaction,
   type FileStorage,
@@ -19,6 +22,7 @@ import { db } from '@/db';
 import { DrizzleAttachmentRepository } from './infrastructure/db/DrizzleAttachmentRepository';
 import { DrizzleTransactionRepository } from './infrastructure/db/DrizzleTransactionRepository';
 import { DrizzleUserRepository } from './infrastructure/db/DrizzleUserRepository';
+import { DrizzleSessionRepository } from './infrastructure/db/DrizzleSessionRepository';
 import { PostgresRateLimiter } from './infrastructure/db/PostgresRateLimiter';
 import { BcryptPasswordHasher } from './infrastructure/security/BcryptPasswordHasher';
 import { CloudflareTurnstileVerifier } from './infrastructure/security/CloudflareTurnstileVerifier';
@@ -59,6 +63,9 @@ const turnstileVerifier = new CloudflareTurnstileVerifier();
 const storage = resolveFileStorage();
 
 export const container = {
+  sessionLifecycle: new SessionLifecycle(new DrizzleSessionRepository(db), clock, ids),
+  revokeSessions: new RevokeSessions(new DrizzleSessionRepository(db)),
+  resolveOAuthUser: new ResolveOAuthUser(users, ids),
   createTransaction: new CreateTransaction(transactions, clock, ids),
   updateTransaction: new UpdateTransaction(transactions),
   deleteTransaction: new DeleteTransaction(transactions),

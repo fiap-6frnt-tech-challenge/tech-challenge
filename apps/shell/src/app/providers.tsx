@@ -9,6 +9,7 @@ import { queryClient } from '@bytebank/api-client';
 import { FeedbackHost } from './FeedbackHost';
 import { SessionSync } from './SessionSync';
 import { ClientEffects } from './ClientEffects';
+import { SessionActivity } from './SessionActivity';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -20,10 +21,11 @@ const ReactQueryDevtools = dynamic(
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-      <SessionProvider>
+      <SessionProvider refetchInterval={60} refetchOnWindowFocus>
         <ClientEffects />
         <SessionSync />
         <QueryClientProvider client={queryClient}>
+          <SessionActivity />
           {children}
           <FeedbackHost />
           {isDev && <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />}

@@ -11,6 +11,7 @@ export interface UserSession {
 export interface AuthState {
   user: UserSession | null;
   isAuthenticated: boolean;
+  logoutError?: boolean;
 }
 
 const initialState: AuthState = {
@@ -18,9 +19,28 @@ const initialState: AuthState = {
   isAuthenticated: false,
 };
 
-export const logout = createAsyncThunk('auth/logout', async () => {
-  await signOut({ callbackUrl: '/login' });
-});
+let logoutInFlight = false;
+export const isClientLogoutInProgress = () => logoutInFlight;
+export const logout = createAsyncThunk(
+  'auth/logout',
+  async (reason?: 'expired' | 'idle') => {
+    logoutInFlight = true;
+    const callbackUrl =
+      reason === 'expired'
+        ? '/login?reason=session-expired'
+        : reason === 'idle'
+          ? '/login?reason=inactive'
+          : '/login';
+    try {
+      const response = await fetch('/api/auth/sessions/current/revoke', { method: 'POST' });
+      if (!response.ok) throw new Error('Não foi possível confirmar o encerramento da sessão.');
+      await signOut({ callbackUrl });
+    } finally {
+      logoutInFlight = false;
+    }
+  },
+  { condition: () => !logoutInFlight }
+);
 
 export const authSlice = createSlice({
   name: 'auth',
@@ -29,6 +49,7 @@ export const authSlice = createSlice({
     setSession: (state, action: PayloadAction<UserSession | null>) => {
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
+      delete state.logoutError;
     },
     clearSession: (state) => {
       state.user = null;
@@ -36,9 +57,13 @@ export const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder.addCase(logout.rejected, (state) => {
+      state.logoutError = true;
+    });
     builder.addCase(logout.fulfilled, (state) => {
       state.user = null;
       state.isAuthenticated = false;
+      delete state.logoutError;
     });
   },
 });

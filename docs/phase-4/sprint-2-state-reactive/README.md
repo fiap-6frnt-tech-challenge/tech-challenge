@@ -39,7 +39,7 @@
 | 04  | ✅     | Redux avançado                                       | Dev 2 | 1.5 dia | P0   | ⬅ 01, 03 (parcial) | [04-redux-patterns.md](./04-redux-patterns.md)           |
 | 05  | ✅     | Login: limite de tentativas e bloqueio               | Dev 1 | 1.5 dia | P0   | ✅ dia 1           | [05-login-rate-limit.md](./05-login-rate-limit.md)       |
 | 06  | 🟢     | Política de senha + HIBP + bcrypt 12                 | Dev 1 | 1 dia   | P0   | ✅                 | [06-password-policy.md](./06-password-policy.md)         |
-| 07  | ⏳     | Sessão: expiração, revogação, logout, inatividade    | Dev 1 | 1.5 dia | P0   | ⬅ 01, 04           | [07-session-hardening.md](./07-session-hardening.md)     |
+| 07  | 🟢     | Sessão: expiração, revogação, logout, inatividade    | Dev 1 | 1.5 dia | P0   | ⬅ 01, 04           | [07-session-hardening.md](./07-session-hardening.md)     |
 | 08  | ⏳     | Pré-carregamento de remotes e dados                  | Dev 3 | 1.5 dia | P0   | ✅ dia 1           | [08-preload.md](./08-preload.md)                         |
 | 09  | ⏳     | Lazy loading e code splitting                        | Dev 3 | 1.5 dia | P0   | ✅                 | [09-lazy-loading.md](./09-lazy-loading.md)               |
 | 10  | ⏳     | Testes + smoke                                       | Todos | 0.5 dia | P0   | ⬅ impl             | [10-tests-smoke.md](./10-tests-smoke.md)                 |
@@ -80,8 +80,8 @@ tudo ─→ 10 (testes/smoke)
 
 - [ ] 5 senhas erradas → bloqueio temporário, mensagem genérica, `429` no registro por IP
 - [ ] Senha < 12 ou vazada é recusada no cadastro; bcrypt custo 12 com rehash no login
-- [ ] Sessão ociosa expira; "sair de todos os dispositivos" revoga tokens; inatividade → aviso → logout
-- [ ] ADR-006 (Sessão e autenticação) escrito
+- [x] Sessão ociosa expira; "sair de todos os dispositivos" revoga tokens; inatividade → aviso → logout
+- [x] ADR-006 (Sessão e autenticação) escrito
 
 ### Performance
 
