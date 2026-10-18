@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Header, UserMenu } from '@bytebank/design-system';
+import { Header, UserMenu, type HeaderProps } from '@bytebank/design-system';
 import { logout, selectUser, useAppDispatch, useAppSelector } from '@bytebank/stores';
 
-export function AppHeader() {
+type AppHeaderProps = Pick<HeaderProps, 'onLinkClick' | 'onLinkIntent'>;
+
+export function AppHeader({ onLinkClick, onLinkIntent }: AppHeaderProps = {}) {
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -17,6 +19,8 @@ export function AppHeader() {
   return (
     <Header
       userName={user?.name ?? ''}
+      onLinkClick={onLinkClick}
+      onLinkIntent={onLinkIntent}
       actionsSlot={
         user ? (
           <UserMenu

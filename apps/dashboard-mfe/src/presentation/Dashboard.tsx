@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { DashboardWidget, KpiCard, BarChart, LineChart, PieChart } from '@bytebank/design-system';
+import { markContentReady } from '@bytebank/shared';
 import { EMPTY_DASHBOARD_VIEW_MODEL } from '../application/toDashboardViewModel';
 import { useDashboardViewModel } from '../application/useDashboardViewModel';
 
@@ -9,6 +11,10 @@ export default function Dashboard() {
     isError,
     refetch,
   } = useDashboardViewModel();
+
+  useEffect(() => {
+    if (!isLoading) markContentReady('dashboard');
+  }, [isLoading]);
 
   return (
     <div className="flex flex-col gap-lg">
