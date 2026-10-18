@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AjaxError, type AjaxRequest } from 'rxjs/ajax';
 import { AttachmentHttpGateway, isTransientUploadError } from './AttachmentHttpGateway';
+import { domainEvents$, invalidateClientSession } from '@bytebank/stores';
 
 class FakeEventTarget {
   private listeners = new Map<string, Array<(event: ProgressEvent) => void>>();
@@ -64,6 +65,24 @@ function progressEvent(type: string, loaded: number, total: number): ProgressEve
 }
 
 describe('AttachmentHttpGateway.upload$', () => {
+  it('reports XHR 401 only for the current session', () => {
+    const events: unknown[] = [];
+    const stop = domainEvents$.subscribe((event) => events.push(event));
+    try {
+      for (const stale of [false, true]) {
+        const xhr = new FakeXhr();
+        xhr.status = 401;
+        const gateway = new AttachmentHttpGateway(() => xhr as unknown as XMLHttpRequest);
+        gateway.upload$('tx', new File(['x'], 'receipt.pdf')).subscribe({ error: () => {} });
+        if (stale) invalidateClientSession();
+        xhr.readyState = 4;
+        xhr.dispatch('load', progressEvent('load', 0, 0));
+      }
+      expect(events).toEqual([{ type: 'session.expired', version: 1 }]);
+    } finally {
+      stop.unsubscribe();
+    }
+  });
   it('emits upload progress and the response while posting multipart data to the configured API URL', () => {
     const xhr = new FakeXhr();
     const gateway = new AttachmentHttpGateway(() => xhr as unknown as XMLHttpRequest);

@@ -6,6 +6,7 @@ import {
   ValidationError,
 } from '@bytebank/core';
 import { HttpError, httpRequest } from './httpClient';
+import { domainEvents$, invalidateClientSession } from '@bytebank/stores';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -14,6 +15,30 @@ function response(status: number, body: unknown, headers?: HeadersInit) {
 }
 
 describe('httpRequest', () => {
+  it('publishes session expiry for 401 responses but ignores a response from an ended session', async () => {
+    const events: unknown[] = [];
+    const stop = domainEvents$.subscribe((event) => events.push(event));
+    try {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(401, {})));
+      await expect(httpRequest('/private')).rejects.toBeInstanceOf(AuthenticationError);
+      expect(events).toEqual([{ type: 'session.expired', version: 1 }]);
+      let release!: (value: unknown) => void;
+      vi.stubGlobal(
+        'fetch',
+        () =>
+          new Promise((resolve) => {
+            release = resolve;
+          })
+      );
+      const pending = httpRequest('/private');
+      invalidateClientSession();
+      release(response(401, {}));
+      await expect(pending).rejects.toBeInstanceOf(AuthenticationError);
+      expect(events).toHaveLength(1);
+    } finally {
+      stop.unsubscribe();
+    }
+  });
   it.each([
     [401, AuthenticationError],
     [404, NotFoundError],

@@ -116,3 +116,20 @@ export const BackdropClose: Story = {
     await expect(canvas.queryByRole('menu')).not.toBeInTheDocument();
   },
 };
+
+export const RevokeAllDevices: Story = {
+  args: { onLogoutAll: action('logout-all-click') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: /abrir menu/i }));
+    await waitFor(() =>
+      expect(canvas.getByRole('menuitem', { name: 'Sair', exact: true })).toHaveFocus()
+    );
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(
+      canvas.getByRole('menuitem', { name: 'Sair de todos os dispositivos' })
+    ).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    await expect(canvas.queryByRole('menu')).not.toBeInTheDocument();
+  },
+};

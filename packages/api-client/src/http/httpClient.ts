@@ -4,6 +4,7 @@ import {
   RateLimitedError,
   ValidationError,
 } from '@bytebank/core';
+import { createSessionExpiryReporter } from './sessionExpiry';
 
 let baseUrl = '/api';
 
@@ -26,6 +27,7 @@ export class HttpError extends Error {
 }
 
 export async function httpRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const reportExpired = createSessionExpiryReporter();
   const requestInit = Object.fromEntries(
     Object.entries(init).filter(([, value]) => value !== undefined)
   ) as RequestInit;
@@ -42,7 +44,10 @@ export async function httpRequest<T>(path: string, init: RequestInit = {}): Prom
     // Some endpoints (for example upload limits) return plain text.
   }
   const message = payload.error ?? `Request failed (${response.status})`;
-  if (response.status === 401) throw new AuthenticationError();
+  if (response.status === 401) {
+    reportExpired();
+    throw new AuthenticationError();
+  }
   if (response.status === 404) throw new NotFoundError(message);
   if (response.status === 422) throw new ValidationError(payload.issues ?? message);
   if (response.status === 429) {
