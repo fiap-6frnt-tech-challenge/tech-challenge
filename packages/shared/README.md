@@ -27,3 +27,14 @@ import type { Transaction } from '@bytebank/shared/types';
 - No UI dependencies.
 - No framework dependencies.
 - Pure TypeScript types and utilities only.
+
+## Validation schemas
+
+Runtime schemas are outside the main barrel so its synchronous Module Federation singleton stays free of Zod. New consumers import from the core schema entrypoint:
+
+```ts
+import { transactionFormSchema, registerSchema } from '@bytebank/core/schemas';
+import type { TransactionFormValues, RegisterInput } from '@bytebank/shared';
+```
+
+`@bytebank/shared/schemas` retains the transaction schema exports for compatibility. Authentication types remain type-only on the main entrypoint.
