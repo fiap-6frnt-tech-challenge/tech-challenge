@@ -48,10 +48,25 @@ Hoje o `registerSchema` exige só 8 caracteres, sem checar senhas vazadas, e o b
 
 ## Validação
 
-- [ ] Senha com menos de 12 caracteres → erro no formulário e 422 na API
-- [ ] Senha vazada conhecida (ex.: `password123456`) → recusada com mensagem clara
-- [ ] API do HIBP fora do ar (simular) → cadastro permitido + log
-- [ ] Hash novo com custo 12; conta antiga migra no primeiro login (teste unitário)
+- [x] Senha com menos de 12 caracteres → erro no formulário e 422 na API
+- [x] Senha vazada conhecida (ex.: `password123456`) → recusada com mensagem clara
+- [x] API do HIBP fora do ar (simular) → cadastro permitido + log
+- [x] Hash novo com custo 12; conta antiga migra no primeiro login (teste unitário)
+
+### Evidências — 2026-10-15
+
+Implementada em `dev1-sec/password-policy`, a partir de `phase-4` (`c70352f`). O indicador de força (opcional) ficou de fora.
+
+| Verificação                                    | Resultado                                                                              |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `npx vitest run` (core e shell)                | 132/132 e 142/142                                                                      |
+| Stories do `RegisterForm` (Chromium)           | 6/6, incluindo `PasswordPolicy` (dica acessível, 11 caracteres barrados, senha colada) |
+| `npm run test:integration` (PostgreSQL 16)     | 62/62: cadastro com custo 12 e hash `$2b$10$` migrado para `$2b$12$` no login          |
+| `npx playwright test --project=chromium`       | 10/10 com senha aleatória ≥ 12 e hash custo 12 no fixture                              |
+| `POST /api/auth/register` (build, HIBP ligado) | Curta → 422 · forte → 201 · `password123456` → 422 com a mensagem de vazamento         |
+| HIBP real                                      | `password123456` vazada; aleatória não; timeout → `false` + `console.warn` (fail-open) |
+
+A primeira consulta ao HIBP depois de subir o servidor levou 3,6 s nesta máquina (handshake TLS); as seguintes, ~0,4 s. Com o timeout de 2 s, esse primeiro cadastro cai no fail-open.
 
 ## Gotchas
 

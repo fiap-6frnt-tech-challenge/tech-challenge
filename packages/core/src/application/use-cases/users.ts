@@ -1,8 +1,14 @@
-import { ConflictError, RateLimitedError, TurnstileRequiredError } from '../../domain';
+import {
+  ConflictError,
+  RateLimitedError,
+  TurnstileRequiredError,
+  ValidationError,
+} from '../../domain';
 import { registerSchema } from '../../schemas';
 import type {
   CaptchaVerifier,
   IdGenerator,
+  PasswordBreachChecker,
   PasswordHasher,
   RateLimiter,
   RateLimitKeyGenerator,
@@ -11,13 +17,17 @@ import type {
 import type { NewUser, User } from '../types';
 import { parseOrThrow } from '../parseOrThrow';
 
+export const BREACHED_PASSWORD_MESSAGE =
+  'Esta senha já apareceu em vazamentos de dados. Escolha outra senha.';
+
 export class RegisterUser {
   constructor(
     private readonly users: UserRepository,
     private readonly passwords: PasswordHasher,
     private readonly ids: IdGenerator,
     private readonly rateLimiter: RateLimiter,
-    private readonly rateLimitKeys: RateLimitKeyGenerator
+    private readonly rateLimitKeys: RateLimitKeyGenerator,
+    private readonly breachChecker: PasswordBreachChecker
   ) {}
 
   async execute(input: unknown, ipAddress: string): Promise<User> {
@@ -30,6 +40,11 @@ export class RegisterUser {
       registerSchema,
       input
     );
+    if (await this.breachChecker.isBreached(data.password)) {
+      throw new ValidationError([
+        { code: 'custom', path: ['password'], message: BREACHED_PASSWORD_MESSAGE },
+      ]);
+    }
     const email = data.email.trim().toLowerCase();
     if (await this.users.findByEmail(email)) throw new ConflictError('E-mail');
     const newUser: NewUser = {
@@ -110,6 +125,10 @@ export class AuthenticateUser {
     }
 
     await this.rateLimiter.reset(emailKey);
-    return user;
+    if (!this.passwords.needsRehash(user.passwordHash)) return user;
+
+    const passwordHash = await this.passwords.hash(password);
+    await this.users.updatePasswordHash(user.id, passwordHash);
+    return { ...user, passwordHash };
   }
 }

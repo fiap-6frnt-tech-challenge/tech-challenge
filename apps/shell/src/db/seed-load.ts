@@ -85,7 +85,7 @@ async function seedLoad() {
       id: USER_ID,
       name: USER_NAME,
       email: USER_EMAIL,
-      passwordHash: await hash(USER_PASSWORD, 10),
+      passwordHash: await hash(USER_PASSWORD, 12),
     });
     console.log(`Carga: usuário ${USER_EMAIL} criado (senha: ${USER_PASSWORD}).`);
   }

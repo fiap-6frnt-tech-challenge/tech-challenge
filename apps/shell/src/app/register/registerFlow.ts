@@ -5,6 +5,7 @@ type RegisterFlowResult = { ok: true } | { ok: false; error: string };
 
 type RegisterErrorResponse = {
   error?: string;
+  issues?: { fieldErrors?: Record<string, string[] | undefined> };
 };
 
 export async function registerAndSignIn(data: RegisterFormFields): Promise<RegisterFlowResult> {
@@ -16,9 +17,15 @@ export async function registerAndSignIn(data: RegisterFormFields): Promise<Regis
 
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as RegisterErrorResponse;
+    const fieldError = Object.values(body.issues?.fieldErrors ?? {})
+      .flat()
+      .find(Boolean);
     return {
       ok: false,
-      error: res.status === 409 ? 'E-mail já cadastrado' : (body.error ?? 'Falha no cadastro'),
+      error:
+        res.status === 409
+          ? 'E-mail já cadastrado'
+          : (fieldError ?? body.error ?? 'Falha no cadastro'),
     };
   }
 

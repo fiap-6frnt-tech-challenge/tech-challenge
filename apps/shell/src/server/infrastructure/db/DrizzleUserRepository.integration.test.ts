@@ -46,6 +46,22 @@ describe('DrizzleUserRepository', () => {
     expect(await repository.findByEmail(bia.email)).toEqual(bia);
   });
 
+  it('troca só o hash de senha do usuário indicado', async () => {
+    const carla = user('carla');
+    const duda = user('duda');
+    await repository.create(carla);
+    await repository.create(duda);
+    const rehashed = '$2b$12$IplSxM7DRgUxQc6VRjJk/u8W5MtEpyoWALM2GdoOLREyWZE.SQjwS';
+
+    await repository.updatePasswordHash(carla.id, rehashed);
+
+    expect(await repository.findByEmail(carla.email)).toEqual({
+      ...carla,
+      passwordHash: rehashed,
+    });
+    expect(await repository.findByEmail(duda.email)).toEqual(duda);
+  });
+
   it('devolve null para e-mail desconhecido', async () => {
     expect(await repository.findByEmail(`${scope.id('ninguem')}@bytebank.test`)).toBeNull();
   });
