@@ -10,11 +10,17 @@ const navLinks = [
   { href: '/transactions', label: 'Transações' },
 ];
 
-export function Sidebar({ onLinkClick, activePath }: SidebarProps) {
+export function Sidebar({ onLinkClick, onLinkIntent, activePath }: SidebarProps) {
   const routerPathname = usePathname();
   const pathname = activePath ?? routerPathname;
 
   const isSelectedMenu = (pathname: string, href: string) => pathname === href;
+
+  const linkEvents = (href: string) => ({
+    onClick: () => onLinkClick?.(href),
+    onPointerEnter: () => onLinkIntent?.(href),
+    onFocus: () => onLinkIntent?.(href),
+  });
 
   return (
     <nav aria-label="Navegação principal">
@@ -27,7 +33,7 @@ export function Sidebar({ onLinkClick, activePath }: SidebarProps) {
             <li key={link.href}>
               <Link
                 href={link.href}
-                onClick={onLinkClick}
+                {...linkEvents(link.href)}
                 className={cn(
                   'block rounded-default p-md',
                   isSelected ? 'body-semibold' : '',
@@ -52,6 +58,7 @@ export function Sidebar({ onLinkClick, activePath }: SidebarProps) {
             <li key={link.href}>
               <Link
                 href={link.href}
+                {...linkEvents(link.href)}
                 className={cn(
                   'block rounded-default px-md py-sm',
                   isSelected ? 'body-semibold' : '',
@@ -76,6 +83,7 @@ export function Sidebar({ onLinkClick, activePath }: SidebarProps) {
             <li key={link.href}>
               <Link
                 href={link.href}
+                {...linkEvents(link.href)}
                 className={cn(
                   'block rounded-default px-md py-sm',
                   isSelected ? 'body-semibold' : '',

@@ -6,6 +6,7 @@ const meta: Meta<typeof Header> = {
   title: 'Organisms/Header',
   component: Header,
   tags: ['autodocs'],
+  args: { userName: 'Joana da Silva Oliveira' },
   argTypes: {
     userName: { control: 'text' },
     actionsSlot: { control: false },
@@ -43,6 +44,16 @@ export const Desktop: Story = {
 
 export const CustomUser: Story = {
   args: { userName: 'Felipe Rosa' },
+};
+
+export const WithoutUserName: Story = {
+  args: { userName: undefined },
+  globals: { viewport: { value: 'desktop' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText('Joana da Silva Oliveira')).not.toBeInTheDocument();
+    await expect(canvasElement.querySelector('header .label-default')).toBeNull();
+  },
 };
 
 export const WithActionsSlot: Story = {

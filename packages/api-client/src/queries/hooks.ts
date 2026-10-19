@@ -1,7 +1,8 @@
-import { useCallback, useMemo } from 'react';
-import { useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo } from 'react';
+import { hashKey, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { tap, type Observable } from 'rxjs';
 import type { DashboardSummary, NewTransaction, UpdateTransaction } from '@bytebank/core';
+import { shouldPrefetch } from '@bytebank/shared';
 import { publish, createClientSessionGuard, ClientSessionEndedError } from '@bytebank/stores';
 import type { GetPaginatedParams, PaginatedResponse, SummaryRange } from '../http';
 import type { AttachmentUploadEvent } from '../gateways/types';
@@ -9,6 +10,7 @@ import { attachmentKeys, overviewKeys, summaryKeys, transactionKeys } from '../k
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
 import { AttachmentHttpGateway } from '../gateways/AttachmentHttpGateway';
 import { useSessionMutation } from './useSessionMutation';
+import { accountOverviewQuery, dashboardSummaryQuery, transactionsPageQuery } from './queryOptions';
 
 const transactions = new TransactionHttpGateway();
 const attachments = new AttachmentHttpGateway();
@@ -31,15 +33,6 @@ function removeFromListCache(old: ListCache, id: string): ListCache {
   return { ...old, data: old.data.filter((t) => t.id !== id), items: Math.max(0, old.items - 1) };
 }
 
-function getDefaultSummaryRange(now = new Date()): Required<SummaryRange> {
-  const from = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-
-  return {
-    from: from.toISOString().slice(0, 10),
-    to: now.toISOString().slice(0, 10),
-  };
-}
-
 export interface DashboardSummaryOptions<TData> extends SummaryRange {
   select?: (summary: DashboardSummary) => TData;
 }
@@ -48,50 +41,34 @@ export function useDashboardSummary<TData = DashboardSummary>({
   select,
   ...range
 }: DashboardSummaryOptions<TData> = {}) {
-  const effectiveRange = useMemo(
-    () => ({ ...getDefaultSummaryRange(), ...range }),
-    [range.from, range.to]
-  );
+  const options = useMemo(() => dashboardSummaryQuery(range), [range.from, range.to]);
 
-  return useQuery({
-    queryKey: summaryKeys.range(effectiveRange),
-    queryFn: ({ signal }) => transactions.summary(effectiveRange, { signal }),
-    staleTime: 60_000,
-    select,
-  });
+  return useQuery({ ...options, select });
 }
 
 export function useAccountOverview() {
-  return useQuery({
-    queryKey: overviewKeys.all,
-    queryFn: ({ signal }) => transactions.overview({ signal }),
-  });
+  return useQuery(accountOverviewQuery());
 }
 
 export function useTransactionsPage(params: GetPaginatedParams) {
-  // Normalize params so the cache key matches the actual request (defaults + omitting "all"/empty filters).
-  const normalizedParams: GetPaginatedParams = {
-    page: params.page,
-    perPage: params.perPage ?? 10,
-    sortBy: params.sortBy ?? 'date',
-    sortOrder: params.sortOrder ?? 'desc',
-    ...(params.type && params.type !== 'all' ? { type: params.type } : {}),
-    ...(params.dateFrom ? { dateFrom: params.dateFrom } : {}),
-    ...(params.dateTo ? { dateTo: params.dateTo } : {}),
-    ...(params.q ? { q: params.q } : {}),
-    ...(params.amount_gte !== undefined ? { amount_gte: params.amount_gte } : {}),
-    ...(params.amount_lte !== undefined ? { amount_lte: params.amount_lte } : {}),
-    ...(params.category?.length ? { category: params.category } : {}),
-  };
+  return useQuery({ ...transactionsPageQuery(params), placeholderData: (prev) => prev });
+}
 
-  return useQuery({
-    queryKey: transactionKeys.list({ ...normalizedParams }),
-    queryFn: ({ signal }) => {
-      const { page, perPage, ...filter } = normalizedParams;
-      return transactions.list(filter, { page, perPage: perPage ?? 10 }, { signal });
-    },
-    placeholderData: (prev) => prev,
-  });
+export function usePrefetchNextTransactionsPage(
+  params: GetPaginatedParams,
+  totalPages: number | undefined
+) {
+  const queryClient = useQueryClient();
+  const next =
+    totalPages !== undefined && params.page < totalPages
+      ? transactionsPageQuery({ ...params, page: params.page + 1 })
+      : undefined;
+  const nextKey = next ? hashKey(next.queryKey) : undefined;
+
+  useEffect(() => {
+    if (!next || !shouldPrefetch()) return;
+    void queryClient.prefetchQuery(next);
+  }, [queryClient, nextKey]);
 }
 
 export function useTransaction(id: string) {

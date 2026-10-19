@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { Sidebar } from './Sidebar';
 
 const meta: Meta<typeof Sidebar> = {
@@ -49,6 +50,26 @@ export const DesktopTransactions: Story = {
   args: { activePath: '/transactions' },
   globals: { viewport: { value: 'desktop' } },
   decorators: desktopDecorator,
+};
+
+export const LinkIntent: Story = {
+  name: 'Desktop — intenção de navegação',
+  args: { activePath: '/', onLinkIntent: fn(), onLinkClick: fn() },
+  globals: { viewport: { value: 'desktop' } },
+  decorators: desktopDecorator,
+  play: async ({ canvasElement, args }) => {
+    const link = within(canvasElement).getByRole('link', { name: 'Transações' });
+
+    await userEvent.hover(link);
+    await expect(args.onLinkIntent).toHaveBeenLastCalledWith('/transactions');
+
+    link.blur();
+    link.focus();
+    await expect(args.onLinkIntent).toHaveBeenCalledTimes(2);
+
+    await userEvent.click(link);
+    await expect(args.onLinkClick).toHaveBeenCalledWith('/transactions');
+  },
 };
 
 export const MobileInicio: Story = {

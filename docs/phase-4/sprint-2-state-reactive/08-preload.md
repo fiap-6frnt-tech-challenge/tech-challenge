@@ -67,10 +67,12 @@ A Fase 2 já faz preconnect e preload dos **manifests** dos remotes (`app/layout
 
 ## Validação
 
-- [ ] Hover em "Transações" baixa os chunks do expose e a 1ª página antes do clique (aba Network)
-- [ ] Navegar para a página 2 da lista não mostra loading (dados já no cache)
-- [ ] Nada é pré-carregado com "Economia de dados" ativa ou em 2G
-- [ ] Tempo clique → conteúdo menor que na baseline (anotado)
+- [x] Hover em "Transações" baixa os chunks do expose e a 1ª página antes do clique (aba Network)
+- [x] Navegar para a página 2 da lista não mostra loading (dados já no cache)
+- [x] Nada é pré-carregado com "Economia de dados" ativa ou em 2G
+- [x] Tempo clique → conteúdo menor que na baseline (anotado)
+
+**Evidência (2026-10-18):** build de produção em Slow 4G, 3 pares intercalados ([relatório](../perf/s2-08-preload.md)). Com o preload, o clique → lista de `/transactions` caiu de 522 para **333 ms** (−36%), e o clique → dashboard da home de 835 para **341 ms** (−59%). O `loadRemote` caiu de 193 para 2 ms. O hover sozinho baixou o `__federation_expose_TransactionsPage` e a 1ª página. Depois do clique não houve requisição aos MFEs, e a página 2 abriu do cache, sem `aria-busy`. Com Economia de dados ou 2G emulados, nada saiu antes do clique. O "antes" é a mesma build com `saveData`, porque a baseline do S0-04 não mede clique → conteúdo. A captura da aba Network fica para o vídeo, como no S2-02.
 
 ## Gotchas
 

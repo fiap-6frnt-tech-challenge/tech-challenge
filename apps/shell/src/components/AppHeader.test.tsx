@@ -61,4 +61,14 @@ describe('AppHeader', () => {
     expect(mocks.logout).toHaveBeenCalledTimes(1);
     expect(mocks.dispatch).toHaveBeenCalledWith({ type: 'auth/logout' });
   });
+
+  it('repassa ao Header os handlers de clique e intenção do menu', () => {
+    const onLinkClick = vi.fn();
+    const onLinkIntent = vi.fn();
+
+    const element = AppHeader({ onLinkClick, onLinkIntent });
+
+    expect(element.props.onLinkClick).toBe(onLinkClick);
+    expect(element.props.onLinkIntent).toBe(onLinkIntent);
+  });
 });
