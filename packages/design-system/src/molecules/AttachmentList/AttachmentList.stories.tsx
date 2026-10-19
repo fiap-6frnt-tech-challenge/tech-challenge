@@ -13,7 +13,7 @@ const IMAGE_ATTACHMENT: Attachment = {
   size: 1_258_291,
   mimeType: 'image/png',
   downloadUrl:
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGPIcPz0HwAFSwKbTadG6wAAAABJRU5ErkJggg==',
 };
 
 const PDF_ATTACHMENT: Attachment = {

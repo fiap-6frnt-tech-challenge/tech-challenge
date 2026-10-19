@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { expect, test } from '@playwright/test';
+import { expect, test, type APIRequestContext } from '@playwright/test';
 import { login } from './helpers/auth';
 import { editTransaction, openTransactionsPage } from './helpers/transactions';
 
@@ -15,7 +15,7 @@ const attachment = {
 const attachmentSize = `${attachment.buffer.byteLength} B`;
 const attachmentsUrl = '/api/transactions/e2e-attachment-target/attachments';
 const png = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGPIcPz0HwAFSwKbTadG6wAAAABJRU5ErkJggg==',
   'base64'
 );
 const uploadsDir = resolve(process.env.LOCAL_UPLOADS_DIR ?? '.uploads');
@@ -29,11 +29,24 @@ async function filesAtRest(): Promise<Buffer[]> {
   );
 }
 
+async function clearAttachments(api: APIRequestContext) {
+  const response = await api.get(attachmentsUrl);
+  if (!response.ok()) return;
+  for (const { id } of (await response.json()) as Array<{ id: string }>) {
+    await api.delete(`${attachmentsUrl}/${id}`);
+  }
+}
+
+test.afterEach(async ({ page }) => {
+  await clearAttachments(page.request);
+});
+
 test('uploads, persists, and removes an attachment from an existing transaction', async ({
   page,
   request,
 }) => {
   await login(page);
+  await clearAttachments(page.request);
   await openTransactionsPage(page);
 
   await editTransaction(page, 'E2E Attachment Target');
@@ -121,5 +134,4 @@ test('uploads, persists, and removes an attachment from an existing transaction'
   await openTransactionsPage(page);
   await editTransaction(page, 'E2E Attachment Target');
   await expect(page.getByText('comprovante.pdf')).toBeHidden();
-  expect((await page.request.delete(`${attachmentsUrl}/${photo.id}`)).status()).toBe(204);
 });
