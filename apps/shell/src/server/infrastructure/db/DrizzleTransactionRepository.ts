@@ -11,6 +11,7 @@ import {
 } from '@bytebank/core';
 import type {
   AccountOverview,
+  Cipher,
   DateRange,
   NewTransactionData,
   Page,
@@ -63,14 +64,17 @@ function sortedBy(filter: TransactionFilter) {
 }
 
 export class DrizzleTransactionRepository implements TransactionRepository {
-  constructor(private readonly db: Database) {}
+  constructor(
+    private readonly db: Database,
+    private readonly cipher: Cipher
+  ) {}
 
   async findById(id: string, ownerId: string): Promise<Transaction | null> {
     const row = await this.db.query.transactions.findFirst({
       where: owned(id, ownerId),
       with: { attachments: true },
     });
-    return row ? toTransaction(row) : null;
+    return row ? toTransaction(row, this.cipher) : null;
   }
 
   async list(
@@ -90,7 +94,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       }),
     ]);
     return {
-      items: rows.map((row) => toTransaction(row)),
+      items: rows.map((row) => toTransaction(row, this.cipher)),
       page: page.page,
       perPage: page.perPage,
       total,
@@ -111,7 +115,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
         description: data.description,
       })
       .returning();
-    return toTransaction(row);
+    return toTransaction(row, this.cipher);
   }
 
   async update(id: string, ownerId: string, patch: TransactionPatch): Promise<Transaction | null> {
@@ -151,7 +155,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
         with: { attachments: true },
       }),
     ]);
-    return { balance, recent: recent.map((row) => toTransaction(row)) };
+    return { balance, recent: recent.map((row) => toTransaction(row, this.cipher)) };
   }
 
   async monthlyTotals(ownerId: string, range: Partial<DateRange>): Promise<MonthlyAggregate[]> {

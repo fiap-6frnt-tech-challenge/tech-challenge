@@ -53,6 +53,9 @@ export default defineConfig({
         HIBP_ENABLED: process.env.HIBP_ENABLED ?? 'false',
         DATABASE_URL:
           process.env.DATABASE_URL ?? 'postgres://bytebank:bytebank@localhost:5432/bytebank',
+        DATA_ENCRYPTION_KEYS:
+          process.env.DATA_ENCRYPTION_KEYS ?? '1:Ynl0ZWJhbmstZTJlLWRhdGEtZW5jcnlwdGlvbi1rZXk=',
+        DATA_ENCRYPTION_ACTIVE_KEY_ID: process.env.DATA_ENCRYPTION_ACTIVE_KEY_ID ?? '1',
         BLOB_READ_WRITE_TOKEN: '',
         LOCAL_UPLOADS_DIR: resolve(process.env.LOCAL_UPLOADS_DIR ?? '.uploads'),
       },

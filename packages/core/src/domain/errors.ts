@@ -29,6 +29,8 @@ export class RateLimitedError extends DomainError {
   }
 }
 
+export class InvalidFileError extends DomainError {}
+
 export class TurnstileRequiredError extends DomainError {
   constructor() {
     super('Confirme o desafio de segurança');

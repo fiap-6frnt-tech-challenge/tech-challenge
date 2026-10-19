@@ -20,6 +20,12 @@ export { CATEGORIES, categoryLabel, type Category, type CategoryId } from './cat
 export { suggestCategory } from './category/suggestCategory';
 export type { DashboardSummary } from './dashboard/DashboardSummary';
 export {
+  ATTACHMENT_MAX_SIZE_BYTES,
+  ATTACHMENT_MIME_TYPES,
+  detectAttachmentType,
+  type AttachmentMimeType,
+} from './attachment/fileType';
+export {
   fromSearchParams,
   toSearchParams,
   normalizeTransactionFilter,
@@ -43,5 +49,6 @@ export {
   RateLimitedError,
   TurnstileRequiredError,
   AuthenticationError,
+  InvalidFileError,
 } from './errors';
 export type { DomainEvent } from './events';

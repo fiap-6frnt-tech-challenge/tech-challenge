@@ -290,7 +290,7 @@ const transaction = {
 };
 const attachment = {
   id: 'att-1',
-  url: 'https://blob.example/receipt.pdf',
+  downloadUrl: '/api/transactions/tx-1/attachments/att-1/download',
   name: 'receipt.pdf',
   size: 4,
   mimeType: 'application/pdf',
@@ -342,7 +342,7 @@ describe('mutation domain events', () => {
   it('publishes and invalidates when the progress stream completes an upload', () => {
     const attachment = {
       id: 'att-stream',
-      url: '/attachments/att-stream',
+      downloadUrl: '/api/transactions/tx-1/attachments/att-stream/download',
       name: 'receipt.pdf',
       size: 4,
       mimeType: 'application/pdf',

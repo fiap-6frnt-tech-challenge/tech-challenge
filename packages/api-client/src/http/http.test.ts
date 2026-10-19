@@ -151,7 +151,7 @@ describe('SummaryService', () => {
 describe('AttachmentService', () => {
   const attachment = {
     id: 'attachment-1',
-    url: 'https://blob.example/attachment-1.pdf',
+    downloadUrl: '/api/transactions/transaction-1/attachments/attachment-1/download',
     name: 'recibo.pdf',
     size: 1024,
     mimeType: 'application/pdf',

@@ -8,6 +8,7 @@ import type {
 } from '@bytebank/shared';
 import { db } from '@/db';
 import { attachments, transactions, type AttachmentRow, type TransactionRow } from '@/db/schema';
+import { attachmentDownloadUrl } from '@/server/attachmentDownloadUrl';
 
 type TransactionWithAttachments = TransactionRow & {
   attachments?: AttachmentRow[];
@@ -16,7 +17,7 @@ type TransactionWithAttachments = TransactionRow & {
 function toAttachment(row: AttachmentRow): Attachment {
   return {
     id: row.id,
-    url: row.url,
+    downloadUrl: attachmentDownloadUrl(row.transactionId, row.id),
     name: row.name,
     size: row.size,
     mimeType: row.mimeType,
@@ -191,7 +192,7 @@ export async function createAttachment(data: {
     .values({
       id: crypto.randomUUID(),
       transactionId: data.transactionId,
-      url: data.url,
+      ref: data.url,
       name: data.name,
       size: data.size,
       mimeType: data.mimeType,

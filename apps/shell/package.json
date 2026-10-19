@@ -10,6 +10,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/db/seed.ts",
+    "db:migrate-attachments": "tsx --tsconfig tsconfig.scripts.json src/db/migrate-attachments.ts",
     "lint": "eslint --fix",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",

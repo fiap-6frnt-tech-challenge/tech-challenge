@@ -1,5 +1,6 @@
+import { randomBytes } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { resolveFileStorage } from './container';
+import { resolveCipher, resolveFileStorage } from './container';
 import { LocalFileStorage } from './infrastructure/storage/LocalFileStorage';
 import { VercelBlobFileStorage } from './infrastructure/storage/VercelBlobFileStorage';
 
@@ -42,10 +43,70 @@ describe('resolveFileStorage', () => {
   });
 });
 
+describe('resolveCipher', () => {
+  const key = randomBytes(32).toString('base64');
+  const context = 'attachment:a1';
+  const plain = new TextEncoder().encode('recibo');
+
+  function stubCipherEnv(env: { keys?: string; active?: string; nodeEnv: string; phase?: string }) {
+    vi.stubEnv('DATA_ENCRYPTION_KEYS', env.keys ?? '');
+    vi.stubEnv('DATA_ENCRYPTION_ACTIVE_KEY_ID', env.active ?? '');
+    vi.stubEnv('NODE_ENV', env.nodeEnv);
+    vi.stubEnv('NEXT_PHASE', env.phase ?? '');
+  }
+
+  it('usa a chave ativa configurada', () => {
+    stubCipherEnv({ keys: `1:${key}`, active: '1', nodeEnv: 'production' });
+    const cipher = resolveCipher();
+    const payload = cipher.encrypt(plain, context);
+    expect(payload[1]).toBe(1);
+    expect(new Uint8Array(cipher.decrypt(payload, context))).toEqual(plain);
+  });
+
+  it.each([
+    [
+      'chave com tamanho errado',
+      `1:${randomBytes(16).toString('base64')}`,
+      '1',
+      'exatamente 32 bytes',
+    ],
+    ['chave ativa ausente', `1:${key}`, '', 'DATA_ENCRYPTION_ACTIVE_KEY_ID'],
+    ['chave ativa inexistente', `1:${key}`, '2', 'DATA_ENCRYPTION_ACTIVE_KEY_ID'],
+  ])('falha no boot com %s', (_name, keys, active, message) => {
+    stubCipherEnv({ keys, active, nodeEnv: 'development' });
+    expect(() => resolveCipher()).toThrow(message);
+  });
+
+  it('exige as chaves em produção', () => {
+    stubCipherEnv({ nodeEnv: 'production' });
+    expect(() => resolveCipher()).toThrow('DATA_ENCRYPTION_KEYS');
+  });
+
+  it.each([
+    ['no desenvolvimento', 'development', undefined],
+    ['no build de produção', 'production', 'phase-production-build'],
+  ])('usa a chave local de desenvolvimento %s', (_name, nodeEnv, phase) => {
+    stubCipherEnv({ nodeEnv, phase });
+    const payload = resolveCipher().encrypt(plain, context);
+    expect(payload[1]).toBe(0);
+    expect(new Uint8Array(resolveCipher().decrypt(payload, context))).toEqual(plain);
+  });
+});
+
 describe('container', () => {
   it('não carrega em produção sem token, o que derruba o build das rotas que o importam', async () => {
     stubStorageEnv({ nodeEnv: 'production' });
+    vi.stubEnv('DATA_ENCRYPTION_KEYS', `1:${randomBytes(32).toString('base64')}`);
+    vi.stubEnv('DATA_ENCRYPTION_ACTIVE_KEY_ID', '1');
     vi.resetModules();
     await expect(import('./container')).rejects.toThrow(missingToken);
+  });
+
+  it('não atende requisições em produção sem as chaves de cifra', async () => {
+    stubStorageEnv({ uploadsDir: '/srv/uploads', nodeEnv: 'production' });
+    vi.stubEnv('DATA_ENCRYPTION_KEYS', '');
+    vi.stubEnv('NEXT_PHASE', 'phase-production-server');
+    vi.resetModules();
+    await expect(import('./container')).rejects.toThrow('DATA_ENCRYPTION_KEYS');
   });
 });
