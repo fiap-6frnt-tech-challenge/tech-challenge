@@ -8,6 +8,8 @@ import { useFocusTrap } from '../../hooks';
 import type { ModalProps } from './IModal';
 
 export function Modal({
+  role = 'dialog',
+  descriptionId,
   isOpen,
   onClose,
   title,
@@ -24,9 +26,10 @@ export function Modal({
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-lg [animation:backdrop-in_150ms_ease-out]"
-      role="dialog"
+      role={role}
       aria-modal="true"
       aria-labelledby={titleId}
+      aria-describedby={descriptionId}
     >
       <div
         className="absolute inset-0 bg-content-primary/50"

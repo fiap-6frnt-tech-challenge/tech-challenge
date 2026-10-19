@@ -29,9 +29,22 @@ export const users = pgTable('users', {
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  sessionVersion: integer('session_version').notNull().default(0),
   image: text('image'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const authSessions = pgTable(
+  'auth_sessions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (t) => [index('auth_sessions_user_idx').on(t.userId)]
+);
 
 export const authAttempts = pgTable('auth_attempts', {
   key: text('key').primaryKey(),

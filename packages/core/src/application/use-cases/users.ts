@@ -113,7 +113,7 @@ export class AuthenticateUser {
     };
 
     const user = await this.users.findByEmail(normalizedEmail);
-    if (!user) {
+    if (!user || !user.passwordHash) {
       await this.passwords.verifyDummy(password);
       await registerFailure();
       return null;

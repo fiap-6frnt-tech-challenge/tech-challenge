@@ -1,6 +1,7 @@
 import type { Attachment } from '@bytebank/core';
 import { AjaxError, ajax } from 'rxjs/ajax';
-import { filter, map, type Observable } from 'rxjs';
+import { defer, filter, map, tap, type Observable } from 'rxjs';
+import { createSessionExpiryReporter } from '../http/sessionExpiry';
 import { apiUrl, httpRequest } from '../http/httpClient';
 import type { AttachmentGateway, AttachmentUploadEvent, RequestOptions } from './types';
 
@@ -29,12 +30,21 @@ export class AttachmentHttpGateway implements AttachmentGateway {
     const body = new FormData();
     body.append('file', file);
 
-    return ajax<Attachment>({
-      url: apiUrl(`/transactions/${encodeURIComponent(id)}/attachments`),
-      method: 'POST',
-      body,
-      includeUploadProgress: true,
-      ...(this.createXHR ? { createXHR: this.createXHR } : {}),
+    return defer(() => {
+      const reportExpired = createSessionExpiryReporter();
+      return ajax<Attachment>({
+        url: apiUrl(`/transactions/${encodeURIComponent(id)}/attachments`),
+        method: 'POST',
+        body,
+        includeUploadProgress: true,
+        ...(this.createXHR ? { createXHR: this.createXHR } : {}),
+      }).pipe(
+        tap({
+          error: (error: unknown) => {
+            if (error instanceof AjaxError && error.status === 401) reportExpired();
+          },
+        })
+      );
     }).pipe(
       filter(
         (response) => response.type === 'upload_progress' || response.type === 'download_load'

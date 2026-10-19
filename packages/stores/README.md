@@ -35,6 +35,7 @@ MFEs consume the same store as a shared singleton via Module Federation
 - `hooks` — typed `useAppDispatch`, `useAppSelector` and `useAppStore`.
 - `uploadCancellation` — external callback registry for cancelling queues; callbacks and Files never enter Redux.
 - `clientSession` — `invalidateClientSession`, `createClientSessionGuard` and `ClientSessionEndedError` for rejecting work started in an ended client session.
+- `reactive/idle` — `idle$` and `idleTimeoutMs` for throttled activity, warning and absolute inactivity deadlines with an injectable scheduler.
 - `events/domainEvents` — shared RxJS domain event bus; the shell bridges successful operations to notifications.
 
 ## State ownership and logout
@@ -42,6 +43,8 @@ MFEs consume the same store as a shared singleton via Module Federation
 Redux contains client state only: authentication, filters, notifications and serializable upload metadata (`ids` / `entities`). Server data remains in TanStack Query. Files and RxJS subscriptions remain in the upload hook.
 
 The shell registers listeners and the event bridge in `ClientEffects`, with cleanup on unmount. `logout.pending` and `clearSession` invalidate the client session, cancel active and queued uploads, clear the QueryClient, then reset every Redux slice. API mutations use session guards to prevent late success events, optimistic rollbacks or UI feedback from restoring data after logout. Session guards suppress stale results; they do not undo a request already accepted by the server.
+
+The logout thunk confirms current-session revocation before calling Auth.js signOut. A failed confirmation leaves private state cleared and exposes `auth.logoutError` for a retry dialog; SessionSync must not restore that profile. Concurrent logout calls are deduplicated. Optional `expired` / `idle` reasons select fixed login notices.
 
 The shell unmounts private content when authentication is cleared so query observers cannot fetch data again while logout redirects to the login page.
 

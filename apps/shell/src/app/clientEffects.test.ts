@@ -59,7 +59,7 @@ describe('domain event bridge', () => {
       queryClient: new QueryClient(),
       cancelUploads: () => undefined,
     });
-    store.dispatch(logout.pending('request'));
+    store.dispatch(logout.pending('request', undefined));
     events$.next({ type: 'transaction.created', version: 1, transaction });
     expect(selectAllNotifications(store.getState())).toEqual([]);
     stopBridge();
@@ -126,7 +126,7 @@ describe('client listener composition', () => {
         store.dispatch(uploadCancelled('upload'));
       },
     });
-    store.dispatch(logout.pending('request'));
+    store.dispatch(logout.pending('request', undefined));
     expect(cancelled).toBe(true);
     expect(queryClient.getQueryCache().getAll()).toEqual([]);
     expect(queryClient.getMutationCache().getAll()).toEqual([]);
