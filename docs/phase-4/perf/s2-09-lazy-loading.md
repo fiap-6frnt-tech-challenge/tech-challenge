@@ -70,7 +70,7 @@ JS transferido vem de `network-requests.transferSize` do Lighthouse e inclui ove
 
 ## Integração com S2-08
 
-A branch da S2-08 continua separada. A simulação de merge detectou conflito em `apps/dashboard-mfe/src/presentation/Dashboard.tsx`: preservar os imports dos widgets lazy desta task e acrescentar `useEffect`/`markContentReady` da S2-08. O modal da home também passou a ser lazy nesta task; ao integrar, manter os handlers de preload e os marcadores da S2-08 junto da montagem condicional. O Shared deve conservar os novos helpers de prefetch/navigationTiming e os schemas fora do barrel principal. Repetir as medições do conjunto quando a S2-08 for integrada.
+A branch da S2-08 continua separada. A simulação final de merge detectou conflitos em `apps/dashboard-mfe/src/presentation/Dashboard.tsx`, `apps/transactions-mfe/src/presentation/components/AccountOverview.tsx` e no README do sprint. No Dashboard, preservar os imports dos widgets lazy desta task e acrescentar `useEffect`/`markContentReady` da S2-08. O modal da home também passou a ser lazy nesta task; ao integrar, manter os handlers de preload e os marcadores da S2-08 junto da montagem condicional. O Shared deve conservar os novos helpers de prefetch/navigationTiming e os schemas fora do barrel principal. Repetir as medições do conjunto quando a S2-08 for integrada.
 
 ## Reprodução
 
