@@ -12,7 +12,8 @@ const IMAGE_ATTACHMENT: Attachment = {
   name: 'comprovante.png',
   size: 1_258_291,
   mimeType: 'image/png',
-  url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  downloadUrl:
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
 };
 
 const PDF_ATTACHMENT: Attachment = {
@@ -20,7 +21,7 @@ const PDF_ATTACHMENT: Attachment = {
   name: 'recibo.pdf',
   size: 348_160,
   mimeType: 'application/pdf',
-  url: 'https://example.com/recibo.pdf',
+  downloadUrl: '/api/transactions/tx-1/attachments/attachment-pdf/download',
 };
 
 const meta: Meta<typeof AttachmentList> = {
@@ -67,9 +68,9 @@ export const ComItens: Story = {
 
     await expect(canvas.getByText('comprovante.png')).toBeInTheDocument();
     await expect(canvas.getByText('recibo.pdf')).toBeInTheDocument();
-    await expect(
-      canvas.getByRole('link', { name: 'Abrir comprovante.png em nova aba' })
-    ).toHaveAttribute('target', '_blank');
+    const download = canvas.getByRole('link', { name: 'Baixar recibo.pdf' });
+    await expect(download).toHaveAttribute('href', PDF_ATTACHMENT.downloadUrl);
+    await expect(download).toHaveAttribute('download');
     const removeButton = canvas.getByRole('button', { name: 'Remover anexo: comprovante.png' });
     await expect(removeButton).toBeEnabled();
 

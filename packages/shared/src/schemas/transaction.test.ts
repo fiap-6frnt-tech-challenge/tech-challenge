@@ -19,7 +19,7 @@ const validInput = {
 
 const validAttachment = {
   id: 'att-1',
-  url: 'https://blob.test/recibo.pdf',
+  downloadUrl: '/api/transactions/t1/attachments/a1/download',
   name: 'recibo.pdf',
   size: 1024,
   mimeType: 'application/pdf',
@@ -138,8 +138,13 @@ describe('attachmentSchema', () => {
     expect(() => attachmentSchema.parse(validAttachment)).not.toThrow();
   });
 
-  it('rejeita url inválida', () => {
-    expect(() => attachmentSchema.parse({ ...validAttachment, url: 'not-a-url' })).toThrow();
+  it('rejeita anexo sem downloadUrl', () => {
+    expect(() => attachmentSchema.parse({ ...validAttachment, downloadUrl: '' })).toThrow();
+    const { downloadUrl, ...withoutDownloadUrl } = validAttachment;
+    void downloadUrl;
+    expect(() =>
+      attachmentSchema.parse({ ...withoutDownloadUrl, url: 'https://blob.test/x' })
+    ).toThrow();
   });
 
   it('rejeita size não positivo', () => {

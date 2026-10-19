@@ -27,7 +27,7 @@
 
 ## Contexto
 
-Hoje (`lib/storage.ts`):
+Antes desta task (`lib/storage.ts`, depois `VercelBlobFileStorage` e `AddAttachment`):
 
 - o arquivo vai para o Vercel Blob com `access: 'public'` — quem tiver a URL abre o recibo;
 - a chave do blob inclui o nome original (`${userId}/${Date.now()}-${file.name}`);
@@ -115,7 +115,7 @@ Hoje (`lib/storage.ts`):
      },
    ];
    ```
-5. **Upload (`AddAttachment`):** tamanho ≤ 5 MB → detectar tipo → cifrar com o contexto `attachment:<attachmentId>` → `storage.put(<uuid aleatório>, ciphertext, 'application/octet-stream')` → salvar a linha com a referência e o nome **cifrados**, o tipo detectado e o tamanho.
+5. **Upload (`AddAttachment`):** tamanho ≤ 4 MB (Spike C) → detectar tipo → cifrar com o contexto `attachment:<attachmentId>` → `storage.put(<uuid aleatório>, ciphertext, 'application/octet-stream')` → salvar a linha com a referência e o nome **cifrados**, o tipo detectado e o tamanho.
 6. **Download:** `GET /api/transactions/[id]/attachments/[attachmentId]/download` → confere o dono → busca os bytes → decifra → responde:
    ```ts
    return new NextResponse(bytes, {
@@ -130,27 +130,50 @@ Hoje (`lib/storage.ts`):
 7. **Contrato:** o DTO `Attachment` troca `url` por `downloadUrl` (a rota acima). `attachmentSchema` (core), `AttachmentList` (DS) e os gateways passam a usar `downloadUrl`.
 8. **Anexos antigos (em claro):** coluna `enc_version` (0 = legado, 1 = AES-GCM). A rota de download atende os dois durante a transição; o script `npm run db:migrate-attachments -w @bytebank/shell` baixa cada legado, cifra, reenvia, atualiza a linha e apaga o blob antigo.
 
+## Notas de implementação
+
+- **Onde cada coisa é cifrada.** O `AddAttachment` (core) cifra os bytes com `attachment:<id>` e grava sob um UUID aleatório, sem `userId` nem nome na chave. O `DrizzleAttachmentRepository` cifra `name` e a referência do storage com `attachment:<id>:name` e `attachment:<id>:ref` (contextos distintos impedem trocar um campo pelo outro) e decifra na leitura, inclusive nos anexos embutidos nas transações. O `size` guardado é o do arquivo original.
+- **Formato.** `[versão][keyId][IV 12 B][tag 16 B][ciphertext]`, com `authTagLength: 16` fixo e checagem de tamanho mínimo antes de decifrar.
+- **Validação de arquivo.** O tipo vem dos magic bytes (PNG com os 8 bytes da assinatura, JPEG, PDF, WEBP); o `file.type` do cliente é ignorado. O limite de 4 MB (`ATTACHMENT_MAX_SIZE_BYTES`, no core) é checado antes de ler o corpo e de novo no caso de uso. Recusa → `400` com a mensagem de sempre.
+- **Download.** `route()` passa a aceitar uma `NextResponse` pronta. Outro dono, ou anexo de outra transação, → `404`. O nome é sanitizado (controle, `"`, `/`, `\`; vazio vira `anexo`) e codificado em RFC 5987, incluindo `'()*`.
+- **Contrato.** `Attachment.downloadUrl` substitui `url`; nenhuma resposta da API carrega a referência do storage. No DS, o link vira "Baixar" (`download`), já que a rota responde `Content-Disposition: attachment`; a miniatura usa a mesma rota.
+- **Chaves.** `DATA_ENCRYPTION_KEYS` (ids 1–255, exatamente 32 bytes, sem repetição) e `DATA_ENCRYPTION_ACTIVE_KEY_ID` são validadas ao carregar o container. Em produção, sem chaves, nada sobe — inclusive o login, que importa o container. O `next build` (`NEXT_PHASE`) e o dev usam uma chave local fixa com keyId 0, reservado e recusado no env. E2E e Docker Compose usam chaves de teste versionadas, como o `AUTH_SECRET` dos E2E.
+- **Migração `0008`.** Só `ADD COLUMN enc_version` (expand). A coluna `url` continua no banco, mapeada para `ref` no Drizzle, para a versão em produção seguir funcionando durante o deploy.
+- **`db:migrate-attachments`.** Exige chaves explícitas (nunca usa a de dev) e confere se decifram um anexo já cifrado antes de começar. Tem `--dry-run`, cursor por id e `UPDATE … WHERE enc_version = 0` (idempotente). Se outra execução já migrou a linha, descarta o blob novo; numa falha ambígua do banco, preserva o blob novo para não apontar a linha para um arquivo apagado. Blob legado não removido aparece no relatório. Em produção: `vercel env pull` (Blob, banco e chaves) e rodar o script depois da migração `0008`.
+- **Fora do escopo.** O script de recifragem da rotação (trocar dados da chave 1 para a 2) fica pendente; a rotação em si já funciona pelo keyId.
+
 ## Testes
 
-- [ ] Ida e volta (cifra → decifra) para bytes e texto
-- [ ] Adulteração: um byte alterado → erro
-- [ ] Contexto errado (anexo de outra linha) → erro
-- [ ] Rotação: cifrado com a chave 1, ativa = 2 → ainda decifra
-- [ ] Magic bytes: `.exe` renomeado para `.png` → recusado
-- [ ] Rota: outro usuário → 404; headers corretos na resposta
+- [x] Ida e volta (cifra → decifra) para bytes e texto
+- [x] Adulteração: um byte alterado → erro
+- [x] Contexto errado (anexo de outra linha) → erro
+- [x] Rotação: cifrado com a chave 1, ativa = 2 → ainda decifra
+- [x] Magic bytes: `.exe` renomeado para `.png` → recusado
+- [x] Rota: outro usuário → 404; headers corretos na resposta
 
 ## Validação
 
-- [ ] Baixar o blob direto pela URL do storage devolve bytes ilegíveis
-- [ ] Pela aplicação, imagem e PDF abrem normalmente
-- [ ] Nenhuma resposta da API contém a URL do blob
-- [ ] Anexos legados migrados (ou servidos pela rota durante a transição)
+- [x] Baixar o blob direto pela URL do storage devolve bytes ilegíveis (storage local; Blob real fica para a validação do deploy)
+- [x] Pela aplicação, imagem e PDF abrem normalmente
+- [x] Nenhuma resposta da API contém a URL do blob
+- [x] Anexos legados migrados (ou servidos pela rota durante a transição)
 
 ## Gotchas
 
 1. Nunca repita um IV com a mesma chave no GCM: 12 bytes aleatórios por operação.
 2. O AAD (`attachment:<id>`) amarra o ciphertext ao registro: trocar arquivos entre linhas do banco faz a decifragem falhar (integridade).
 3. Chaves como variáveis **Sensitive** na Vercel e no `.env.local`, nunca no repo. Guarde uma cópia segura fora do repo: sem a chave, os anexos ficam irrecuperáveis.
-4. 5 MB cifrados em memória cabem numa função serverless; não aumente o limite sem streaming.
+4. 4 MB cifrados em memória cabem numa função serverless (Spike C); não aumente o limite sem streaming.
 5. O nome vindo do usuário vai no `Content-Disposition`: remova `\r`, `\n`, `"`, `/` e `\`, e use `filename*=` com `encodeURIComponent` (evita header injection).
 6. O resultado do Spike C decide se o Blob fica público (com o conteúdo cifrado) ou privado.
+
+## Evidências — 2026-10-18
+
+| Validação                                                       | Resultado                                                                                                                             |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Testes unitários (core, shell, shared, api-client, stores, MFE) | Aprovados, incluindo cifra (ida e volta, adulteração, contexto, rotação), magic bytes, casos de uso e rota de download                |
+| Integração com PostgreSQL 16 descartável e migrations aplicadas | 69 testes aprovados em 7 arquivos; nome e referência ilegíveis no banco, troca de nome entre linhas recusada                          |
+| `next build` sem `DATA_ENCRYPTION_KEYS`                         | Build de produção aprovado; rota `/api/transactions/[id]/attachments/[attachmentId]/download` gerada                                  |
+| E2E Chromium (`npx playwright test --project=chromium`)         | 16 aprovados; o de anexos baixa o PDF idêntico, renderiza PNG pela rota, recusa `.exe` como `.png` e confere o disco sem texto claro  |
+| `db:migrate-attachments` com um legado real em disco            | Recusa sem chaves e com chave errada; `--dry-run` só conta; migra, apaga o arquivo em claro e a segunda execução não encontra legados |
+| `npm run arch:check`                                            | Sem violações                                                                                                                         |

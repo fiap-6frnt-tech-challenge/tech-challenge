@@ -51,7 +51,7 @@ function done(file: File) {
       name: file.name,
       size: file.size,
       mimeType: file.type,
-      url: `/uploads/${file.name}`,
+      downloadUrl: `/api/transactions/tx-1/attachments/${file.name}/download`,
     },
   });
   transfers.get(file)!.complete();

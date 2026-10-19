@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   aggregateByMonth,
@@ -17,14 +18,16 @@ import { db } from '@/db';
 import { attachments, transactions } from '@/db/schema';
 import { integrationScope } from '@/server/testing/integrationScope';
 import seed from '../../../../data/transactions.json';
+import { AesGcmCipher } from '../security/AesGcmCipher';
 import { DrizzleAttachmentRepository } from './DrizzleAttachmentRepository';
 import { DrizzleTransactionRepository } from './DrizzleTransactionRepository';
 
 const scope = integrationScope();
 const userId = scope.id('joana');
 const stranger = scope.id('outra-pessoa');
-const transactionRepository = new DrizzleTransactionRepository(db);
-const attachmentRepository = new DrizzleAttachmentRepository(db);
+const cipher = new AesGcmCipher(new Map([[1, randomBytes(32)]]), 1);
+const transactionRepository = new DrizzleTransactionRepository(db, cipher);
+const attachmentRepository = new DrizzleAttachmentRepository(db, cipher);
 const all = normalizeTransactionFilter({});
 
 const withReceipt = scope.id('txn-102');
@@ -33,9 +36,9 @@ const receiptId = scope.id('att-receipt');
 
 const byId = (items: Transaction[]) => [...items].sort((a, b) => a.id.localeCompare(b.id));
 const cents = (value: number) => Math.round(value * 100) / 100;
-const toDto = ({ id, url, name, size, mimeType }: Attachment): Attachment => ({
+const toDto = ({ id, downloadUrl, name, size, mimeType }: Attachment): Attachment => ({
   id,
-  url,
+  downloadUrl,
   name,
   size,
   mimeType,
@@ -74,7 +77,7 @@ beforeAll(async () => {
     {
       id: receiptId,
       transactionId: withReceipt,
-      url: 'https://example.test/recibo.pdf',
+      ref: 'https://example.test/recibo.pdf',
       name: 'recibo.pdf',
       size: 2048,
       mimeType: 'application/pdf',
@@ -82,7 +85,7 @@ beforeAll(async () => {
     {
       id: scope.id('att-photo'),
       transactionId: withPhoto,
-      url: 'https://example.test/foto.png',
+      ref: 'https://example.test/foto.png',
       name: 'foto.png',
       size: 4096,
       mimeType: 'image/png',

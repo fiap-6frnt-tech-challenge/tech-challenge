@@ -61,10 +61,11 @@ export const attachments = pgTable(
     transactionId: text('transaction_id')
       .notNull()
       .references(() => transactions.id, { onDelete: 'cascade' }),
-    url: text('url').notNull(),
+    ref: text('url').notNull(),
     name: text('name').notNull(),
     size: integer('size').notNull(),
     mimeType: text('mime_type').notNull(),
+    encVersion: integer('enc_version').notNull().default(0),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (t) => [index('attachments_transaction_idx').on(t.transactionId)]

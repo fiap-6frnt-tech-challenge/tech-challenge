@@ -38,11 +38,37 @@ export interface StoredFile {
   contentType: string;
 }
 
+export const ATTACHMENT_ENCRYPTION = { legacy: 0, aesGcm: 1 } as const;
+
 export interface NewAttachment {
+  id: string;
   name: string;
   size: number;
   mimeType: string;
   ref: string;
 }
 
-export type AttachmentRecord = Attachment & { ref: string; transactionId: string; ownerId: string };
+export type AttachmentRecord = Attachment & {
+  ref: string;
+  transactionId: string;
+  ownerId: string;
+  encVersion: number;
+};
+
+export interface LegacyAttachment {
+  id: string;
+  name: string;
+  mimeType: string;
+  ref: string;
+}
+
+export interface AttachmentUpload {
+  name: string;
+  bytes: Uint8Array;
+}
+
+export interface AttachmentFile {
+  name: string;
+  mimeType: string;
+  bytes: Uint8Array;
+}

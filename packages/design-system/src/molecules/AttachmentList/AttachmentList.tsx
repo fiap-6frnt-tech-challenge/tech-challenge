@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, FileText, Loader2, RotateCcw, X } from 'lucide-react';
+import { Download, FileText, Loader2, RotateCcw, X } from 'lucide-react';
 import { formatFileSize } from '@bytebank/shared';
 import { IconButton } from '../../atoms/Button';
 import type { IAttachmentList } from './IAttachmentList';
@@ -31,7 +31,7 @@ export function AttachmentList({
           >
             {isImage(attachment.mimeType) ? (
               <img
-                src={attachment.url}
+                src={attachment.downloadUrl}
                 alt=""
                 className="h-12 w-12 shrink-0 rounded-default object-cover"
               />
@@ -50,14 +50,13 @@ export function AttachmentList({
                 {formatFileSize(attachment.size)}
               </p>
               <a
-                href={attachment.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Abrir ${attachment.name} em nova aba`}
+                href={attachment.downloadUrl}
+                download
+                aria-label={`Baixar ${attachment.name}`}
                 className="inline-flex w-fit items-center gap-xs label-semibold text-brand-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
               >
-                Abrir
-                <ExternalLink aria-hidden="true" size={14} />
+                Baixar
+                <Download aria-hidden="true" size={14} />
               </a>
             </div>
 
