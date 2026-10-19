@@ -113,3 +113,32 @@ test('keyboard traversal reaches deferred widgets and exposes their chart data',
   await expect(balance).toBeFocused();
   await expect(page.getByRole('table', { name: balanceCaption })).toBeAttached();
 });
+
+test('home keeps Zod deferred until the transaction form is opened', async ({ page, browser }) => {
+  await login(page);
+  const context = await browser.newContext({
+    storageState: await page.context().storageState(),
+    viewport: { width: 412, height: 823 },
+  });
+  try {
+    const coldPage = await context.newPage();
+    const sources: Promise<string>[] = [];
+    coldPage.on('response', (response) => {
+      if (response.ok() && response.request().resourceType() === 'script')
+        sources.push(response.text());
+    });
+    await coldPage.goto('/');
+    await expect(
+      coldPage.getByRole('button', { name: 'Nova transação', exact: true })
+    ).toBeEnabled();
+    await coldPage.waitForLoadState('networkidle');
+    expect(sources.length).toBeGreaterThan(0);
+    const initialSources = await Promise.all(sources);
+    expect(initialSources.some((source) => /ZodError|\$ZodError/.test(source))).toBe(false);
+    await coldPage.getByRole('button', { name: 'Nova transação', exact: true }).click();
+    await expect(coldPage.getByRole('dialog')).toBeVisible();
+    await expect(coldPage.getByLabel('Descrição')).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});

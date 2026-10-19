@@ -1,22 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Plus, ReceiptText } from 'lucide-react';
 import { Button, EmptyState, ErrorState } from '@bytebank/design-system';
 import { useAccountOverview } from '@bytebank/api-client';
 import { selectUser, useAppSelector } from '@bytebank/stores';
 import { BalanceCard } from './BalanceCard';
 import { TransactionList } from './TransactionList';
-import { NewTransactionModal } from './NewTransactionModal';
+
+const NewTransactionModal = lazy(() =>
+  import('./NewTransactionModal').then((module) => ({ default: module.NewTransactionModal }))
+);
 
 export default function AccountOverview() {
   const { data, isLoading, isError } = useAccountOverview();
   const user = useAppSelector(selectUser);
   const firstName = user?.name?.split(' ')[0];
   const [isNewTransactionVisible, setIsNewTransactionVisible] = useState(false);
+  const [hasOpenedNewTransaction, setHasOpenedNewTransaction] = useState(false);
 
   if (isError) {
     return <ErrorState />;
+  }
+
+  function openNewTransaction() {
+    setHasOpenedNewTransaction(true);
+    setIsNewTransactionVisible(true);
   }
 
   return (
@@ -53,21 +62,21 @@ export default function AccountOverview() {
             </Button>
           </a>
 
-          <Button
-            disabled={isLoading}
-            className="w-full sm:w-auto"
-            onClick={() => setIsNewTransactionVisible(true)}
-          >
+          <Button disabled={isLoading} className="w-full sm:w-auto" onClick={openNewTransaction}>
             <Plus size={16} aria-hidden="true" />
             Nova transação
           </Button>
         </span>
       </section>
 
-      <NewTransactionModal
-        isOpen={isNewTransactionVisible}
-        onCancel={() => setIsNewTransactionVisible(false)}
-      />
+      {hasOpenedNewTransaction && (
+        <Suspense fallback={<p role="status">Carregando formulário...</p>}>
+          <NewTransactionModal
+            isOpen={isNewTransactionVisible}
+            onCancel={() => setIsNewTransactionVisible(false)}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

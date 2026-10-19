@@ -14,6 +14,20 @@ mkdirSync(outDir, { recursive: true });
 execFileSync(process.execPath, ['scripts/perf/session-cookie.mjs', baseUrl], { stdio: 'inherit' });
 const headersPath = resolve('.secrets/headers.json');
 const cookie = JSON.parse(readFileSync(headersPath, 'utf8')).Cookie;
+const session = await fetch(`${baseUrl}/api/auth/session`, { headers: { Cookie: cookie } }).then(
+  (response) => response.json()
+);
+const remainingMs = Date.parse(session.expires) - Date.now();
+if (
+  !session.user?.id ||
+  !Number.isFinite(remainingMs) ||
+  remainingMs <= 0 ||
+  remainingMs > 8 * 60 * 60 * 1000 + 60_000
+) {
+  throw new Error(
+    'Expected the current phase-4 session contract (authenticated, maxAge 8h); check for stale build artifacts'
+  );
+}
 const browser = await chromium.launch();
 const rows = [];
 try {
@@ -60,6 +74,12 @@ try {
       throw new Error(`Unexpected redirect: ${page.url()}`);
     await Promise.all(pending);
     if (errors.length) throw new Error(`Page failed: ${errors.join('\n')}`);
+    if (
+      label === 'after' &&
+      assets.some((asset) => asset.zod || (path === '/transactions' && asset.recharts))
+    ) {
+      throw new Error(`Heavy dependency unexpectedly loaded on ${path}`);
+    }
     await page.screenshot({ path: resolve(outDir, `${slug}-mobile.png`) });
     rows.push({
       route: path,
