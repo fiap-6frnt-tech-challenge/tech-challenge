@@ -69,3 +69,6 @@ storybook-static
 
 # Cookie de sessão das medições de performance (Fase 4, S0-04)
 .secrets/
+
+# Capturas locais de performance
+/perf/

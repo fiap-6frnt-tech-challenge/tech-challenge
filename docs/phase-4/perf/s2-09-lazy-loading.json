@@ -1,0 +1,187 @@
+{
+  "before": {
+    "graph": {
+      "entry": "[project]/apps/shell/src/lib/federation.ts [app-client] (ecmascript, next/dynamic entry)",
+      "synchronousModules": 1167,
+      "rechartsModules": 201,
+      "zodModules": 78,
+      "schemaPaths": [
+        "[project]/packages/core/src/schemas/transaction.ts",
+        "[project]/packages/shared/src/schemas/transaction.ts",
+        "[project]/packages/core/src/schemas/index.ts",
+        "[project]/packages/core/src/schemas/register.ts",
+        "[project]/packages/design-system/src/organisms/RegisterForm/schema.ts",
+        "[project]/packages/design-system/src/organisms/LoginForm/schema.ts"
+      ]
+    },
+    "routes": [
+      {
+        "route": "/",
+        "best": {
+          "score": 53,
+          "tbt": 224,
+          "lcp": 6012.544999999998,
+          "jsBytes": 568168
+        },
+        "samples": [
+          {
+            "score": 51,
+            "tbt": 256.99999999999955,
+            "lcp": 6013.785999999999,
+            "jsBytes": 568168
+          },
+          {
+            "score": 53,
+            "tbt": 224,
+            "lcp": 6012.544999999998,
+            "jsBytes": 568168
+          },
+          {
+            "score": 53,
+            "tbt": 214,
+            "lcp": 6003.208000000001,
+            "jsBytes": 568168
+          }
+        ],
+        "scriptGzip": 558539,
+        "federation": [
+          {
+            "raw": 581112,
+            "gzip": 155820
+          }
+        ],
+        "rechartsScripts": 1,
+        "zodScripts": 3
+      },
+      {
+        "route": "/transactions",
+        "best": {
+          "score": 81,
+          "tbt": 46,
+          "lcp": 5157.543325,
+          "jsBytes": 514691
+        },
+        "samples": [
+          {
+            "score": 81,
+            "tbt": 46,
+            "lcp": 5157.543325,
+            "jsBytes": 514691
+          },
+          {
+            "score": 81,
+            "tbt": 52,
+            "lcp": 5162.2501250000005,
+            "jsBytes": 514691
+          },
+          {
+            "score": 81,
+            "tbt": 37,
+            "lcp": 5159.034775,
+            "jsBytes": 514691
+          }
+        ],
+        "scriptGzip": 506991,
+        "federation": [
+          {
+            "raw": 581112,
+            "gzip": 155820
+          }
+        ],
+        "rechartsScripts": 1,
+        "zodScripts": 2
+      }
+    ]
+  },
+  "after": {
+    "graph": {
+      "entry": "[project]/apps/shell/src/lib/federation.ts [app-client] (ecmascript, next/dynamic entry)",
+      "synchronousModules": 671,
+      "rechartsModules": 0,
+      "zodModules": 0,
+      "schemaPaths": []
+    },
+    "routes": [
+      {
+        "route": "/",
+        "best": {
+          "score": 88,
+          "tbt": 5,
+          "lcp": 3997.0175,
+          "jsBytes": 314097
+        },
+        "samples": [
+          {
+            "score": 87,
+            "tbt": 10,
+            "lcp": 4024.5295,
+            "jsBytes": 314097
+          },
+          {
+            "score": 88,
+            "tbt": 5,
+            "lcp": 3997.0175,
+            "jsBytes": 314097
+          },
+          {
+            "score": 88,
+            "tbt": 4,
+            "lcp": 3995.46425,
+            "jsBytes": 314097
+          }
+        ],
+        "scriptGzip": 307730,
+        "federation": [
+          {
+            "raw": 187245,
+            "gzip": 49214
+          }
+        ],
+        "rechartsScripts": 0,
+        "zodScripts": 0
+      },
+      {
+        "route": "/transactions",
+        "best": {
+          "score": 88,
+          "tbt": 6,
+          "lcp": 3996.8102,
+          "jsBytes": 317763
+        },
+        "samples": [
+          {
+            "score": 88,
+            "tbt": 6,
+            "lcp": 3996.8102,
+            "jsBytes": 317763
+          },
+          {
+            "score": 88,
+            "tbt": 5,
+            "lcp": 3996.8082000000004,
+            "jsBytes": 317763
+          },
+          {
+            "score": 88,
+            "tbt": 4,
+            "lcp": 3994.9145000000003,
+            "jsBytes": 317763
+          }
+        ],
+        "scriptGzip": 311000,
+        "federation": [
+          {
+            "raw": 187245,
+            "gzip": 49214
+          }
+        ],
+        "rechartsScripts": 0,
+        "zodScripts": 0
+      }
+    ]
+  },
+  "date": "2026-10-19",
+  "baselineCommit": "5b7dd3e",
+  "candidateProductCommit": "1cbb6eee0792ddfedc141ab734d49b56ef749058",
+  "method": "Lighthouse 12.8.2 mobile simulated 4x CPU; best score of3; matching production apps and5000 transactions on Apple M4/macOS 27; direct workspace builds."
+}
