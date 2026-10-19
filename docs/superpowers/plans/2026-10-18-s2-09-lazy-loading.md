@@ -56,7 +56,7 @@
 - [x] Build with the same settings; analyze chunks and capture route network before/after plus three Lighthouse mobile runs per route.
 - [x] Run full tests, type-check, lint, architecture and Chromium/Firefox production E2E; inspect output.
 - [x] Independent whole-branch review; fix confirmed important findings with regression tests.
-- [ ] Record evidence and limitations, commit, push dev3-perf/lazy-loading and deliver PR link/title/body targeting phase-4.
+- [x] Record evidence and limitations, commit, push dev3-perf/lazy-loading and deliver PR link/title/body targeting phase-4.
 
 ## Final implementation decisions
 
@@ -74,3 +74,5 @@
 - Actual network and official analyzer prove the bundle cut. Sanitized measurements and all samples are in docs/phase-4/perf/s2-09-lazy-loading.md and .json.
 - One Important review finding fixed with RED→GREEN and real keyboard traversal; no deferred minors. Additional cold-home Zod regression also RED→GREEN.
 - PR destination remains phase-4. Dashboard/AccountOverview overlaps with the separate S2-08 branch are documented for integration.
+
+Handoff: branch published to origin as dev3-perf/lazy-loading; PR creation targets phase-4 and is left to the user. Local servers and disposable PostgreSQL stopped after validation.
