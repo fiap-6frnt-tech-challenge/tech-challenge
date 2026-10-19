@@ -39,7 +39,7 @@ export function ChartWidget<T extends object>({ loadChart, data, ...widget }: Ch
     </DashboardWidget>
   );
   return (
-    <DeferUntilVisible minHeight={380} fallback={skeleton}>
+    <DeferUntilVisible minHeight={380} fallback={skeleton} label={widget.title}>
       <ChartErrorBoundary
         key={attempt}
         fallback={

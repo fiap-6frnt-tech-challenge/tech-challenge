@@ -33,7 +33,7 @@ afterEach(async () => {
 const render = () =>
   act(() =>
     root.render(
-      <DeferUntilVisible minHeight={360} fallback="Loading">
+      <DeferUntilVisible minHeight={360} fallback="Loading" label="Chart details">
         <button>Chart data</button>
       </DeferUntilVisible>
     )
@@ -71,4 +71,16 @@ it('still renders charts when IntersectionObserver is unavailable', async () => 
   vi.stubGlobal('cancelAnimationFrame', vi.fn());
   await render();
   expect(container.querySelector('button')?.textContent).toBe('Chart data');
+});
+
+it('lets keyboard focus load an offscreen chart without an observer notification', async () => {
+  await render();
+  const region = container.firstElementChild as HTMLDivElement;
+  expect(region.tabIndex).toBe(0);
+  await act(() => region.focus());
+  expect(document.activeElement).toBe(region);
+  expect(region.getAttribute('role')).toBe('region');
+  expect(region.getAttribute('aria-label')).toBe('Chart details');
+  expect(container.querySelector('button')?.textContent).toBe('Chart data');
+  expect(disconnect).toHaveBeenCalled();
 });

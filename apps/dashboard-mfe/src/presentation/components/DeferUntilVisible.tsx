@@ -4,9 +4,15 @@ interface DeferUntilVisibleProps {
   children: ReactNode;
   fallback: ReactNode;
   minHeight: number;
+  label: string;
 }
 
-export function DeferUntilVisible({ children, fallback, minHeight }: DeferUntilVisibleProps) {
+export function DeferUntilVisible({
+  children,
+  fallback,
+  minHeight,
+  label,
+}: DeferUntilVisibleProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -28,7 +34,15 @@ export function DeferUntilVisible({ children, fallback, minHeight }: DeferUntilV
     return () => observer.disconnect();
   }, [visible]);
   return (
-    <div ref={ref} style={visible ? undefined : { minHeight }}>
+    <div
+      ref={ref}
+      role="region"
+      aria-label={label}
+      tabIndex={0}
+      onFocus={() => setVisible(true)}
+      className="rounded-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+      style={visible ? undefined : { minHeight }}
+    >
       {visible ? children : fallback}
     </div>
   );

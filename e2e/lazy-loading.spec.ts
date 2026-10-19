@@ -90,3 +90,26 @@ test('a failed chart download offers a working retry without losing the dashboar
   await expect(page.getByRole('table', { name: incomeCaption })).toBeAttached();
   await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeAttached();
 });
+
+test('keyboard traversal reaches deferred widgets and exposes their chart data', async ({
+  page,
+}) => {
+  await login(page);
+  await revealFirstWidget(page);
+  const income = page.getByRole('region', { name: 'Receita vs Despesa', exact: true });
+  const category = page.getByRole('region', { name: 'Despesas por Categoria', exact: true });
+  const balance = page.getByRole('region', { name: 'Evolução do Saldo', exact: true });
+  await expect(page.getByRole('table', { name: categoryCaption })).toHaveCount(0);
+  await income.focus();
+  await expect(page.getByRole('table', { name: incomeCaption })).toBeAttached();
+  await page.keyboard.press('Tab');
+  await expect(income.getByRole('button', { name: 'Atualizar', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(category).toBeFocused();
+  await expect(page.getByRole('table', { name: categoryCaption })).toBeAttached();
+  await page.keyboard.press('Tab');
+  await expect(category.getByRole('button', { name: 'Atualizar', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(balance).toBeFocused();
+  await expect(page.getByRole('table', { name: balanceCaption })).toBeAttached();
+});
