@@ -70,6 +70,7 @@ export interface TransactionRepository {
   monthlyTotals(ownerId: string, range: Partial<DateRange>): Promise<MonthlyAggregate[]>;
   categoryTotals(ownerId: string, range: Partial<DateRange>): Promise<CategoryAggregate[]>;
   balanceSeries(ownerId: string, range: Partial<DateRange>): Promise<BalancePoint[]>;
+  version(ownerId: string): Promise<string>;
 }
 
 export interface AttachmentRepository {

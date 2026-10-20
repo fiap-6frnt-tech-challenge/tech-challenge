@@ -20,6 +20,7 @@ export const transactions = pgTable(
   (t) => [
     index('transactions_user_date_idx').on(t.userId, t.date),
     index('transactions_user_category_idx').on(t.userId, t.category),
+    index('transactions_user_updated_idx').on(t.userId, t.updatedAt),
     index('transactions_description_trgm_idx').using('gin', t.description.op('gin_trgm_ops')),
   ]
 );

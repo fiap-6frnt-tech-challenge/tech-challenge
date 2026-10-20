@@ -53,6 +53,74 @@ describe('route', () => {
     expect(response.status).toBe(204);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3003');
   });
+
+  describe('with a data version', () => {
+    const version = vi.fn();
+    const handler = vi.fn();
+    const versioned = route(handler, { version });
+    const conditional = (etag: string) =>
+      new Request('http://localhost/api/test', {
+        headers: { 'If-None-Match': etag },
+      }) as import('next/server').NextRequest;
+
+    beforeEach(() => {
+      version.mockResolvedValue('stamp-1');
+      handler.mockResolvedValue({ ok: true });
+    });
+
+    it('answers 304 to the stored ETag without calling the handler', async () => {
+      const first = await versioned(request);
+      const etag = first.headers.get('ETag')!;
+      handler.mockClear();
+
+      const second = await versioned(conditional(etag));
+
+      expect(first.status).toBe(200);
+      expect(second.status).toBe(304);
+      expect(handler).not.toHaveBeenCalled();
+      expect(version).toHaveBeenCalledWith({
+        actor: { userId: 'user-1' },
+        req: expect.anything(),
+        params: {},
+      });
+    });
+
+    it('serves fresh data once the version changes', async () => {
+      const etag = (await versioned(request)).headers.get('ETag')!;
+      version.mockResolvedValue('stamp-2');
+
+      const response = await versioned(conditional(etag));
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get('ETag')).not.toBe(etag);
+      await expect(response.json()).resolves.toEqual({ ok: true });
+    });
+
+    it('never matches the ETag of another user', async () => {
+      const etag = (await versioned(request)).headers.get('ETag')!;
+      mocks.auth.mockResolvedValue({ user: { id: 'user-2' } });
+
+      const response = await versioned(conditional(etag));
+
+      expect(response.status).toBe(200);
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({ actor: { userId: 'user-2' } })
+      );
+    });
+
+    it('checks the session before reading the version', async () => {
+      mocks.auth.mockResolvedValue(null);
+      expect((await versioned(request)).status).toBe(401);
+      expect(version).not.toHaveBeenCalled();
+    });
+
+    it('maps handler errors after the version check', async () => {
+      handler.mockRejectedValue(new NotFoundError('Transação'));
+      const response = await versioned(request);
+      expect(response.status).toBe(404);
+      expect(response.headers.get('ETag')).toBeNull();
+    });
+  });
 });
 
 describe('publicRoute', () => {

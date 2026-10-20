@@ -7,12 +7,14 @@ const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   create: vi.fn(),
   list: vi.fn(),
+  version: vi.fn(),
 }));
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
 vi.mock('@/server/container', () => ({
   container: {
     createTransaction: { execute: mocks.create },
     listTransactions: { execute: mocks.list },
+    getTransactionsVersion: { execute: mocks.version },
   },
 }));
 
@@ -28,8 +30,8 @@ const payload = {
 };
 const tx = { id: 'tx-1', userId: actor.userId, ...payload };
 
-function getRequest(query = ''): NextRequest {
-  return new NextRequest(`http://localhost/api/transactions${query}`);
+function getRequest(query = '', headers: HeadersInit = {}): NextRequest {
+  return new NextRequest(`http://localhost/api/transactions${query}`, { headers });
 }
 function postRequest(body: string): NextRequest {
   return new Request('http://localhost/api/transactions', {
@@ -44,6 +46,7 @@ beforeEach(() => {
   mocks.auth.mockResolvedValue({ user: { id: actor.userId } });
   mocks.create.mockResolvedValue(tx);
   mocks.list.mockResolvedValue({ items: [tx], page: 1, perPage: 10, total: 1, totalPages: 1 });
+  mocks.version.mockResolvedValue('2026-06-23 12:00:00.000001:1');
 });
 
 describe('GET /api/transactions', () => {
@@ -79,11 +82,26 @@ describe('GET /api/transactions', () => {
     );
   });
 
-  it('rejects invalid query before accessing the repository', async () => {
+  it('rejects invalid query without listing', async () => {
     const response = await GET(getRequest('?_page=0'));
     expect(response.status).toBe(422);
     await expect(response.json()).resolves.toMatchObject({ error: 'Dados inválidos' });
     expect(mocks.list).not.toHaveBeenCalled();
+  });
+
+  it('answers 304 to the same page until the data version changes', async () => {
+    const query = '?_page=2&_per_page=5';
+    const etag = (await GET(getRequest(query))).headers.get('ETag')!;
+
+    const unchanged = await GET(getRequest(query, { 'If-None-Match': etag }));
+    const otherPage = await GET(getRequest('?_page=3&_per_page=5', { 'If-None-Match': etag }));
+    mocks.version.mockResolvedValue('2026-06-23 12:00:01.000001:2');
+    const changed = await GET(getRequest(query, { 'If-None-Match': etag }));
+
+    expect(unchanged.status).toBe(304);
+    expect(otherPage.status).toBe(200);
+    expect(changed.status).toBe(200);
+    expect(mocks.list).toHaveBeenCalledTimes(3);
   });
 });
 

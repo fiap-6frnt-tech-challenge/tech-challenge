@@ -5,6 +5,7 @@ import {
   CreateTransaction,
   DeleteTransaction,
   GetTransaction,
+  GetTransactionsVersion,
   ListTransactions,
   UpdateTransaction,
 } from './transactions';
@@ -116,5 +117,20 @@ describe('transaction use cases happy paths and validation', () => {
     });
     expect(result.items.map(({ id }) => id)).toEqual(['tx-a']);
     expect(result.perPage).toBe(100);
+  });
+
+  it('changes the actor data version after each mutation', async () => {
+    const repository = new InMemoryTransactionRepository([ownedByA]);
+    const actor = { userId: 'user-a' };
+    const version = new GetTransactionsVersion(repository);
+    const seen = [await version.execute(actor)];
+
+    await new UpdateTransaction(repository).execute(actor, 'tx-a', { description: 'Nova' });
+    seen.push(await version.execute(actor));
+    await new DeleteTransaction(repository).execute(actor, 'tx-a');
+    seen.push(await version.execute(actor));
+
+    expect(new Set(seen).size).toBe(3);
+    expect(await version.execute(actor)).toBe(seen[2]);
   });
 });

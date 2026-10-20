@@ -127,7 +127,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
         amount: patch.amount,
         date: patch.date,
         description: patch.description,
-        updatedAt: new Date(),
+        updatedAt: sql`now()`,
       })
       .where(owned(id, ownerId))
       .returning({ id: transactions.id });
@@ -156,6 +156,17 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       }),
     ]);
     return { balance, recent: recent.map((row) => toTransaction(row, this.cipher)) };
+  }
+
+  async version(ownerId: string): Promise<string> {
+    const [{ updatedAt, total }] = await this.db
+      .select({
+        updatedAt: sql<string | null>`max(${transactions.updatedAt})::text`,
+        total: count(),
+      })
+      .from(transactions)
+      .where(eq(transactions.userId, ownerId));
+    return `${updatedAt ?? ''}:${total}`;
   }
 
   async monthlyTotals(ownerId: string, range: Partial<DateRange>): Promise<MonthlyAggregate[]> {

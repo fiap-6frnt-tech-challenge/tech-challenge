@@ -352,3 +352,75 @@ describe('DrizzleTransactionRepository — escrita', () => {
     expect(await repository.delete(row.id, editor)).toBe(false);
   });
 });
+
+describe('DrizzleTransactionRepository — versão dos dados', () => {
+  const versioned = scope.id('versioned');
+  const attachmentRepository = new DrizzleAttachmentRepository(db, cipher);
+  const newTransaction = (name: string, userId = versioned) =>
+    repository.create(
+      {
+        id: scope.id(name),
+        type: 'deposit',
+        category: 'salary',
+        amount: 10,
+        date: '2026-04-01',
+        description: 'Versão',
+      },
+      userId
+    );
+
+  it('é estável sem mudanças e conta zero para quem não tem transações', async () => {
+    expect(await repository.version(versioned)).toBe(':0');
+    expect(await repository.version(owner)).toBe(await repository.version(owner));
+  });
+
+  it('muda a cada criação, edição e exclusão do dono, e não com as de outro usuário', async () => {
+    const initial = await repository.version(versioned);
+    const created = await newTransaction('v-created');
+    const afterCreate = await repository.version(versioned);
+    await repository.update(created.id, versioned, { amount: 20 });
+    const afterUpdate = await repository.version(versioned);
+    await newTransaction('v-foreign', other);
+    const afterForeign = await repository.version(versioned);
+    await repository.delete(created.id, versioned);
+    const afterDelete = await repository.version(versioned);
+
+    expect(afterCreate).not.toBe(initial);
+    expect(afterUpdate).not.toBe(afterCreate);
+    expect(afterForeign).toBe(afterUpdate);
+    expect(afterDelete).not.toBe(afterUpdate);
+  });
+
+  it('muda quando um anexo entra ou sai da transação', async () => {
+    const transaction = await newTransaction('v-attached');
+    const before = await repository.version(versioned);
+
+    const attachment = await attachmentRepository.create(transaction.id, versioned, {
+      id: scope.id('v-receipt'),
+      name: 'recibo.pdf',
+      size: 10,
+      mimeType: 'application/pdf',
+      ref: 'v-blob',
+    });
+    const attached = await repository.version(versioned);
+    await attachmentRepository.delete(attachment.id, versioned);
+    const detached = await repository.version(versioned);
+
+    expect(new Set([before, attached, detached]).size).toBe(3);
+  });
+
+  it('não muda quando o anexo é recusado', async () => {
+    const before = await repository.version(owner);
+    await expect(
+      attachmentRepository.create(scope.id('salary'), other, {
+        id: scope.id('v-intruder'),
+        name: 'intruso.pdf',
+        size: 10,
+        mimeType: 'application/pdf',
+        ref: 'v-intruder',
+      })
+    ).rejects.toThrow();
+    expect(await attachmentRepository.delete(receipt.id, other)).toBe(false);
+    expect(await repository.version(owner)).toBe(before);
+  });
+});

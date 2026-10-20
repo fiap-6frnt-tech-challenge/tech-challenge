@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, desc, eq, gt, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, sql, type SQL } from 'drizzle-orm';
 import { NotFoundError } from '@bytebank/core';
 import {
   ATTACHMENT_ENCRYPTION,
@@ -23,6 +23,16 @@ function ownedTransaction(transactionId: string, ownerId: string) {
 }
 
 const isLegacy = eq(attachments.encVersion, ATTACHMENT_ENCRYPTION.legacy);
+
+type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
+
+function touchTransaction(tx: DbTransaction, where: SQL | undefined) {
+  return tx
+    .update(transactions)
+    .set({ updatedAt: sql`now()` })
+    .where(where)
+    .returning({ id: transactions.id });
+}
 
 export class DrizzleAttachmentRepository
   implements AttachmentRepository, LegacyAttachmentRepository
@@ -60,37 +70,39 @@ export class DrizzleAttachmentRepository
     ownerId: string,
     data: NewAttachment
   ): Promise<AttachmentRecord> {
-    const [transaction] = await this.db
-      .select({ id: transactions.id })
-      .from(transactions)
-      .where(ownedTransaction(transactionId, ownerId))
-      .limit(1);
-    if (!transaction) throw new NotFoundError('Transação');
+    return this.db.transaction(async (tx) => {
+      const [transaction] = await touchTransaction(tx, ownedTransaction(transactionId, ownerId));
+      if (!transaction) throw new NotFoundError('Transação');
 
-    const [row] = await this.db
-      .insert(attachments)
-      .values({
-        id: data.id,
-        transactionId,
-        size: data.size,
-        mimeType: data.mimeType,
-        ...encryptAttachmentFields(this.cipher, data.id, data),
-      })
-      .returning();
-    return toAttachmentRecord(row, ownerId, this.cipher);
+      const [row] = await tx
+        .insert(attachments)
+        .values({
+          id: data.id,
+          transactionId,
+          size: data.size,
+          mimeType: data.mimeType,
+          ...encryptAttachmentFields(this.cipher, data.id, data),
+        })
+        .returning();
+      return toAttachmentRecord(row, ownerId, this.cipher);
+    });
   }
 
   async delete(id: string, ownerId: string): Promise<boolean> {
-    const owned = this.db
-      .select({ id: attachments.id })
-      .from(attachments)
-      .innerJoin(transactions, eq(attachments.transactionId, transactions.id))
-      .where(ownedAttachment(id, ownerId));
-    const rows = await this.db
-      .delete(attachments)
-      .where(inArray(attachments.id, owned))
-      .returning({ id: attachments.id });
-    return rows.length > 0;
+    return this.db.transaction(async (tx) => {
+      const owned = tx
+        .select({ id: attachments.id })
+        .from(attachments)
+        .innerJoin(transactions, eq(attachments.transactionId, transactions.id))
+        .where(ownedAttachment(id, ownerId));
+      const [row] = await tx
+        .delete(attachments)
+        .where(inArray(attachments.id, owned))
+        .returning({ transactionId: attachments.transactionId });
+      if (!row) return false;
+      await touchTransaction(tx, eq(transactions.id, row.transactionId));
+      return true;
+    });
   }
 
   async listLegacy(limit: number, afterId?: string): Promise<LegacyAttachment[]> {
@@ -108,11 +120,15 @@ export class DrizzleAttachmentRepository
   }
 
   async markEncrypted(id: string, data: Omit<LegacyAttachment, 'id'>): Promise<boolean> {
-    const rows = await this.db
-      .update(attachments)
-      .set({ mimeType: data.mimeType, ...encryptAttachmentFields(this.cipher, id, data) })
-      .where(and(eq(attachments.id, id), isLegacy))
-      .returning({ id: attachments.id });
-    return rows.length > 0;
+    return this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(attachments)
+        .set({ mimeType: data.mimeType, ...encryptAttachmentFields(this.cipher, id, data) })
+        .where(and(eq(attachments.id, id), isLegacy))
+        .returning({ transactionId: attachments.transactionId });
+      if (!row) return false;
+      await touchTransaction(tx, eq(transactions.id, row.transactionId));
+      return true;
+    });
   }
 }

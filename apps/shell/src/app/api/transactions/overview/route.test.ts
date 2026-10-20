@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
 
-const mocks = vi.hoisted(() => ({ auth: vi.fn(), overview: vi.fn() }));
+const mocks = vi.hoisted(() => ({ auth: vi.fn(), overview: vi.fn(), version: vi.fn() }));
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
 vi.mock('@/server/container', () => ({
-  container: { getAccountOverview: { execute: mocks.overview } },
+  container: {
+    getAccountOverview: { execute: mocks.overview },
+    getTransactionsVersion: { execute: mocks.version },
+  },
 }));
 
 import { GET } from './route';
@@ -25,12 +28,14 @@ const overview = {
     },
   ],
 };
-const request = () => new Request('http://localhost/api/transactions/overview') as NextRequest;
+const request = (headers: HeadersInit = {}) =>
+  new Request('http://localhost/api/transactions/overview', { headers }) as NextRequest;
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.auth.mockResolvedValue({ user: { id: actor.userId } });
   mocks.overview.mockResolvedValue(overview);
+  mocks.version.mockResolvedValue('2026-01-10 12:00:00.000001:1');
 });
 
 describe('GET /api/transactions/overview', () => {
@@ -46,5 +51,16 @@ describe('GET /api/transactions/overview', () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual(overview);
     expect(mocks.overview).toHaveBeenCalledWith(actor);
+  });
+
+  it('answers 304 to a repeated request while the data version is unchanged', async () => {
+    const first = await GET(request());
+    expect(first.headers.get('Cache-Control')).toBe('private, no-cache');
+
+    const second = await GET(request({ 'If-None-Match': first.headers.get('ETag')! }));
+
+    expect(second.status).toBe(304);
+    expect(mocks.overview).toHaveBeenCalledTimes(1);
+    expect(mocks.version).toHaveBeenCalledWith(actor);
   });
 });

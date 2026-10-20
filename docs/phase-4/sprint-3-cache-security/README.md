@@ -46,8 +46,8 @@
 | #   | Status | Task                                        | Owner         | Duração  | Prio | Paralela?   | Arquivo                                                              |
 | --- | ------ | ------------------------------------------- | ------------- | -------- | ---- | ----------- | -------------------------------------------------------------------- |
 | 01  | ✅     | Anexos cifrados + download autenticado      | Dev 1         | 2.5 dias | P0   | ✅ dia 1    | [01-encrypted-attachments.md](./01-encrypted-attachments.md)         |
-| 02  | 🟢     | Dados pessoais cifrados (blind index)       | Dev 1         | 1.5 dia  | P1   | ⬅ 01        | [02-pii-encryption.md](./02-pii-encryption.md)                       |
-| 03  | ⏳     | Cache HTTP: ETag/304 e `Cache-Control`      | Dev 3         | 1.5 dia  | P0   | ✅ dia 1    | [03-http-cache.md](./03-http-cache.md)                               |
+| 02  | ✅     | Dados pessoais cifrados (blind index)       | Dev 1         | 1.5 dia  | P1   | ⬅ 01        | [02-pii-encryption.md](./02-pii-encryption.md)                       |
+| 03  | 🟢     | Cache HTTP: ETag/304 e `Cache-Control`      | Dev 3         | 1.5 dia  | P0   | ✅ dia 1    | [03-http-cache.md](./03-http-cache.md)                               |
 | 04  | ⏳     | Cache no servidor + prefetch no SSR         | Dev 3         | 2 dias   | P0   | ✅          | [04-server-cache-ssr-prefetch.md](./04-server-cache-ssr-prefetch.md) |
 | 05  | ⏳     | Headers de segurança, CSP e CSRF            | Dev 3         | 1.5 dia  | P0   | ✅          | [05-security-headers-csp.md](./05-security-headers-csp.md)           |
 | 06  | ⏳     | Estratégia de cache no cliente + otimista   | Dev 2         | 1 dia    | P0   | ✅ dia 1    | [06-query-cache-strategy.md](./06-query-cache-strategy.md)           |
