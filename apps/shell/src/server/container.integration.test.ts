@@ -5,19 +5,21 @@ import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
 import { users } from '@/db/schema';
+import { encryptUserFields } from './infrastructure/db/DrizzleUserRepository';
 import { integrationScope } from './testing/integrationScope';
 
 const scope = integrationScope();
 const actor = { userId: scope.id('owner') };
 let uploadsDir: string;
 let container: typeof import('./container').container;
+let resolvers: Pick<typeof import('./container'), 'resolveBlindIndex' | 'resolveCipher'>;
 
 beforeAll(async () => {
   uploadsDir = await mkdtemp(join(tmpdir(), 'bytebank-uploads-'));
   vi.stubEnv('BLOB_READ_WRITE_TOKEN', '');
   vi.stubEnv('LOCAL_UPLOADS_DIR', uploadsDir);
   vi.stubEnv('HIBP_ENABLED', 'false');
-  ({ container } = await import('./container'));
+  ({ container, ...resolvers } = await import('./container'));
 });
 
 afterAll(async () => {
@@ -92,10 +94,19 @@ describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => 
       '127.0.0.1'
     );
 
+    scope.adoptUser(user.id);
     expect(user.passwordHash).toMatch(/^\$2[aby]\$12\$/);
+    const [row] = await db.select().from(users).where(eq(users.id, user.id));
+    expect(`${row.emailHash}${row.emailEnc}${row.nameEnc}`).not.toMatch(/Ana|bytebank\.test/);
     expect(
       await container.authenticateUser.execute(email.toUpperCase(), password, '127.0.0.1')
     ).toEqual(user);
+    await expect(
+      container.registerUser.execute(
+        { name: 'Outra Ana', email: email.toUpperCase(), password },
+        scope.id('ip')
+      )
+    ).rejects.toThrow('E-mail já existe');
     expect(await container.authenticateUser.execute(email, 'senha-errada', '127.0.0.1')).toBeNull();
   });
 
@@ -106,7 +117,11 @@ describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => 
       email: `${scope.id('legado')}@bytebank.test`,
       passwordHash: '$2b$10$WOxndslfeNrIgvZqXM9V.OiXmBY1Lch/Eg9QrMqrAz36Xn29dJdzK',
     };
-    await db.insert(users).values(legacy);
+    await db.insert(users).values({
+      id: legacy.id,
+      passwordHash: legacy.passwordHash,
+      ...encryptUserFields(resolvers.resolveCipher(), resolvers.resolveBlindIndex(), legacy),
+    });
 
     const authenticated = await container.authenticateUser.execute(
       legacy.email,

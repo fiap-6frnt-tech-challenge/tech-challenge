@@ -26,8 +26,9 @@ export const transactions = pgTable(
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
+  emailHash: text('email_hash').notNull().unique(),
+  emailEnc: text('email_enc').notNull(),
+  nameEnc: text('name_enc').notNull(),
   passwordHash: text('password_hash').notNull(),
   sessionVersion: integer('session_version').notNull().default(0),
   image: text('image'),

@@ -179,8 +179,9 @@ Em dev, todas ficam em `apps/shell/.env.local` (criado no passo 3). O `.env` da 
 | `NEXT_PUBLIC_DASHBOARD_MFE_URL`         | Não         | URL do manifest do dashboard-mfe                                             | `http://localhost:3002/mf-manifest.json`               |
 | `NEXT_PUBLIC_TRANSACTIONS_MFE_URL`      | Não         | URL do manifest do transactions-mfe                                          | `http://localhost:3003/mf-manifest.json`               |
 | `BLOB_READ_WRITE_TOKEN`                 | Não         | Token do Vercel Blob para upload de anexos; sem ele, usa storage mock local  | —                                                      |
-| `DATA_ENCRYPTION_KEYS`                  | Em produção | Chaves AES-256-GCM dos anexos (`id:base64`, 32 bytes); no dev, chave local   | —                                                      |
+| `DATA_ENCRYPTION_KEYS`                  | Em produção | Chaves AES-256-GCM dos anexos e dados pessoais (`id:base64`, 32 bytes)       | —                                                      |
 | `DATA_ENCRYPTION_ACTIVE_KEY_ID`         | Em produção | Id da chave das novas cifras (as demais seguem decifrando)                   | —                                                      |
+| `BLIND_INDEX_KEY`                       | Em produção | Chave HMAC do blind index do e-mail (base64, 32 bytes); no dev, chave local  | —                                                      |
 
 ---
 

@@ -62,6 +62,9 @@ function dateFor(index: number, random: () => number) {
 async function seedLoad() {
   const { db } = await import('./index');
   const { attachments, transactions, users } = await import('./schema');
+  const { resolveBlindIndex, resolveCipher } = await import('@/server/container');
+  const { DrizzleUserRepository } =
+    await import('@/server/infrastructure/db/DrizzleUserRepository');
 
   const existing = await db
     .select({ id: transactions.id })
@@ -81,12 +84,17 @@ async function seedLoad() {
 
   const user = await db.select({ id: users.id }).from(users).where(eq(users.id, USER_ID));
   if (user.length === 0) {
-    await db.insert(users).values({
+    const created = await new DrizzleUserRepository(
+      db,
+      resolveCipher(),
+      resolveBlindIndex()
+    ).create({
       id: USER_ID,
       name: USER_NAME,
       email: USER_EMAIL,
       passwordHash: await hash(USER_PASSWORD, 12),
     });
+    if (!created) throw new Error(`${USER_EMAIL} já pertence a outro usuário`);
     console.log(`Carga: usuário ${USER_EMAIL} criado (senha: ${USER_PASSWORD}).`);
   }
 

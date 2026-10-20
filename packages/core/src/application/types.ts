@@ -31,6 +31,8 @@ export interface User {
 
 export type NewUser = User;
 
+export type LegacyUser = Pick<User, 'id' | 'name' | 'email'>;
+
 export interface StoredFile {
   ref: string;
   name: string;

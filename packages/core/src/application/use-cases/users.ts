@@ -8,6 +8,7 @@ import { registerSchema } from '../../schemas';
 import type {
   CaptchaVerifier,
   IdGenerator,
+  LegacyUserRepository,
   PasswordBreachChecker,
   PasswordHasher,
   RateLimiter,
@@ -16,6 +17,7 @@ import type {
 } from '../ports';
 import type { NewUser, User } from '../types';
 import { parseOrThrow } from '../parseOrThrow';
+import type { LegacyMigrationReport } from './attachments';
 
 export const BREACHED_PASSWORD_MESSAGE =
   'Esta senha já apareceu em vazamentos de dados. Escolha outra senha.';
@@ -130,5 +132,29 @@ export class AuthenticateUser {
     const passwordHash = await this.passwords.hash(password);
     await this.users.updatePasswordHash(user.id, passwordHash);
     return { ...user, passwordHash };
+  }
+}
+
+export class EncryptLegacyUsers {
+  constructor(private readonly legacy: LegacyUserRepository) {}
+
+  async execute(batchSize = 100): Promise<LegacyMigrationReport> {
+    const report: LegacyMigrationReport = { migrated: 0, failed: [] };
+    let afterId: string | undefined;
+    for (;;) {
+      const batch = await this.legacy.listLegacy(batchSize, afterId);
+      if (batch.length === 0) return report;
+      for (const user of batch) {
+        try {
+          if (await this.legacy.markEncrypted(user)) report.migrated += 1;
+        } catch (error) {
+          report.failed.push({
+            id: user.id,
+            reason: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+      afterId = batch[batch.length - 1].id;
+    }
   }
 }

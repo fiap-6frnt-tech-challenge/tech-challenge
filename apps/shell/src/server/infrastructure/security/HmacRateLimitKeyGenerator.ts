@@ -1,20 +1,12 @@
 import 'server-only';
-import { createHmac } from 'node:crypto';
 import type { RateLimitKeyGenerator } from '@bytebank/core/application';
+import type { HmacBlindIndex } from './HmacBlindIndex';
 
 export class HmacRateLimitKeyGenerator implements RateLimitKeyGenerator {
-  private readonly secretProvider: () => string;
-
-  constructor(secret: string | (() => string)) {
-    this.secretProvider = typeof secret === 'string' ? () => secret : secret;
-  }
+  constructor(private readonly blindIndex: HmacBlindIndex) {}
 
   loginEmail(email: string): string {
-    const secret = this.secretProvider();
-    if (!secret) throw new Error('AUTH_SECRET ou BLIND_INDEX_KEY é obrigatório para rate limit');
-    const normalizedEmail = email.trim().toLowerCase();
-    const digest = createHmac('sha256', secret).update(normalizedEmail).digest('base64url');
-    return `login:email:${digest}`;
+    return `login:email:${this.blindIndex.compute(email)}`;
   }
 
   loginIp(ipAddress: string): string {
