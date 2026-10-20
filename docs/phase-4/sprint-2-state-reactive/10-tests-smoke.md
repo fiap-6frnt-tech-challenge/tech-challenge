@@ -24,6 +24,15 @@
 
 ## Critérios
 
-- [ ] Todos os itens do roteiro ✅
-- [ ] ADR-006 mergeado
-- [ ] Antes/depois de bundle e TBT registrado em `docs/phase-4/perf/`
+- [x] Todos os itens do roteiro ✅
+- [x] ADR-006 mergeado
+- [x] Antes/depois de bundle e TBT registrado em `docs/phase-4/perf/`
+
+## Evidências — 20/10/2026
+
+- Base validada: `de5d07c` da `phase-4`, com S2-01–09 integradas.
+- CI da base verde; testes, tipos e lint locais 13/13 tarefas; arquitetura sem violações; três builds aprovados; integração 77/77.
+- E2E: 44 cenários de regressão e 11 de smoke aprovados; rede lenta CDP executada no Chromium e ignorada no Firefox.
+- HIBP real: cadastro recusado com 422; cinco falhas bloqueiam login; cadastro por IP retorna 429. Progresso visível, concorrência dois, cancelamento, limpeza de estado, sessões, preload e CRUD verificados.
+- Antes/depois histórico e medição atual: federação 152,2 → 48,4 KiB gzip; TBT atual de 5 ms nas duas rotas, na amostra selecionada.
+- [Relatório, condições e reprodução](../perf/s2-10-smoke.md) · [JSON sanitizado](../perf/s2-10-smoke.json).

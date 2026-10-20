@@ -2,7 +2,7 @@
 
 |                 |                                                                                                                                                                |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Status**      | aceito na implementação; integração pela PR da S2-07                                                                                                           |
+| **Status**      | aceito e integrado na phase-4 pelo PR #187 (S2-07)                                                                                                             |
 | **Data**        | 2026-10-18                                                                                                                                                     |
 | **Autor**       | Dev 1 (Backend & Segurança)                                                                                                                                    |
 | **Task**        | [S2-05 — Login: limite de tentativas](../sprint-2-state-reactive/05-login-rate-limit.md), [S2-07 — Sessão](../sprint-2-state-reactive/07-session-hardening.md) |

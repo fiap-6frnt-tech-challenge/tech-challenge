@@ -61,7 +61,9 @@ try {
             gzip: gzipSync(body).length,
             recharts: source.includes('recharts-wrapper'),
             zod: /ZodError|\$ZodError/.test(source),
-            federation: source.includes('Failed to load remote dashboard/Dashboard'),
+            federation:
+              source.includes('Failed to load remote dashboard/Dashboard') ||
+              source.includes('mf:loadRemote '),
           });
         })()
       );
