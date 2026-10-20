@@ -96,18 +96,20 @@ describe('client listener composition', () => {
     const target = new EventTarget();
     const stop = registerPendingUploadWarning(store, target);
     const unload = () => {
-      const event = new Event('beforeunload', { cancelable: true });
+      const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
+      Object.defineProperty(event, 'returnValue', { value: undefined, writable: true });
       target.dispatchEvent(event);
-      return event.defaultPrevented;
+      return { prevented: event.defaultPrevented, returnValue: event.returnValue };
     };
-    expect(unload()).toBe(false);
+    const allowed = { prevented: false, returnValue: undefined };
+    expect(unload()).toEqual(allowed);
     store.dispatch(uploadQueued(metadata));
-    expect(unload()).toBe(true);
+    expect(unload()).toEqual({ prevented: true, returnValue: '' });
     store.dispatch(uploadCancelled('upload'));
-    expect(unload()).toBe(false);
+    expect(unload()).toEqual(allowed);
     store.dispatch(uploadQueued(metadata));
     stop();
-    expect(unload()).toBe(false);
+    expect(unload()).toEqual(allowed);
   });
   it('cancels transfers and empties Redux and TanStack as soon as logout starts', () => {
     const { store, startListening } = createAppStore();
