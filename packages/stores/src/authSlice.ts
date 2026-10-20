@@ -19,6 +19,16 @@ const initialState: AuthState = {
   isAuthenticated: false,
 };
 
+const LOGOUT_FAILED = 'Não foi possível confirmar o encerramento da sessão.';
+const SIGN_OUT_ATTEMPTS = 3;
+
+async function hasActiveSession(): Promise<boolean> {
+  const response = await fetch('/api/auth/session', { cache: 'no-store' });
+  if (!response.ok) return false;
+  const session = (await response.json()) as { user?: unknown } | null;
+  return Boolean(session?.user);
+}
+
 let logoutInFlight = false;
 export const isClientLogoutInProgress = () => logoutInFlight;
 export const logout = createAsyncThunk(
@@ -33,8 +43,13 @@ export const logout = createAsyncThunk(
           : '/login';
     try {
       const response = await fetch('/api/auth/sessions/current/revoke', { method: 'POST' });
-      if (!response.ok) throw new Error('Não foi possível confirmar o encerramento da sessão.');
-      await signOut({ callbackUrl });
+      if (!response.ok) throw new Error(LOGOUT_FAILED);
+      for (let attempt = 1; ; attempt += 1) {
+        await signOut({ redirect: false });
+        if (!(await hasActiveSession())) break;
+        if (attempt === SIGN_OUT_ATTEMPTS) throw new Error(LOGOUT_FAILED);
+      }
+      window.location.assign(callbackUrl);
     } finally {
       logoutInFlight = false;
     }
