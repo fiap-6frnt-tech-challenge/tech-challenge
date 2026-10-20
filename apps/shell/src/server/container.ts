@@ -1,9 +1,11 @@
 import 'server-only';
+import { createHash } from 'node:crypto';
 import {
   AddAttachment,
   AuthenticateUser,
   CreateTransaction,
   DeleteTransaction,
+  DownloadAttachment,
   GetAccountOverview,
   GetDashboardSummary,
   GetTransaction,
@@ -16,6 +18,7 @@ import {
   ResolveOAuthUser,
   RemoveAttachment,
   UpdateTransaction,
+  type Cipher,
   type FileStorage,
 } from '@bytebank/core/application';
 import { db } from '@/db';
@@ -24,6 +27,7 @@ import { DrizzleTransactionRepository } from './infrastructure/db/DrizzleTransac
 import { DrizzleUserRepository } from './infrastructure/db/DrizzleUserRepository';
 import { DrizzleSessionRepository } from './infrastructure/db/DrizzleSessionRepository';
 import { PostgresRateLimiter } from './infrastructure/db/PostgresRateLimiter';
+import { AesGcmCipher, parseEncryptionKeys } from './infrastructure/security/AesGcmCipher';
 import { BcryptPasswordHasher } from './infrastructure/security/BcryptPasswordHasher';
 import { CloudflareTurnstileVerifier } from './infrastructure/security/CloudflareTurnstileVerifier';
 import { HibpBreachChecker } from './infrastructure/security/HibpBreachChecker';
@@ -45,8 +49,31 @@ export function resolveFileStorage(): FileStorage {
   return new LocalFileStorage('.uploads');
 }
 
-const transactions = new DrizzleTransactionRepository(db);
-const attachments = new DrizzleAttachmentRepository(db);
+const DEVELOPMENT_KEY_ID = 0;
+
+export function resolveCipher(): Cipher {
+  const keys = process.env.DATA_ENCRYPTION_KEYS;
+  if (keys) {
+    return new AesGcmCipher(
+      parseEncryptionKeys(keys),
+      Number(process.env.DATA_ENCRYPTION_ACTIVE_KEY_ID)
+    );
+  }
+  if (
+    process.env.NODE_ENV === 'production' &&
+    process.env.NEXT_PHASE !== 'phase-production-build'
+  ) {
+    throw new Error(
+      'DATA_ENCRYPTION_KEYS e DATA_ENCRYPTION_ACTIVE_KEY_ID são obrigatórios em produção'
+    );
+  }
+  const developmentKey = createHash('sha256').update('bytebank-development-data-key').digest();
+  return new AesGcmCipher(new Map([[DEVELOPMENT_KEY_ID, developmentKey]]), DEVELOPMENT_KEY_ID);
+}
+
+const cipher = resolveCipher();
+const transactions = new DrizzleTransactionRepository(db, cipher);
+const attachments = new DrizzleAttachmentRepository(db, cipher);
 const users = new DrizzleUserRepository(db);
 const clock = new SystemClock('America/Sao_Paulo');
 const ids = new CryptoIdGenerator();
@@ -74,8 +101,9 @@ export const container = {
   listTransactions: new ListTransactions(transactions),
   getAccountOverview: new GetAccountOverview(transactions),
   getDashboardSummary: new GetDashboardSummary(transactions, clock),
-  addAttachment: new AddAttachment(transactions, attachments, storage, ids),
+  addAttachment: new AddAttachment(transactions, attachments, storage, cipher, ids),
   listAttachments: new ListAttachments(attachments),
+  downloadAttachment: new DownloadAttachment(attachments, storage, cipher),
   removeAttachment: new RemoveAttachment(attachments, storage),
   registerUser: new RegisterUser(users, passwords, ids, rateLimiter, rateLimitKeys, breachChecker),
   authenticateUser: new AuthenticateUser(

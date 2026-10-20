@@ -29,22 +29,32 @@ async function revealFirstWidget(page: Page) {
 
 test.use({ viewport: { width: 412, height: 823 } });
 
-test('transactions loads neither Recharts nor Zod scripts', async ({ page }) => {
+test('transactions loads neither Recharts nor Zod scripts', async ({ page, browser }) => {
   await login(page);
-  const scripts: Promise<string>[] = [];
-  page.on('response', (response) => {
-    if (response.ok() && response.request().resourceType() === 'script')
-      scripts.push(response.text());
+  // Measure only this route: home may still be preloading scripts when navigation starts.
+  const context = await browser.newContext({
+    storageState: await page.context().storageState(),
+    viewport: { width: 412, height: 823 },
   });
-  await page.goto('/transactions');
-  await expect(page.locator('#transactions-heading')).toBeVisible();
-  await expect(page.getByText('E2E Uber Trip', { exact: true })).toBeVisible();
-  await page.waitForLoadState('networkidle');
-  const sources = await Promise.all(scripts);
-  expect(sources.length).toBeGreaterThan(0);
-  for (const source of sources) {
-    expect(source).not.toContain('recharts-wrapper');
-    expect(source).not.toMatch(/ZodError|\$ZodError/);
+  try {
+    const coldPage = await context.newPage();
+    const scripts: Promise<string>[] = [];
+    coldPage.on('response', (response) => {
+      if (response.ok() && response.request().resourceType() === 'script')
+        scripts.push(response.text());
+    });
+    await coldPage.goto('/transactions');
+    await expect(coldPage.locator('#transactions-heading')).toBeVisible();
+    await expect(coldPage.getByText('E2E Uber Trip', { exact: true })).toBeVisible();
+    await coldPage.waitForLoadState('networkidle');
+    const sources = await Promise.all(scripts);
+    expect(sources.length).toBeGreaterThan(0);
+    for (const source of sources) {
+      expect(source).not.toContain('recharts-wrapper');
+      expect(source).not.toMatch(/ZodError|\$ZodError/);
+    }
+  } finally {
+    await context.close();
   }
 });
 

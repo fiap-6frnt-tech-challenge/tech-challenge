@@ -24,11 +24,10 @@ describe('corsHeaders', () => {
 });
 
 describe('readUpload', () => {
-  it('returns only the accepted file bytes and metadata', async () => {
-    const file = new File(['%PDF'], 'recibo.pdf', { type: 'application/pdf' });
+  it('returns the file name and bytes, ignoring the client-declared type', async () => {
+    const file = new File(['%PDF'], 'recibo.pdf', { type: 'text/html' });
     const upload = await readUpload(uploadRequest(file));
-    expect(upload.name).toBe('recibo.pdf');
-    expect(upload.contentType).toBe('application/pdf');
+    expect(upload).toEqual({ name: 'recibo.pdf', bytes: expect.any(Uint8Array) });
     expect(Array.from(upload.bytes)).toEqual(Array.from(new TextEncoder().encode('%PDF')));
   });
 
@@ -36,15 +35,10 @@ describe('readUpload', () => {
     await expect(readUpload(uploadRequest())).rejects.toThrow('Arquivo não enviado');
   });
 
-  it('rejects unsupported MIME types', async () => {
-    const file = new File(['hello'], 'note.txt', { type: 'text/plain' });
-    await expect(readUpload(uploadRequest(file))).rejects.toThrow('Tipo de arquivo não permitido');
-  });
-
-  it('rejects files above 5 MB before reading them', async () => {
-    const file = new File([new Uint8Array(6 * 1024 * 1024)], 'huge.pdf', {
+  it('rejects files above 4 MB before reading them', async () => {
+    const file = new File([new Uint8Array(4 * 1024 * 1024 + 1)], 'huge.pdf', {
       type: 'application/pdf',
     });
-    await expect(readUpload(uploadRequest(file))).rejects.toThrow('Arquivo excede o limite de 5MB');
+    await expect(readUpload(uploadRequest(file))).rejects.toThrow('Arquivo excede o limite de 4MB');
   });
 });

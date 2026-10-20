@@ -8,7 +8,7 @@ import { Sidebar } from '../Sidebar';
 import { useFocusTrap } from '../../hooks';
 import type { HeaderProps } from './IHeader';
 
-export function Header({ userName = 'Joana da Silva Oliveira', actionsSlot }: HeaderProps) {
+export function Header({ userName, actionsSlot, onLinkClick, onLinkIntent }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const mobileNavRef = useFocusTrap({ isActive: menuOpen, onEscape: () => setMenuOpen(false) });
 
@@ -21,7 +21,7 @@ export function Header({ userName = 'Joana da Silva Oliveira', actionsSlot }: He
           </Link>
 
           <div className="hidden sm:flex items-center gap-md text-content-inverse">
-            <span className="label-default">{userName}</span>
+            {userName && <span className="label-default">{userName}</span>}
             {actionsSlot !== undefined ? actionsSlot : <UserCircle size={32} aria-hidden="true" />}
           </div>
 
@@ -52,7 +52,13 @@ export function Header({ userName = 'Joana da Silva Oliveira', actionsSlot }: He
             aria-modal="true"
             aria-label="Menu de navegação"
           >
-            <Sidebar onLinkClick={() => setMenuOpen(false)} />
+            <Sidebar
+              onLinkClick={(href) => {
+                setMenuOpen(false);
+                onLinkClick?.(href);
+              }}
+              onLinkIntent={onLinkIntent}
+            />
           </div>
         </div>
       )}

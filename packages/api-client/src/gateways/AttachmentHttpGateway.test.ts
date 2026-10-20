@@ -26,7 +26,7 @@ class FakeXhr extends FakeEventTarget {
   responseType: XMLHttpRequestResponseType = '';
   response: unknown = {
     id: 'att-1',
-    url: '/attachments/att-1',
+    downloadUrl: '/api/transactions/tx-1/attachments/att-1/download',
     name: 'receipt.pdf',
     size: 12,
     mimeType: 'application/pdf',
@@ -104,7 +104,7 @@ describe('AttachmentHttpGateway.upload$', () => {
         type: 'done',
         attachment: {
           id: 'att-1',
-          url: '/attachments/att-1',
+          downloadUrl: '/api/transactions/tx-1/attachments/att-1/download',
           name: 'receipt.pdf',
           size: 12,
           mimeType: 'application/pdf',

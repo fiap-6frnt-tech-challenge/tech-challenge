@@ -8,7 +8,7 @@ import { uploadQueue$, type UploadQueueEvent, type UploadQueueJob } from './uplo
 
 const attachment: Attachment = {
   id: 'attachment-1',
-  url: '/attachments/attachment-1',
+  downloadUrl: '/api/transactions/tx-1/attachments/attachment-1/download',
   name: 'receipt.pdf',
   size: 12,
   mimeType: 'application/pdf',

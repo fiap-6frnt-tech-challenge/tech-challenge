@@ -12,7 +12,7 @@ const hasNoNullByte = (value: string) => !value.includes('\u0000');
 
 export const attachmentSchema = z.object({
   id: z.string(),
-  url: z.string().url(),
+  downloadUrl: z.string().min(1),
   name: z.string(),
   size: z.number().positive(),
   mimeType: z.string(),

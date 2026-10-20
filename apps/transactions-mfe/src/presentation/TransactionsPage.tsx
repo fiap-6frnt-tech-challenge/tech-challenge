@@ -1,14 +1,16 @@
 'use client';
 
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Funnel, ReceiptText, SearchX } from 'lucide-react';
 import { EmptyState, ErrorState, IconButton, Pagination } from '@bytebank/design-system';
 import {
   usePaginatedTransactions,
+  usePrefetchNextTransactionsPage,
   useDeleteTransaction,
   useUpdateTransaction,
 } from '@bytebank/api-client';
 import { showFeedback, useAppDispatch, ClientSessionEndedError } from '@bytebank/stores';
+import { markContentReady } from '@bytebank/shared';
 import type { Transaction } from '@bytebank/shared';
 import { TransactionFilters, DEFAULT_FILTERS } from './components/TransactionFilters';
 import { TransactionList } from './components/TransactionList';
@@ -45,6 +47,13 @@ export default function TransactionsPage() {
     isError,
     isPlaceholderData,
   } = usePaginatedTransactions({ page, ...filters });
+  usePrefetchNextTransactionsPage(
+    { page, ...filters },
+    isPlaceholderData ? undefined : paginated?.pages
+  );
+  useEffect(() => {
+    if (!isLoading) markContentReady('transactions');
+  }, [isLoading]);
   const transactions = paginated?.data ?? [];
   const totalPages = Math.max(1, paginated?.pages ?? 1);
   const listRef = useRef<HTMLDivElement>(null);

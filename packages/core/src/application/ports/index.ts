@@ -14,6 +14,7 @@ import type {
   AccountOverview,
   AttachmentRecord,
   DateRange,
+  LegacyAttachment,
   NewAttachment,
   NewTransactionData,
   NewUser,
@@ -78,6 +79,11 @@ export interface AttachmentRepository {
   delete(id: string, ownerId: string): Promise<boolean>;
 }
 
+export interface LegacyAttachmentRepository {
+  listLegacy(limit: number, afterId?: string): Promise<LegacyAttachment[]>;
+  markEncrypted(id: string, data: Omit<LegacyAttachment, 'id'>): Promise<boolean>;
+}
+
 export interface UserRepository {
   findByEmail(email: string): Promise<User | null>;
   create(data: NewUser): Promise<User | null>;
@@ -95,6 +101,13 @@ export interface FileStorage {
   put(key: string, bytes: Uint8Array, contentType: string): Promise<StoredFile>;
   get(ref: string): Promise<Uint8Array>;
   delete(ref: string): Promise<void>;
+}
+
+export interface Cipher {
+  encrypt(plain: Uint8Array, context: string): Uint8Array;
+  decrypt(payload: Uint8Array, context: string): Uint8Array;
+  encryptText(plain: string, context: string): string;
+  decryptText(payload: string, context: string): string;
 }
 
 export interface PasswordHasher {

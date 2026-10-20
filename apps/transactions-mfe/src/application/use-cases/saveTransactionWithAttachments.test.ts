@@ -85,7 +85,7 @@ describe('saveTransactionWithAttachments', () => {
     const deps = fakeDeps({ succeededFiles: [], failedFiles: [], cancelledFiles: [cancelled] }, [
       {
         id: 'late-attachment',
-        url: '/attachments/late',
+        downloadUrl: '/api/transactions/tx-1/attachments/late-attachment/download',
         name: 'late.pdf',
         size: cancelled.size,
         mimeType: 'application/pdf',

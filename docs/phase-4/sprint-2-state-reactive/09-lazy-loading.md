@@ -49,4 +49,4 @@
 - Transações: JS inicial **502,6 → 310,3 KiB**, TBT mobile **46 → 6 ms**.
 - Medição em produção local com 5.000 transações, três execuções por rota e o mesmo hardware. Método, todas as amostras e limites no [relatório de performance](../perf/s2-09-lazy-loading.md).
 - Revisão independente identificou a falta de acesso aos widgets por Tab. Regiões focáveis carregam no foco; regressão unitária e navegação real corrigidas.
-- Ao integrar a S2-08, preservar os marcadores `markContentReady` junto dos widgets lazy no Dashboard e os handlers de preload junto do modal condicional da home.
+- Integração em 2026-10-20 com `phase-4` em `1218396`: marcadores `markContentReady`, handlers de preload e montagem condicional preservados; schema de anexos adaptado ao `downloadUrl` autenticado. As métricas acima são anteriores a essa integração.

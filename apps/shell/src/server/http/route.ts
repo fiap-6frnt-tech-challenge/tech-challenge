@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   AuthenticationError,
   ConflictError,
+  InvalidFileError,
   NotFoundError,
   RateLimitedError,
   ValidationError,
@@ -21,6 +22,7 @@ type RouteOptions = {
 type RouteContext<P> = { params: Promise<P> };
 
 function responseFor(result: unknown, req: NextRequest, options: RouteOptions): NextResponse {
+  if (result instanceof NextResponse) return result;
   const headers = options.headers?.(req);
   if (result === undefined) return new NextResponse(null, { status: 204, headers });
   return NextResponse.json(result, { status: options.status ?? 200, headers });
@@ -82,6 +84,9 @@ export function toHttpError(error: unknown): NextResponse {
   }
   if (error instanceof JsonRequestError || error instanceof UploadRequestError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+  if (error instanceof InvalidFileError) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
   const requestId = crypto.randomUUID();
   console.error('[http] Erro inesperado', { requestId, error });

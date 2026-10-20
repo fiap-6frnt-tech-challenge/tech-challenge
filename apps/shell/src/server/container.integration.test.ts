@@ -27,7 +27,7 @@ afterAll(async () => {
 });
 
 describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => {
-  it('anexa, lista e remove um arquivo com os bytes gravados em disco', async () => {
+  it('anexa cifrado em disco, baixa decifrado, lista e remove', async () => {
     const transaction = await container.createTransaction.execute(actor, {
       type: 'withdrawal',
       category: 'food',
@@ -40,7 +40,6 @@ describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => 
     const attachment = await container.addAttachment.execute(actor, transaction.id, {
       name: 'recibo.pdf',
       bytes,
-      contentType: 'application/pdf',
     });
 
     expect(attachment).toMatchObject({
@@ -49,8 +48,27 @@ describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => 
       mimeType: 'application/pdf',
       transactionId: transaction.id,
       ownerId: actor.userId,
+      encVersion: 1,
     });
-    expect(new Uint8Array(await readFile(join(uploadsDir, attachment.ref)))).toEqual(bytes);
+    expect(attachment.ref).not.toContain('recibo');
+    expect(attachment.ref).not.toContain(actor.userId);
+    const onDisk = await readFile(join(uploadsDir, attachment.ref));
+    expect(onDisk.byteLength).toBe(bytes.byteLength + 30);
+    expect(onDisk.includes(Buffer.from('recibo de teste'))).toBe(false);
+    const downloaded = await container.downloadAttachment.execute(
+      actor,
+      transaction.id,
+      attachment.id
+    );
+    expect(downloaded).toMatchObject({ name: 'recibo.pdf', mimeType: 'application/pdf' });
+    expect(new Uint8Array(downloaded.bytes)).toEqual(bytes);
+    await expect(
+      container.downloadAttachment.execute(
+        { userId: scope.id('intruso') },
+        transaction.id,
+        attachment.id
+      )
+    ).rejects.toThrow('Anexo não encontrado');
     expect(await container.listAttachments.execute(actor, transaction.id)).toEqual([attachment]);
 
     await container.removeAttachment.execute(actor, attachment.id);

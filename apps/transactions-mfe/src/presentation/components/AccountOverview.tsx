@@ -1,16 +1,23 @@
 'use client';
 
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Plus, ReceiptText } from 'lucide-react';
 import { Button, EmptyState, ErrorState } from '@bytebank/design-system';
 import { useAccountOverview } from '@bytebank/api-client';
+import { markContentReady, shouldPrefetch } from '@bytebank/shared';
 import { selectUser, useAppSelector } from '@bytebank/stores';
 import { BalanceCard } from './BalanceCard';
 import { TransactionList } from './TransactionList';
 
+const loadNewTransactionModal = () => import('./NewTransactionModal');
+
 const NewTransactionModal = lazy(() =>
-  import('./NewTransactionModal').then((module) => ({ default: module.NewTransactionModal }))
+  loadNewTransactionModal().then((m) => ({ default: m.NewTransactionModal }))
 );
+
+function preloadNewTransactionModal() {
+  if (shouldPrefetch()) void loadNewTransactionModal();
+}
 
 export default function AccountOverview() {
   const { data, isLoading, isError } = useAccountOverview();
@@ -18,6 +25,10 @@ export default function AccountOverview() {
   const firstName = user?.name?.split(' ')[0];
   const [isNewTransactionVisible, setIsNewTransactionVisible] = useState(false);
   const [hasOpenedNewTransaction, setHasOpenedNewTransaction] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) markContentReady('overview');
+  }, [isLoading]);
 
   if (isError) {
     return <ErrorState />;
@@ -62,7 +73,13 @@ export default function AccountOverview() {
             </Button>
           </a>
 
-          <Button disabled={isLoading} className="w-full sm:w-auto" onClick={openNewTransaction}>
+          <Button
+            disabled={isLoading}
+            className="w-full sm:w-auto"
+            onPointerEnter={preloadNewTransactionModal}
+            onFocus={preloadNewTransactionModal}
+            onClick={openNewTransaction}
+          >
             <Plus size={16} aria-hidden="true" />
             Nova transação
           </Button>

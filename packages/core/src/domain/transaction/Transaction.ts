@@ -2,7 +2,7 @@ import type { TransactionType } from './TransactionType';
 
 export interface Attachment {
   id: string;
-  url: string;
+  downloadUrl: string;
   name: string;
   size: number;
   mimeType: string;

@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import {
@@ -8,23 +9,33 @@ import {
 import { db } from '@/db';
 import { attachments, transactions } from '@/db/schema';
 import { integrationScope } from '@/server/testing/integrationScope';
+import { AesGcmCipher } from '../security/AesGcmCipher';
+import { DrizzleAttachmentRepository } from './DrizzleAttachmentRepository';
 import { DrizzleTransactionRepository } from './DrizzleTransactionRepository';
 
 const scope = integrationScope();
 const owner = scope.id('owner');
 const other = scope.id('other');
 const editor = scope.id('editor');
-const repository = new DrizzleTransactionRepository(db);
+const cipher = new AesGcmCipher(new Map([[1, randomBytes(32)]]), 1);
+const repository = new DrizzleTransactionRepository(db, cipher);
 const all = normalizeTransactionFilter({});
 
 const names = (items: Transaction[]) => items.map((item) => item.id.replace(scope.id(''), ''));
 
 const receipt = {
   id: scope.id('receipt'),
-  url: 'https://example.test/recibo.pdf',
+  ref: 'https://example.test/recibo.pdf',
   name: 'recibo.pdf',
   size: 1024,
   mimeType: 'application/pdf',
+};
+const receiptDto = {
+  id: receipt.id,
+  downloadUrl: `/api/transactions/${scope.id('market')}/attachments/${receipt.id}/download`,
+  name: receipt.name,
+  size: receipt.size,
+  mimeType: receipt.mimeType,
 };
 
 async function insertEditable(name: string) {
@@ -115,8 +126,32 @@ describe('DrizzleTransactionRepository — leitura', () => {
       amount: 320.5,
       date: '2026-01-10',
       description: 'Mercado do bairro',
-      attachments: [receipt],
+      attachments: [receiptDto],
     });
+  });
+
+  it('decifra o nome dos anexos cifrados sem expor a referência do storage', async () => {
+    const row = await insertEditable('encrypted');
+    await new DrizzleAttachmentRepository(db, cipher).create(row.id, editor, {
+      id: scope.id('encrypted-att'),
+      name: 'nota fiscal.pdf',
+      size: 10,
+      mimeType: 'application/pdf',
+      ref: 'b6f1c0de',
+    });
+
+    const found = await repository.findById(row.id, editor);
+
+    expect(found?.attachments).toEqual([
+      {
+        id: scope.id('encrypted-att'),
+        downloadUrl: `/api/transactions/${row.id}/attachments/${scope.id('encrypted-att')}/download`,
+        name: 'nota fiscal.pdf',
+        size: 10,
+        mimeType: 'application/pdf',
+      },
+    ]);
+    expect(JSON.stringify(found)).not.toContain('b6f1c0de');
   });
 
   it('não enxerga a transação de outro usuário', async () => {

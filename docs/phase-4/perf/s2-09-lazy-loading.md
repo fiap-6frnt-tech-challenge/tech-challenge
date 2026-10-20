@@ -68,9 +68,19 @@ JS transferido vem de `network-requests.transferSize` do Lighthouse e inclui ove
 - Protótipos customizados e arrays esparsos não chegam às entradas HTTP de produção, normalizadas por URLSearchParams. A decisão preserva esse escopo; novos consumidores diretos devem manter validação equivalente.
 - A inspeção da home encontrou o modal ainda estático; adiá-lo até a abertura foi necessário para cumprir a retirada do Zod do caminho inicial. Regressões de rede em contexto novo confirmam o corte e a abertura do formulário.
 
-## Integração com S2-08
+## Integração com a phase-4 — 2026-10-20
 
-A branch da S2-08 continua separada. A simulação final de merge detectou conflitos em `apps/dashboard-mfe/src/presentation/Dashboard.tsx`, `apps/transactions-mfe/src/presentation/components/AccountOverview.tsx` e no README do sprint. No Dashboard, preservar os imports dos widgets lazy desta task e acrescentar `useEffect`/`markContentReady` da S2-08. O modal da home também passou a ser lazy nesta task; ao integrar, manter os handlers de preload e os marcadores da S2-08 junto da montagem condicional. O Shared deve conservar os novos helpers de prefetch/navigationTiming e os schemas fora do barrel principal. Repetir as medições do conjunto quando a S2-08 for integrada.
+A `phase-4` em `1218396` foi integrada nesta branch, incluindo a S2-08 e os anexos criptografados do PR #189. A resolução preserva:
+
+- Widgets lazy e marcadores `markContentReady` no Dashboard.
+- Montagem condicional e fallback acessível do modal, com preload em hover/foco e respeito a `shouldPrefetch`.
+- Helpers de prefetch/navigationTiming no Shared, mantendo os schemas fora do barrel principal.
+- Contrato `downloadUrl` dos anexos autenticados no schema movido para `core/schemas`; os testes de contrato existentes falharam antes da adaptação e passaram depois.
+- Status de tasks já mergeadas no README do sprint.
+
+Validação desta integração: testes, type-check e lint com 13/13 tarefas aprovadas; arquitetura sem violações (493 módulos/1383 dependências); builds de produção dos três apps aprovados; migrações até 0008 aplicadas em PostgreSQL descartável; **42/42 E2E aprovados em Chromium e Firefox**.
+
+O E2E de scripts de transações usa contexto autenticado novo para não capturar respostas de preload da home interrompidas pela navegação. As métricas acima continuam referentes aos commits registrados no JSON; não foram medidas novamente após esta integração. A comparação de performance do conjunto fica para o smoke S2-10.
 
 ## Reprodução
 
