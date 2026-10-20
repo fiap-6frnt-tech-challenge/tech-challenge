@@ -1,0 +1,392 @@
+{
+  "date": "2026-10-20",
+  "codeCommit": "de5d07c70a9414807c535b4973f4efbfd737bb9e",
+  "ci": {
+    "run": 39456787461,
+    "conclusion": "success",
+    "jobs": ["Lint + Build + Test", "E2E (Playwright)"]
+  },
+  "unitTasks": 13,
+  "integrationTests": 77,
+  "regressionCases": 44,
+  "uniqueCases": {
+    "passed": 55,
+    "skipped": 1
+  },
+  "combinedRun": {
+    "startTime": "2026-10-20T16:37:33.496Z",
+    "duration": 148206.966,
+    "expected": 53,
+    "skipped": 1,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "finalSmokeRun": {
+    "startTime": "2026-10-20T16:40:21.422Z",
+    "duration": 45222.97,
+    "expected": 11,
+    "skipped": 1,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "evidence": [
+    {
+      "title": "real slow-network uploads show progress, keep two slots and cancel one without losing the others",
+      "browser": "chromium",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "slow-upload-evidence",
+          "initialStatuses": ["uploading", "uploading", "queued"],
+          "finalStatuses": ["cancelled", "done", "done"],
+          "maxObservedActive": 2,
+          "samplesWithIntermediateProgress": 21,
+          "startedRequests": 3,
+          "failures": ["net::ERR_ABORTED"]
+        }
+      ]
+    },
+    {
+      "title": "hover alone preloads the transactions remote and first page without downloading them again on click",
+      "browser": "chromium",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "hover-preload-evidence",
+          "remoteRequests": 1,
+          "firstPageRequests": 1,
+          "timing": [
+            {
+              "name": "mf:loadRemote transactions/AccountOverview",
+              "duration": 15.599999904632568
+            },
+            {
+              "name": "nav:click → transactions:ready",
+              "duration": 319.5
+            },
+            {
+              "name": "mf:loadRemote transactions/TransactionsPage",
+              "duration": 1.0999999046325684
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "a leaked password is rejected through the live HIBP service and registration UI",
+      "browser": "chromium",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "hibp-live-evidence",
+          "rangeStatus": 200,
+          "registrationStatus": 422,
+          "issues": {
+            "formErrors": [],
+            "fieldErrors": {
+              "password": ["Esta senha já apareceu em vazamentos de dados. Escolha outra senha."]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "five wrong passwords lock the account and a correct password cannot bypass the lock",
+      "browser": "chromium",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "five-failures-evidence",
+          "failures": 0,
+          "lock_count": 1,
+          "locked": true
+        }
+      ]
+    },
+    {
+      "title": "registration rejects short passwords and returns 429 with Retry-After after ten attempts from one IP",
+      "browser": "chromium",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "registration-limit-evidence",
+          "statuses": [422, 422, 422, 422, 422, 422, 422, 422, 422, 422],
+          "blockedStatus": 429,
+          "retryAfter": "3600"
+        }
+      ]
+    },
+    {
+      "title": "creates, edits and deletes a transaction through the UI and keeps deletion after reload",
+      "browser": "chromium",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "crud-evidence",
+          "patchStatus": 200,
+          "deleteStatus": 204,
+          "absentAfterReload": true
+        }
+      ]
+    },
+    {
+      "title": "real slow-network uploads show progress, keep two slots and cancel one without losing the others",
+      "browser": "firefox",
+      "status": "skipped",
+      "evidence": []
+    },
+    {
+      "title": "hover alone preloads the transactions remote and first page without downloading them again on click",
+      "browser": "firefox",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "hover-preload-evidence",
+          "remoteRequests": 1,
+          "firstPageRequests": 1,
+          "timing": [
+            {
+              "name": "mf:loadRemote transactions/AccountOverview",
+              "duration": 22
+            },
+            {
+              "name": "nav:click → transactions:ready",
+              "duration": 330
+            },
+            {
+              "name": "mf:loadRemote transactions/TransactionsPage",
+              "duration": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "a leaked password is rejected through the live HIBP service and registration UI",
+      "browser": "firefox",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "hibp-live-evidence",
+          "rangeStatus": 200,
+          "registrationStatus": 422,
+          "issues": {
+            "formErrors": [],
+            "fieldErrors": {
+              "password": ["Esta senha já apareceu em vazamentos de dados. Escolha outra senha."]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "five wrong passwords lock the account and a correct password cannot bypass the lock",
+      "browser": "firefox",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "five-failures-evidence",
+          "failures": 0,
+          "lock_count": 1,
+          "locked": true
+        }
+      ]
+    },
+    {
+      "title": "registration rejects short passwords and returns 429 with Retry-After after ten attempts from one IP",
+      "browser": "firefox",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "registration-limit-evidence",
+          "statuses": [422, 422, 422, 422, 422, 422, 422, 422, 422, 422],
+          "blockedStatus": 429,
+          "retryAfter": "3600"
+        }
+      ]
+    },
+    {
+      "title": "creates, edits and deletes a transaction through the UI and keeps deletion after reload",
+      "browser": "firefox",
+      "status": "passed",
+      "evidence": [
+        {
+          "name": "crud-evidence",
+          "patchStatus": 200,
+          "deleteStatus": 204,
+          "absentAfterReload": true
+        }
+      ]
+    }
+  ],
+  "performance": {
+    "method": "Lighthouse mobile, simulated 4x CPU, best score of three (first on ties); direct production builds, Apple M4/macOS 27, Node 22.23.3, 5000 transactions; cache-empty authenticated contexts",
+    "lighthouseVersion": "12.8.2",
+    "historicalReference": {
+      "source": "s2-09-lazy-loading.json",
+      "baselineCommit": "5b7dd3e",
+      "candidateProductCommit": "1cbb6eee0792ddfedc141ab734d49b56ef749058",
+      "before": [
+        {
+          "route": "/",
+          "best": {
+            "score": 53,
+            "tbt": 224,
+            "lcp": 6012.544999999998,
+            "jsBytes": 568168
+          },
+          "federation": [
+            {
+              "raw": 581112,
+              "gzip": 155820
+            }
+          ]
+        },
+        {
+          "route": "/transactions",
+          "best": {
+            "score": 81,
+            "tbt": 46,
+            "lcp": 5157.543325,
+            "jsBytes": 514691
+          },
+          "federation": [
+            {
+              "raw": 581112,
+              "gzip": 155820
+            }
+          ]
+        }
+      ],
+      "after": [
+        {
+          "route": "/",
+          "best": {
+            "score": 88,
+            "tbt": 5,
+            "lcp": 3997.0175,
+            "jsBytes": 314097
+          },
+          "federation": [
+            {
+              "raw": 187245,
+              "gzip": 49214
+            }
+          ]
+        },
+        {
+          "route": "/transactions",
+          "best": {
+            "score": 88,
+            "tbt": 6,
+            "lcp": 3996.8102,
+            "jsBytes": 317763
+          },
+          "federation": [
+            {
+              "raw": 187245,
+              "gzip": 49214
+            }
+          ]
+        }
+      ]
+    },
+    "current": [
+      {
+        "route": "/",
+        "best": {
+          "score": 88,
+          "tbt": 5,
+          "lcp": 3995.0549,
+          "jsBytes": 326679
+        },
+        "samples": [
+          {
+            "score": 87,
+            "tbt": 22,
+            "lcp": 4093.423375,
+            "jsBytes": 326679
+          },
+          {
+            "score": 88,
+            "tbt": 5,
+            "lcp": 3995.0549,
+            "jsBytes": 326679
+          },
+          {
+            "score": 88,
+            "tbt": 4,
+            "lcp": 3995.11985,
+            "jsBytes": 326679
+          }
+        ],
+        "rawScriptBytes": 1094460,
+        "gzipScriptBytes": 319197,
+        "federation": [
+          {
+            "raw": 188240,
+            "gzip": 49576
+          }
+        ],
+        "rechartsScripts": 0,
+        "zodScripts": 0,
+        "preloadedExposes": [
+          "__federation_expose_AccountOverview.f5317604b0.js",
+          "__federation_expose_TransactionsPage.0235454a95.js"
+        ]
+      },
+      {
+        "route": "/transactions",
+        "best": {
+          "score": 87,
+          "tbt": 5,
+          "lcp": 4149.6952,
+          "jsBytes": 363954
+        },
+        "samples": [
+          {
+            "score": 87,
+            "tbt": 5,
+            "lcp": 4149.6952,
+            "jsBytes": 363954
+          },
+          {
+            "score": 86,
+            "tbt": 5,
+            "lcp": 4151.8838000000005,
+            "jsBytes": 363954
+          },
+          {
+            "score": 87,
+            "tbt": 4,
+            "lcp": 4149.3228,
+            "jsBytes": 363954
+          }
+        ],
+        "rawScriptBytes": 1220142,
+        "gzipScriptBytes": 355422,
+        "federation": [
+          {
+            "raw": 188240,
+            "gzip": 49576
+          }
+        ],
+        "rechartsScripts": 0,
+        "zodScripts": 0,
+        "preloadedExposes": [
+          "__federation_expose_TransactionsPage.0235454a95.js",
+          "__federation_expose_AccountOverview.f5317604b0.js",
+          "__federation_expose_Dashboard.fd95a40b05.js"
+        ]
+      }
+    ]
+  },
+  "crudRecheckRun": {
+    "startTime": "2026-10-20T16:46:31.558Z",
+    "duration": 15117.089,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

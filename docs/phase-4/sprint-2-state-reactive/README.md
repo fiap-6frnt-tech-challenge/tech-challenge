@@ -25,7 +25,7 @@
 
 - [x] Sprint 1 fechado (core, casos de uso, rotas finas, gateways)
 - [x] Spike A (RxJS singleton) aprovado ou mitigação escolhida
-- [ ] Spike B (preload) aprovado
+- [x] Spike B (preload) aprovado
 
 ---
 
@@ -41,8 +41,8 @@
 | 06  | ✅     | Política de senha + HIBP + bcrypt 12                 | Dev 1 | 1 dia   | P0   | ✅                 | [06-password-policy.md](./06-password-policy.md)         |
 | 07  | ✅     | Sessão: expiração, revogação, logout, inatividade    | Dev 1 | 1.5 dia | P0   | ⬅ 01, 04           | [07-session-hardening.md](./07-session-hardening.md)     |
 | 08  | ✅     | Pré-carregamento de remotes e dados                  | Dev 3 | 1.5 dia | P0   | ✅ dia 1           | [08-preload.md](./08-preload.md)                         |
-| 09  | 🟢     | Lazy loading e code splitting                        | Dev 3 | 1.5 dia | P0   | ✅                 | [09-lazy-loading.md](./09-lazy-loading.md)               |
-| 10  | ⏳     | Testes + smoke                                       | Todos | 0.5 dia | P0   | ⬅ impl             | [10-tests-smoke.md](./10-tests-smoke.md)                 |
+| 09  | ✅     | Lazy loading e code splitting                        | Dev 3 | 1.5 dia | P0   | ✅                 | [09-lazy-loading.md](./09-lazy-loading.md)               |
+| 10  | 🟢     | Testes + smoke                                       | Todos | 0.5 dia | P0   | ⬅ impl             | [10-tests-smoke.md](./10-tests-smoke.md)                 |
 
 **Legenda:** ✅ mergeada · 🟢 implementada · ⏳ pendente
 
@@ -66,9 +66,9 @@ tudo ─→ 10 (testes/smoke)
 ### Reatividade
 
 - [x] `rxjs` compartilhado como singleton; um único barramento de eventos entre shell e MFEs
-- [ ] Busca: digitação rápida gera 1 requisição; requisições obsoletas aparecem como canceladas
-- [ ] Uploads com progresso por arquivo, no máximo 2 simultâneos, retry em erro transitório, cancelamento
-- [ ] Marble tests para os pipelines
+- [x] Busca: digitação rápida gera 1 requisição; requisições obsoletas aparecem como canceladas
+- [x] Uploads com progresso por arquivo, no máximo 2 simultâneos, retry em erro transitório, cancelamento
+- [x] Marble tests para os pipelines
 
 ### Estado
 
@@ -78,13 +78,17 @@ tudo ─→ 10 (testes/smoke)
 
 ### Autenticação
 
-- [ ] 5 senhas erradas → bloqueio temporário, mensagem genérica, `429` no registro por IP
-- [ ] Senha < 12 ou vazada é recusada no cadastro; bcrypt custo 12 com rehash no login
+- [x] 5 senhas erradas → bloqueio temporário, mensagem genérica, `429` no registro por IP
+- [x] Senha < 12 ou vazada é recusada no cadastro; bcrypt custo 12 com rehash no login
 - [x] Sessão ociosa expira; "sair de todos os dispositivos" revoga tokens; inatividade → aviso → logout
 - [x] ADR-006 (Sessão e autenticação) escrito
 
 ### Performance
 
-- [ ] Hover em "Transações" pré-carrega o remote e a primeira página
+- [x] Hover em "Transações" pré-carrega o remote e a primeira página
 - [x] recharts fora do carregamento de `/transactions`; gráficos abaixo da dobra só carregam ao rolar
-- [ ] Antes/depois anotado (bundle, TBT, tempo clique → conteúdo)
+- [x] Antes/depois anotado (bundle, TBT, tempo clique → conteúdo)
+
+## Smoke do sprint — 20/10/2026
+
+Validado em `phase-4` no commit `de5d07c`: 44 regressões e 11 cenários complementares aprovados, integração 77/77 e CI verde. O caso CDP de rede lenta é exclusivo do Chromium. Condições, limites, métricas e evidências no [relatório S2-10](../perf/s2-10-smoke.md).
