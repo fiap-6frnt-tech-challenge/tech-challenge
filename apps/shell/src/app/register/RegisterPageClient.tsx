@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useTransition } from 'react';
-import { RegisterForm, type RegisterFormFields } from '@bytebank/design-system';
+import { RegisterForm, type RegisterFormFields } from '@bytebank/design-system/forms';
 import { registerAndSignIn } from './registerFlow';
 
 export function RegisterPageClient() {

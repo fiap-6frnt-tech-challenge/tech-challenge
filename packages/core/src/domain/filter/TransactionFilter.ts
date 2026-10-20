@@ -1,4 +1,4 @@
-import { listTransactionsQuerySchema } from '../../schemas/transaction';
+import { parseTransactionQuery } from './parseTransactionQuery';
 import type { TransactionType } from '../transaction/TransactionType';
 
 export interface TransactionFilter {
@@ -58,7 +58,7 @@ export function fromSearchParams(
   const canonical = canonicalParams(params, options.allowLegacy ?? false);
   const raw: Record<string, unknown> = Object.fromEntries(canonical);
   if (canonical.has('category')) raw.category = canonical.getAll('category');
-  const parsed = listTransactionsQuerySchema.parse(raw);
+  const parsed = parseTransactionQuery(raw);
 
   return {
     filter: {

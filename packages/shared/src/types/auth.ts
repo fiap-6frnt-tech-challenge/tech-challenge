@@ -1,1 +1,1 @@
-export { registerSchema, type RegisterInput } from '@bytebank/core/schemas';
+export type { RegisterInput } from '@bytebank/core/schemas';

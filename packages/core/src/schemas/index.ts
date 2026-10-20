@@ -6,3 +6,8 @@ export {
 } from './transaction';
 export { listTransactionsQuerySchema as listQuerySchema } from './transaction';
 export { registerSchema, type RegisterInput } from './register';
+export {
+  transactionFormSchema,
+  attachmentSchema,
+  type TransactionFormValues,
+} from './transactionForm';

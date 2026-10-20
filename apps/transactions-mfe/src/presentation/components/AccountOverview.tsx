@@ -87,7 +87,7 @@ export default function AccountOverview() {
       </section>
 
       {hasOpenedNewTransaction && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<p role="status">Carregando formulário...</p>}>
           <NewTransactionModal
             isOpen={isNewTransactionVisible}
             onCancel={() => setIsNewTransactionVisible(false)}

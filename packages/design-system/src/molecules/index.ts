@@ -1,6 +1,5 @@
 export * from './AttachmentList';
 export * from './CategorySelect';
-export * from './ChartTooltip';
 export * from './CurrencyInput';
 export * from './DatePicker';
 export * from './EmptyState';

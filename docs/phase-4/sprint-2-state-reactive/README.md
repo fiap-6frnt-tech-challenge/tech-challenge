@@ -40,8 +40,8 @@
 | 05  | ✅     | Login: limite de tentativas e bloqueio               | Dev 1 | 1.5 dia | P0   | ✅ dia 1           | [05-login-rate-limit.md](./05-login-rate-limit.md)       |
 | 06  | ✅     | Política de senha + HIBP + bcrypt 12                 | Dev 1 | 1 dia   | P0   | ✅                 | [06-password-policy.md](./06-password-policy.md)         |
 | 07  | ✅     | Sessão: expiração, revogação, logout, inatividade    | Dev 1 | 1.5 dia | P0   | ⬅ 01, 04           | [07-session-hardening.md](./07-session-hardening.md)     |
-| 08  | 🟢     | Pré-carregamento de remotes e dados                  | Dev 3 | 1.5 dia | P0   | ✅ dia 1           | [08-preload.md](./08-preload.md)                         |
-| 09  | ⏳     | Lazy loading e code splitting                        | Dev 3 | 1.5 dia | P0   | ✅                 | [09-lazy-loading.md](./09-lazy-loading.md)               |
+| 08  | ✅     | Pré-carregamento de remotes e dados                  | Dev 3 | 1.5 dia | P0   | ✅ dia 1           | [08-preload.md](./08-preload.md)                         |
+| 09  | 🟢     | Lazy loading e code splitting                        | Dev 3 | 1.5 dia | P0   | ✅                 | [09-lazy-loading.md](./09-lazy-loading.md)               |
 | 10  | ⏳     | Testes + smoke                                       | Todos | 0.5 dia | P0   | ⬅ impl             | [10-tests-smoke.md](./10-tests-smoke.md)                 |
 
 **Legenda:** ✅ mergeada · 🟢 implementada · ⏳ pendente
@@ -86,5 +86,5 @@ tudo ─→ 10 (testes/smoke)
 ### Performance
 
 - [ ] Hover em "Transações" pré-carrega o remote e a primeira página
-- [ ] recharts fora do carregamento de `/transactions`; gráficos abaixo da dobra só carregam ao rolar
+- [x] recharts fora do carregamento de `/transactions`; gráficos abaixo da dobra só carregam ao rolar
 - [ ] Antes/depois anotado (bundle, TBT, tempo clique → conteúdo)

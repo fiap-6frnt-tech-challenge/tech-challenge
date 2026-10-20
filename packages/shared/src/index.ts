@@ -8,11 +8,4 @@ export * from './lib/navigationTiming';
 export { suggestCategory } from './lib/suggestCategory';
 export * from './constants/transaction';
 export { CATEGORIES, type Category, type CategoryId } from './categories';
-export {
-  transactionFormSchema,
-  attachmentSchema,
-  createTransactionSchema,
-  updateTransactionSchema,
-  listTransactionsQuerySchema,
-  type TransactionFormValues,
-} from './schemas/transaction';
+export type { TransactionFormValues } from '@bytebank/core/schemas';

@@ -1,8 +1,13 @@
 import { useEffect } from 'react';
-import { DashboardWidget, KpiCard, BarChart, LineChart, PieChart } from '@bytebank/design-system';
+import { KpiCard } from '@bytebank/design-system';
 import { markContentReady } from '@bytebank/shared';
+import { ChartWidget } from './components/ChartWidget';
 import { EMPTY_DASHBOARD_VIEW_MODEL } from '../application/toDashboardViewModel';
 import { useDashboardViewModel } from '../application/useDashboardViewModel';
+
+const loadIncomeExpense = () => import('./charts/IncomeExpenseChart');
+const loadCategoryExpense = () => import('./charts/CategoryExpenseChart');
+const loadBalance = () => import('./charts/BalanceChart');
 
 export default function Dashboard() {
   const {
@@ -50,72 +55,33 @@ export default function Dashboard() {
       </div>
 
       <div className="flex flex-col gap-lg">
-        <div>
-          <DashboardWidget
-            title="Receita vs Despesa"
-            loading={isLoading}
-            error={isError}
-            onRefresh={refetch}
-            skeletonType="bar"
-            empty={viewModel.byMonth.length === 0}
-          >
-            <div role="group" aria-label="Gráfico de barras mostrando receita e despesa por mês">
-              <BarChart
-                data={viewModel.byMonth}
-                xKey="month"
-                bars={[
-                  { key: 'income', label: 'Receita', color: 'var(--color-chart-green)' },
-                  { key: 'expense', label: 'Despesa', color: 'var(--color-chart-red)' },
-                ]}
-                height={300}
-                accessibleCaption="Resumo de receitas e despesas agrupados por mês"
-              />
-            </div>
-          </DashboardWidget>
-        </div>
-
-        <div>
-          <DashboardWidget
-            title="Despesas por Categoria"
-            loading={isLoading}
-            error={isError}
-            onRefresh={refetch}
-            skeletonType="pie"
-            empty={viewModel.byCategory.length === 0}
-          >
-            <div role="group" aria-label="Gráfico de pizza mostrando despesas por categoria">
-              <PieChart
-                data={viewModel.byCategory}
-                height={300}
-                accessibleCaption="Distribuição de despesas por categoria de consumo"
-              />
-            </div>
-          </DashboardWidget>
-        </div>
-
-        <div>
-          <DashboardWidget
-            title="Evolução do Saldo"
-            loading={isLoading}
-            error={isError}
-            onRefresh={refetch}
-            skeletonType="line"
-            empty={viewModel.balanceOverTime.length === 0}
-          >
-            <div
-              role="group"
-              aria-label="Gráfico de linha mostrando a evolução do saldo ao longo do tempo"
-            >
-              <LineChart
-                data={viewModel.balanceOverTime}
-                xKey="date"
-                lines={[{ key: 'balance', label: 'Saldo', color: 'var(--color-brand-primary)' }]}
-                height={300}
-                accessibleCaption="Gráfico de evolução histórica do saldo total acumulado"
-              />
-            </div>
-          </DashboardWidget>
-        </div>
+        <ChartWidget
+          title="Receita vs Despesa"
+          skeletonType="bar"
+          data={viewModel.byMonth}
+          loadChart={loadIncomeExpense}
+          loading={isLoading}
+          error={isError}
+          onRefresh={refetch}
+        />
+        <ChartWidget
+          title="Despesas por Categoria"
+          skeletonType="pie"
+          data={viewModel.byCategory}
+          loadChart={loadCategoryExpense}
+          loading={isLoading}
+          error={isError}
+          onRefresh={refetch}
+        />
+        <ChartWidget
+          title="Evolução do Saldo"
+          skeletonType="line"
+          data={viewModel.balanceOverTime}
+          loadChart={loadBalance}
+          loading={isLoading}
+          error={isError}
+          onRefresh={refetch}
+        />
       </div>
     </div>
   );

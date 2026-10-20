@@ -1,12 +1,8 @@
-export * from './AccessibleChartData';
 export * from './AuthGuard';
-export * from './BarChart';
 export * from './DashboardWidget';
 export * from './FeedbackModal';
 export * from './Header';
-export * from './LineChart';
-export * from './LoginForm';
 export * from './Modal';
-export * from './PieChart';
-export * from './RegisterForm';
 export * from './Sidebar';
+export type { LoginFormFields, LoginFormProps } from './LoginForm/ILoginForm';
+export type { RegisterFormFields, RegisterFormProps } from './RegisterForm/IRegisterForm';
