@@ -43,6 +43,7 @@ services:
       # NextAuth v5 (o código lê AUTH_*, não NEXTAUTH_*). AUTH_TRUST_HOST já vem do Dockerfile.
       AUTH_SECRET: ${AUTH_SECRET:-dev-secret}
       AUTH_URL: http://localhost:3000
+      CSP_MODE: ${CSP_MODE:-report-only}
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
       HIBP_ENABLED: ${HIBP_ENABLED:-true}
