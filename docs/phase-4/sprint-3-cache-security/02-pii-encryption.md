@@ -78,7 +78,7 @@ Migração em etapas (expand → backfill → contract):
 Com o contract no mesmo deploy, não há volta para a versão anterior pelo código: ela lê `email` e `name`. Rollback = restaurar o branch/backup do Neon.
 
 1. Criar `BLIND_INDEX_KEY` na Vercel (Sensitive, base64 de 32 bytes, diferente da chave de cifra) e guardar uma cópia fora do repo. Se ela já existir em outro formato, o deploy não sobe.
-2. Branch/backup do Neon. `vercel env pull` e `npm run db:backfill-pii -w @bytebank/shell -- --dry-run`, que mostra quantos usuários estão em claro.
+2. Branch/backup do Neon. `npm run db:backfill-pii -w @bytebank/shell -- --dry-run`, que mostra quantos usuários estão em claro. As chaves vêm do cofre de senhas do time, não do `vercel env pull`: variáveis Secret não são legíveis depois de salvas, e o `pull` grava só um placeholder. O `DATABASE_URL` é a conexão direta do Neon (sem `-pooler`).
 3. Merge (deploy) e, assim que o deploy estiver no ar, `npm run db:backfill-pii -w @bytebank/shell`. Entre o deploy e o fim do script (segundos), login e cadastro falham. As sessões abertas continuam valendo, porque a validação da sessão só lê `session_version`.
 4. Conferir: `SELECT email_hash, email_enc, name_enc FROM users LIMIT 3;` e o login de uma conta antiga.
 5. Se o script parar com falha (e-mail duplicado após normalizar), o contract não roda: os já cifrados entram, mas o cadastro falha até resolver a linha e rodar o script de novo.
