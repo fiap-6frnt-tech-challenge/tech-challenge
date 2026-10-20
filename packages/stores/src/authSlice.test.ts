@@ -7,7 +7,27 @@ import { signOut } from 'next-auth/react';
 import authReducer, { setSession, clearSession, logout, type UserSession } from './authSlice';
 
 const initialState = { user: null, isAuthenticated: false };
-beforeEach(() => vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 204 })));
+const assign = vi.fn();
+
+function stubNetwork({ revokeOk = true, activeSessionChecks = 0 } = {}) {
+  let remaining = activeSessionChecks;
+  const fetchMock = vi.fn(async (url: string) => {
+    if (url === '/api/auth/sessions/current/revoke')
+      return { ok: revokeOk, status: revokeOk ? 204 : 503 };
+    const active = remaining > 0;
+    remaining -= 1;
+    return { ok: true, status: 200, json: async () => (active ? { user: { id: 'u1' } } : null) };
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
+beforeEach(() => {
+  stubNetwork();
+  assign.mockClear();
+  vi.mocked(signOut).mockClear();
+  vi.stubGlobal('window', { location: { assign } });
+});
 afterEach(() => vi.unstubAllGlobals());
 
 const fakeUser: UserSession = {
@@ -18,21 +38,44 @@ const fakeUser: UserSession = {
 
 describe('authSlice', () => {
   it('does not claim remote logout succeeded when current-session revocation fails and permits retry', async () => {
-    vi.mocked(signOut).mockClear();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    stubNetwork({ revokeOk: false });
     const store = configureStore({ reducer: { auth: authReducer } });
     const failed = await store.dispatch(logout());
     expect(failed.meta.requestStatus).toBe('rejected');
     expect(signOut).not.toHaveBeenCalled();
+    expect(assign).not.toHaveBeenCalled();
     expect(store.getState().auth.logoutError).toBe(true);
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 204 }));
+    stubNetwork();
     const retry = await store.dispatch(logout());
     expect(retry.meta.requestStatus).toBe('fulfilled');
     expect(signOut).toHaveBeenCalledTimes(1);
   });
+  it('signs out again when a late session refresh restored the cookie, then navigates once', async () => {
+    const fetchMock = stubNetwork({ activeSessionChecks: 1 });
+    const store = configureStore({ reducer: { auth: authReducer } });
+
+    const result = await store.dispatch(logout('idle'));
+
+    expect(result.meta.requestStatus).toBe('fulfilled');
+    expect(signOut).toHaveBeenCalledTimes(2);
+    expect(signOut).toHaveBeenCalledWith({ redirect: false });
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/session', { cache: 'no-store' });
+    expect(assign).toHaveBeenCalledTimes(1);
+    expect(assign).toHaveBeenCalledWith('/login?reason=inactive');
+  });
+  it('reports the logout as failed when the session keeps coming back', async () => {
+    stubNetwork({ activeSessionChecks: 3 });
+    const store = configureStore({ reducer: { auth: authReducer } });
+
+    const result = await store.dispatch(logout());
+
+    expect(result.meta.requestStatus).toBe('rejected');
+    expect(signOut).toHaveBeenCalledTimes(3);
+    expect(assign).not.toHaveBeenCalled();
+    expect(store.getState().auth.logoutError).toBe(true);
+  });
   it('deduplicates simultaneous logout requests even before the session provider updates', async () => {
     let finish!: () => void;
-    vi.mocked(signOut).mockClear();
     vi.mocked(signOut).mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
@@ -80,7 +123,7 @@ describe('authSlice', () => {
     expect(state.isAuthenticated).toBe(false);
   });
 
-  it('logout dispara signOut com callbackUrl e limpa a sessão', async () => {
+  it('logout limpa o cookie, confere a sessão, navega para o login e limpa o estado', async () => {
     const store = configureStore({
       reducer: { auth: authReducer },
       preloadedState: { auth: { user: fakeUser, isAuthenticated: true } },
@@ -88,7 +131,8 @@ describe('authSlice', () => {
 
     await store.dispatch(logout());
 
-    expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/login' });
+    expect(signOut).toHaveBeenCalledWith({ redirect: false });
+    expect(assign).toHaveBeenCalledWith('/login');
     expect(store.getState().auth.user).toBeNull();
     expect(store.getState().auth.isAuthenticated).toBe(false);
   });

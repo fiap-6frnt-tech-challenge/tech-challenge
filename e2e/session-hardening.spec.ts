@@ -105,6 +105,39 @@ test('normal logout invalidates a copied cookie after the revocation check inter
   expect(response.status()).toBe(401);
 });
 
+test('stays logged out when a late session refresh restores the cookie after sign-out', async ({
+  page,
+  context,
+}) => {
+  await login(page);
+  const cookie = (await context.cookies()).find((entry) =>
+    /^(?:__Secure-)?authjs\.session-token$/.test(entry.name)
+  );
+  expect(cookie).toBeDefined();
+  let loggingOut = false;
+  let restore!: () => void;
+  const restored = new Promise<void>((resolve) => (restore = resolve));
+  await page.route('**/api/auth/sessions/current/revoke', (route) => {
+    loggingOut = true;
+    return route.continue();
+  });
+  await page.route('**/api/auth/session', async (route) => {
+    if (loggingOut) await restored;
+    await route.continue();
+  });
+  void page.waitForResponse('**/api/auth/signout').then(async () => {
+    await context.addCookies([cookie!]);
+    restore();
+  });
+
+  await logout(page);
+  await restored;
+  await page.goto('/');
+
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toHaveCount(0);
+});
+
 test('does not report successful global revocation when the endpoint fails', async ({ page }) => {
   await login(page);
   await page.route('**/api/auth/sessions/revoke', (route) =>

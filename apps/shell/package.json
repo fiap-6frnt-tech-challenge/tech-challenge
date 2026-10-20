@@ -11,13 +11,14 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/db/seed.ts",
     "db:migrate-attachments": "tsx --tsconfig tsconfig.scripts.json src/db/migrate-attachments.ts",
+    "db:backfill-pii": "tsx --tsconfig tsconfig.scripts.json src/db/backfill-pii.ts",
     "lint": "eslint --fix",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "chromatic": "npx chromatic --project-token=chpt_330cd685ba026e8",
     "test": "vitest run --passWithNoTests",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "db:seed-load": "tsx src/db/seed-load.ts"
+    "db:seed-load": "tsx --tsconfig tsconfig.scripts.json src/db/seed-load.ts"
   },
   "browserslist": [
     "last 2 Chrome versions",

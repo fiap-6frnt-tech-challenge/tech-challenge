@@ -1,0 +1,6 @@
+export const E2E_KEYS = {
+  DATA_ENCRYPTION_KEYS:
+    process.env.DATA_ENCRYPTION_KEYS ?? '1:Ynl0ZWJhbmstZTJlLWRhdGEtZW5jcnlwdGlvbi1rZXk=',
+  DATA_ENCRYPTION_ACTIVE_KEY_ID: process.env.DATA_ENCRYPTION_ACTIVE_KEY_ID ?? '1',
+  BLIND_INDEX_KEY: process.env.BLIND_INDEX_KEY ?? 'Ynl0ZWJhbmstZTJlLWJsaW5kLWluZGV4LWtleS0zMmI=',
+};

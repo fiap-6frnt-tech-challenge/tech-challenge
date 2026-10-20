@@ -31,6 +31,7 @@ import { AesGcmCipher, parseEncryptionKeys } from './infrastructure/security/Aes
 import { BcryptPasswordHasher } from './infrastructure/security/BcryptPasswordHasher';
 import { CloudflareTurnstileVerifier } from './infrastructure/security/CloudflareTurnstileVerifier';
 import { HibpBreachChecker } from './infrastructure/security/HibpBreachChecker';
+import { HmacBlindIndex, parseBlindIndexKey } from './infrastructure/security/HmacBlindIndex';
 import { HmacRateLimitKeyGenerator } from './infrastructure/security/HmacRateLimitKeyGenerator';
 import { getRateLimitPolicies } from './infrastructure/security/rateLimitPolicy';
 import { LocalFileStorage } from './infrastructure/storage/LocalFileStorage';
@@ -51,6 +52,17 @@ export function resolveFileStorage(): FileStorage {
 
 const DEVELOPMENT_KEY_ID = 0;
 
+function requireInProduction(message: string) {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    process.env.NEXT_PHASE !== 'phase-production-build'
+  ) {
+    throw new Error(message);
+  }
+}
+
+const developmentKey = (label: string) => createHash('sha256').update(label).digest();
+
 export function resolveCipher(): Cipher {
   const keys = process.env.DATA_ENCRYPTION_KEYS;
   if (keys) {
@@ -59,32 +71,32 @@ export function resolveCipher(): Cipher {
       Number(process.env.DATA_ENCRYPTION_ACTIVE_KEY_ID)
     );
   }
-  if (
-    process.env.NODE_ENV === 'production' &&
-    process.env.NEXT_PHASE !== 'phase-production-build'
-  ) {
-    throw new Error(
-      'DATA_ENCRYPTION_KEYS e DATA_ENCRYPTION_ACTIVE_KEY_ID são obrigatórios em produção'
-    );
-  }
-  const developmentKey = createHash('sha256').update('bytebank-development-data-key').digest();
-  return new AesGcmCipher(new Map([[DEVELOPMENT_KEY_ID, developmentKey]]), DEVELOPMENT_KEY_ID);
+  requireInProduction(
+    'DATA_ENCRYPTION_KEYS e DATA_ENCRYPTION_ACTIVE_KEY_ID são obrigatórios em produção'
+  );
+  return new AesGcmCipher(
+    new Map([[DEVELOPMENT_KEY_ID, developmentKey('bytebank-development-data-key')]]),
+    DEVELOPMENT_KEY_ID
+  );
+}
+
+export function resolveBlindIndex(): HmacBlindIndex {
+  const key = process.env.BLIND_INDEX_KEY;
+  if (key) return new HmacBlindIndex(parseBlindIndexKey(key));
+  requireInProduction('BLIND_INDEX_KEY é obrigatório em produção');
+  return new HmacBlindIndex(developmentKey('bytebank-development-blind-index-key'));
 }
 
 const cipher = resolveCipher();
+const blindIndex = resolveBlindIndex();
 const transactions = new DrizzleTransactionRepository(db, cipher);
 const attachments = new DrizzleAttachmentRepository(db, cipher);
-const users = new DrizzleUserRepository(db);
+const users = new DrizzleUserRepository(db, cipher, blindIndex);
 const clock = new SystemClock('America/Sao_Paulo');
 const ids = new CryptoIdGenerator();
 const passwords = new BcryptPasswordHasher(12);
 const breachChecker = new HibpBreachChecker();
-const rateLimitKeys = new HmacRateLimitKeyGenerator(
-  () =>
-    process.env.BLIND_INDEX_KEY ??
-    process.env.AUTH_SECRET ??
-    (process.env.NODE_ENV === 'production' ? '' : 'bytebank-local-rate-limit-secret')
-);
+const rateLimitKeys = new HmacRateLimitKeyGenerator(blindIndex);
 const rateLimiter = new PostgresRateLimiter(db, getRateLimitPolicies(), clock);
 const turnstileVerifier = new CloudflareTurnstileVerifier();
 const storage = resolveFileStorage();

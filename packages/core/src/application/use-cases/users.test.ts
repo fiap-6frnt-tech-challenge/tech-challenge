@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   ConflictError,
   RateLimitedError,
@@ -7,6 +7,7 @@ import {
 } from '../../domain';
 import type {
   CaptchaVerifier,
+  LegacyUserRepository,
   PasswordBreachChecker,
   PasswordHasher,
   RateLimiter,
@@ -14,8 +15,13 @@ import type {
   UserRepository,
 } from '../ports';
 import { FakeClock, SequentialIdGenerator } from '../testing';
-import type { User } from '../types';
-import { AuthenticateUser, BREACHED_PASSWORD_MESSAGE, RegisterUser } from './users';
+import type { LegacyUser, User } from '../types';
+import {
+  AuthenticateUser,
+  BREACHED_PASSWORD_MESSAGE,
+  EncryptLegacyUsers,
+  RegisterUser,
+} from './users';
 
 const strongPassword = 'Bytebank-Teste-2026';
 
@@ -375,5 +381,68 @@ describe('user use cases', () => {
       authenticate.execute('ana@example.com', 'Senha123!', '127.0.0.1')
     ).resolves.toEqual({ ...legacy, passwordHash: 'hashed:Senha123!' });
     expect(deps.passwordHashUpdates).toHaveLength(1);
+  });
+});
+
+describe('EncryptLegacyUsers', () => {
+  class MemoryLegacyUsers implements LegacyUserRepository {
+    readonly encrypted = new Map<string, LegacyUser>();
+    readonly failing = new Set<string>();
+    constructor(readonly rows: LegacyUser[]) {}
+    async listLegacy(limit: number, afterId?: string): Promise<LegacyUser[]> {
+      return this.rows
+        .filter((row) => !this.encrypted.has(row.id) && (!afterId || row.id > afterId))
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .slice(0, limit);
+    }
+    async markEncrypted(user: LegacyUser): Promise<boolean> {
+      if (this.failing.has(user.id)) throw new Error('E-mail já cifrado em outro usuário');
+      if (this.encrypted.has(user.id)) return false;
+      this.encrypted.set(user.id, user);
+      return true;
+    }
+  }
+
+  const legacy = (id: string): LegacyUser => ({
+    id,
+    name: `Nome ${id}`,
+    email: `${id}@bytebank.test`,
+  });
+
+  it('cifra todos os legados em lotes, com o nome e o e-mail de cada um', async () => {
+    const repository = new MemoryLegacyUsers(['c', 'a', 'b'].map(legacy));
+
+    await expect(new EncryptLegacyUsers(repository).execute(2)).resolves.toEqual({
+      migrated: 3,
+      failed: [],
+    });
+    expect(repository.encrypted.get('b')).toEqual(legacy('b'));
+  });
+
+  it('é idempotente: a segunda execução não encontra legados', async () => {
+    const useCase = new EncryptLegacyUsers(new MemoryLegacyUsers([legacy('a')]));
+    await useCase.execute();
+    await expect(useCase.execute()).resolves.toEqual({ migrated: 0, failed: [] });
+  });
+
+  it('registra a falha e segue para os próximos sem repetir o mesmo usuário', async () => {
+    const repository = new MemoryLegacyUsers(['a', 'b'].map(legacy));
+    repository.failing.add('a');
+
+    await expect(new EncryptLegacyUsers(repository).execute(1)).resolves.toEqual({
+      migrated: 1,
+      failed: [{ id: 'a', reason: 'E-mail já cifrado em outro usuário' }],
+    });
+    expect([...repository.encrypted.keys()]).toEqual(['b']);
+  });
+
+  it('não conta o usuário que outra execução já cifrou', async () => {
+    const repository = new MemoryLegacyUsers([legacy('a')]);
+    vi.spyOn(repository, 'markEncrypted').mockResolvedValue(false);
+
+    await expect(new EncryptLegacyUsers(repository).execute()).resolves.toEqual({
+      migrated: 0,
+      failed: [],
+    });
   });
 });

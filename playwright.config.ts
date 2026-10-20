@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
+import { E2E_KEYS } from './e2e/keys';
 
 const shellUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 const dashboardManifestUrl =
@@ -10,6 +11,7 @@ const reuseExistingServer = process.env.E2E_REUSE_SERVERS === '1';
 
 export default defineConfig({
   testDir: './e2e',
+  tsconfig: './e2e/tsconfig.json',
   fullyParallel: false,
   timeout: 60_000,
   expect: {
@@ -53,9 +55,7 @@ export default defineConfig({
         HIBP_ENABLED: process.env.HIBP_ENABLED ?? 'false',
         DATABASE_URL:
           process.env.DATABASE_URL ?? 'postgres://bytebank:bytebank@localhost:5432/bytebank',
-        DATA_ENCRYPTION_KEYS:
-          process.env.DATA_ENCRYPTION_KEYS ?? '1:Ynl0ZWJhbmstZTJlLWRhdGEtZW5jcnlwdGlvbi1rZXk=',
-        DATA_ENCRYPTION_ACTIVE_KEY_ID: process.env.DATA_ENCRYPTION_ACTIVE_KEY_ID ?? '1',
+        ...E2E_KEYS,
         BLOB_READ_WRITE_TOKEN: '',
         LOCAL_UPLOADS_DIR: resolve(process.env.LOCAL_UPLOADS_DIR ?? '.uploads'),
       },

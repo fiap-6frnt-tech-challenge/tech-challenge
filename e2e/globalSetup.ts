@@ -1,10 +1,20 @@
 import { randomBytes } from 'node:crypto';
 import { hash } from 'bcryptjs';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, or } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from '../apps/shell/src/db/schema';
 import { attachments, authAttempts, transactions, users } from '../apps/shell/src/db/schema';
+import { DrizzleUserRepository } from '../apps/shell/src/server/infrastructure/db/DrizzleUserRepository';
+import {
+  AesGcmCipher,
+  parseEncryptionKeys,
+} from '../apps/shell/src/server/infrastructure/security/AesGcmCipher';
+import {
+  HmacBlindIndex,
+  parseBlindIndexKey,
+} from '../apps/shell/src/server/infrastructure/security/HmacBlindIndex';
+import { E2E_KEYS } from './keys';
 
 // Via env para os workers do Playwright herdarem a mesma senha.
 const e2ePassword =
@@ -62,6 +72,15 @@ const seededTransactions = [
 async function globalSetup() {
   const pool = new Pool({ connectionString: databaseUrl });
   const db = drizzle(pool, { schema });
+  const blindIndex = new HmacBlindIndex(parseBlindIndexKey(E2E_KEYS.BLIND_INDEX_KEY));
+  const userRepository = new DrizzleUserRepository(
+    db,
+    new AesGcmCipher(
+      parseEncryptionKeys(E2E_KEYS.DATA_ENCRYPTION_KEYS),
+      Number(E2E_KEYS.DATA_ENCRYPTION_ACTIVE_KEY_ID)
+    ),
+    blindIndex
+  );
 
   try {
     await db.delete(authAttempts);
@@ -76,14 +95,19 @@ async function globalSetup() {
     }
 
     await db.delete(transactions).where(eq(transactions.userId, E2E_USER.id));
-    await db.delete(users).where(eq(users.email, E2E_USER.email));
+    await db
+      .delete(users)
+      .where(
+        or(eq(users.id, E2E_USER.id), eq(users.emailHash, blindIndex.compute(E2E_USER.email)))
+      );
 
-    await db.insert(users).values({
+    const created = await userRepository.create({
       id: E2E_USER.id,
       name: E2E_USER.name,
       email: E2E_USER.email,
       passwordHash: await hash(E2E_USER.password, 12),
     });
+    if (!created) throw new Error(`${E2E_USER.email} já pertence a outro usuário`);
 
     await db.insert(transactions).values(seededTransactions);
   } finally {

@@ -7,7 +7,18 @@ vi.mock('next-auth/react', () => ({ signOut: vi.fn().mockResolvedValue(undefined
 import { signOut } from 'next-auth/react';
 import { registerClientListeners } from './clientListeners';
 import { registerSessionExpiry } from './sessionEffects';
-beforeEach(() => vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 204 })));
+const assign = vi.fn();
+beforeEach(() => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) =>
+      url === '/api/auth/session'
+        ? { ok: true, status: 200, json: async () => null }
+        : { ok: true, status: 204 }
+    )
+  );
+  vi.stubGlobal('window', { location: { assign } });
+});
 afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
@@ -31,7 +42,8 @@ describe('session expiry composition', () => {
     expect(store.getState().auth.isAuthenticated).toBe(false);
     expect(queryClient.getQueryCache().getAll()).toEqual([]);
     expect(signOut).toHaveBeenCalledTimes(1);
-    expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/login?reason=session-expired' });
+    await vi.waitFor(() => expect(assign).toHaveBeenCalledWith('/login?reason=session-expired'));
+    expect(signOut).toHaveBeenCalledWith({ redirect: false });
     stop();
     store.dispatch(setSession({ id: 'u', name: 'Ana', email: 'ana@example.com' }));
     events$.next({ type: 'session.expired', version: 1 });

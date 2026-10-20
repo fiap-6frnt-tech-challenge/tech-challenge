@@ -1,6 +1,6 @@
-import { randomBytes } from 'node:crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { resolveCipher, resolveFileStorage } from './container';
+import { resolveBlindIndex, resolveCipher, resolveFileStorage } from './container';
 import { LocalFileStorage } from './infrastructure/storage/LocalFileStorage';
 import { VercelBlobFileStorage } from './infrastructure/storage/VercelBlobFileStorage';
 
@@ -93,11 +93,52 @@ describe('resolveCipher', () => {
   });
 });
 
+describe('resolveBlindIndex', () => {
+  function stubBlindIndexEnv(env: { key?: string; nodeEnv: string; phase?: string }) {
+    vi.stubEnv('BLIND_INDEX_KEY', env.key ?? '');
+    vi.stubEnv('NODE_ENV', env.nodeEnv);
+    vi.stubEnv('NEXT_PHASE', env.phase ?? '');
+  }
+
+  it('usa a chave configurada', () => {
+    const key = randomBytes(32);
+    stubBlindIndexEnv({ key: key.toString('base64'), nodeEnv: 'production' });
+    expect(resolveBlindIndex().compute('ana@example.com')).toBe(
+      createHmac('sha256', key).update('ana@example.com').digest('base64url')
+    );
+  });
+
+  it('falha no boot com chave de tamanho errado', () => {
+    stubBlindIndexEnv({ key: randomBytes(16).toString('base64'), nodeEnv: 'development' });
+    expect(() => resolveBlindIndex()).toThrow('exatamente 32 bytes');
+  });
+
+  it('exige a chave em produção', () => {
+    stubBlindIndexEnv({ nodeEnv: 'production' });
+    expect(() => resolveBlindIndex()).toThrow('BLIND_INDEX_KEY');
+  });
+
+  it.each([
+    ['no desenvolvimento', 'development', undefined],
+    ['no build de produção', 'production', 'phase-production-build'],
+  ])('usa a chave local de desenvolvimento %s', (_name, nodeEnv, phase) => {
+    stubBlindIndexEnv({ nodeEnv, phase });
+    expect(resolveBlindIndex().compute('ana@example.com')).toBe(
+      resolveBlindIndex().compute('ana@example.com')
+    );
+  });
+});
+
 describe('container', () => {
-  it('não carrega em produção sem token, o que derruba o build das rotas que o importam', async () => {
-    stubStorageEnv({ nodeEnv: 'production' });
+  function stubKeys() {
     vi.stubEnv('DATA_ENCRYPTION_KEYS', `1:${randomBytes(32).toString('base64')}`);
     vi.stubEnv('DATA_ENCRYPTION_ACTIVE_KEY_ID', '1');
+    vi.stubEnv('BLIND_INDEX_KEY', randomBytes(32).toString('base64'));
+  }
+
+  it('não carrega em produção sem token, o que derruba o build das rotas que o importam', async () => {
+    stubStorageEnv({ nodeEnv: 'production' });
+    stubKeys();
     vi.resetModules();
     await expect(import('./container')).rejects.toThrow(missingToken);
   });
@@ -108,5 +149,14 @@ describe('container', () => {
     vi.stubEnv('NEXT_PHASE', 'phase-production-server');
     vi.resetModules();
     await expect(import('./container')).rejects.toThrow('DATA_ENCRYPTION_KEYS');
+  });
+
+  it('não atende requisições em produção sem a chave do blind index', async () => {
+    stubStorageEnv({ uploadsDir: '/srv/uploads', nodeEnv: 'production' });
+    stubKeys();
+    vi.stubEnv('BLIND_INDEX_KEY', '');
+    vi.stubEnv('NEXT_PHASE', 'phase-production-server');
+    vi.resetModules();
+    await expect(import('./container')).rejects.toThrow('BLIND_INDEX_KEY');
   });
 });

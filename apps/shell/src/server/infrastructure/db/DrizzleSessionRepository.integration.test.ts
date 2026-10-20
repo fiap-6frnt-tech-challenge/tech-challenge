@@ -1,12 +1,19 @@
+import { randomBytes } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import { db } from '@/db';
 import { integrationScope } from '@/server/testing/integrationScope';
+import { AesGcmCipher } from '../security/AesGcmCipher';
+import { HmacBlindIndex } from '../security/HmacBlindIndex';
 import { DrizzleUserRepository } from './DrizzleUserRepository';
 import { DrizzleSessionRepository } from './DrizzleSessionRepository';
 
 const scope = integrationScope();
 const sessions = new DrizzleSessionRepository(db);
-const users = new DrizzleUserRepository(db);
+const users = new DrizzleUserRepository(
+  db,
+  new AesGcmCipher(new Map([[1, randomBytes(32)]]), 1),
+  new HmacBlindIndex(randomBytes(32))
+);
 afterAll(() => scope.cleanup());
 async function createUser(label: string) {
   const id = scope.id(label);

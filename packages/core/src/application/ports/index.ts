@@ -15,6 +15,7 @@ import type {
   AttachmentRecord,
   DateRange,
   LegacyAttachment,
+  LegacyUser,
   NewAttachment,
   NewTransactionData,
   NewUser,
@@ -88,6 +89,11 @@ export interface UserRepository {
   findByEmail(email: string): Promise<User | null>;
   create(data: NewUser): Promise<User | null>;
   updatePasswordHash(id: string, passwordHash: string): Promise<void>;
+}
+
+export interface LegacyUserRepository {
+  listLegacy(limit: number, afterId?: string): Promise<LegacyUser[]>;
+  markEncrypted(user: LegacyUser): Promise<boolean>;
 }
 
 export interface SessionRepository {

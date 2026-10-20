@@ -64,6 +64,20 @@
       "when": 1792368744885,
       "tag": "0008_encrypted_attachments",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792457885332,
+      "tag": "0009_pii_encryption",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792457900293,
+      "tag": "0010_pii_contract",
+      "breakpoints": true
     }
   ]
 }
