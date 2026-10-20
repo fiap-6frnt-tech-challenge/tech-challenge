@@ -51,6 +51,13 @@ export class GetTransaction {
   }
 }
 
+export class GetTransactionsVersion {
+  constructor(private readonly transactions: TransactionRepository) {}
+  execute(actor: Actor): Promise<string> {
+    return this.transactions.version(actor.userId);
+  }
+}
+
 export class ListTransactions {
   constructor(private readonly transactions: TransactionRepository) {}
   execute(actor: Actor, filter: TransactionFilter, page: PageRequest) {

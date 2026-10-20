@@ -19,6 +19,8 @@ import type {
 import type { TransactionRepository } from '../ports';
 
 export class InMemoryTransactionRepository implements TransactionRepository {
+  private revision = 0;
+
   constructor(private readonly items: Transaction[] = []) {}
 
   async findById(id: string, ownerId: string): Promise<Transaction | null> {
@@ -52,19 +54,26 @@ export class InMemoryTransactionRepository implements TransactionRepository {
   async create(data: NewTransactionData, ownerId: string): Promise<Transaction> {
     const item: Transaction = { ...data, userId: ownerId };
     this.items.push(item);
+    this.revision += 1;
     return item;
   }
   async update(id: string, ownerId: string, patch: TransactionPatch): Promise<Transaction | null> {
     const item = await this.findById(id, ownerId);
     if (!item) return null;
     Object.assign(item, patch);
+    this.revision += 1;
     return item;
   }
   async delete(id: string, ownerId: string): Promise<boolean> {
     const index = this.items.findIndex((item) => item.id === id && item.userId === ownerId);
     if (index < 0) return false;
     this.items.splice(index, 1);
+    this.revision += 1;
     return true;
+  }
+  async version(ownerId: string): Promise<string> {
+    const count = this.items.filter((item) => item.userId === ownerId).length;
+    return `${this.revision}:${count}`;
   }
   async overview(ownerId: string, recentLimit: number): Promise<AccountOverview> {
     const items = this.items.filter((item) => item.userId === ownerId);

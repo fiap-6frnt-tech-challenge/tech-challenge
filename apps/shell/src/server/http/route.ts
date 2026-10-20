@@ -12,12 +12,17 @@ import type { Actor } from '@bytebank/core/application';
 import { auth } from '@/auth';
 import { JsonRequestError } from '@/app/api/read-json';
 import { UploadRequestError } from './UploadRequestError';
+import { dataVersion, withETag } from './etag';
 
-type Handler<P> = (context: { actor: Actor; req: NextRequest; params: P }) => Promise<unknown>;
+type Context<P> = { actor: Actor; req: NextRequest; params: P };
+type Handler<P> = (context: Context<P>) => Promise<unknown>;
 type PublicHandler<P> = (context: { req: NextRequest; params: P }) => Promise<unknown>;
 type RouteOptions = {
   status?: number;
   headers?: (request: NextRequest) => HeadersInit;
+};
+type ActorRouteOptions<P> = RouteOptions & {
+  version?: (context: Context<P>) => Promise<string>;
 };
 type RouteContext<P> = { params: Promise<P> };
 
@@ -28,7 +33,7 @@ function responseFor(result: unknown, req: NextRequest, options: RouteOptions): 
   return NextResponse.json(result, { status: options.status ?? 200, headers });
 }
 
-export function route<P>(handler: Handler<P>, options: RouteOptions = {}) {
+export function route<P>(handler: Handler<P>, options: ActorRouteOptions<P> = {}) {
   return async (req: NextRequest, context?: RouteContext<P>): Promise<NextResponse> => {
     try {
       const session = await auth();
@@ -36,11 +41,13 @@ export function route<P>(handler: Handler<P>, options: RouteOptions = {}) {
         return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
       }
       const params = await (context?.params ?? Promise.resolve({} as P));
-      return responseFor(
-        await handler({ actor: { userId: session.user.id }, req, params }),
-        req,
-        options
-      );
+      const handlerContext = { actor: { userId: session.user.id }, req, params };
+      if (options.version) {
+        const stamp = await options.version(handlerContext);
+        const version = dataVersion(req, session.user.id, stamp);
+        return await withETag(req, version, () => handler(handlerContext));
+      }
+      return responseFor(await handler(handlerContext), req, options);
     } catch (error) {
       return toHttpError(error);
     }
