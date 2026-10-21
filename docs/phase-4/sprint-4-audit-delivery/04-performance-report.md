@@ -7,7 +7,7 @@
 | **Duração**     | 1 dia                                                     |
 | **Prioridade**  | P0                                                        |
 | **Branch**      | `dev3-perf/perf-report`                                   |
-| **Depende de**  | Sprint 3 inteiro, S0-04 (baseline)                        |
+| **Depende de**  | Sprint 3 inteiro, S0-04 (baseline), Task 10 (LCP mobile)  |
 | **Desbloqueia** | Task 07 (seção de performance do README), Task 08 (vídeo) |
 | **Requisito**   | Performance e otimização · melhoria no tempo de resposta  |
 | **Embasamento** | Arquiteturas Avançadas — Aula 4                           |
@@ -30,14 +30,15 @@ A spec pede "melhorias no tempo de resposta da aplicação". O relatório prova 
 6. **Navegação:** tempo clique → conteúdo em "Transações" (com e sem preload).
 7. **Causalidade:** para cada otimização, qual métrica ela moveu e quanto:
 
-   | Otimização                 | Task  | Métrica                           | Antes → Depois |
-   | -------------------------- | ----- | --------------------------------- | -------------- |
-   | Índices + agregação em SQL | S1-05 | p95 do resumo                     |                |
-   | Overview na home           | S1-05 | payload da home                   |                |
-   | Preload de remotes e dados | S2-08 | clique → conteúdo                 |                |
-   | Gráficos fora do shell     | S2-09 | JS de `/transactions`, TBT        |                |
-   | ETag/304                   | S3-03 | bytes transferidos na revalidação |                |
-   | Prefetch no SSR            | S3-04 | LCP mobile                        |                |
+   | Otimização                      | Task  | Métrica                            | Antes → Depois                                                                                                                                                          |
+   | ------------------------------- | ----- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | Índices + agregação em SQL      | S1-05 | p95 do resumo                      |                                                                                                                                                                         |
+   | Overview na home                | S1-05 | payload da home                    |                                                                                                                                                                         |
+   | Preload de remotes e dados      | S2-08 | clique → conteúdo                  |                                                                                                                                                                         |
+   | Gráficos fora do shell          | S2-09 | JS de `/transactions`, TBT         |                                                                                                                                                                         |
+   | ETag/304                        | S3-03 | bytes transferidos na revalidação  |                                                                                                                                                                         |
+   | Prefetch no SSR                 | S3-04 | remote carregado → conteúdo pronto | 278 → 126 ms (`/`), 294 → 144 ms (`/transactions`); LCP mobile sem mudança ([S3-04](../sprint-3-cache-security/04-server-cache-ssr-prefetch.md#evidências--2026-10-20)) |
+   | Elemento de LCP fora da cascata | S4-10 | LCP mobile                         |                                                                                                                                                                         |
 
 8. **Metas do PLAN.md:** atingida / não atingida, com explicação.
 

@@ -119,19 +119,20 @@
 
 **8 dias · 23/10 → 30/10**
 
-| #   | Tarefa                                                               | Owner | Dias | Prio | Depende de   |
-| --- | -------------------------------------------------------------------- | ----- | ---- | ---- | ------------ |
-| 01  | Logs de segurança e auditoria (A09)                                  | Dev 1 | 0.5  | P1   | S1-04, S2-05 |
-| 02  | Hardening de Docker e infraestrutura                                 | Dev 1 | 0.5  | P1   | S3-09        |
-| 03  | Auditoria OWASP + varredura com OWASP ZAP                            | Dev 1 | 1.5  | P0   | S3           |
-| 04  | Relatório de performance antes/depois                                | Dev 3 | 1    | P0   | S3           |
-| 05  | E2E de regressão (fluxos novos)                                      | Dev 3 | 1.5  | P0   | S3           |
-| 06  | Documentação de arquitetura                                          | Dev 2 | 1.5  | P0   | S3           |
-| 07  | README final                                                         | Dev 3 | 1    | P0   | Tasks 04, 06 |
-| 08  | **Vídeo demo (≤ 5 min)** — roteiro com o Dev 2                       | Todos | 1    | P0   | tudo         |
-| 09  | Smoke final em clone limpo + merge `phase-4` → `main` + tag `v4.0.0` | Todos | 0.5  | P0   | tudo         |
+| #   | Tarefa                                                                | Owner | Dias | Prio | Depende de   |
+| --- | --------------------------------------------------------------------- | ----- | ---- | ---- | ------------ |
+| 01  | Logs de segurança e auditoria (A09)                                   | Dev 1 | 0.5  | P1   | S1-04, S2-05 |
+| 02  | Hardening de Docker e infraestrutura                                  | Dev 1 | 0.5  | P1   | S3-09        |
+| 03  | Auditoria OWASP + varredura com OWASP ZAP                             | Dev 1 | 1.5  | P0   | S3           |
+| 04  | Relatório de performance antes/depois                                 | Dev 3 | 1    | P0   | S3           |
+| 05  | E2E de regressão (fluxos novos)                                       | Dev 3 | 1.5  | P0   | S3           |
+| 06  | Documentação de arquitetura                                           | Dev 2 | 1.5  | P0   | S3           |
+| 07  | README final                                                          | Dev 3 | 1    | P0   | Tasks 04, 06 |
+| 08  | **Vídeo demo (≤ 5 min)** — roteiro com o Dev 2                        | Todos | 1    | P0   | tudo         |
+| 09  | Smoke final em clone limpo + merge `phase-4` → `main` + tag `v4.0.0`  | Todos | 0.5  | P0   | tudo         |
+| 10  | LCP mobile: elemento de LCP fora da cascata dos remotes (antes da 04) | Dev 3 | 2    | P1   | S3-04, S3-05 |
 
-**Alocado:** Dev 1 ~4 · Dev 2 ~3 · Dev 3 ~5 (de 24 dev-days). ~3 dias de buffer por dev para o prazo fixo de 30/10. O Dev 2, mais livre, apoia os E2E e as correções da auditoria.
+**Alocado:** Dev 1 ~4 · Dev 2 ~3 · Dev 3 ~5 (de 24 dev-days), mais a Task 10 (Dev 3 ~2, Dev 2 apoia a Parte A), que sai do buffer. ~3 dias de buffer por dev para o prazo fixo de 30/10. O Dev 2, mais livre, apoia os E2E e as correções da auditoria.
 
 ---
 
