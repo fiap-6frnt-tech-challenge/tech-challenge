@@ -1,3 +1,4 @@
+import './configureZod';
 import { z } from 'zod';
 import { CATEGORIES } from '../domain/category/categories';
 import { TRANSACTION_TYPE } from '../domain/transaction/TransactionType';

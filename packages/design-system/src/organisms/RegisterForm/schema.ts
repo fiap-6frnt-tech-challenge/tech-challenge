@@ -1,3 +1,4 @@
+import '../configureZod';
 import { z } from 'zod';
 
 export const PASSWORD_HINT =
