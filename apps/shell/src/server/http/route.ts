@@ -1,3 +1,4 @@
+import './configureZod';
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import {

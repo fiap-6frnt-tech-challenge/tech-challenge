@@ -1,3 +1,4 @@
+import './configureZod';
 import { z } from 'zod';
 import { ValidationError } from '../domain/errors';
 import { parseTransactionQuery } from '../domain/filter/parseTransactionQuery';

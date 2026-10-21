@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
 import { corsHeaders } from './cors';
 import { readUpload } from './upload';
@@ -20,6 +20,15 @@ describe('corsHeaders', () => {
     expect(corsHeaders('https://attacker.example')['Access-Control-Allow-Origin']).toBe(
       'http://localhost:3003'
     );
+  });
+
+  it('does not enable credentialed CORS in production', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    try {
+      expect(corsHeaders('https://tech-challenge-transactions-mfe.vercel.app')).toEqual({});
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });
 

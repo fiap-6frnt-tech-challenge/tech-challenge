@@ -66,7 +66,7 @@ O shell não envia CSP, HSTS nem os demais headers de segurança, e o `X-Powered
      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${mfeOrigins}${isDev ? " 'unsafe-eval'" : ''}`,
      `style-src 'self' 'unsafe-inline'`,
      `img-src 'self' data: blob: https://lh3.googleusercontent.com`,
-     `connect-src 'self' ${mfeOrigins}`,
+     `connect-src 'self' ${mfeOrigins}${isDev ? ' ws:' : ''}`,
      `font-src 'self'`,
      `frame-ancestors 'none'`,
      `base-uri 'self'`,
@@ -76,9 +76,9 @@ O shell não envia CSP, HSTS nem os demais headers de segurança, e o `X-Powered
    ].join('; ');
    ```
 
-   - Passar o nonce ao Next pelo header de requisição `x-nonce` e devolver a CSP na resposta (padrão da documentação do Next), mantendo as regras de redirect que o `proxy.ts` já tem.
+   - Passar a política (`Content-Security-Policy` ou `Content-Security-Policy-Report-Only`) no header de requisição correspondente e na resposta, mantendo as regras de redirect que o `proxy.ts` já tem. `x-nonce` é encaminhado apenas para componentes que precisem ler o nonce; o Next extrai o nonce da política CSP recebida.
    - `CSP_MODE=report-only` na primeira semana (`Content-Security-Policy-Report-Only`) → `enforce` depois de zerar as violações.
-   - `/api/csp-report` registra as violações (entra nos logs do S4-01).
+   - `/api/csp-report` recebe e valida as violações; o log estruturado do evento fica para S4-01.
 
 3. **Defesa CSRF** (`proxy.ts`), para `/api/*` com método que altera estado, exceto `/api/auth/*`:
    ```ts

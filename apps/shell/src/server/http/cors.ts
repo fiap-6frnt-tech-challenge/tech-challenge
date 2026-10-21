@@ -11,7 +11,9 @@ const allowedOrigins = [
   toOrigin(process.env.NEXT_PUBLIC_DASHBOARD_MFE_URL ?? 'http://localhost:3002'),
 ];
 
-export function corsHeaders(origin: string | null) {
+export function corsHeaders(origin: string | null): Record<string, string> {
+  if (process.env.NODE_ENV === 'production') return {};
+
   const allowed = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
   return {
     'Access-Control-Allow-Origin': allowed,
