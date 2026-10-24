@@ -21,7 +21,6 @@ function collectApiCacheHeaders(page: Page) {
   return values;
 }
 
-// With SSR data the remotes no longer fetch on load, so the page fetches through its HTTP cache.
 async function fetchFromPage(page: Page, path: string) {
   const url = new URL(path, page.url());
   const response = page.waitForResponse(

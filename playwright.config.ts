@@ -8,9 +8,7 @@ const dashboardManifestUrl =
 const transactionsManifestUrl =
   process.env.E2E_TRANSACTIONS_MFE_URL ?? 'http://localhost:3003/mf-manifest.json';
 const reuseExistingServer = process.env.E2E_REUSE_SERVERS === '1';
-// IPv4: o Firefox tenta 127.0.0.1 primeiro, e no Windows a recusa em [::1]-only leva ~2 s por conexão.
 const listenHost = '127.0.0.1';
-// No Windows, a troca de processo do COOP faz o Playwright perder a página no Firefox depois de navegar.
 const firefoxUserPrefs =
   process.platform === 'win32' ? { 'browser.tabs.remote.useCrossOriginOpenerPolicy': false } : {};
 

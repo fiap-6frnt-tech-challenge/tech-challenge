@@ -2,7 +2,6 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import type { CacheEntry, ResultCache } from '@bytebank/core/application';
 
-// unstable_cache keys on cb.toString(), which minifies differently in each bundle (route vs page).
 const withStableSource = <T>(load: () => Promise<T>) =>
   Object.assign(() => load(), { toString: () => 'NextResultCache' });
 
