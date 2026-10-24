@@ -1,5 +1,68 @@
-import { describe, it, expect } from 'vitest';
-import { attachmentKeys, summaryKeys, transactionKeys } from './keys';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import {
+  attachmentKeys,
+  normalizeTransactionsPageParams,
+  resolveSummaryRange,
+  summaryKeys,
+  transactionKeys,
+} from './keys';
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('normalizeTransactionsPageParams', () => {
+  it('fills the list defaults and drops empty filters', () => {
+    expect(
+      normalizeTransactionsPageParams({
+        page: 2,
+        type: 'all',
+        q: '',
+        dateFrom: '',
+        dateTo: '',
+        category: [],
+      })
+    ).toEqual({ page: 2, perPage: 10, sortBy: 'date', sortOrder: 'desc' });
+  });
+
+  it('keeps every active filter', () => {
+    expect(
+      normalizeTransactionsPageParams({
+        page: 1,
+        perPage: 5,
+        type: 'withdrawal',
+        q: 'uber',
+        amount_gte: 0,
+        category: ['transport'],
+      })
+    ).toEqual({
+      page: 1,
+      perPage: 5,
+      sortBy: 'date',
+      sortOrder: 'desc',
+      type: 'withdrawal',
+      q: 'uber',
+      amount_gte: 0,
+      category: ['transport'],
+    });
+  });
+});
+
+describe('resolveSummaryRange', () => {
+  it('keeps an explicit range', () => {
+    expect(resolveSummaryRange({ from: '2026-01-01', to: '2026-06-30' })).toEqual({
+      from: '2026-01-01',
+      to: '2026-06-30',
+    });
+  });
+
+  it('defaults to the São Paulo calendar, so server (UTC) and browser build the same key', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-16T01:30:00.000Z'));
+
+    expect(resolveSummaryRange()).toEqual({ from: '2026-01-01', to: '2026-06-15' });
+  });
+});
 
 describe('transactionKeys', () => {
   it('monta chaves hierárquicas consistentes', () => {

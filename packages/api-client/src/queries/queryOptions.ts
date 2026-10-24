@@ -1,58 +1,63 @@
 import { queryOptions } from '@tanstack/react-query';
 import type { GetPaginatedParams, SummaryRange } from '../http';
-import { overviewKeys, summaryKeys, transactionKeys } from '../keys';
+import {
+  attachmentKeys,
+  normalizeTransactionsPageParams,
+  overviewKeys,
+  resolveSummaryRange,
+  summaryKeys,
+  transactionKeys,
+} from '../keys';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
+import { AttachmentHttpGateway } from '../gateways/AttachmentHttpGateway';
+import { cachePolicy } from './cachePolicy';
 
 const transactions = new TransactionHttpGateway();
-
-function getDefaultSummaryRange(now = new Date()): Required<SummaryRange> {
-  const from = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-
-  return {
-    from: from.toISOString().slice(0, 10),
-    to: now.toISOString().slice(0, 10),
-  };
-}
-
-function normalizeTransactionsPageParams(params: GetPaginatedParams): GetPaginatedParams {
-  return {
-    page: params.page,
-    perPage: params.perPage ?? 10,
-    sortBy: params.sortBy ?? 'date',
-    sortOrder: params.sortOrder ?? 'desc',
-    ...(params.type && params.type !== 'all' ? { type: params.type } : {}),
-    ...(params.dateFrom ? { dateFrom: params.dateFrom } : {}),
-    ...(params.dateTo ? { dateTo: params.dateTo } : {}),
-    ...(params.q ? { q: params.q } : {}),
-    ...(params.amount_gte !== undefined ? { amount_gte: params.amount_gte } : {}),
-    ...(params.amount_lte !== undefined ? { amount_lte: params.amount_lte } : {}),
-    ...(params.category?.length ? { category: params.category } : {}),
-  };
-}
+const attachments = new AttachmentHttpGateway();
 
 export function transactionsPageQuery(params: GetPaginatedParams) {
   const normalized = normalizeTransactionsPageParams(params);
   return queryOptions({
+    ...cachePolicy.transactionsPage,
     queryKey: transactionKeys.list({ ...normalized }),
     queryFn: ({ signal }) => {
       const { page, perPage, ...filter } = normalized;
-      return transactions.list(filter, { page, perPage: perPage ?? 10 }, { signal });
+      return transactions.list(filter, { page, perPage }, { signal });
     },
   });
 }
 
 export function accountOverviewQuery() {
   return queryOptions({
+    ...cachePolicy.overview,
     queryKey: overviewKeys.all,
     queryFn: ({ signal }) => transactions.overview({ signal }),
   });
 }
 
 export function dashboardSummaryQuery(range: SummaryRange = {}) {
-  const effectiveRange = { ...getDefaultSummaryRange(), ...range };
+  const effectiveRange = resolveSummaryRange(range);
   return queryOptions({
+    ...cachePolicy.summary,
     queryKey: summaryKeys.range(effectiveRange),
     queryFn: ({ signal }) => transactions.summary(effectiveRange, { signal }),
-    staleTime: 60_000,
+  });
+}
+
+export function transactionDetailQuery(id: string) {
+  return queryOptions({
+    ...cachePolicy.transactionDetail,
+    queryKey: transactionKeys.detail(id),
+    queryFn: ({ signal }) => transactions.get(id, { signal }),
+    enabled: !!id,
+  });
+}
+
+export function transactionAttachmentsQuery(id: string) {
+  return queryOptions({
+    ...cachePolicy.attachments,
+    queryKey: attachmentKeys.list(id),
+    queryFn: ({ signal }) => attachments.list(id, { signal }),
+    enabled: !!id,
   });
 }

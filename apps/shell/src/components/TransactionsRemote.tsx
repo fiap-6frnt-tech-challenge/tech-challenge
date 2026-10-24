@@ -16,7 +16,7 @@ const TransactionsPage = dynamic(
   }
 );
 
-function TransactionsSkeleton() {
+export function TransactionsSkeleton() {
   return (
     <section
       className="flex flex-col gap-lg overflow-hidden h-full px-1"

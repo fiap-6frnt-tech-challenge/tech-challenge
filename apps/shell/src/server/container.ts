@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   AddAttachment,
   AuthenticateUser,
+  CachedGetTransactionsSummary,
   CreateTransaction,
   DeleteTransaction,
   DownloadAttachment,
@@ -23,6 +24,8 @@ import {
   type FileStorage,
 } from '@bytebank/core/application';
 import { db } from '@/db';
+import { NextCacheInvalidator } from './infrastructure/cache/NextCacheInvalidator';
+import { NextResultCache } from './infrastructure/cache/NextResultCache';
 import { DrizzleAttachmentRepository } from './infrastructure/db/DrizzleAttachmentRepository';
 import { DrizzleTransactionRepository } from './infrastructure/db/DrizzleTransactionRepository';
 import { DrizzleUserRepository } from './infrastructure/db/DrizzleUserRepository';
@@ -52,6 +55,7 @@ export function resolveFileStorage(): FileStorage {
 }
 
 const DEVELOPMENT_KEY_ID = 0;
+const SUMMARY_CACHE_SECONDS = 300;
 
 function requireInProduction(message: string) {
   if (
@@ -101,16 +105,22 @@ const rateLimitKeys = new HmacRateLimitKeyGenerator(blindIndex);
 const rateLimiter = new PostgresRateLimiter(db, getRateLimitPolicies(), clock);
 const turnstileVerifier = new CloudflareTurnstileVerifier();
 const storage = resolveFileStorage();
+const summaryCache = new NextResultCache(SUMMARY_CACHE_SECONDS);
+const cacheInvalidator = new NextCacheInvalidator();
 
 export const container = {
   sessionLifecycle: new SessionLifecycle(new DrizzleSessionRepository(db), clock, ids),
   revokeSessions: new RevokeSessions(new DrizzleSessionRepository(db)),
   resolveOAuthUser: new ResolveOAuthUser(users, ids),
-  createTransaction: new CreateTransaction(transactions, clock, ids),
-  updateTransaction: new UpdateTransaction(transactions),
-  deleteTransaction: new DeleteTransaction(transactions),
+  createTransaction: new CreateTransaction(transactions, clock, ids, cacheInvalidator),
+  updateTransaction: new UpdateTransaction(transactions, cacheInvalidator),
+  deleteTransaction: new DeleteTransaction(transactions, cacheInvalidator),
   getTransaction: new GetTransaction(transactions),
-  getTransactionsSummary: new GetTransactionsSummary(transactions),
+  getTransactionsSummary: new CachedGetTransactionsSummary(
+    new GetTransactionsSummary(transactions),
+    transactions,
+    summaryCache
+  ),
   getTransactionsVersion: new GetTransactionsVersion(transactions),
   listTransactions: new ListTransactions(transactions),
   getAccountOverview: new GetAccountOverview(transactions),

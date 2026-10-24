@@ -1,6 +1,7 @@
 import { expect, test, type BrowserContext } from '@playwright/test';
 import { decode, encode } from 'next-auth/jwt';
 import { login, logout } from './helpers/auth';
+import { filterBySearch, openTransactionsPage } from './helpers/transactions';
 
 // Re-sign only the test user's cookie with the known local E2E secret. This exercises
 // the real server's five-minute boundary without a server clock override or sleeps.
@@ -49,14 +50,15 @@ test('clears the session and shows the expiry notice when a private API returns 
   page,
 }) => {
   await login(page);
-  await page.route('**/api/transactions/overview', (route) =>
+  await openTransactionsPage(page);
+  await page.route('**/api/transactions?*', (route) =>
     route.fulfill({
       status: 401,
       contentType: 'application/json',
       body: JSON.stringify({ error: 'Não autenticado' }),
     })
   );
-  await page.reload();
+  await filterBySearch(page, 'uber');
   await expect(page).toHaveURL(/\/login\?reason=session-expired/);
   await expect(page.getByRole('status')).toHaveText('Sua sessão expirou. Entre novamente.');
 });

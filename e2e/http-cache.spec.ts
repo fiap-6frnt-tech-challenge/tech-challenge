@@ -2,10 +2,8 @@ import { expect, test, type Page, type Response } from '@playwright/test';
 import { login } from './helpers/auth';
 import { createWithdrawal, openTransactionsPage } from './helpers/transactions';
 
-const apiGet = (pathname: string) => (response: Response) =>
-  response.request().method() === 'GET' && new URL(response.url()).pathname === pathname;
-const isList = apiGet('/api/transactions');
-const isOverview = apiGet('/api/transactions/overview');
+const overviewPath = '/api/transactions/overview';
+const listPath = '/api/transactions?_page=1&_per_page=10&_sort=-date';
 
 // Firefox reports the 304; Chromium reports the cached 200 it revalidated.
 async function wasNotModified(response: Response) {
@@ -23,40 +21,43 @@ function collectApiCacheHeaders(page: Page) {
   return values;
 }
 
+// With SSR data the remotes no longer fetch on load, so the page fetches through its HTTP cache.
+async function fetchFromPage(page: Page, path: string) {
+  const url = new URL(path, page.url());
+  const response = page.waitForResponse(
+    (candidate) =>
+      candidate.request().method() === 'GET' &&
+      candidate.url() === url.toString() &&
+      candidate.request().resourceType() === 'fetch'
+  );
+  await page.evaluate((target) => fetch(target).then((result) => result.text()), url.toString());
+  return response;
+}
+
 test('API revalidates with 304 until a mutation changes the data', async ({ page }, testInfo) => {
   const description = `E2E Cache ${testInfo.project.name} ${testInfo.retry}`;
   const cacheHeaders = collectApiCacheHeaders(page);
-
-  const firstOverview = page.waitForResponse(isOverview);
   await login(page);
-  const overview = await firstOverview;
+
+  const overview = await fetchFromPage(page, overviewPath);
   expect(overview.status()).toBe(200);
   expect(overview.headers()).toMatchObject({
     'cache-control': 'private, no-cache',
     etag: expect.stringMatching(/^W\/"/),
     vary: expect.stringContaining('Cookie'),
   });
+  expect(await wasNotModified(await fetchFromPage(page, overviewPath))).toBe(true);
 
-  const revalidatedOverview = page.waitForResponse(isOverview);
-  await page.reload();
-  expect(await wasNotModified(await revalidatedOverview)).toBe(true);
+  const listETag = (await fetchFromPage(page, listPath)).headers().etag;
+  expect(await wasNotModified(await fetchFromPage(page, listPath))).toBe(true);
 
-  const firstList = page.waitForResponse(isList);
-  await openTransactionsPage(page);
-  const listETag = (await firstList).headers().etag;
-
-  const revalidatedList = page.waitForResponse(isList);
-  await page.reload();
-  expect(await wasNotModified(await revalidatedList)).toBe(true);
-  await expect(page.getByText('E2E Uber Trip', { exact: true })).toBeVisible();
-
-  await page.goto('/');
   await createWithdrawal(page, description, '7');
-  const refreshedList = page.waitForResponse(isList);
-  await openTransactionsPage(page);
-  const refreshed = await refreshedList;
+  const refreshed = await fetchFromPage(page, listPath);
   expect(refreshed.status()).toBe(200);
   expect(refreshed.headers().etag).not.toBe(listETag);
+  expect(await refreshed.text()).toContain(description);
+
+  await openTransactionsPage(page);
   await expect(page.getByText(description, { exact: true })).toBeVisible();
 
   expect(cacheHeaders.length).toBeGreaterThan(0);

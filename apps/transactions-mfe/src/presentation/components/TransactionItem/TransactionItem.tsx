@@ -1,6 +1,7 @@
 'use client';
 
 import { Pencil, Trash2 } from 'lucide-react';
+import { isOptimisticId } from '@bytebank/core';
 import { cn } from '@bytebank/shared';
 import { BADGE_LABEL_MAP, BADGE_VARIANT_MAP } from '@bytebank/shared';
 import { formatCurrency, formatDate } from '@bytebank/shared';
@@ -18,9 +19,11 @@ export function TransactionItem({
   tooltipPosition = 'top',
 }: TransactionItemProps) {
   const { id, type, description, amount, date } = transaction;
+  const isPending = isOptimisticId(id);
 
   return (
     <li
+      aria-busy={isPending || undefined}
       className={cn(
         'flex flex-col items-start justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm transition-shadow hover:shadow-md',
         '@md:grid @md:grid-cols-[7rem_1fr_auto_auto] @md:items-center @md:gap-x-4 @md:gap-y-0',
@@ -38,12 +41,14 @@ export function TransactionItem({
             <IconButton
               aria-label={`Edit transaction: ${description}`}
               onClick={() => onEdit(id)}
+              disabled={isPending}
               icon={<Pencil size={18} />}
             />
 
             <IconButton
               aria-label={`Delete transaction: ${description}`}
               onClick={() => onDelete(id)}
+              disabled={isPending}
               icon={<Trash2 size={18} />}
             />
           </div>

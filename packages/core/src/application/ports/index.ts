@@ -145,6 +145,19 @@ export interface RateLimitKeyGenerator {
   loginIp(ipAddress: string): string;
   registerIp(ipAddress: string): string;
 }
+export interface CacheEntry {
+  key: readonly string[];
+  tags: readonly string[];
+}
+
+export interface ResultCache {
+  remember<T>(entry: CacheEntry, load: () => Promise<T>): Promise<T>;
+}
+
+export interface CacheInvalidator {
+  invalidateUser(userId: string): Promise<void>;
+}
+
 export interface Clock {
   now(): Date;
   todayISO(): string;
