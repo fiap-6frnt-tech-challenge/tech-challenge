@@ -6,7 +6,7 @@ import {
   type PageRequest,
 } from '../../domain';
 import { createTransactionSchemaForDate, updateTransactionSchema } from '../../schemas';
-import type { Actor, Clock, IdGenerator, TransactionRepository } from '../ports';
+import type { Actor, CacheInvalidator, Clock, IdGenerator, TransactionRepository } from '../ports';
 import { parseOrThrow } from '../parseOrThrow';
 import type { TransactionPatch } from '../types';
 
@@ -14,31 +14,42 @@ export class CreateTransaction {
   constructor(
     private readonly transactions: TransactionRepository,
     private readonly clock: Clock,
-    private readonly ids: IdGenerator
+    private readonly ids: IdGenerator,
+    private readonly cache: CacheInvalidator
   ) {}
-  execute(actor: Actor, input: unknown): Promise<Transaction> {
+  async execute(actor: Actor, input: unknown): Promise<Transaction> {
     const data = parseOrThrow<NewTransaction>(
       createTransactionSchemaForDate(this.clock.todayISO()),
       input
     );
-    return this.transactions.create({ ...data, id: this.ids.next() }, actor.userId);
+    const created = await this.transactions.create({ ...data, id: this.ids.next() }, actor.userId);
+    await this.cache.invalidateUser(actor.userId);
+    return created;
   }
 }
 
 export class UpdateTransaction {
-  constructor(private readonly transactions: TransactionRepository) {}
+  constructor(
+    private readonly transactions: TransactionRepository,
+    private readonly cache: CacheInvalidator
+  ) {}
   async execute(actor: Actor, id: string, input: unknown): Promise<Transaction> {
     const patch = parseOrThrow<TransactionPatch>(updateTransactionSchema, input);
     const updated = await this.transactions.update(id, actor.userId, patch);
     if (!updated) throw new NotFoundError('Transação');
+    await this.cache.invalidateUser(actor.userId);
     return updated;
   }
 }
 
 export class DeleteTransaction {
-  constructor(private readonly transactions: TransactionRepository) {}
+  constructor(
+    private readonly transactions: TransactionRepository,
+    private readonly cache: CacheInvalidator
+  ) {}
   async execute(actor: Actor, id: string): Promise<void> {
     if (!(await this.transactions.delete(id, actor.userId))) throw new NotFoundError('Transação');
+    await this.cache.invalidateUser(actor.userId);
   }
 }
 

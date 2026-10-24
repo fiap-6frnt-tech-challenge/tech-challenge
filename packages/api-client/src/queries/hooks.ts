@@ -1,22 +1,46 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { hashKey, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { tap, type Observable } from 'rxjs';
-import type { DashboardSummary, NewTransaction, UpdateTransaction } from '@bytebank/core';
+import {
+  applyOptimisticCreate,
+  applyOptimisticSummaryCreate,
+  applyOptimisticSummaryUpdate,
+  applyOptimisticUpdate,
+  createOptimisticTransaction,
+  type DashboardSummary,
+  type NewTransaction,
+  type UpdateTransaction,
+} from '@bytebank/core';
 import { shouldPrefetch } from '@bytebank/shared';
 import { publish, createClientSessionGuard, ClientSessionEndedError } from '@bytebank/stores';
 import type { GetPaginatedParams, PaginatedResponse, SummaryRange } from '../http';
 import type { AttachmentUploadEvent } from '../gateways/types';
-import { attachmentKeys, overviewKeys, summaryKeys, transactionKeys } from '../keys';
+import { attachmentKeys, transactionKeys } from '../keys';
 import { TransactionHttpGateway } from '../gateways/TransactionHttpGateway';
 import { AttachmentHttpGateway } from '../gateways/AttachmentHttpGateway';
 import { useSessionMutation } from './useSessionMutation';
-import { accountOverviewQuery, dashboardSummaryQuery, transactionsPageQuery } from './queryOptions';
+import {
+  accountOverviewQuery,
+  dashboardSummaryQuery,
+  transactionAttachmentsQuery,
+  transactionDetailQuery,
+  transactionsPageQuery,
+} from './queryOptions';
+import {
+  applyToTransactionViews,
+  cancelTransactionViews,
+  findCachedTransaction,
+  invalidateTransactionViews,
+  restoreTransactionViews,
+  type TransactionViewsSnapshot,
+} from './transactionViews';
 
 const transactions = new TransactionHttpGateway();
 const attachments = new AttachmentHttpGateway();
 
 type ListCache = PaginatedResponse | undefined;
 type MutationSession = { assertSession: () => void };
+type OptimisticContext = MutationSession & { snapshot?: TransactionViewsSnapshot };
 const beginMutation = (): MutationSession => ({ assertSession: createClientSessionGuard() });
 function canApplyMutation(context: MutationSession | undefined): boolean {
   try {
@@ -72,24 +96,35 @@ export function usePrefetchNextTransactionsPage(
 }
 
 export function useTransaction(id: string) {
-  return useQuery({
-    queryKey: transactionKeys.detail(id),
-    queryFn: ({ signal }) => transactions.get(id, { signal }),
-    enabled: !!id,
-  });
+  return useQuery(transactionDetailQuery(id));
 }
 
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
   return useSessionMutation({
-    onMutate: beginMutation,
     mutationFn: (newTx: NewTransaction) => transactions.create(newTx),
+    onMutate: async (newTx): Promise<OptimisticContext> => {
+      const assertSession = createClientSessionGuard();
+      await cancelTransactionViews(queryClient);
+      assertSession();
+      const optimistic = createOptimisticTransaction(newTx, crypto.randomUUID());
+      const snapshot = applyToTransactionViews(queryClient, {
+        overview: (overview) => applyOptimisticCreate(overview, optimistic),
+        summary: (summary, range) => applyOptimisticSummaryCreate(summary, range, optimistic),
+      });
+      return { assertSession, snapshot };
+    },
     onSuccess: (transaction, _input, context) => {
       if (!canApplyMutation(context)) return;
       publish({ type: 'transaction.created', version: 1, transaction });
-      queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: overviewKeys.all });
-      queryClient.invalidateQueries({ queryKey: summaryKeys.all });
+    },
+    onError: (_error, _input, context) => {
+      if (!canApplyMutation(context)) return;
+      restoreTransactionViews(queryClient, context?.snapshot);
+    },
+    onSettled: (_data, error, _input, context) => {
+      if (error instanceof ClientSessionEndedError || !canApplyMutation(context)) return;
+      invalidateTransactionViews(queryClient);
     },
   });
 }
@@ -97,16 +132,32 @@ export function useCreateTransaction() {
 export function useUpdateTransaction() {
   const queryClient = useQueryClient();
   return useSessionMutation({
-    onMutate: beginMutation,
     mutationFn: ({ id, data }: { id: string; data: UpdateTransaction }) =>
       transactions.update(id, data),
+    onMutate: async ({ id, data }): Promise<OptimisticContext> => {
+      const assertSession = createClientSessionGuard();
+      await cancelTransactionViews(queryClient);
+      assertSession();
+      const previous = findCachedTransaction(queryClient, id);
+      if (!previous) return { assertSession };
+      const next = { ...previous, ...data };
+      const snapshot = applyToTransactionViews(queryClient, {
+        overview: (overview) => applyOptimisticUpdate(overview, previous, next),
+        summary: (summary, range) => applyOptimisticSummaryUpdate(summary, range, previous, next),
+      });
+      return { assertSession, snapshot };
+    },
     onSuccess: (updated, _input, context) => {
       if (!canApplyMutation(context)) return;
       publish({ type: 'transaction.updated', version: 1, transaction: updated });
-      queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: transactionKeys.detail(updated.id) });
-      queryClient.invalidateQueries({ queryKey: overviewKeys.all });
-      queryClient.invalidateQueries({ queryKey: summaryKeys.all });
+    },
+    onError: (_error, _input, context) => {
+      if (!canApplyMutation(context)) return;
+      restoreTransactionViews(queryClient, context?.snapshot);
+    },
+    onSettled: (_data, error, { id }, context) => {
+      if (error instanceof ClientSessionEndedError || !canApplyMutation(context)) return;
+      invalidateTransactionViews(queryClient, id);
     },
   });
 }
@@ -145,20 +196,13 @@ export function useDeleteTransaction() {
 
     onSettled: (_data, error, idToDelete, context) => {
       if (error instanceof ClientSessionEndedError || !canApplyMutation(context)) return;
-      queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: transactionKeys.detail(idToDelete) });
-      queryClient.invalidateQueries({ queryKey: overviewKeys.all });
-      queryClient.invalidateQueries({ queryKey: summaryKeys.all });
+      invalidateTransactionViews(queryClient, idToDelete);
     },
   });
 }
 
 export function useTransactionAttachments(id: string) {
-  return useQuery({
-    queryKey: attachmentKeys.list(id),
-    queryFn: ({ signal }) => attachments.list(id, { signal }),
-    enabled: !!id,
-  });
+  return useQuery(transactionAttachmentsQuery(id));
 }
 
 export function useUploadAttachment() {
@@ -196,12 +240,7 @@ export function useUploadAttachment() {
   );
 
   const reconcileAttachments = useCallback(
-    (id: string) =>
-      queryClient.fetchQuery({
-        queryKey: attachmentKeys.list(id),
-        queryFn: ({ signal }) => attachments.list(id, { signal }),
-        staleTime: 0,
-      }),
+    (id: string) => queryClient.fetchQuery({ ...transactionAttachmentsQuery(id), staleTime: 0 }),
     [queryClient]
   );
 

@@ -40,7 +40,21 @@ export type {
 } from './filter/TransactionFilter';
 export { computeKpiDeltas, topCategoriesWithOthers } from './dashboard/kpis';
 export type { KpiDeltas, CategorySlice } from './dashboard/kpis';
+export { defaultSummaryRange, SUMMARY_MONTHS, SUMMARY_TIME_ZONE } from './dashboard/summaryRange';
+export type { SummaryDateRange } from './dashboard/summaryRange';
+export { buildDashboardSummary } from './dashboard/summarize';
+export type { SummarySeries } from './dashboard/summarize';
 export { createTransaction } from './transaction/Transaction';
+export {
+  OPTIMISTIC_ID_PREFIX,
+  isOptimisticId,
+  createOptimisticTransaction,
+  applyOptimisticCreate,
+  applyOptimisticUpdate,
+  applyOptimisticSummaryCreate,
+  applyOptimisticSummaryUpdate,
+} from './transaction/optimistic';
+export type { OverviewSnapshot } from './transaction/optimistic';
 export {
   DomainError,
   ValidationError,

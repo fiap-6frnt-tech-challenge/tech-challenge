@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import { HydrationBoundary } from '@tanstack/react-query';
 import { DashboardRemote } from '@/components/DashboardRemote';
 import { AccountOverviewRemote } from '@/components/AccountOverviewRemote';
 import { DeferUntilVisible } from '@/components/DeferUntilVisible';
+import { prefetchHome } from '@/server/prefetch';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Bytebank',
@@ -9,13 +11,15 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function Home() {
+export default async function Home() {
   return (
-    <div className="flex flex-col gap-xl">
-      <AccountOverviewRemote />
-      <DeferUntilVisible minHeight={640}>
-        <DashboardRemote />
-      </DeferUntilVisible>
-    </div>
+    <HydrationBoundary state={await prefetchHome()}>
+      <div className="flex flex-col gap-xl">
+        <AccountOverviewRemote />
+        <DeferUntilVisible minHeight={640}>
+          <DashboardRemote />
+        </DeferUntilVisible>
+      </div>
+    </HydrationBoundary>
   );
 }

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { Transaction } from '../../domain';
+import {
+  applyOptimisticSummaryCreate,
+  applyOptimisticSummaryUpdate,
+  type Transaction,
+} from '../../domain';
 import { InMemoryTransactionRepository } from '../testing';
 import { GetTransactionsSummary } from './dashboard';
 
@@ -78,6 +82,44 @@ describe('GetTransactionsSummary', () => {
       new InMemoryTransactionRepository(rows)
     ).execute({ userId: 'owner' });
     expect(result).toMatchObject({ savingsMonth: -0.2, deltaIncome: -0.2, deltaExpense: 0.3 });
+  });
+
+  describe('optimistic projection', () => {
+    const range = { from: '2026-01-01', to: '2026-03-31' };
+    const rows = [
+      transaction('income-jan', 'owner', {
+        type: 'deposit',
+        category: 'salary',
+        amount: 500,
+        date: '2026-01-05',
+      }),
+      transaction('expense-jan', 'owner', { amount: 50, date: '2026-01-10' }),
+      transaction('income-feb', 'owner', { type: 'deposit', amount: 200, date: '2026-02-05' }),
+    ];
+    const summarize = (items: Transaction[]) =>
+      new GetTransactionsSummary(new InMemoryTransactionRepository(items)).execute(
+        { userId: 'owner' },
+        range
+      );
+
+    it('matches the recomputed summary after a create', async () => {
+      const created = transaction('new', 'owner', {
+        category: 'transport',
+        amount: 30,
+        date: '2026-01-20',
+      });
+      expect(applyOptimisticSummaryCreate(await summarize(rows), range, created)).toEqual(
+        await summarize([...rows, created])
+      );
+    });
+
+    it('matches the recomputed summary after an edit that changes month and type', async () => {
+      const previous = rows[1];
+      const next = { ...previous, type: 'deposit' as const, amount: 80, date: '2026-03-02' };
+      expect(applyOptimisticSummaryUpdate(await summarize(rows), range, previous, next)).toEqual(
+        await summarize([rows[0], next, rows[2]])
+      );
+    });
   });
 
   it('returns the zero summary for an empty range', async () => {

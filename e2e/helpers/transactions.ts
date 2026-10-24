@@ -10,13 +10,18 @@ export async function openTransactionsPage(page: Page) {
   await expect(page.getByRole('heading', { name: 'Transações' })).toBeVisible();
 }
 
-export async function submitWithdrawal(page: Page, description: string, amount: string) {
+export async function submitWithdrawal(
+  page: Page,
+  description: string,
+  amount: string,
+  date = '2026-07-02'
+) {
   await page.getByRole('button', { name: /nova transação/i }).click();
   await expect(page.getByRole('dialog', { name: /nova transação/i })).toBeVisible();
 
   await selectOptionByLabel(page.getByRole('button', { name: /^Depósito$/ }), 'Saque');
   await page.getByLabel('Valor').fill(amount);
-  await page.getByLabel('Data').fill('2026-07-02');
+  await page.getByLabel('Data').fill(date);
   await page.getByLabel('Descrição').fill(description);
   await selectOptionByLabel(page.getByRole('button', { name: /categoria/i }), 'Transporte');
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { TransactionItem } from './TransactionItem';
 
 const meta: Meta<typeof TransactionItem> = {
@@ -128,5 +128,40 @@ export const WithoutActions: Story = {
           'Read-only transaction item variant used in compact contexts without edit/delete actions.',
       },
     },
+  },
+};
+
+export const PendingSync: Story = {
+  name: 'State: Pending Sync',
+  args: {
+    transaction: {
+      id: 'optimistic-6f1c2b9e',
+      userId: '',
+      type: 'withdrawal',
+      category: 'food',
+      description: 'Almoço',
+      amount: 24.5,
+      date: '2025-03-20',
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Optimistic item still waiting for the server: edit and delete stay disabled until it has a real id.',
+      },
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const edit = canvas.getByRole('button', { name: /Edit transaction: Almoço/ });
+    const remove = canvas.getByRole('button', { name: /Delete transaction: Almoço/ });
+    expect(edit).toBeDisabled();
+    expect(remove).toBeDisabled();
+    expect(canvas.getByRole('listitem')).toHaveAttribute('aria-busy', 'true');
+    await userEvent.click(edit, { pointerEventsCheck: 0 });
+    await userEvent.click(remove, { pointerEventsCheck: 0 });
+    expect(args.onEdit).not.toHaveBeenCalled();
+    expect(args.onDelete).not.toHaveBeenCalled();
   },
 };
