@@ -93,7 +93,6 @@ test('uploads, persists, and removes an attachment from an existing transaction'
   const photo = await photoResponse.json();
   expect(photo.mimeType).toBe('image/png');
 
-  await page.reload();
   await openTransactionsPage(page);
   await editTransaction(page, 'E2E Attachment Target');
   await expect(page.getByText('comprovante.pdf')).toBeVisible();
@@ -130,7 +129,6 @@ test('uploads, persists, and removes an attachment from an existing transaction'
   await updateButton.click();
   await expect(page.getByText('Transação atualizada')).toBeVisible();
 
-  await page.reload();
   await openTransactionsPage(page);
   await editTransaction(page, 'E2E Attachment Target');
   await expect(page.getByText('comprovante.pdf')).toBeHidden();

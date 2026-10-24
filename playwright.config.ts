@@ -8,6 +8,11 @@ const dashboardManifestUrl =
 const transactionsManifestUrl =
   process.env.E2E_TRANSACTIONS_MFE_URL ?? 'http://localhost:3003/mf-manifest.json';
 const reuseExistingServer = process.env.E2E_REUSE_SERVERS === '1';
+// IPv4: o Firefox tenta 127.0.0.1 primeiro, e no Windows a recusa em [::1]-only leva ~2 s por conexão.
+const listenHost = '127.0.0.1';
+// No Windows, a troca de processo do COOP faz o Playwright perder a página no Firefox depois de navegar.
+const firefoxUserPrefs =
+  process.platform === 'win32' ? { 'browser.tabs.remote.useCrossOriginOpenerPolicy': false } : {};
 
 export default defineConfig({
   testDir: './e2e',
@@ -34,7 +39,7 @@ export default defineConfig({
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: { ...devices['Desktop Firefox'], launchOptions: { firefoxUserPrefs } },
     },
   ],
   webServer: [
@@ -44,6 +49,7 @@ export default defineConfig({
       reuseExistingServer,
       timeout: 120_000,
       env: {
+        HOSTNAME: listenHost,
         NEXT_PUBLIC_API_URL: '/api',
         NEXT_PUBLIC_DASHBOARD_MFE_URL: dashboardManifestUrl,
         NEXT_PUBLIC_TRANSACTIONS_MFE_URL: transactionsManifestUrl,
@@ -61,13 +67,13 @@ export default defineConfig({
       },
     },
     {
-      command: 'npm run preview --workspace @bytebank/dashboard-mfe',
+      command: `npm run preview --workspace @bytebank/dashboard-mfe -- --host ${listenHost}`,
       url: dashboardManifestUrl,
       reuseExistingServer,
       timeout: 120_000,
     },
     {
-      command: 'npm run preview --workspace @bytebank/transactions-mfe',
+      command: `npm run preview --workspace @bytebank/transactions-mfe -- --host ${listenHost}`,
       url: transactionsManifestUrl,
       reuseExistingServer,
       timeout: 120_000,
