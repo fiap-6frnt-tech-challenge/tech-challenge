@@ -1,4 +1,5 @@
 import type { TransactionFormValues } from '../TransactionForm/ITransactionForm';
+import type { TransactionFlowMode } from '../TransactionFlowStatus';
 
 export interface ConfirmTransactionModalProps {
   isOpen: boolean;
@@ -6,4 +7,7 @@ export interface ConfirmTransactionModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  mode?: TransactionFlowMode;
+  error?: string | null;
+  onRetry?: () => void;
 }

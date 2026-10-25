@@ -116,12 +116,20 @@ export function useUploadQueue() {
   );
 
   const startJobs = useCallback(
-    (transactionId: string, jobs: UploadQueueJob[]): Promise<UploadBatchResult> =>
+    (
+      transactionId: string,
+      jobs: UploadQueueJob[],
+      onEvent?: (event: UploadQueueEvent) => void
+    ): Promise<UploadBatchResult> =>
       new Promise((resolve, reject) => {
         if (sessionEnded.current) {
           reject(new UploadSessionEndedError());
           return;
         }
+        const emit = (event: UploadQueueEvent) => {
+          applyEvent(event);
+          if (!sessionEnded.current) onEvent?.(event);
+        };
         const batch = { subscription: new Subscription(), reject };
         activeBatches.current.add(batch);
         const finish = () => {
@@ -146,11 +154,9 @@ export function useUploadQueue() {
         };
         batch.subscription.add(
           uploadQueue$(jobs, (file) => uploadStream(transactionId, file)).subscribe({
-            next: applyEvent,
+            next: emit,
             error: (error: unknown) => {
-              jobs.forEach((job) =>
-                applyEvent({ type: 'failed', id: job.id, file: job.file, error })
-              );
+              jobs.forEach((job) => emit({ type: 'failed', id: job.id, file: job.file, error }));
               finish();
             },
             complete: finish,
@@ -161,7 +167,7 @@ export function useUploadQueue() {
   );
 
   const uploadFiles = useCallback(
-    (transactionId: string, nextFiles: File[]) => {
+    (transactionId: string, nextFiles: File[], onEvent?: (event: UploadQueueEvent) => void) => {
       assertSessionActive();
       if (!transactionId) throw new Error('Transação não encontrada para envio do anexo');
       removeUploads(
@@ -186,7 +192,7 @@ export function useUploadQueue() {
         );
         return { id, file, cancel$ };
       });
-      return startJobs(transactionId, jobs);
+      return startJobs(transactionId, jobs, onEvent);
     },
     [assertSessionActive, readUploads, removeUploads, startJobs, store]
   );

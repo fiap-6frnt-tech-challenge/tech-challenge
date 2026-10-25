@@ -4,15 +4,14 @@ import { useEffect, useState } from 'react';
 import { AttachmentList, FileUpload, Modal } from '@bytebank/design-system';
 import { showFeedback, useAppDispatch, ClientSessionEndedError } from '@bytebank/stores';
 import { EditTransactionModalProps } from './IEditTransactionModal';
+import { ConfirmTransactionModal } from '../ConfirmTransactionModal';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
+import type { TransactionFormValues } from '../TransactionForm/ITransactionForm';
+import { TransactionFlowStatus } from '../TransactionFlowStatus';
 import { useAttachments } from '../../../application/useAttachments';
+import { useTransactionFlow } from '../../../application/useTransactionFlow';
 
-export function EditTransactionModal({
-  transaction,
-  onConfirm,
-  onCancel,
-  isSubmitting,
-}: EditTransactionModalProps) {
+export function EditTransactionModal({ transaction, onSave, onClose }: EditTransactionModalProps) {
   const dispatch = useAppDispatch();
   const transactionId = transaction?.id;
   const [hasAttachmentChanges, setHasAttachmentChanges] = useState(false);
@@ -30,6 +29,16 @@ export function EditTransactionModal({
     removeAttachment,
     resetAttachments,
   } = useAttachments(transactionId);
+  const { state, send } = useTransactionFlow<TransactionFormValues>({
+    save: onSave,
+    onFinish: () => {
+      cancelAllUploads();
+      onClose();
+    },
+  });
+  const isConfirmOpen =
+    state.value === 'confirming' || state.value === 'saving' || state.value === 'error';
+  const isSaving = state.value === 'saving';
 
   useEffect(() => {
     setHasAttachmentChanges(false);
@@ -96,11 +105,6 @@ export function EditTransactionModal({
     }
   };
 
-  const handleCancel = () => {
-    cancelAllUploads();
-    onCancel();
-  };
-
   const handleRemove = async (attachmentId: string) => {
     if (!transactionId) return;
 
@@ -120,43 +124,63 @@ export function EditTransactionModal({
   };
 
   return (
-    <Modal isOpen={!!transaction} onClose={handleCancel} title="Editar Transação">
-      <TransactionForm
-        onSubmit={onConfirm}
-        onCancel={onCancel}
-        initialValues={transaction || undefined}
-        isSubmitting={isSubmitting}
-        hasExternalChanges={hasAttachmentChanges}
-        attachmentSlot={
-          <div className="flex flex-col gap-sm">
-            <p className="body-semibold text-content-primary">Anexos</p>
-            {isLoading ? (
-              <p className="label-default text-content-secondary">Carregando anexos...</p>
-            ) : (
-              <AttachmentList
-                attachments={uploadedAttachments}
-                uploadItems={uploads.filter((item) => item.status !== 'done')}
-                onRemove={handleRemove}
-                onCancel={cancelUpload}
-                onRetry={(id) => void handleRetryUpload(id)}
-                isRemoving={removing}
-              />
-            )}
-            <FileUpload
-              value={[]}
-              onChange={handleUpload}
-              onError={(title) => dispatch(showFeedback({ type: 'error', title }))}
-              maxFiles={Math.max(
-                0,
-                5 -
-                  uploadedAttachments.length -
-                  uploads.filter((item) => item.status !== 'done').length
+    <>
+      <Modal
+        isOpen={!!transaction}
+        onClose={() => {
+          if (!isConfirmOpen) send({ type: 'CANCEL' });
+        }}
+        title="Editar Transação"
+      >
+        <TransactionForm
+          onSubmit={(draft) => send({ type: 'SUBMIT', draft, files: [] })}
+          initialValues={transaction || undefined}
+          isSubmitting={isSaving}
+          hasExternalChanges={hasAttachmentChanges}
+          attachmentSlot={
+            <div className="flex flex-col gap-sm">
+              <p className="body-semibold text-content-primary">Anexos</p>
+              {isLoading ? (
+                <p className="label-default text-content-secondary">Carregando anexos...</p>
+              ) : (
+                <AttachmentList
+                  attachments={uploadedAttachments}
+                  uploadItems={uploads.filter((item) => item.status !== 'done')}
+                  onRemove={handleRemove}
+                  onCancel={cancelUpload}
+                  onRetry={(id) => void handleRetryUpload(id)}
+                  isRemoving={removing}
+                />
               )}
-              disabled={isSubmitting || isUploading || uploadedAttachments.length >= 5}
-            />
-          </div>
-        }
+              <FileUpload
+                value={[]}
+                onChange={handleUpload}
+                onError={(title) => dispatch(showFeedback({ type: 'error', title }))}
+                maxFiles={Math.max(
+                  0,
+                  5 -
+                    uploadedAttachments.length -
+                    uploads.filter((item) => item.status !== 'done').length
+                )}
+                disabled={isSaving || isUploading || uploadedAttachments.length >= 5}
+              />
+            </div>
+          }
+        />
+      </Modal>
+
+      <ConfirmTransactionModal
+        mode="edit"
+        isOpen={!!transaction && isConfirmOpen}
+        transaction={isConfirmOpen ? state.draft : null}
+        onConfirm={() => send({ type: 'CONFIRM' })}
+        onCancel={() => send({ type: 'BACK' })}
+        onRetry={() => send({ type: 'RETRY' })}
+        error={state.value === 'error' ? state.reason : null}
+        isSubmitting={isSaving}
       />
-    </Modal>
+
+      <TransactionFlowStatus state={state} mode="edit" />
+    </>
   );
 }

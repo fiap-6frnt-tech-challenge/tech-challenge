@@ -7,7 +7,8 @@ export interface SaveTransactionDeps {
   attachments: {
     uploadFiles: (
       transactionId: string,
-      files: File[]
+      files: File[],
+      onProgress?: (done: number) => void
     ) => Promise<{
       succeededFiles: File[];
       failedFiles: File[];
@@ -17,25 +18,32 @@ export interface SaveTransactionDeps {
   };
 }
 
-export interface SaveTransactionResult {
-  transaction: Transaction;
+export interface UploadAttachmentsResult {
   failedFiles: File[];
   cancelledFiles: File[];
 }
 
-export const saveTransactionWithAttachments =
-  (deps: SaveTransactionDeps) =>
-  async (input: NewTransaction, files: File[]): Promise<SaveTransactionResult> => {
-    const transaction = await deps.transactions.create(input);
-    if (files.length === 0) return { transaction, failedFiles: [], cancelledFiles: [] };
+export interface SaveTransactionResult extends UploadAttachmentsResult {
+  transaction: Transaction;
+}
 
-    const { succeededFiles, failedFiles, cancelledFiles } = await deps.attachments.uploadFiles(
-      transaction.id,
-      files
+export const uploadTransactionAttachments =
+  (attachments: SaveTransactionDeps['attachments']) =>
+  async (
+    transactionId: string,
+    files: File[],
+    onProgress?: (done: number) => void
+  ): Promise<UploadAttachmentsResult> => {
+    if (files.length === 0) return { failedFiles: [], cancelledFiles: [] };
+
+    const { succeededFiles, failedFiles, cancelledFiles } = await attachments.uploadFiles(
+      transactionId,
+      files,
+      onProgress
     );
     let reconciled: Attachment[] | undefined;
     try {
-      reconciled = await deps.attachments.reconcile?.(transaction.id);
+      reconciled = await attachments.reconcile?.(transactionId);
     } catch (error) {
       if (error instanceof UploadSessionEndedError) throw error;
       // A failed reconciliation must not discard the original upload outcomes.
@@ -50,11 +58,18 @@ export const saveTransactionWithAttachments =
     for (const file of succeededFiles) consumeMatch(remainingCounts, file);
 
     return {
-      transaction,
       failedFiles: failedFiles.filter((file) => !consumeMatch(remainingCounts, file)),
       cancelledFiles: cancelledFiles.filter((file) => !consumeMatch(remainingCounts, file)),
     };
   };
+
+export const saveTransactionWithAttachments = (deps: SaveTransactionDeps) => {
+  const upload = uploadTransactionAttachments(deps.attachments);
+  return async (input: NewTransaction, files: File[]): Promise<SaveTransactionResult> => {
+    const transaction = await deps.transactions.create(input);
+    return { transaction, ...(await upload(transaction.id, files)) };
+  };
+};
 
 function consumeMatch(counts: Map<string, number>, file: File): boolean {
   const key = fileKey(file.name, file.size);

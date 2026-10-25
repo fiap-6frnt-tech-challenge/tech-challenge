@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import type { Transaction } from '@bytebank/core';
 import { Button } from '@bytebank/design-system';
 import { EditTransactionModal } from './EditTransactionModal';
-import type { TransactionFormValues } from '../TransactionForm';
+import type { EditTransactionModalProps } from './IEditTransactionModal';
 
 const EDIT_DEPOSIT_TRANSACTION: Transaction = {
   id: '1',
@@ -42,19 +42,18 @@ const meta: Meta<typeof EditTransactionModal> = {
   tags: ['autodocs'],
   args: {
     transaction: null,
-    onConfirm: fn(),
-    onCancel: fn(),
-    isSubmitting: false,
+    onSave: fn(async () => EDIT_DEPOSIT_TRANSACTION),
+    onClose: fn(),
   },
   argTypes: {
-    onConfirm: { control: false },
-    onCancel: { control: false },
+    onSave: { control: false },
+    onClose: { control: false },
   },
   parameters: {
     docs: {
       description: {
         component:
-          'Modal for editing an existing transaction. Reuses TransactionForm with prefilled values.',
+          'Modal for editing an existing transaction. Reuses TransactionForm with prefilled values and asks for confirmation before saving; the flow is driven by the transaction flow state machine.',
       },
     },
   },
@@ -69,107 +68,100 @@ const openButton = (onClick: () => void) => (
   </Button>
 );
 
+function EditStory({ initial, ...args }: EditTransactionModalProps & { initial: Transaction }) {
+  const [transaction, setTransaction] = useState<Transaction | null>(null);
+  return (
+    <>
+      {openButton(() => setTransaction(args.transaction ?? initial))}
+      <EditTransactionModal
+        {...args}
+        transaction={transaction}
+        onClose={() => {
+          args.onClose();
+          setTransaction(null);
+        }}
+      />
+    </>
+  );
+}
+
+async function submitEdit(canvasElement: HTMLElement) {
+  const body = within(canvasElement.ownerDocument.body);
+  await userEvent.click(body.getByRole('button', { name: /Abrir modal/i }));
+  await userEvent.type(await body.findByLabelText('Descrição'), ' editado');
+  await userEvent.click(body.getByRole('button', { name: /Atualizar transação/i }));
+  return within(await body.findByRole('dialog', { name: /Confirmar alteração/i }));
+}
+
 export const Deposit: Story = {
   name: 'Depósito',
   args: { transaction: EDIT_DEPOSIT_TRANSACTION },
-  render: (args) => {
-    const [transaction, setTransaction] = useState<Transaction | null>(null);
-    const handleCancel = () => {
-      args.onCancel?.();
-      setTransaction(null);
-    };
-    const handleConfirm = async (data: TransactionFormValues) => {
-      await args.onConfirm?.(data);
-      setTransaction(null);
-    };
-
-    return (
-      <>
-        {openButton(() => setTransaction(args.transaction ?? EDIT_DEPOSIT_TRANSACTION))}
-        <EditTransactionModal
-          {...args}
-          transaction={transaction}
-          onCancel={handleCancel}
-          onConfirm={handleConfirm}
-        />
-      </>
-    );
-  },
+  render: (args) => <EditStory {...args} initial={EDIT_DEPOSIT_TRANSACTION} />,
 };
 
 export const Withdrawal: Story = {
   name: 'Saque',
   args: { transaction: EDIT_WITHDRAWAL_TRANSACTION },
-  render: (args) => {
-    const [transaction, setTransaction] = useState<Transaction | null>(null);
-
-    return (
-      <>
-        {openButton(() => setTransaction(args.transaction ?? EDIT_WITHDRAWAL_TRANSACTION))}
-        <EditTransactionModal
-          {...args}
-          transaction={transaction}
-          onCancel={() => {
-            args.onCancel?.();
-            setTransaction(null);
-          }}
-          onConfirm={async (data) => {
-            await args.onConfirm?.(data);
-            setTransaction(null);
-          }}
-        />
-      </>
-    );
-  },
+  render: (args) => <EditStory {...args} initial={EDIT_WITHDRAWAL_TRANSACTION} />,
 };
 
 export const LongDescription: Story = {
   name: 'Descrição longa',
   args: { transaction: EDIT_LONG_DESCRIPTION_TRANSACTION },
-  render: (args) => {
-    const [transaction, setTransaction] = useState<Transaction | null>(null);
+  render: (args) => <EditStory {...args} initial={EDIT_LONG_DESCRIPTION_TRANSACTION} />,
+};
 
-    return (
-      <>
-        {openButton(() => setTransaction(args.transaction ?? EDIT_LONG_DESCRIPTION_TRANSACTION))}
-        <EditTransactionModal
-          {...args}
-          transaction={transaction}
-          onCancel={() => {
-            args.onCancel?.();
-            setTransaction(null);
-          }}
-          onConfirm={async (data) => {
-            await args.onConfirm?.(data);
-            setTransaction(null);
-          }}
-        />
-      </>
-    );
+export const ConfirmOnce: Story = {
+  name: 'Confirmação: duplo clique salva uma vez',
+  args: { transaction: EDIT_DEPOSIT_TRANSACTION },
+  render: (args) => <EditStory {...args} initial={EDIT_DEPOSIT_TRANSACTION} />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Submitting opens the confirmation dialog; a double click on Confirmar saves once because the state machine ignores CONFIRM while saving.',
+      },
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const dialog = await submitEdit(canvasElement);
+    await userEvent.dblClick(dialog.getByRole('button', { name: /^Confirmar$/ }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledTimes(1));
+    expect(args.onSave).toHaveBeenCalledTimes(1);
   },
 };
 
-export const Submitting: Story = {
-  name: 'Atualizando',
+export const Saving: Story = {
+  name: 'Salvando',
   args: {
     transaction: EDIT_DEPOSIT_TRANSACTION,
-    isSubmitting: true,
+    onSave: fn(() => new Promise<Transaction>(() => {})),
   },
-  render: (args) => {
-    const [transaction, setTransaction] = useState<Transaction | null>(null);
-    return (
-      <>
-        {openButton(() => setTransaction(args.transaction ?? EDIT_DEPOSIT_TRANSACTION))}
-        <EditTransactionModal
-          {...args}
-          transaction={transaction}
-          onCancel={() => {
-            args.onCancel?.();
-            setTransaction(null);
-          }}
-        />
-      </>
-    );
+  render: (args) => <EditStory {...args} initial={EDIT_DEPOSIT_TRANSACTION} />,
+  play: async ({ canvasElement }) => {
+    const dialog = await submitEdit(canvasElement);
+    await userEvent.click(dialog.getByRole('button', { name: /^Confirmar$/ }));
+    await expect(await dialog.findByRole('button', { name: /Confirmando/i })).toBeDisabled();
+  },
+};
+
+export const SaveError: Story = {
+  name: 'Erro ao salvar',
+  args: {
+    transaction: EDIT_DEPOSIT_TRANSACTION,
+    onSave: fn(async (): Promise<Transaction> => {
+      throw new Error('503');
+    }),
+  },
+  render: (args) => <EditStory {...args} initial={EDIT_DEPOSIT_TRANSACTION} />,
+  play: async ({ canvasElement, args }) => {
+    const dialog = await submitEdit(canvasElement);
+    await userEvent.click(dialog.getByRole('button', { name: /^Confirmar$/ }));
+    await expect(await dialog.findByRole('alert')).toHaveTextContent('Erro ao atualizar transação');
+    await userEvent.click(dialog.getByRole('button', { name: 'Tentar de novo' }));
+    await expect(dialog.getByRole('button', { name: /^Confirmar$/ })).toBeEnabled();
+    expect(args.onSave).toHaveBeenCalledTimes(1);
+    expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 
@@ -180,31 +172,12 @@ export const Closed: Story = {
 
 export const AccessibilityKeyboardFocus: Story = {
   name: 'Accessibility: Keyboard / Escape',
-  args: {
-    transaction: EDIT_DEPOSIT_TRANSACTION,
-    onConfirm: fn(),
-    onCancel: fn(),
-    isSubmitting: false,
-  },
-  render: (args) => {
-    const [transaction, setTransaction] = useState<Transaction | null>(null);
-    const handleCancel = () => {
-      args.onCancel?.();
-      setTransaction(null);
-    };
-
-    return (
-      <>
-        {openButton(() => setTransaction(args.transaction ?? EDIT_DEPOSIT_TRANSACTION))}
-        <EditTransactionModal {...args} transaction={transaction} onCancel={handleCancel} />
-      </>
-    );
-  },
+  args: { transaction: EDIT_DEPOSIT_TRANSACTION },
+  render: (args) => <EditStory {...args} initial={EDIT_DEPOSIT_TRANSACTION} />,
   parameters: {
     docs: {
       description: {
-        story:
-          'A11y check: editing dialog supports keyboard interaction and Escape invokes cancel.',
+        story: 'A11y check: editing dialog supports keyboard interaction and Escape invokes close.',
       },
     },
   },
@@ -213,6 +186,6 @@ export const AccessibilityKeyboardFocus: Story = {
     await userEvent.click(canvas.getByRole('button', { name: /Abrir modal/i }));
     expect(canvas.getByRole('dialog')).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
-    expect(args.onCancel).toHaveBeenCalled();
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };

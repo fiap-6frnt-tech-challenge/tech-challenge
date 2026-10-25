@@ -3,7 +3,11 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import { login } from './helpers/auth';
-import { editTransaction, openTransactionsPage } from './helpers/transactions';
+import {
+  confirmTransactionUpdate,
+  editTransaction,
+  openTransactionsPage,
+} from './helpers/transactions';
 
 const marker = `Bytebank E2E fixture ${randomUUID()}`;
 const attachment = {
@@ -72,8 +76,7 @@ test('uploads, persists, and removes an attachment from an existing transaction'
   const uploadedDialog = page.getByRole('dialog', { name: 'Anexo enviado' });
   await expect(uploadedDialog).toBeVisible();
   await uploadedDialog.getByRole('button', { name: 'Fechar', exact: true }).last().click();
-  await expect(page.getByRole('button', { name: /atualizar transação/i })).toBeEnabled();
-  await page.getByRole('button', { name: /atualizar transação/i }).click();
+  await confirmTransactionUpdate(page);
   await expect(page.getByText('Transação atualizada')).toBeVisible();
 
   const disguised = await page.request.post(attachmentsUrl, {
@@ -124,9 +127,7 @@ test('uploads, persists, and removes an attachment from an existing transaction'
   await expect(removed).toBeVisible();
   await removed.getByRole('button', { name: 'Fechar', exact: true }).last().click();
 
-  const updateButton = page.getByRole('button', { name: /atualizar transação/i });
-  await expect(updateButton).toBeEnabled();
-  await updateButton.click();
+  await confirmTransactionUpdate(page);
   await expect(page.getByText('Transação atualizada')).toBeVisible();
 
   await openTransactionsPage(page);
