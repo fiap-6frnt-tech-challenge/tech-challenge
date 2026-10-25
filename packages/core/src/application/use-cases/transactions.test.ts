@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { NotFoundError, ValidationError } from '../../domain';
-import { FakeClock, InMemoryTransactionRepository, SequentialIdGenerator } from '../testing';
+import {
+  FakeCacheInvalidator,
+  FakeClock,
+  InMemoryTransactionRepository,
+  SequentialIdGenerator,
+} from '../testing';
 import {
   CreateTransaction,
   DeleteTransaction,
@@ -29,14 +34,20 @@ describe('transaction use cases enforce ownership', () => {
   });
 
   it('hides another actor transaction on update', async () => {
-    const useCase = new UpdateTransaction(new InMemoryTransactionRepository([ownedByA]));
+    const useCase = new UpdateTransaction(
+      new InMemoryTransactionRepository([ownedByA]),
+      new FakeCacheInvalidator()
+    );
     await expect(
       useCase.execute({ userId: 'user-b' }, 'tx-a', { description: 'Mudança' })
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it('hides another actor transaction on delete', async () => {
-    const useCase = new DeleteTransaction(new InMemoryTransactionRepository([ownedByA]));
+    const useCase = new DeleteTransaction(
+      new InMemoryTransactionRepository([ownedByA]),
+      new FakeCacheInvalidator()
+    );
     await expect(useCase.execute({ userId: 'user-b' }, 'tx-a')).rejects.toBeInstanceOf(
       NotFoundError
     );
@@ -47,7 +58,12 @@ describe('transaction use cases happy paths and validation', () => {
   it('creates a transaction for the actor with a generated id', async () => {
     const repository = new InMemoryTransactionRepository();
     const clock = new FakeClock(new Date());
-    const useCase = new CreateTransaction(repository, clock, new SequentialIdGenerator('tx'));
+    const useCase = new CreateTransaction(
+      repository,
+      clock,
+      new SequentialIdGenerator('tx'),
+      new FakeCacheInvalidator()
+    );
     const result = await useCase.execute(
       { userId: 'user-a' },
       {
@@ -65,7 +81,8 @@ describe('transaction use cases happy paths and validation', () => {
     const useCase = new CreateTransaction(
       new InMemoryTransactionRepository(),
       new FakeClock(new Date()),
-      new SequentialIdGenerator()
+      new SequentialIdGenerator(),
+      new FakeCacheInvalidator()
     );
     try {
       await useCase.execute({ userId: 'user-a' }, {});
@@ -78,10 +95,11 @@ describe('transaction use cases happy paths and validation', () => {
 
   it('updates, gets and deletes an owned transaction', async () => {
     const repository = new InMemoryTransactionRepository([ownedByA]);
+    const cache = new FakeCacheInvalidator();
     const actor = { userId: 'user-a' };
     expect(
       (
-        await new UpdateTransaction(repository).execute(actor, 'tx-a', {
+        await new UpdateTransaction(repository, cache).execute(actor, 'tx-a', {
           description: 'Atualizada',
         })
       ).description
@@ -89,7 +107,9 @@ describe('transaction use cases happy paths and validation', () => {
     expect((await new GetTransaction(repository).execute(actor, 'tx-a')).description).toBe(
       'Atualizada'
     );
-    await expect(new DeleteTransaction(repository).execute(actor, 'tx-a')).resolves.toBeUndefined();
+    await expect(
+      new DeleteTransaction(repository, cache).execute(actor, 'tx-a')
+    ).resolves.toBeUndefined();
     await expect(new GetTransaction(repository).execute(actor, 'tx-a')).rejects.toBeInstanceOf(
       NotFoundError
     );
@@ -121,16 +141,69 @@ describe('transaction use cases happy paths and validation', () => {
 
   it('changes the actor data version after each mutation', async () => {
     const repository = new InMemoryTransactionRepository([ownedByA]);
+    const cache = new FakeCacheInvalidator();
     const actor = { userId: 'user-a' };
     const version = new GetTransactionsVersion(repository);
     const seen = [await version.execute(actor)];
 
-    await new UpdateTransaction(repository).execute(actor, 'tx-a', { description: 'Nova' });
+    await new UpdateTransaction(repository, cache).execute(actor, 'tx-a', { description: 'Nova' });
     seen.push(await version.execute(actor));
-    await new DeleteTransaction(repository).execute(actor, 'tx-a');
+    await new DeleteTransaction(repository, cache).execute(actor, 'tx-a');
     seen.push(await version.execute(actor));
 
     expect(new Set(seen).size).toBe(3);
     expect(await version.execute(actor)).toBe(seen[2]);
+  });
+});
+
+describe('transaction mutations invalidate the actor server cache', () => {
+  const actor = { userId: 'user-a' };
+
+  it('invalidates the actor after create, update and delete', async () => {
+    const repository = new InMemoryTransactionRepository();
+    const clock = new FakeClock(new Date());
+    const cache = new FakeCacheInvalidator();
+
+    const created = await new CreateTransaction(
+      repository,
+      clock,
+      new SequentialIdGenerator('tx'),
+      cache
+    ).execute(actor, {
+      type: 'deposit',
+      category: 'salary',
+      amount: 100,
+      date: clock.todayISO(),
+      description: 'Salário',
+    });
+    await new UpdateTransaction(repository, cache).execute(actor, created.id, {
+      description: 'Nova',
+    });
+    await new DeleteTransaction(repository, cache).execute(actor, created.id);
+
+    expect(cache.invalidated).toEqual(['user-a', 'user-a', 'user-a']);
+  });
+
+  it('leaves the cache alone when nothing changed', async () => {
+    const repository = new InMemoryTransactionRepository([ownedByA]);
+    const cache = new FakeCacheInvalidator();
+    const intruder = { userId: 'user-b' };
+
+    await expect(
+      new CreateTransaction(
+        repository,
+        new FakeClock(new Date()),
+        new SequentialIdGenerator(),
+        cache
+      ).execute(actor, {})
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(
+      new UpdateTransaction(repository, cache).execute(intruder, 'tx-a', { description: 'Mudança' })
+    ).rejects.toBeInstanceOf(NotFoundError);
+    await expect(
+      new DeleteTransaction(repository, cache).execute(intruder, 'tx-a')
+    ).rejects.toBeInstanceOf(NotFoundError);
+
+    expect(cache.invalidated).toEqual([]);
   });
 });

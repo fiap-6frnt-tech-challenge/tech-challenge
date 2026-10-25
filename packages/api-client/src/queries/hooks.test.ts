@@ -44,6 +44,8 @@ import {
   useDashboardSummary,
   useDeleteTransaction,
   usePaginatedTransactions,
+  useTransaction,
+  useTransactionAttachments,
   useUploadAttachment,
   useUpdateTransaction,
 } from './hooks';
@@ -62,12 +64,16 @@ beforeEach(() => {
 });
 
 describe('useDashboardSummary', () => {
-  it('configura query com range explícito e staleTime de 60s', () => {
+  it('configura query com range explícito e a política do resumo (60s, 10min, foco)', () => {
     useDashboardSummary({ from: '2026-01-01', to: '2026-06-30' });
 
     const options = mocks.useQuery.mock.calls[0][0];
     expect(options.queryKey).toEqual(summaryKeys.range({ from: '2026-01-01', to: '2026-06-30' }));
-    expect(options.staleTime).toBe(60_000);
+    expect(options).toMatchObject({
+      staleTime: 60_000,
+      gcTime: 600_000,
+      refetchOnWindowFocus: true,
+    });
     expect(typeof options.queryFn).toBe('function');
   });
 
@@ -130,28 +136,61 @@ describe('useAccountOverview', () => {
 
     const signal = new AbortController().signal;
     expect(options.queryKey).toEqual(overviewKeys.all);
+    expect(options).toMatchObject({
+      staleTime: 30_000,
+      gcTime: 600_000,
+      refetchOnWindowFocus: true,
+    });
     await expect(options.queryFn({ signal })).resolves.toEqual(overview);
     expect(overviewSpy).toHaveBeenCalledWith({ signal });
   });
 });
 
+describe('cache policy per data type', () => {
+  it('detalhe fica fresco por 5min, sem refetch no foco', () => {
+    useTransaction('tx-1');
+
+    const options = mocks.useQuery.mock.calls[0][0];
+    expect(options.queryKey).toEqual(transactionKeys.detail('tx-1'));
+    expect(options).toMatchObject({
+      staleTime: 300_000,
+      gcTime: 600_000,
+      refetchOnWindowFocus: false,
+      enabled: true,
+    });
+  });
+
+  it('anexos ficam frescos por 5min, sem refetch no foco', () => {
+    useTransactionAttachments('tx-1');
+
+    const options = mocks.useQuery.mock.calls[0][0];
+    expect(options.queryKey).toEqual(attachmentKeys.list('tx-1'));
+    expect(options).toMatchObject({
+      staleTime: 300_000,
+      gcTime: 600_000,
+      refetchOnWindowFocus: false,
+      enabled: true,
+    });
+  });
+});
+
 describe('transaction mutations summary invalidation', () => {
-  it('useCreateTransaction invalida listas, overview e summary no sucesso', () => {
+  it('useCreateTransaction invalida listas, overview e summary ao terminar', () => {
     useCreateTransaction();
     const options = mocks.useMutation.mock.calls[0][0];
 
-    options.onSuccess();
+    options.onSettled(undefined, null, {});
 
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.lists() });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: overviewKeys.all });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: summaryKeys.all });
   });
 
-  it('useUpdateTransaction invalida listas, detalhe, overview e summary no sucesso', () => {
+  it('useUpdateTransaction invalida listas, detalhe, overview e summary ao terminar', () => {
     useUpdateTransaction();
     const options = mocks.useMutation.mock.calls[0][0];
 
-    options.onSuccess({ id: 'tx-1' });
+    options.onSettled(undefined, null, { id: 'tx-1', data: {} });
 
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: transactionKeys.lists() });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
@@ -196,6 +235,16 @@ describe('usePaginatedTransactions', () => {
     );
     expect(typeof options.queryFn).toBe('function');
     expect(typeof options.placeholderData).toBe('function');
+  });
+
+  it('aplica a política da lista (30s, 5min, sem refetch no foco)', () => {
+    usePaginatedTransactions({ page: 1 });
+
+    expect(lastQueryOptions()).toMatchObject({
+      staleTime: 30_000,
+      gcTime: 300_000,
+      refetchOnWindowFocus: false,
+    });
   });
 
   it('omite type "all" e filtros vazios da queryKey', () => {

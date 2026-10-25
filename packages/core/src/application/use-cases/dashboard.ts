@@ -1,6 +1,8 @@
-import { Money, type DashboardSummary } from '../../domain';
-import type { Actor, Clock, TransactionRepository } from '../ports';
+import { buildDashboardSummary, Money, type DashboardSummary } from '../../domain';
+import type { Actor, Clock, ResultCache, TransactionRepository } from '../ports';
 import type { AccountOverview, DateRange } from '../types';
+
+export const summaryCacheTag = (userId: string) => `summary:${userId}`;
 
 function difference(minuend: number, subtrahend: number): number {
   return Money.fromDecimal(minuend).subtract(Money.fromDecimal(subtrahend)).toDecimal();
@@ -60,20 +62,27 @@ export class GetTransactionsSummary {
       this.transactions.categoryTotals(actor.userId, range),
       this.transactions.balanceSeries(actor.userId, range),
     ]);
-    const current = byMonth.at(-1);
-    const previous = byMonth.at(-2);
-    const incomeMonth = current?.income ?? 0;
-    const expenseMonth = current?.expense ?? 0;
-    return {
-      balance: balanceOverTime.at(-1)?.balance ?? 0,
-      incomeMonth,
-      expenseMonth,
-      savingsMonth: difference(incomeMonth, expenseMonth),
-      deltaIncome: difference(incomeMonth, previous?.income ?? 0),
-      deltaExpense: difference(expenseMonth, previous?.expense ?? 0),
-      byMonth,
-      balanceOverTime,
-      byCategory,
-    };
+    return buildDashboardSummary({ byMonth, byCategory, balanceOverTime });
+  }
+}
+
+type TransactionsSummaryQuery = Pick<GetTransactionsSummary, 'execute'>;
+
+export class CachedGetTransactionsSummary implements TransactionsSummaryQuery {
+  constructor(
+    private readonly summary: TransactionsSummaryQuery,
+    private readonly transactions: Pick<TransactionRepository, 'version'>,
+    private readonly cache: ResultCache
+  ) {}
+
+  async execute(actor: Actor, range: Partial<DateRange> = {}): Promise<DashboardSummary> {
+    const version = await this.transactions.version(actor.userId);
+    return this.cache.remember(
+      {
+        key: ['summary', actor.userId, range.from ?? '', range.to ?? '', version],
+        tags: [summaryCacheTag(actor.userId)],
+      },
+      () => this.summary.execute(actor, range)
+    );
   }
 }

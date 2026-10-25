@@ -8,6 +8,22 @@ import { users } from '@/db/schema';
 import { encryptUserFields } from './infrastructure/db/DrizzleUserRepository';
 import { integrationScope } from './testing/integrationScope';
 
+const nextCache = vi.hoisted(() => {
+  const entries = new Map<string, unknown>();
+  return {
+    entries,
+    revalidateTag: vi.fn(),
+    unstable_cache:
+      (load: () => Promise<unknown>, [key]: string[]) =>
+      async () => {
+        if (!entries.has(key)) entries.set(key, await load());
+        return entries.get(key);
+      },
+  };
+});
+
+vi.mock('next/cache', () => nextCache);
+
 const scope = integrationScope();
 const actor = { userId: scope.id('owner') };
 let uploadsDir: string;
@@ -79,6 +95,37 @@ describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => 
     await expect(stat(join(uploadsDir, attachment.ref))).rejects.toMatchObject({
       code: 'ENOENT',
     });
+  });
+
+  it('guarda o resumo por usuário e versão, e invalida a tag do usuário nas mutações', async () => {
+    const range = { from: '2026-02-01', to: '2026-02-28' };
+    const other = { userId: scope.id('outro') };
+    nextCache.revalidateTag.mockClear();
+
+    const empty = await container.getTransactionsSummary.execute(actor, range);
+    const created = await container.createTransaction.execute(actor, {
+      type: 'deposit',
+      category: 'salary',
+      amount: 300,
+      date: '2026-02-10',
+      description: 'Bônus',
+    });
+    const afterCreate = await container.getTransactionsSummary.execute(actor, range);
+    expect(afterCreate.byMonth).not.toEqual(empty.byMonth);
+    expect(await container.getTransactionsSummary.execute(other, range)).toEqual(empty);
+
+    await container.updateTransaction.execute(actor, created.id, { amount: 500 });
+    await container.deleteTransaction.execute(actor, created.id);
+
+    expect(nextCache.revalidateTag.mock.calls).toEqual([
+      [`summary:${actor.userId}`, { expire: 0 }],
+      [`summary:${actor.userId}`, { expire: 0 }],
+      [`summary:${actor.userId}`, { expire: 0 }],
+    ]);
+    expect(await container.getTransactionsSummary.execute(actor, range)).toEqual(empty);
+    const keys = [...nextCache.entries.keys()].map((key) => JSON.parse(key) as string[]);
+    expect(keys.every((key) => key[0] === 'summary' && key.length === 5)).toBe(true);
+    expect(new Set(keys.map((key) => key[1]))).toEqual(new Set([actor.userId, other.userId]));
   });
 
   it('registra e autentica um usuário com a senha em bcrypt custo 12', async () => {

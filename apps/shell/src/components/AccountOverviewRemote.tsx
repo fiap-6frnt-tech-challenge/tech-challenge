@@ -41,7 +41,7 @@ function BalanceCardSkeleton() {
   );
 }
 
-function AccountOverviewSkeleton() {
+export function AccountOverviewSkeleton() {
   return (
     <section className="flex flex-col gap-lg" aria-busy="true" aria-label="Carregando visão geral">
       <BalanceCardSkeleton />

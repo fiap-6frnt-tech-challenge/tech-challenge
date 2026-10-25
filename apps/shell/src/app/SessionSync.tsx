@@ -14,6 +14,17 @@ import {
 } from '@bytebank/stores';
 import { isPublicAuthRoute } from './AppShell.routes';
 
+async function isSignedOutOnServer(): Promise<boolean> {
+  try {
+    const response = await fetch('/api/auth/session', { cache: 'no-store' });
+    if (!response.ok) return false;
+    const session = (await response.json()) as { user?: unknown } | null;
+    return !session?.user;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Espelha a sessão do NextAuth no store Redux (authSlice).
  * Não renderiza nada — apenas sincroniza estado.
@@ -37,13 +48,23 @@ export function SessionSync() {
           image: session.user.image ?? undefined,
         })
       );
-    } else {
-      if (store.getState().auth.isAuthenticated) publish({ type: 'session.expired', version: 1 });
-      else {
-        dispatch(clearSession());
-        if (!isPublicAuthRoute(pathname)) void dispatch(logout('expired'));
-      }
+      return;
     }
+
+    if (!store.getState().auth.isAuthenticated) {
+      dispatch(clearSession());
+      if (isPublicAuthRoute(pathname)) return;
+    }
+    if (isClientLogoutInProgress()) return;
+    let current = true;
+    void isSignedOutOnServer().then((signedOut) => {
+      if (!current || !signedOut) return;
+      if (store.getState().auth.isAuthenticated) publish({ type: 'session.expired', version: 1 });
+      else void dispatch(logout('expired'));
+    });
+    return () => {
+      current = false;
+    };
   }, [session, status, dispatch, store, pathname]);
 
   return null;
