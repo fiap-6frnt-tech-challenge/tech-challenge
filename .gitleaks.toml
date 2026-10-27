@@ -24,11 +24,79 @@ regexes = [
   '''AUTH_SECRET:\s*bytebank-e2e-auth-secret-bytebank-e2e-auth-secret''',
 ]
 
-# The exposed token was rotated and its GitHub secret replaced. Ignore only its
-# historical finding in the commit and package path where it was exposed.
+# Test fixtures: suppress only the generic-api-key false positives reported in
+# these exact historical test files. Dedicated credential rules remain enabled.
 [[allowlists]]
-description = "Revoked Chromatic token in historical commit"
+description = "Mock registration password in route test"
+targetRules = ["generic-api-key"]
+condition = "AND"
+commits = ["3348fa8e02020ca874844be3eb40262dd5a0c69d"]
+paths = ['''^apps/shell/src/app/api/auth/register/route\.test\.ts$''']
+
+[[allowlists]]
+description = "Mock password in core user use-case test"
+targetRules = ["generic-api-key"]
+condition = "AND"
+commits = ["3348fa8e02020ca874844be3eb40262dd5a0c69d"]
+paths = ['''^packages/core/src/application/use-cases/users\.test\.ts$''']
+
+[[allowlists]]
+description = "Mock password in container integration test"
+targetRules = ["generic-api-key"]
+condition = "AND"
+commits = ["3348fa8e02020ca874844be3eb40262dd5a0c69d"]
+paths = ['''^apps/shell/src/server/container\.integration\.test\.ts$''']
+
+[[allowlists]]
+description = "Mock password values in registration schema tests"
+targetRules = ["generic-api-key"]
+condition = "AND"
+commits = ["3348fa8e02020ca874844be3eb40262dd5a0c69d"]
+paths = ['''^packages/core/src/schemas/register\.test\.ts$''']
+
+# The Chromatic project token has been rotated. These exceptions suppress only
+# its generic-api-key findings in the historical commits and files where it appeared.
+[[allowlists]]
+description = "Revoked Chromatic token in shell package history"
+targetRules = ["generic-api-key"]
+condition = "AND"
+commits = ["886261767ed3720176f73f82294a5846b47dc470"]
+paths = ['''^apps/shell/package\.json$''']
+regexTarget = "secret"
+regexes = ['''^chpt_[a-f0-9]+$''']
+
+[[allowlists]]
+description = "Revoked Chromatic token in design system migration documentation"
+targetRules = ["generic-api-key"]
+condition = "AND"
+commits = ["c17c5c07f36cd125a6892ad1b1f1fa0da17358b1"]
+paths = ['''^docs/phase-2/sprint-0/03-extract-design-system\.md$''']
+regexTarget = "secret"
+regexes = ['''^chpt_[a-f0-9]+$''']
+
+[[allowlists]]
+description = "Revoked Chromatic token in shell migration documentation"
+targetRules = ["generic-api-key"]
+condition = "AND"
+commits = ["9cc44662922e966021c596634e07f43b70016b16"]
+paths = ['''^docs/phase-2/sprint-0/02-migrate-shell\.md$''']
+regexTarget = "secret"
+regexes = ['''^chpt_[a-f0-9]+$''']
+
+[[allowlists]]
+description = "Revoked Chromatic token in root package history"
+targetRules = ["generic-api-key"]
+condition = "AND"
+commits = ["054481f88af3185150b7fa6f965b9df6b6a17813"]
+paths = ['''^package\.json$''']
+regexTarget = "secret"
+regexes = ['''^chpt_[a-f0-9]+$''']
+
+[[allowlists]]
+description = "Revoked Chromatic token in design system package history"
+targetRules = ["generic-api-key"]
 condition = "AND"
 commits = ["09ca5f7fad86786e6b1ffc73942a750a596b34dc"]
 paths = ['''^packages/design-system/package\.json$''']
+regexTarget = "secret"
 regexes = ['''^chpt_[a-f0-9]+$''']
