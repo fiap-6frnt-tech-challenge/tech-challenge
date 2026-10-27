@@ -5,6 +5,8 @@ updates:
     target-branch: phase-4
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     groups:
       minor-and-patch:
@@ -15,6 +17,8 @@ updates:
     target-branch: phase-4
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: docker
     directories:
@@ -24,3 +28,5 @@ updates:
     target-branch: phase-4
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7

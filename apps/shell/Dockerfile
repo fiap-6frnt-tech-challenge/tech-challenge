@@ -33,5 +33,8 @@ ENV LOCAL_UPLOADS_DIR=/app/.uploads
 COPY --from=build /app/apps/shell/.next/standalone ./
 COPY --from=build /app/apps/shell/.next/static ./apps/shell/.next/static
 COPY --from=build /app/apps/shell/public ./apps/shell/public
+RUN mkdir -p /app/.uploads /app/apps/shell/.next/cache && \
+    chown -R node:node /app/.uploads /app/apps/shell/.next/cache
+USER node
 EXPOSE 3000
 CMD ["node", "apps/shell/server.js"]
