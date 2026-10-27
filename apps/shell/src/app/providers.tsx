@@ -7,6 +7,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { store } from '@bytebank/stores';
 import { queryClient } from '@bytebank/api-client';
 import { FeedbackHost } from './FeedbackHost';
+import { NavigationBridge } from './NavigationBridge';
 import { SessionSync } from './SessionSync';
 import { ClientEffects } from './ClientEffects';
 import { SessionActivity } from './SessionActivity';
@@ -22,6 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <SessionProvider refetchInterval={60} refetchOnWindowFocus>
+        <NavigationBridge />
         <ClientEffects />
         <SessionSync />
         <QueryClientProvider client={queryClient}>

@@ -25,6 +25,8 @@ import type {
   User,
 } from '../types';
 
+export * from './NavigationPort';
+
 export interface Actor {
   userId: string;
 }

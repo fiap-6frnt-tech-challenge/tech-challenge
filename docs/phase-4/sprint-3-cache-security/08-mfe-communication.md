@@ -1,4 +1,4 @@
-# Task 08 — Comunicação entre MFEs: navegação e eventos
+# Task 08 — Comunicação entre MFEs: navegação e eventos ✅
 
 |                 |                                                                 |
 | --------------- | --------------------------------------------------------------- |
@@ -60,15 +60,15 @@ export const navigation = {
 
 ## Testes
 
-- [ ] Registro de navegação: fallback, troca de implementação
-- [ ] Link do MFE chama `navigate` no clique simples e deixa o navegador agir com Ctrl/Cmd+clique
-- [ ] Dashboard reage a `transaction.created` (teste de render)
+- [x] Registro de navegação: fallback, troca de implementação
+- [x] Link do MFE chama `navigate` no clique simples e deixa o navegador agir com Ctrl/Cmd+clique
+- [x] Dashboard reage a `transaction.created` (teste de render)
 
 ## Validação
 
-- [ ] Home → "Todas as transações" sem recarregar a página (a aba Network não mostra um novo documento)
-- [ ] Hover no link pré-carrega o remote de transações
-- [ ] Criar transação na home anuncia e destaca a atualização no dashboard
+- [x] Home → "Todas as transações" sem recarregar a página (a aba Network não mostra um novo documento)
+- [x] Hover no link pré-carrega o remote de transações
+- [x] Criar transação na home anuncia e destaca a atualização no dashboard
 
 ## Gotchas
 
