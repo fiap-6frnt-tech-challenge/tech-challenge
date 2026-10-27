@@ -22,6 +22,7 @@ RUN npm run build -w @bytebank/shell
 
 # Stage 3: runtime — imagem mínima, só o standalone server
 FROM node:22-alpine AS runtime
+RUN apk -U upgrade
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000

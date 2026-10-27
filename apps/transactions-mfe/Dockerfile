@@ -19,6 +19,7 @@ RUN npm run build -w @bytebank/transactions-mfe
 
 # Stage 2: runtime — nginx servindo dist/
 FROM nginx:alpine AS runtime
+RUN apk -U upgrade
 COPY --from=build /app/apps/transactions-mfe/dist /usr/share/nginx/html
 COPY apps/transactions-mfe/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
