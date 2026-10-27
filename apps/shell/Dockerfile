@@ -22,7 +22,9 @@ RUN npm run build -w @bytebank/shell
 
 # Stage 3: runtime — imagem mínima, só o standalone server
 FROM node:22-alpine AS runtime
-RUN apk -U upgrade
+# O npm só é usado no build; removemos seus pacotes da imagem de runtime.
+RUN apk -U upgrade && \
+    rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
