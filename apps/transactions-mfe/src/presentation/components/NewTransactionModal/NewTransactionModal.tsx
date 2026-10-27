@@ -1,177 +1,162 @@
 'use client';
 
 import { ConfirmTransactionModal } from '../ConfirmTransactionModal';
-import { Button, FileUpload, Modal } from '@bytebank/design-system';
-import { showFeedback, useAppDispatch, ClientSessionEndedError } from '@bytebank/stores';
+import { AttachmentList, Button, FileUpload, Modal } from '@bytebank/design-system';
+import { showFeedback, useAppDispatch } from '@bytebank/stores';
 import type { ReactElement } from 'react';
-import { useRef, useState } from 'react';
-import type {
-  TransactionFormRef,
-  TransactionFormValues,
-} from '../TransactionForm/ITransactionForm';
+import { useEffect, useRef, useState } from 'react';
+import type { TransactionFormValues } from '../TransactionForm/ITransactionForm';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
+import { TransactionFlowStatus } from '../TransactionFlowStatus';
 import { useSaveTransactionWithAttachments } from '../../../application/useSaveTransactionWithAttachments';
+import { useTransactionFlow } from '../../../application/useTransactionFlow';
 import type { NewTransactionModalProps } from './INewTransactionModal';
 
-const ERROR_FEEDBACK = {
-  type: 'error' as const,
-  title: 'Erro ao adicionar transação',
-  message: 'Tente novamente',
-};
-
 export function NewTransactionModal({ isOpen, onCancel }: NewTransactionModalProps): ReactElement {
-  const { saveTransaction, uploads, isUploading, cancelUpload, retryUpload, resetUploads } =
+  const { save, uploadAttachments, uploads, cancelUpload, cancelAllUploads, resetUploads } =
     useSaveTransactionWithAttachments();
   const dispatch = useAppDispatch();
-
-  const formRef = useRef<TransactionFormRef>(null);
-  const [pendingData, setPendingData] = useState<TransactionFormValues | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const [savedTransactionId, setSavedTransactionId] = useState<string | null>(null);
-
-  const handleFormSubmit = (data: TransactionFormValues): void => {
-    if (savedTransactionId) return;
-    setPendingData(data);
-  };
-
-  const handleConfirm = async (): Promise<void> => {
-    if (!pendingData || isSubmitting) return;
-
-    const submittedData = pendingData;
-    setPendingData(null);
-
-    setIsSubmitting(true);
-
-    try {
-      const result = await saveTransaction(submittedData, pendingFiles);
-      const retryableFiles = [...result.failedFiles, ...result.cancelledFiles];
-
-      if (retryableFiles.length > 0) {
-        setSavedTransactionId(result.transaction.id);
-        setPendingFiles(retryableFiles);
-        formRef.current?.reset();
-        dispatch(
-          showFeedback({
-            type: 'info',
-            title: 'Transação criada com anexos pendentes',
-            message: 'Os arquivos que falharam permanecem disponíveis para tentar novamente.',
-          })
-        );
-        return;
-      }
-
-      formRef.current?.reset();
-      setPendingFiles([]);
-      setSavedTransactionId(null);
+  const { state, send } = useTransactionFlow<TransactionFormValues>({
+    save,
+    uploadAttachments,
+    cancelUploads: cancelAllUploads,
+    onFinish: () => {
       resetUploads();
+      setPendingFiles([]);
       onCancel();
-    } catch (error) {
-      if (error instanceof ClientSessionEndedError) return;
-      dispatch(showFeedback(ERROR_FEEDBACK));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    },
+  });
 
-  const handleRetryUpload = async (uploadId: string) => {
-    if (!savedTransactionId) return;
-    try {
-      const result = await retryUpload(uploadId, savedTransactionId);
-      setPendingFiles(result.unresolvedUploads.map((item) => item.file));
-      if (result.unresolvedUploads.length === 0) {
-        setSavedTransactionId(null);
-        setPendingFiles([]);
-        resetUploads();
-        onCancel();
-      }
-    } catch (error) {
-      if (error instanceof ClientSessionEndedError) return;
-      dispatch(
-        showFeedback({
-          type: 'error',
-          title: 'Erro ao tentar novamente',
-          message: 'O arquivo continua disponível para nova tentativa.',
-        })
+  const isConfirmOpen =
+    state.value === 'confirming' || state.value === 'saving' || state.value === 'error';
+  const canDismiss = !isConfirmOpen && state.value !== 'uploading';
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (state.value === 'uploading' || state.value === 'partialSuccess') panelRef.current?.focus();
+  }, [state.value]);
+
+  const uploadItemsFor = (files: File[]) => uploads.filter((item) => files.includes(item.file));
+
+  const renderBody = () => {
+    if (state.value === 'uploading') {
+      return (
+        <div ref={panelRef} tabIndex={-1} className="flex flex-col gap-md outline-none">
+          <p className="body-default text-content-secondary">
+            A transação foi criada. Enviando os anexos…
+          </p>
+          <div className="flex flex-col gap-xs">
+            <div className="flex justify-between label-default text-content-secondary">
+              <span>Anexos processados</span>
+              <span className="tabular-nums">
+                {state.done} de {state.total}
+              </span>
+            </div>
+            <div
+              role="progressbar"
+              aria-label="Envio dos anexos"
+              aria-valuemin={0}
+              aria-valuemax={state.total}
+              aria-valuenow={state.done}
+              aria-valuetext={`${state.done} de ${state.total} anexos processados`}
+              className="h-1.5 w-full overflow-hidden rounded-full bg-background"
+            >
+              <div
+                className="h-full rounded-full bg-brand-primary transition-all"
+                style={{ width: `${(state.done / state.total) * 100}%` }}
+              />
+            </div>
+          </div>
+          <AttachmentList
+            attachments={[]}
+            uploadItems={uploadItemsFor(state.files)}
+            onCancel={cancelUpload}
+          />
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => send({ type: 'CANCEL' })}
+              disabled={state.cancelling}
+            >
+              {state.cancelling ? 'Cancelando...' : 'Cancelar envio'}
+            </Button>
+          </div>
+        </div>
       );
     }
-  };
 
-  const handleCancel = (): void => {
-    if (isSubmitting) return;
-    if (!savedTransactionId) {
-      resetUploads();
-      setPendingFiles([]);
+    if (state.value === 'partialSuccess') {
+      return (
+        <div ref={panelRef} tabIndex={-1} className="flex flex-col gap-md outline-none">
+          <p className="body-default text-content-secondary">
+            A transação foi criada, mas{' '}
+            {state.failed.length === 1
+              ? '1 anexo não foi enviado'
+              : `${state.failed.length} anexos não foram enviados`}
+            . Tente de novo agora ou anexe depois pela edição da transação.
+          </p>
+          <AttachmentList attachments={[]} uploadItems={uploadItemsFor(state.failed)} />
+          <div className="flex flex-col gap-sm sm:flex-row sm:justify-end">
+            <Button type="button" variant="secondary" onClick={() => send({ type: 'CANCEL' })}>
+              Fechar
+            </Button>
+            <Button type="button" onClick={() => send({ type: 'RETRY_FAILED' })}>
+              Tentar de novo
+            </Button>
+          </div>
+        </div>
+      );
     }
-    setPendingData(null);
-    onCancel();
+
+    return (
+      <TransactionForm
+        onSubmit={(draft) => send({ type: 'SUBMIT', draft, files: pendingFiles })}
+        isSubmitting={state.value === 'saving'}
+        attachmentSlot={
+          <div className="flex flex-col gap-sm">
+            <p className="body-semibold text-content-primary">Anexos</p>
+            <FileUpload
+              value={pendingFiles}
+              onChange={setPendingFiles}
+              onError={(title) => dispatch(showFeedback({ type: 'error', title }))}
+              maxFiles={5}
+              disabled={state.value === 'saving'}
+            />
+            <p className="label-default text-content-secondary">
+              Arquivos serão enviados após confirmar a transação.
+            </p>
+          </div>
+        }
+      />
+    );
   };
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={handleCancel} title="Nova transação">
-        {savedTransactionId ? (
-          <div className="flex flex-col gap-md">
-            <p className="body-default text-content-secondary">
-              A transação foi criada. Reenvie os anexos pendentes ou feche e volte a esta tela
-              depois.
-            </p>
-            <FileUpload
-              value={pendingFiles}
-              uploadItems={uploads.filter((item) => pendingFiles.includes(item.file))}
-              onChange={setPendingFiles}
-              onCancel={cancelUpload}
-              onRetry={(id) => void handleRetryUpload(id)}
-              onError={(title) => dispatch(showFeedback({ type: 'error', title }))}
-              maxFiles={5}
-              disabled={isSubmitting || savedTransactionId !== null}
-            />
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleCancel}
-                disabled={isUploading}
-              >
-                Fechar
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <TransactionForm
-            ref={formRef}
-            onSubmit={handleFormSubmit}
-            onCancel={handleCancel}
-            isSubmitting={isSubmitting}
-            attachmentSlot={
-              <div className="flex flex-col gap-sm">
-                <p className="body-semibold text-content-primary">Anexos</p>
-                <FileUpload
-                  value={pendingFiles}
-                  uploadItems={uploads.filter((item) => pendingFiles.includes(item.file))}
-                  onChange={setPendingFiles}
-                  onCancel={cancelUpload}
-                  onRetry={(id) => void handleRetryUpload(id)}
-                  onError={(title) => dispatch(showFeedback({ type: 'error', title }))}
-                  maxFiles={5}
-                  disabled={isSubmitting}
-                />
-                <p className="label-default text-content-secondary">
-                  Arquivos serão enviados após confirmar a transação.
-                </p>
-              </div>
-            }
-          />
-        )}
+      <Modal
+        isOpen={isOpen}
+        onClose={() => {
+          if (canDismiss) send({ type: 'CANCEL' });
+        }}
+        showCloseButton={state.value !== 'uploading'}
+        title="Nova transação"
+      >
+        {renderBody()}
       </Modal>
 
       <ConfirmTransactionModal
-        isOpen={pendingData !== null}
-        transaction={pendingData}
-        onConfirm={handleConfirm}
-        onCancel={() => setPendingData(null)}
-        isSubmitting={isSubmitting}
+        isOpen={isConfirmOpen}
+        transaction={isConfirmOpen ? state.draft : null}
+        onConfirm={() => send({ type: 'CONFIRM' })}
+        onCancel={() => send({ type: 'BACK' })}
+        onRetry={() => send({ type: 'RETRY' })}
+        error={state.value === 'error' ? state.reason : null}
+        isSubmitting={state.value === 'saving'}
       />
+
+      <TransactionFlowStatus state={state} mode="create" />
     </>
   );
 }

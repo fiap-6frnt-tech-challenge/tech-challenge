@@ -3,7 +3,6 @@ import type { TransactionFormValues } from '../TransactionForm/ITransactionForm'
 
 export interface EditTransactionModalProps {
   transaction: Transaction | null;
-  onConfirm: (data: TransactionFormValues) => Promise<void>;
-  onCancel: () => void;
-  isSubmitting?: boolean;
+  onSave: (data: TransactionFormValues) => Promise<{ id: string }>;
+  onClose: () => void;
 }

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Attachment, NewTransaction, Transaction } from '@bytebank/core';
-import { saveTransactionWithAttachments } from './saveTransactionWithAttachments';
+import {
+  saveTransactionWithAttachments,
+  uploadTransactionAttachments,
+} from './saveTransactionWithAttachments';
 import { UploadSessionEndedError } from '../uploadSession';
 
 const input: NewTransaction = {
@@ -49,7 +52,7 @@ describe('saveTransactionWithAttachments', () => {
     const result = await saveTransactionWithAttachments(deps)(input, files);
 
     expect(deps.transactions.create).toHaveBeenCalledWith(input);
-    expect(deps.attachments.uploadFiles).toHaveBeenCalledWith('tx-1', files);
+    expect(deps.attachments.uploadFiles).toHaveBeenCalledWith('tx-1', files, undefined);
     expect(deps.attachments.reconcile).toHaveBeenCalledWith('tx-1');
     expect(result).toEqual({
       transaction: created,
@@ -116,5 +119,36 @@ describe('saveTransactionWithAttachments', () => {
       'falhou'
     );
     expect(deps.attachments.uploadFiles).not.toHaveBeenCalled();
+  });
+});
+
+describe('uploadTransactionAttachments', () => {
+  it('forwards upload progress and returns only unresolved files', async () => {
+    const failed = file('nota.pdf');
+    const deps = fakeDeps({
+      succeededFiles: [file('recibo.pdf')],
+      failedFiles: [failed],
+      cancelledFiles: [],
+    });
+    const onProgress = vi.fn();
+
+    const result = await uploadTransactionAttachments(deps.attachments)(
+      'tx-1',
+      [failed],
+      onProgress
+    );
+
+    expect(deps.attachments.uploadFiles).toHaveBeenCalledWith('tx-1', [failed], onProgress);
+    expect(deps.attachments.reconcile).toHaveBeenCalledWith('tx-1');
+    expect(result).toEqual({ failedFiles: [failed], cancelledFiles: [] });
+  });
+
+  it('does nothing when there are no files', async () => {
+    const deps = fakeDeps();
+
+    const result = await uploadTransactionAttachments(deps.attachments)('tx-1', []);
+
+    expect(deps.attachments.uploadFiles).not.toHaveBeenCalled();
+    expect(result).toEqual({ failedFiles: [], cancelledFiles: [] });
   });
 });

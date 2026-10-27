@@ -158,6 +158,28 @@ describe('normalized upload queue integration', () => {
     expect(selectAllUploads(store.getState())[0].status).toBe('done');
   });
 
+  it('forwards every queue event of the batch to the caller observer', async () => {
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useUploadQueue(), { wrapper });
+    const files = [file('a.pdf'), file('b.pdf')];
+    const onEvent = vi.fn();
+    let batch!: ReturnType<typeof result.current.uploadFiles>;
+    act(() => {
+      batch = result.current.uploadFiles('tx', files, onEvent);
+    });
+    act(() => transfers.get(files[0])!.next({ type: 'progress', loaded: 50, total: 100 }));
+    act(() => done(files[0]));
+    act(() => transfers.get(files[1])!.error(new Error('Invalid file')));
+    await batch;
+    expect(onEvent.mock.calls.map(([event]) => [event.type, event.file.name])).toEqual([
+      ['started', 'a.pdf'],
+      ['started', 'b.pdf'],
+      ['progress', 'a.pdf'],
+      ['done', 'a.pdf'],
+      ['failed', 'b.pdf'],
+    ]);
+  });
+
   it('uses distinct IDs across concurrent queue instances and clears only owned entries', async () => {
     const { store, wrapper } = setup();
     const { result } = renderHook(() => ({ first: useUploadQueue(), second: useUploadQueue() }), {

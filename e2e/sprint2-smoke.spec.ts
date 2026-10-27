@@ -2,7 +2,12 @@ import { createHash, createHmac, randomUUID } from 'node:crypto';
 import { Pool } from 'pg';
 import { expect, test, type Page } from '@playwright/test';
 import { login } from './helpers/auth';
-import { createWithdrawal, editTransaction, openTransactionsPage } from './helpers/transactions';
+import {
+  confirmTransactionUpdate,
+  createWithdrawal,
+  editTransaction,
+  openTransactionsPage,
+} from './helpers/transactions';
 import { E2E_KEYS } from './keys';
 
 // Opt-in: this smoke requires real HIBP access and the default five-attempt policy.
@@ -380,7 +385,7 @@ test('creates, edits and deletes a transaction through the UI and keeps deletion
       response.request().method() === 'PATCH' &&
       /\/api\/transactions\/[^/]+$/.test(new URL(response.url()).pathname)
   );
-  await page.getByRole('button', { name: /atualizar transação/i }).click();
+  await confirmTransactionUpdate(page);
   expect((await edited).status()).toBe(200);
   await page
     .getByRole('dialog', { name: 'Transação atualizada' })

@@ -69,7 +69,6 @@ export default function TransactionsPage() {
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [pendingEdit, setPendingEdit] = useState<Transaction | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   if (isError) {
     return <ErrorState />;
@@ -105,31 +104,16 @@ export default function TransactionsPage() {
     }
   }
 
-  async function handleEditConfirm(data: TransactionFormValues) {
-    if (!pendingEdit) return;
-    setIsUpdating(true);
-    try {
-      await updateTransaction({ id: pendingEdit.id, data });
-      setPendingEdit(null);
-    } catch (error) {
-      if (error instanceof ClientSessionEndedError) return;
-      dispatch(
-        showFeedback({
-          type: 'error',
-          title: 'Erro ao atualizar',
-          message: 'Não foi possível atualizar a transação. Tente novamente.',
-        })
-      );
-    } finally {
-      setIsUpdating(false);
-    }
+  function handleEditSave(data: TransactionFormValues) {
+    if (!pendingEdit) return Promise.reject(new Error('Transação não encontrada para edição'));
+    return updateTransaction({ id: pendingEdit.id, data });
   }
 
   function handleDeleteCancel() {
     setPendingDelete(null);
   }
 
-  function handleEditCancel() {
+  function handleEditClose() {
     setPendingEdit(null);
   }
 
@@ -223,9 +207,8 @@ export default function TransactionsPage() {
         <Suspense fallback={null}>
           <EditTransactionModal
             transaction={pendingEdit}
-            onConfirm={handleEditConfirm}
-            onCancel={handleEditCancel}
-            isSubmitting={isUpdating}
+            onSave={handleEditSave}
+            onClose={handleEditClose}
           />
         </Suspense>
       )}
