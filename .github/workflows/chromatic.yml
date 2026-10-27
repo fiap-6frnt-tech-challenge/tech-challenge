@@ -11,17 +11,19 @@ jobs:
     name: Run Chromatic
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0 # Chromatic precisa de histórico completo para baseline
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: '22' # Rspack exige >=20.19 ou >=22.12; Node 22 LTS satisfaz ambos
           cache: 'npm'
@@ -33,7 +35,7 @@ jobs:
         run: npx turbo run build-storybook --filter=@bytebank/design-system
 
       - name: Run Chromatic
-        uses: chromaui/action@latest
+        uses: chromaui/action@38afd264ef2241136f12d039093c2724748bec08 # v18.11.0
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           workingDir: packages/design-system
