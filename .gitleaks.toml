@@ -1,0 +1,34 @@
+title = "Bytebank Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+# Exact non-production database fixtures used only by the local Docker Compose setup.
+[[allowlists]]
+description = "Local Docker Compose database fixture"
+condition = "AND"
+paths = ['''^docker-compose\.yml$''']
+regexTarget = "match"
+regexes = [
+  '''postgres://bytebank:bytebank@(?:db|localhost):5432/bytebank''',
+  '''POSTGRES_PASSWORD:\s*bytebank''',
+]
+
+# Test-only secret used by the GitHub Actions E2E job.
+[[allowlists]]
+description = "Non-production AUTH_SECRET in the E2E workflow"
+condition = "AND"
+paths = ['''^\.github/workflows/ci\.yml$''']
+regexTarget = "match"
+regexes = [
+  '''AUTH_SECRET:\s*bytebank-e2e-auth-secret-bytebank-e2e-auth-secret''',
+]
+
+# The exposed token was rotated and its GitHub secret replaced. Ignore only its
+# historical finding in the commit and package path where it was exposed.
+[[allowlists]]
+description = "Revoked Chromatic token in historical commit"
+condition = "AND"
+commits = ["09ca5f7fad86786e6b1ffc73942a750a596b34dc"]
+paths = ['''^packages/design-system/package\.json$''']
+regexes = ['''^chpt_[a-f0-9]+$''']

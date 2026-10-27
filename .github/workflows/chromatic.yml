@@ -11,6 +11,8 @@ jobs:
     name: Run Chromatic
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
@@ -33,7 +35,7 @@ jobs:
         run: npx turbo run build-storybook --filter=@bytebank/design-system
 
       - name: Run Chromatic
-        uses: chromaui/action@latest
+        uses: chromaui/action@38afd264ef2241136f12d039093c2724748bec08 # v18.11.0
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           workingDir: packages/design-system
