@@ -53,6 +53,22 @@ Atividade entre abas não é compartilhada: o timer é por aba. O SessionProvide
 - Consultar a sessão no banco em toda chamada: reduz a janela, mas aumenta IO; adotamos a janela de cinco minutos da task.
 - Migrar para sessões de banco do Auth.js: altera a integração de credenciais; mantemos a estratégia JWT existente e adicionamos o estado mínimo necessário à revogação.
 
+## MFA TOTP (S3-10)
+
+Contas com senha podem cadastrar um autenticador em `/settings/security`. O cadastro exige senha atual; o segredo pendente fica cifrado por dez minutos e vinculado ao hash da senha. A confirmação verifica um código antes de gravar o segredo definitivo, com AES-256-GCM e AAD `user:<id>:mfa`. A migration `0012_mfa_totp.sql` adiciona os campos e a tabela de recuperação sem ativar MFA para contas existentes; aplicar antes do deploy.
+
+Usamos OTPAuth com SHA-1, seis dígitos, período de trinta segundos e tolerância de um passo para cada lado (RFC 6238). A persistência consome atomicamente o passo e rejeita reutilização, inclusive em solicitações simultâneas. Dez códigos aleatórios de recuperação (96 bits cada, formato `8hex-8hex-8hex`) são exibidos uma única vez e armazenados apenas como hash bcrypt custo 12. O prefixo seleciona o hash; o consumo remove o registro atomicamente sob trava do usuário.
+
+O login de credenciais só cria a sessão depois de verificar senha e fator. A UI mantém as credenciais apenas em estado React entre as duas etapas; não usa URL, Redux ou storage. Um cookie HttpOnly de desafio pendente fica como melhoria futura. A versão lida ao verificar o fator deve coincidir com a versão na criação da sessão, sob a mesma trava do usuário; isso impede que uma ativação/desativação concorrente crie uma sessão com prova anterior. Contas somente OAuth recebem explicação e não podem cadastrar MFA local; OAuth não pode contornar o fator de uma identidade que o tenha ativado.
+
+As tentativas usam `mfa:<userId>`, com bloqueio após cinco falhas e duração/janela herdadas da política de login. Configurar ou desativar com senha incorreta também conta. Desativar exige senha atual e TOTP ou recuperação. Ativar e desativar incrementam `session_version` e removem todas as sessões na mesma transação. A janela de checagem de cinco minutos da S2-07 continua aplicável a cookies copiados; a UI encerra a sessão atual após o usuário confirmar que salvou os códigos.
+
+Durante a ativação e entrega dos códigos, um estado efêmero adia somente a navegação automática por expiração. Isso impede que um poll antigo do Auth.js, concluído após a ativação, descarte os códigos antes de serem salvos. Não renovamos o JWT manualmente; nenhuma autorização de servidor é estendida. Erro, confirmação ou desmontagem libera a expiração pendente. A expiração por inatividade continua seguindo a S2-07. Os códigos vivem apenas no componente e não são recuperáveis por GET.
+
+Rotas MFA exigem identidade do servidor, validação estrita e mesma origem nas mutações, inclusive porque `/api/auth/*` não passa pela proteção CSRF geral do proxy. Respostas usam `private, no-store`. Senha/fator incorreto retorna 422 com mensagem fixa, sem provocar o fluxo global de sessão expirada. QR é gerado por import dinâmico de `qrcode`; segredos, URI e códigos não são enviados a logs.
+
+Referências: [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238.html), [OTPAuth](https://github.com/hectorm/otpauth), [QRCode](https://github.com/soldair/node-qrcode).
+
 ## Alternativas para limite de tentativas
 
 | Alternativa                    | Por que não                                                                                |

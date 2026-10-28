@@ -54,3 +54,13 @@ describe('persistent sessions', () => {
     expect(await sessions.revokeAll(scope.id('missing'))).toBe(false);
   });
 });
+
+it('does not issue a session after a security change invalidated the authentication proof', async () => {
+  const owner = await createUser('mfa-proof');
+  const sid = scope.id('stale-proof');
+  const expires = new Date(Date.now() + 43_200_000);
+  await sessions.revokeAll(owner);
+  expect(await sessions.create(owner, sid, expires, 0)).toBeNull();
+  expect(await sessions.find(owner, sid)).toBeNull();
+  expect(await sessions.create(owner, sid, expires, 1)).toBe(1);
+});

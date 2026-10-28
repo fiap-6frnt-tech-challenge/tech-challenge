@@ -7,6 +7,7 @@ import { GoogleAuthButton } from '@bytebank/design-system';
 import { LoginForm } from '@bytebank/design-system/forms';
 import { loginWithCredentials } from './loginFlow';
 import { TurnstileWidget } from './TurnstileWidget';
+import { MfaLoginForm } from './MfaLoginForm';
 
 interface LoginPageClientProps {
   sessionNotice?: string;
@@ -27,11 +28,23 @@ export function LoginPageClient({
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileWidgetVersion, setTurnstileWidgetVersion] = useState(0);
   const [turnstileMessage, setTurnstileMessage] = useState('');
+  const [mfaCredentials, setMfaCredentials] = useState<LoginFormFields | null>(null);
+  const [mfaError, setMfaError] = useState<string>();
   const isPending = isCredentialsPending || isGooglePending;
 
-  function handleCredentialsSubmit(data: LoginFormFields) {
+  function handleCredentialsSubmit(data: LoginFormFields, totp?: string) {
     startCredentialsTransition(async () => {
-      const result = await loginWithCredentials(data, turnstileToken || undefined);
+      const result = await loginWithCredentials(data, turnstileToken || undefined, totp);
+
+      if (!result.ok && ['mfa_required', 'mfa_invalid'].includes(result.code ?? '')) {
+        setMfaCredentials(data);
+        setMfaError(
+          result.code === 'mfa_invalid'
+            ? 'Código inválido ou já utilizado. Tente novamente.'
+            : undefined
+        );
+        return;
+      }
 
       if (!result.ok) {
         if (result.code === 'turnstile_required') {
@@ -59,6 +72,7 @@ export function LoginPageClient({
         return;
       }
 
+      setMfaCredentials(null);
       window.location.assign('/');
     });
   }
@@ -108,7 +122,20 @@ export function LoginPageClient({
               {sessionNotice}
             </p>
           )}
-          <LoginForm onSubmit={handleCredentialsSubmit} isLoading={isPending} />
+          {mfaCredentials ? (
+            <MfaLoginForm
+              pending={isPending}
+              error={mfaError}
+              onSubmit={(code) => handleCredentialsSubmit(mfaCredentials, code)}
+              onBack={() => {
+                setMfaCredentials(null);
+                setMfaError(undefined);
+                setTurnstileToken('');
+              }}
+            />
+          ) : (
+            <LoginForm onSubmit={handleCredentialsSubmit} isLoading={isPending} />
+          )}
 
           {isTurnstileRequired && turnstileSiteKey ? (
             <div className="mt-md flex flex-col gap-sm" aria-live="polite">
@@ -123,7 +150,7 @@ export function LoginPageClient({
             </div>
           ) : null}
 
-          {isGoogleAuthEnabled ? (
+          {isGoogleAuthEnabled && !mfaCredentials ? (
             <>
               <div className="my-lg flex items-center gap-md">
                 <div className="h-px flex-1 bg-border" />

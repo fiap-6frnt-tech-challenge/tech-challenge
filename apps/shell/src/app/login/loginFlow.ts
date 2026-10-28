@@ -5,12 +5,14 @@ type LoginResult = { ok: true } | { ok: false; error: string; code?: string };
 
 export async function loginWithCredentials(
   data: LoginFormFields,
-  turnstileToken?: string
+  turnstileToken?: string,
+  totp?: string
 ): Promise<LoginResult> {
   const result = await signIn('credentials', {
     email: data.email,
     password: data.password,
     ...(turnstileToken ? { turnstileToken } : {}),
+    ...(totp ? { totp } : {}),
     redirect: false,
   });
 

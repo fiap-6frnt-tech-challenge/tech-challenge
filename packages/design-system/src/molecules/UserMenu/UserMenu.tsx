@@ -19,6 +19,7 @@ export function UserMenu({
   user,
   onLogout,
   onLogoutAll,
+  onSecurity,
   isLoggingOut = false,
   className,
 }: UserMenuProps) {
@@ -147,6 +148,20 @@ export function UserMenu({
               <LogOut aria-hidden="true" size={16} />
               {isLoggingOut ? 'Saindo...' : 'Sair'}
             </button>
+            {onSecurity && (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={isLoggingOut}
+                onClick={() => {
+                  closeMenu();
+                  onSecurity();
+                }}
+                className="flex w-full items-center gap-sm rounded-default px-sm py-sm text-left label-semibold text-content-primary hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-60"
+              >
+                Segurança da conta
+              </button>
+            )}
             {onLogoutAll && (
               <button
                 type="button"

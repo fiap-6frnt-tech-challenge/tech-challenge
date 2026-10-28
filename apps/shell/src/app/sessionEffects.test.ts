@@ -7,6 +7,7 @@ vi.mock('next-auth/react', () => ({ signOut: vi.fn().mockResolvedValue(undefined
 import { signOut } from 'next-auth/react';
 import { registerClientListeners } from './clientListeners';
 import { registerSessionExpiry } from './sessionEffects';
+import { beginMfaRecoveryDelivery } from './mfaRecoveryDelivery';
 const assign = vi.fn();
 beforeEach(() => {
   vi.stubGlobal(
@@ -24,6 +25,22 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe('session expiry composition', () => {
+  it('defers expiry navigation only until the one-time recovery delivery is acknowledged', async () => {
+    const { store } = createAppStore();
+    store.dispatch(setSession({ id: 'u', name: 'Ana', email: 'ana@example.com' }));
+    const events$ = new Subject<DomainEvent>();
+    const stop = registerSessionExpiry(store, events$);
+    const release = beginMfaRecoveryDelivery();
+    events$.next({ type: 'session.expired', version: 1 });
+    await Promise.resolve();
+    expect(signOut).not.toHaveBeenCalled();
+    release();
+    await vi.waitFor(() => expect(assign).toHaveBeenCalledWith('/login?reason=session-expired'));
+    expect(signOut).toHaveBeenCalledOnce();
+    release();
+    expect(signOut).toHaveBeenCalledOnce();
+    stop();
+  });
   it('logs out once for simultaneous 401s, clears state and stops after cleanup', async () => {
     const { store, startListening } = createAppStore();
     const events$ = new Subject<DomainEvent>();

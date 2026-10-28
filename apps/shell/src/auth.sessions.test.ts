@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   revoke: vi.fn(),
   oauth: vi.fn(),
   authenticate: vi.fn(),
+  verifyMfa: vi.fn(),
 }));
 vi.mock('next-auth', () => ({
   default: (config: unknown) => {
@@ -23,6 +24,7 @@ vi.mock('@/server/container', () => ({
     sessionLifecycle: { start: mocks.start, validate: mocks.validate, revokeCurrent: mocks.revoke },
     resolveOAuthUser: { execute: mocks.oauth },
     authenticateUser: { execute: mocks.authenticate },
+    mfa: { verifyLogin: mocks.verifyMfa },
   },
 }));
 beforeAll(async () => {
@@ -30,6 +32,7 @@ beforeAll(async () => {
 });
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.verifyMfa.mockResolvedValue(0);
 });
 const claims = { userId: 'u', sid: 's', authTime: 1, sv: 0, svCheckedAt: 1 };
 const config = () => mocks.config as NextAuthConfig;

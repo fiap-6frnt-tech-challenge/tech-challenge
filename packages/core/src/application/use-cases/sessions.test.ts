@@ -7,8 +7,12 @@ class MemorySessions implements SessionRepository {
   version: number | null = 0;
   reads = 0;
   active = new Map<string, Date>();
-  async create(_userId: string, sid: string, expiresAt: Date) {
-    if (this.version === null) return null;
+  async create(_userId: string, sid: string, expiresAt: Date, expectedVersion?: number) {
+    if (
+      this.version === null ||
+      (expectedVersion !== undefined && expectedVersion !== this.version)
+    )
+      return null;
     this.active.set(sid, expiresAt);
     return this.version;
   }
@@ -84,4 +88,12 @@ describe('server session lifecycle', () => {
     expect(await lifecycle.validate({ ...token, svCheckedAt: token!.svCheckedAt + 1 })).toBeNull();
     await expect(new RevokeSessions(repository).execute({ userId: '' })).rejects.toThrow();
   });
+});
+
+it('rejects an authentication proof if MFA/session version changed before session creation', async () => {
+  const { lifecycle, repository } = setup();
+  repository.version = 1;
+  expect(await lifecycle.start('user', 0)).toBeNull();
+  expect(repository.active.size).toBe(0);
+  expect(await lifecycle.start('user', 1)).toMatchObject({ sv: 1 });
 });

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
+  navigate: vi.fn(),
   logout: vi.fn(() => ({ type: 'auth/logout' })),
   setLoggingOut: vi.fn(),
   user: {
@@ -27,6 +28,7 @@ vi.mock('@bytebank/design-system', () => ({
 
 vi.mock('@bytebank/stores', () => ({
   logout: mocks.logout,
+  navigation: { navigate: mocks.navigate },
   selectUser: (state: { auth: { user: typeof mocks.user | null } }) => state.auth.user,
   useAppDispatch: () => mocks.dispatch,
   useAppSelector: (selector: (state: { auth: { user: typeof mocks.user | null } }) => unknown) =>
@@ -71,4 +73,10 @@ describe('AppHeader', () => {
     expect(element.props.onLinkClick).toBe(onLinkClick);
     expect(element.props.onLinkIntent).toBe(onLinkIntent);
   });
+});
+
+it('opens account security through the shell navigation port', () => {
+  const menu = AppHeader().props.actionsSlot;
+  menu.props.onSecurity();
+  expect(mocks.navigate).toHaveBeenCalledWith('/settings/security');
 });
