@@ -158,6 +158,39 @@ export interface CacheInvalidator {
   invalidateUser(userId: string): Promise<void>;
 }
 
+export type AuditEventName =
+  | 'auth.login.success'
+  | 'auth.login.failure'
+  | 'auth.login.locked'
+  | 'auth.register'
+  | 'auth.session.revoked'
+  | 'authz.denied'
+  | 'attachment.download'
+  | 'rate_limit.hit'
+  | 'csp.violation';
+
+export type AuditOutcome = 'success' | 'failure' | 'denied';
+
+/** Already redacted: `email` is masked, and passwords, tokens and request bodies never get here. */
+export interface AuditEvent {
+  event: AuditEventName;
+  outcome: AuditOutcome;
+  userId?: string;
+  email?: string;
+  reason?: string;
+  resource?: string;
+}
+
+export interface AuditLogger {
+  record(event: AuditEvent): void;
+}
+
+export type OwnedResource = 'transaction' | 'attachment';
+
+export interface ResourceOwnership {
+  ownerOf(resource: OwnedResource, id: string): Promise<string | null>;
+}
+
 export interface Clock {
   now(): Date;
   todayISO(): string;

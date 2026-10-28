@@ -5,6 +5,7 @@ import { RateLimitedError, TurnstileRequiredError } from '@bytebank/core';
 import { authConfig } from './auth.config';
 import { container } from '@/server/container';
 import { getClientIp } from '@/server/http/clientIp';
+import { currentRequestId, withRequestContext } from '@/server/http/requestContext';
 
 class RateLimitedSignin extends CredentialsSignin {
   code = 'rate_limited';
@@ -53,34 +54,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Senha', type: 'password' },
         turnstileToken: { label: 'Turnstile token', type: 'text' },
       },
-      async authorize(credentials, request) {
-        if (!credentials?.email || !credentials?.password) return null;
+      authorize(credentials, request) {
+        return withRequestContext(request.headers, async () => {
+          if (!credentials?.email || !credentials?.password) return null;
 
-        let user: Awaited<ReturnType<typeof container.authenticateUser.execute>> = null;
+          let user: Awaited<ReturnType<typeof container.authenticateUser.execute>> = null;
 
-        try {
-          user = await container.authenticateUser.execute(
-            credentials.email as string,
-            credentials.password as string,
-            getClientIp(request.headers),
-            typeof credentials.turnstileToken === 'string' ? credentials.turnstileToken : undefined
-          );
-        } catch (error) {
-          if (error instanceof RateLimitedError) throw new RateLimitedSignin();
-          if (error instanceof TurnstileRequiredError) throw new TurnstileRequiredSignin();
-          console.error('[auth] Falha ao verificar credenciais no banco:', error);
-        }
+          try {
+            user = await container.authenticateUser.execute(
+              credentials.email as string,
+              credentials.password as string,
+              getClientIp(request.headers),
+              typeof credentials.turnstileToken === 'string'
+                ? credentials.turnstileToken
+                : undefined
+            );
+          } catch (error) {
+            if (error instanceof RateLimitedError) throw new RateLimitedSignin();
+            if (error instanceof TurnstileRequiredError) throw new TurnstileRequiredSignin();
+            console.error('[auth] Falha ao verificar credenciais no banco', {
+              requestId: currentRequestId(),
+              error,
+            });
+          }
 
-        if (user) {
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            image: user.image ?? undefined,
-          };
-        }
+          if (user) {
+            return {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              image: user.image ?? undefined,
+            };
+          }
 
-        return null;
+          return null;
+        });
       },
     }),
   ],

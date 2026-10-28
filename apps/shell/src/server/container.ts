@@ -1,6 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import {
+  AccessAudit,
   AddAttachment,
   AuthenticateUser,
   CachedGetTransactionsSummary,
@@ -29,8 +30,10 @@ import { NextResultCache } from './infrastructure/cache/NextResultCache';
 import { DrizzleAttachmentRepository } from './infrastructure/db/DrizzleAttachmentRepository';
 import { DrizzleTransactionRepository } from './infrastructure/db/DrizzleTransactionRepository';
 import { DrizzleUserRepository } from './infrastructure/db/DrizzleUserRepository';
+import { DrizzleResourceOwnership } from './infrastructure/db/DrizzleResourceOwnership';
 import { DrizzleSessionRepository } from './infrastructure/db/DrizzleSessionRepository';
 import { PostgresRateLimiter } from './infrastructure/db/PostgresRateLimiter';
+import { JsonAuditLogger } from './infrastructure/logging/JsonAuditLogger';
 import { AesGcmCipher, parseEncryptionKeys } from './infrastructure/security/AesGcmCipher';
 import { BcryptPasswordHasher } from './infrastructure/security/BcryptPasswordHasher';
 import { CloudflareTurnstileVerifier } from './infrastructure/security/CloudflareTurnstileVerifier';
@@ -42,6 +45,7 @@ import { LocalFileStorage } from './infrastructure/storage/LocalFileStorage';
 import { VercelBlobFileStorage } from './infrastructure/storage/VercelBlobFileStorage';
 import { CryptoIdGenerator } from './infrastructure/system/CryptoIdGenerator';
 import { SystemClock } from './infrastructure/system/SystemClock';
+import { currentRequestContext } from './http/requestContext';
 
 export function resolveFileStorage(): FileStorage {
   if (process.env.BLOB_READ_WRITE_TOKEN) return new VercelBlobFileStorage();
@@ -107,15 +111,18 @@ const turnstileVerifier = new CloudflareTurnstileVerifier();
 const storage = resolveFileStorage();
 const summaryCache = new NextResultCache(SUMMARY_CACHE_SECONDS);
 const cacheInvalidator = new NextCacheInvalidator();
+const auditLogger = new JsonAuditLogger(blindIndex, clock, currentRequestContext);
+const access = new AccessAudit(new DrizzleResourceOwnership(db), auditLogger);
 
 export const container = {
+  auditLogger,
   sessionLifecycle: new SessionLifecycle(new DrizzleSessionRepository(db), clock, ids),
-  revokeSessions: new RevokeSessions(new DrizzleSessionRepository(db)),
+  revokeSessions: new RevokeSessions(new DrizzleSessionRepository(db), auditLogger),
   resolveOAuthUser: new ResolveOAuthUser(users, ids),
   createTransaction: new CreateTransaction(transactions, clock, ids, cacheInvalidator),
-  updateTransaction: new UpdateTransaction(transactions, cacheInvalidator),
-  deleteTransaction: new DeleteTransaction(transactions, cacheInvalidator),
-  getTransaction: new GetTransaction(transactions),
+  updateTransaction: new UpdateTransaction(transactions, cacheInvalidator, access),
+  deleteTransaction: new DeleteTransaction(transactions, cacheInvalidator, access),
+  getTransaction: new GetTransaction(transactions, access),
   getTransactionsSummary: new CachedGetTransactionsSummary(
     new GetTransactionsSummary(transactions),
     transactions,
@@ -125,16 +132,25 @@ export const container = {
   listTransactions: new ListTransactions(transactions),
   getAccountOverview: new GetAccountOverview(transactions),
   getDashboardSummary: new GetDashboardSummary(transactions, clock),
-  addAttachment: new AddAttachment(transactions, attachments, storage, cipher, ids),
-  listAttachments: new ListAttachments(attachments),
-  downloadAttachment: new DownloadAttachment(attachments, storage, cipher),
-  removeAttachment: new RemoveAttachment(attachments, storage),
-  registerUser: new RegisterUser(users, passwords, ids, rateLimiter, rateLimitKeys, breachChecker),
+  addAttachment: new AddAttachment(transactions, attachments, storage, cipher, ids, access),
+  listAttachments: new ListAttachments(attachments, access),
+  downloadAttachment: new DownloadAttachment(attachments, storage, cipher, access, auditLogger),
+  removeAttachment: new RemoveAttachment(attachments, storage, access),
+  registerUser: new RegisterUser(
+    users,
+    passwords,
+    ids,
+    rateLimiter,
+    rateLimitKeys,
+    breachChecker,
+    auditLogger
+  ),
   authenticateUser: new AuthenticateUser(
     users,
     passwords,
     rateLimiter,
     rateLimitKeys,
+    auditLogger,
     turnstileVerifier
   ),
   turnstileVerifier,

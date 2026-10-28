@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FakeClock, SequentialIdGenerator } from '../testing';
+import { FakeClock, MemoryAuditLogger, SequentialIdGenerator } from '../testing';
 import { SessionLifecycle, RevokeSessions } from './sessions';
 import type { SessionRepository } from '../ports';
 
@@ -47,7 +47,11 @@ describe('server session lifecycle', () => {
   it('rechecks the server at 5min and rejects a copied token after global revocation', async () => {
     const { lifecycle, repository, advance } = setup();
     const token = await lifecycle.start('user');
-    await new RevokeSessions(repository).execute({ userId: 'user' });
+    const audit = new MemoryAuditLogger();
+    await new RevokeSessions(repository, audit).execute({ userId: 'user' });
+    expect(audit.events).toEqual([
+      { event: 'auth.session.revoked', outcome: 'success', userId: 'user', reason: 'all_devices' },
+    ]);
     advance(299_999);
     expect(await lifecycle.validate(token)).not.toBeNull();
     expect(repository.reads).toBe(0);
@@ -82,6 +86,8 @@ describe('server session lifecycle', () => {
     const token = await lifecycle.start('user');
     expect(await lifecycle.validate({ ...token, authTime: token!.authTime + 1 })).toBeNull();
     expect(await lifecycle.validate({ ...token, svCheckedAt: token!.svCheckedAt + 1 })).toBeNull();
-    await expect(new RevokeSessions(repository).execute({ userId: '' })).rejects.toThrow();
+    const audit = new MemoryAuditLogger();
+    await expect(new RevokeSessions(repository, audit).execute({ userId: '' })).rejects.toThrow();
+    expect(audit.events).toEqual([]);
   });
 });

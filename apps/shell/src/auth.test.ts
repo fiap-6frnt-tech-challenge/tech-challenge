@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RateLimitedError, TurnstileRequiredError } from '@bytebank/core';
+import { currentRequestContext } from '@/server/http/requestContext';
 
 const mocks = vi.hoisted(() => ({
   nextAuth: vi.fn((config: unknown) => {
@@ -78,12 +79,29 @@ describe('credentials authorize', () => {
     expect(mocks.authenticate).not.toHaveBeenCalled();
   });
 
-  it('fails closed when authentication throws', async () => {
+  it('fails closed when authentication throws and logs the request id, not the credentials', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     mocks.authenticate.mockRejectedValue(new Error('database unavailable'));
     expect(await authorize({ email: 'ana@example.com', password: 'secret' }, request)).toBeNull();
-    expect(log).toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ requestId: expect.any(String), error: expect.any(Error) })
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain('secret');
     log.mockRestore();
+  });
+
+  it('authenticates inside a request context so audit events carry the client IP', async () => {
+    let seen: ReturnType<typeof currentRequestContext>;
+    mocks.authenticate.mockImplementation(async () => {
+      seen = currentRequestContext();
+      return null;
+    });
+
+    await authorize({ email: 'ana@example.com', password: 'secret' }, request);
+
+    expect(seen!).toEqual({ requestId: expect.any(String), ipAddress: '203.0.113.12' });
+    expect(currentRequestContext()).toBeUndefined();
   });
 
   it('translates a rate limit into the safe CredentialsSignin code', async () => {

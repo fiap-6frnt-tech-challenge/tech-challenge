@@ -38,11 +38,65 @@ Sem registro de eventos de segurança, um ataque (força bruta, tentativa de IDO
 3. **Redação de dados:** nunca registrar senha, token, cookie, código TOTP nem corpo de requisição. E-mail só mascarado (`j***@d***.com`); IP só como HMAC.
 4. **`requestId`:** gerado no `proxy.ts` (`x-request-id`), propagado aos logs e às respostas 500 (S1-04).
 
+## Como ficou
+
+**Peças:**
+
+- **Core:** a porta `AuditLogger` e o tipo `AuditEvent` ficam em `application/ports`. Em `application/audit.ts` estão `maskEmail` e o `AccessAudit`, que os casos de uso chamam quando vão devolver `NotFoundError`. O `AccessAudit` consulta a porta `ResourceOwnership` e só registra `authz.denied` se o recurso existe e tem outro dono. Um id inexistente não gera evento, e uma falha nessa consulta não muda a resposta, que continua 404.
+- **Shell:** o `JsonAuditLogger` escreve uma linha JSON por evento com `console.log`. Ele monta o registro campo a campo, então qualquer campo fora da lista é descartado, e mascara o e-mail de novo (a máscara é idempotente). O `ipHash` é o HMAC-SHA256 de `audit:ip:<ip>` com a `BLIND_INDEX_KEY`, então não há variável nova na Vercel. O `DrizzleResourceOwnership` implementa a porta.
+- **`requestId`:** o `proxy.ts` gera um UUID por requisição e sobrescreve qualquer `x-request-id` que o cliente mande. Ele encaminha o id ao handler e o devolve no header da resposta, inclusive em 401, 403 e redirects. O `route()` e o `publicRoute()` abrem um `AsyncLocalStorage` com o `requestId` e o IP. O logger, a resposta 500 do `toHttpError` e o `console.error` do `authorize` leem o id desse contexto. As rotas `/api/auth/*` ficam fora do matcher do proxy, então o contexto aceita só um `x-request-id` no formato UUID e, se não houver, gera um.
+
+**Campos:** `ts`, `event`, `userId`, `email` (mascarado), `ipHash`, `outcome` (`success` · `failure` · `denied`), `reason`, `resource` (`tipo:id`) e `requestId`. Campos vazios não aparecem. `email` e `resource` vão além da lista da spec: sem `email`, uma tentativa contra conta inexistente não diz qual conta foi o alvo; sem `resource`, um download ou uma negação não diz qual recurso foi acessado.
+
+| Evento                 | Onde                                                                                                                                     | `outcome`                               | `reason`                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `auth.login.success`   | `AuthenticateUser`                                                                                                                       | success                                 | —                                                                                               |
+| `auth.login.failure`   | `AuthenticateUser`                                                                                                                       | failure                                 | `invalid_password` · `unknown_user` · `password_not_set` (conta só Google) · `captcha_required` |
+| `auth.login.locked`    | `AuthenticateUser`, na falha que **ativa** o bloqueio da conta                                                                           | denied                                  | `too_many_failures`                                                                             |
+| `rate_limit.hit`       | `AuthenticateUser` e `RegisterUser`, a cada tentativa recusada por bloqueio                                                              | denied                                  | `login_email` · `login_ip` · `login_email,login_ip` · `register_ip`                             |
+| `auth.register`        | `RegisterUser`                                                                                                                           | success / failure                       | `email_taken` · `breached_password`                                                             |
+| `auth.session.revoked` | `RevokeSessions` ("Sair de todos os dispositivos")                                                                                       | success                                 | `all_devices`                                                                                   |
+| `authz.denied`         | `GetTransaction`, `UpdateTransaction`, `DeleteTransaction`, `AddAttachment`, `ListAttachments`, `DownloadAttachment`, `RemoveAttachment` | denied                                  | `not_owner`                                                                                     |
+| `attachment.download`  | `DownloadAttachment` (atende a rota de download)                                                                                         | success                                 | —                                                                                               |
+| `csp.violation`        | `/api/csp-report`, uma linha por violação, no máximo 10 por requisição                                                                   | denied (`enforce`) / failure (`report`) | diretiva violada, validada por regex; fora do padrão vira `unknown`                             |
+
+O bloqueio da conta gera um `auth.login.locked` (o momento em que a força bruta foi detectada). Cada tentativa recusada depois disso gera um `rate_limit.hit`. A troca de senha ainda não existe no produto. Quando existir, ela deve chamar o `RevokeSessions`, e o evento sai sem mudança.
+
+Exemplo (senha errada):
+
+```json
+{
+  "ts": "2026-10-28T12:00:00.000Z",
+  "event": "auth.login.failure",
+  "userId": "8c1f…",
+  "email": "a***@e***.com",
+  "ipHash": "Qm9…",
+  "outcome": "failure",
+  "reason": "invalid_password",
+  "requestId": "6f1c2a5e-8b9d-4e3f-a1b2-c3d4e5f60718"
+}
+```
+
 ## Validação
 
-- [ ] Login com senha errada gera `auth.login.failure` sem a senha no log
-- [ ] Tentativa de IDOR gera `authz.denied`
-- [ ] Busca por `requestId` nos logs da Vercel encontra a cadeia do erro
+- [x] Login com senha errada gera `auth.login.failure` sem a senha no log
+- [x] Tentativa de IDOR gera `authz.denied`
+- [ ] Busca por `requestId` nos logs da Vercel encontra a cadeia do erro (depende do deploy)
+
+## Evidências — 2026-10-28
+
+| Validação                               | Resultado                                                                                                                                                                                                                                                             |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Testes unitários (core e shell)         | Core 245 e shell 278 aprovados. Cobrem: senha errada sem senha, e-mail em claro nem IP no evento; IDOR em transação e anexo gera `authz.denied`, id inexistente não gera; allow-list e HMAC do IP no `JsonAuditLogger`; `requestId` do proxy na resposta 500 e no log |
+| Integração (`DrizzleResourceOwnership`) | Teste escrito, **ainda não rodado** (o Docker não estava disponível)                                                                                                                                                                                                  |
+| `tsc`, ESLint, `npm run arch:check`     | Sem erros nem violações                                                                                                                                                                                                                                               |
+| `npm run build -w @bytebank/shell`      | Build de produção aprovado                                                                                                                                                                                                                                            |
+| Logs da Vercel                          | Pendente: conferir depois do deploy da `phase-4`                                                                                                                                                                                                                      |
+
+## Próximos passos
+
+- Log drain da Vercel para um coletor com alerta, por exemplo para muitos `auth.login.locked` ou `authz.denied` de um mesmo `ipHash`.
+- O `/api/csp-report` é público e não tem rate limit, então dá para inundar o log com `csp.violation`. O teto de 10 linhas por requisição limita a amplificação, mas não o volume total.
 
 ## Gotchas
 

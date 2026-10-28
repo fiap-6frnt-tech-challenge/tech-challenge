@@ -123,6 +123,41 @@ describe('route', () => {
   });
 });
 
+describe('request id propagation', () => {
+  const proxyId = '6f1c2a5e-8b9d-4e3f-a1b2-c3d4e5f60718';
+  const fromProxy = () =>
+    new Request('http://localhost/api/test', {
+      headers: { 'x-request-id': proxyId },
+    }) as import('next/server').NextRequest;
+
+  it.each([
+    ['route', route],
+    ['publicRoute', publicRoute],
+  ] as const)(
+    '%s answers a 500 with the proxy request id and logs the same id',
+    async (_, wrap) => {
+      const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const response = await wrap(async () => {
+        throw new Error('boom');
+      })(fromProxy());
+
+      expect(response.status).toBe(500);
+      await expect(response.json()).resolves.toEqual({ error: 'Erro interno', requestId: proxyId });
+      expect(log).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ requestId: proxyId })
+      );
+    }
+  );
+
+  it('exposes the request context to the handler', async () => {
+    const { currentRequestId } = await import('./requestContext');
+    const seen = vi.fn();
+    await route(async () => seen(currentRequestId()))(fromProxy());
+    expect(seen).toHaveBeenCalledWith(proxyId);
+  });
+});
+
 describe('publicRoute', () => {
   it('does not require a session', async () => {
     mocks.auth.mockResolvedValue(null);

@@ -8,7 +8,8 @@ import type {
   LegacyAttachmentRepository,
   TransactionRepository,
 } from '../ports';
-import { SequentialIdGenerator } from '../testing';
+import { AccessAudit } from '../audit';
+import { MemoryAuditLogger, MemoryResourceOwnership, SequentialIdGenerator } from '../testing';
 import {
   AddAttachment,
   DownloadAttachment,
@@ -79,6 +80,18 @@ const record = (overrides: Partial<AttachmentRecord> = {}): AttachmentRecord => 
 const tx = (exists: boolean): TransactionRepository =>
   ({ findById: async () => exists }) as unknown as TransactionRepository;
 const owner = { userId: 'u1' };
+const access = (audit = new MemoryAuditLogger()) =>
+  new AccessAudit(
+    new MemoryResourceOwnership({ transaction: { t1: 'u1' }, attachment: { a1: 'u1' } }),
+    audit
+  );
+const deniedTo = (resource: string) => ({
+  event: 'authz.denied',
+  outcome: 'denied',
+  userId: 'u2',
+  reason: 'not_owner',
+  resource,
+});
 
 function addAttachment(create = vi.fn(async () => record())) {
   const storage = new MemoryStorage();
@@ -88,7 +101,8 @@ function addAttachment(create = vi.fn(async () => record())) {
     { create } as unknown as AttachmentRepository,
     storage,
     cipher,
-    new SequentialIdGenerator('uuid')
+    new SequentialIdGenerator('uuid'),
+    access()
   );
   return { useCase, storage, cipher, create };
 }
@@ -146,19 +160,22 @@ describe('AddAttachment', () => {
     expect(storage.files.size).toBe(0);
   });
 
-  it('recusa anexar em transação de outro usuário', async () => {
+  it('recusa anexar em transação de outro usuário e registra a tentativa', async () => {
     const storage = new MemoryStorage();
+    const audit = new MemoryAuditLogger();
     const useCase = new AddAttachment(
       tx(false),
       {} as AttachmentRepository,
       storage,
       new FakeCipher(),
-      new SequentialIdGenerator()
+      new SequentialIdGenerator(),
+      access(audit)
     );
     await expect(
       useCase.execute({ userId: 'u2' }, 't1', { name: 'x.pdf', bytes: pdf })
     ).rejects.toBeInstanceOf(NotFoundError);
     expect(storage.files.size).toBe(0);
+    expect(audit.events).toEqual([deniedTo('transaction:t1')]);
   });
 
   it('apaga o arquivo gravado quando a linha não é criada', async () => {
@@ -179,17 +196,20 @@ describe('DownloadAttachment', () => {
     const storage = new MemoryStorage();
     Object.entries(files).forEach(([ref, bytes]) => storage.files.set(ref, bytes));
     const findById = vi.fn(async () => found);
+    const audit = new MemoryAuditLogger();
     const useCase = new DownloadAttachment(
       { findById } as unknown as AttachmentRepository,
       storage,
-      new FakeCipher()
+      new FakeCipher(),
+      access(audit),
+      audit
     );
-    return { useCase, findById };
+    return { useCase, findById, audit };
   }
 
-  it('decifra o arquivo do dono e devolve nome e tipo', async () => {
+  it('decifra o arquivo do dono, devolve nome e tipo e registra o download', async () => {
     const ciphertext = new FakeCipher().encrypt(pdf, 'attachment:a1');
-    const { useCase, findById } = download(record(), { 'blob-1': ciphertext });
+    const { useCase, findById, audit } = download(record(), { 'blob-1': ciphertext });
 
     await expect(useCase.execute(owner, 't1', 'a1')).resolves.toEqual({
       name: 'receipt.pdf',
@@ -197,6 +217,14 @@ describe('DownloadAttachment', () => {
       bytes: pdf,
     });
     expect(findById).toHaveBeenCalledWith('a1', 'u1');
+    expect(audit.events).toEqual([
+      {
+        event: 'attachment.download',
+        outcome: 'success',
+        userId: 'u1',
+        resource: 'attachment:a1',
+      },
+    ]);
   });
 
   it('serve anexos legados em claro durante a transição', async () => {
@@ -210,12 +238,18 @@ describe('DownloadAttachment', () => {
     await expect(useCase.execute(owner, 't1', 'a1')).rejects.toThrow('Falha na tag');
   });
 
-  it.each([
-    ['de outro usuário', null],
-    ['de outra transação', record({ transactionId: 't9' })],
-  ])('responde não encontrado para anexo %s', async (_name, found) => {
-    const { useCase } = download(found, {});
+  it('responde não encontrado para anexo de outro usuário e registra authz.denied', async () => {
+    const { useCase, audit } = download(null, {});
+    await expect(useCase.execute({ userId: 'u2' }, 't1', 'a1')).rejects.toBeInstanceOf(
+      NotFoundError
+    );
+    expect(audit.events).toEqual([deniedTo('attachment:a1')]);
+  });
+
+  it('responde não encontrado para anexo de outra transação do mesmo dono', async () => {
+    const { useCase, audit } = download(record({ transactionId: 't9' }), {});
     await expect(useCase.execute(owner, 't1', 'a1')).rejects.toBeInstanceOf(NotFoundError);
+    expect(audit.events).toEqual([]);
   });
 });
 
@@ -223,11 +257,13 @@ describe('ListAttachments e RemoveAttachment', () => {
   it('lists attachments and reports inaccessible transaction as not found', async () => {
     const row = record();
     const repo = { list: vi.fn(async () => [row]) } as unknown as AttachmentRepository;
-    await expect(new ListAttachments(repo).execute(owner, 't1')).resolves.toEqual([row]);
+    await expect(new ListAttachments(repo, access()).execute(owner, 't1')).resolves.toEqual([row]);
     const missing = { list: async () => null } as unknown as AttachmentRepository;
+    const audit = new MemoryAuditLogger();
     await expect(
-      new ListAttachments(missing).execute({ userId: 'u2' }, 't1')
+      new ListAttachments(missing, access(audit)).execute({ userId: 'u2' }, 't1')
     ).rejects.toBeInstanceOf(NotFoundError);
+    expect(audit.events).toEqual([deniedTo('transaction:t1')]);
   });
 
   it('removes only an attachment owned by the actor', async () => {
@@ -237,20 +273,17 @@ describe('ListAttachments e RemoveAttachment', () => {
       findById: async () => record(),
       delete: removeRow,
     } as unknown as AttachmentRepository;
+    const storage = { delete: removeFile } as unknown as FileStorage;
     await expect(
-      new RemoveAttachment(repo, { delete: removeFile } as unknown as FileStorage).execute(
-        owner,
-        'a1'
-      )
+      new RemoveAttachment(repo, storage, access()).execute(owner, 'a1')
     ).resolves.toBeUndefined();
     expect(removeFile).toHaveBeenCalledWith('blob-1');
     const missing = { findById: async () => null } as unknown as AttachmentRepository;
+    const audit = new MemoryAuditLogger();
     await expect(
-      new RemoveAttachment(missing, { delete: removeFile } as unknown as FileStorage).execute(
-        { userId: 'u2' },
-        'a1'
-      )
+      new RemoveAttachment(missing, storage, access(audit)).execute({ userId: 'u2' }, 'a1')
     ).rejects.toBeInstanceOf(NotFoundError);
+    expect(audit.events).toEqual([deniedTo('attachment:a1')]);
   });
 });
 
