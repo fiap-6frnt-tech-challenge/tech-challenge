@@ -6,6 +6,7 @@ import { authAttempts } from '@/db/schema';
 import type { RateLimitPolicies, RateLimitPolicy } from '../security/rateLimitPolicy';
 
 function policyForKey(key: string, policies: RateLimitPolicies): RateLimitPolicy {
+  if (key.startsWith('mfa:')) return { ...policies.loginEmail, maxFailures: 5, progressive: false };
   if (key.startsWith('login:email:')) return policies.loginEmail;
   if (key.startsWith('login:ip:')) return policies.loginIp;
   if (key.startsWith('register:ip:')) return policies.registerIp;

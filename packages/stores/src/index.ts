@@ -7,5 +7,6 @@ export * from './clientSession';
 export * from './store';
 export * from './hooks';
 export * from './events/domainEvents';
+export * from './navigation';
 export * from './reactive/hooks';
 export * from './reactive/idle';

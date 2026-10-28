@@ -12,6 +12,7 @@ import {
   logout,
   isClientLogoutInProgress,
 } from '@bytebank/stores';
+import { afterMfaRecoveryDelivery } from './mfaRecoveryDelivery';
 import { isPublicAuthRoute } from './AppShell.routes';
 
 async function isSignedOutOnServer(): Promise<boolean> {
@@ -59,8 +60,10 @@ export function SessionSync() {
     let current = true;
     void isSignedOutOnServer().then((signedOut) => {
       if (!current || !signedOut) return;
-      if (store.getState().auth.isAuthenticated) publish({ type: 'session.expired', version: 1 });
-      else void dispatch(logout('expired'));
+      afterMfaRecoveryDelivery(() => {
+        if (store.getState().auth.isAuthenticated) publish({ type: 'session.expired', version: 1 });
+        else void dispatch(logout('expired'));
+      });
     });
     return () => {
       current = false;

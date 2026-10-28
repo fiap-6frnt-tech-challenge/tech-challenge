@@ -62,3 +62,21 @@ describe('loginWithCredentials', () => {
     });
   });
 });
+
+describe('MFA credentials', () => {
+  it('sends a second factor together with the verified credentials, without creating an intermediate session', async () => {
+    mocks.signIn.mockResolvedValue({ error: 'CredentialsSignin', code: 'mfa_required' });
+    const result = await loginWithCredentials(
+      { email: 'ana@bytebank.com', password: 'segredo123' },
+      undefined,
+      '123456'
+    );
+    expect(mocks.signIn).toHaveBeenCalledWith('credentials', {
+      email: 'ana@bytebank.com',
+      password: 'segredo123',
+      totp: '123456',
+      redirect: false,
+    });
+    expect(result).toEqual({ ok: false, error: 'CredentialsSignin', code: 'mfa_required' });
+  });
+});

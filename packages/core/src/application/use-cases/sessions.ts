@@ -36,11 +36,16 @@ export class SessionLifecycle {
     private readonly clock: Clock,
     private readonly ids: IdGenerator
   ) {}
-  async start(userId: string): Promise<SessionClaims | null> {
+  async start(userId: string, expectedVersion?: number): Promise<SessionClaims | null> {
     if (!userId) return null;
     const authTime = this.clock.now().getTime();
     const sid = this.ids.next();
-    const sv = await this.sessions.create(userId, sid, new Date(authTime + SESSION_ABSOLUTE_MS));
+    const sv = await this.sessions.create(
+      userId,
+      sid,
+      new Date(authTime + SESSION_ABSOLUTE_MS),
+      expectedVersion
+    );
     return sv === null ? null : { userId, sid, sv, authTime, svCheckedAt: authTime };
   }
   async validate(value: unknown): Promise<SessionClaims | null> {

@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   AccessAudit,
   AddAttachment,
+  MfaService,
   AuthenticateUser,
   CachedGetTransactionsSummary,
   CreateTransaction,
@@ -25,6 +26,8 @@ import {
   type FileStorage,
 } from '@bytebank/core/application';
 import { db } from '@/db';
+import { DrizzleMfaRepository } from './infrastructure/db/DrizzleMfaRepository';
+import { OtpAuthTotpProvider } from './infrastructure/security/OtpAuthTotpProvider';
 import { NextCacheInvalidator } from './infrastructure/cache/NextCacheInvalidator';
 import { NextResultCache } from './infrastructure/cache/NextResultCache';
 import { DrizzleAttachmentRepository } from './infrastructure/db/DrizzleAttachmentRepository';
@@ -116,6 +119,16 @@ const access = new AccessAudit(new DrizzleResourceOwnership(db), auditLogger);
 
 export const container = {
   auditLogger,
+  mfa: new MfaService(
+    new DrizzleMfaRepository(db),
+    passwords,
+    cipher,
+    new OtpAuthTotpProvider(),
+    rateLimiter,
+    clock,
+    ids,
+    auditLogger
+  ),
   sessionLifecycle: new SessionLifecycle(new DrizzleSessionRepository(db), clock, ids),
   revokeSessions: new RevokeSessions(new DrizzleSessionRepository(db), auditLogger),
   resolveOAuthUser: new ResolveOAuthUser(users, ids),

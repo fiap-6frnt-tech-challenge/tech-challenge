@@ -7,6 +7,7 @@ import { useAccountOverview } from '@bytebank/api-client';
 import { markContentReady, shouldPrefetch } from '@bytebank/shared';
 import { selectUser, useAppSelector } from '@bytebank/stores';
 import { BalanceCard } from './BalanceCard';
+import { MfeNavigationLink } from './MfeNavigationLink';
 import { TransactionList } from './TransactionList';
 
 const loadNewTransactionModal = () => import('./NewTransactionModal');
@@ -67,11 +68,9 @@ export default function AccountOverview() {
         />
 
         <span className="flex flex-col gap-sm sm:flex-row sm:items-center">
-          <a href="/transactions" className="w-full sm:w-auto">
-            <Button disabled={isLoading} className="w-full">
-              Todas as transações
-            </Button>
-          </a>
+          <MfeNavigationLink href="/transactions" className="w-full sm:w-auto">
+            Todas as transações
+          </MfeNavigationLink>
 
           <Button
             disabled={isLoading}

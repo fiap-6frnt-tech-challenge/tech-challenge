@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RateLimitedError, TurnstileRequiredError } from '@bytebank/core';
+import { MfaRequiredError, MfaInvalidCodeError } from '@bytebank/core/application';
 import { currentRequestContext } from '@/server/http/requestContext';
 
 const mocks = vi.hoisted(() => ({
@@ -8,6 +9,7 @@ const mocks = vi.hoisted(() => ({
     return { handlers: {}, auth: vi.fn(), signIn: vi.fn(), signOut: vi.fn() };
   }),
   authenticate: vi.fn(),
+  verifyMfa: vi.fn(),
 }));
 vi.mock('next-auth', () => ({
   default: mocks.nextAuth,
@@ -19,7 +21,10 @@ vi.mock('next-auth', () => ({
 vi.mock('next-auth/providers/credentials', () => ({ default: (options: unknown) => options }));
 vi.mock('./auth.config', () => ({ authConfig: { providers: [] } }));
 vi.mock('@/server/container', () => ({
-  container: { authenticateUser: { execute: mocks.authenticate } },
+  container: {
+    authenticateUser: { execute: mocks.authenticate },
+    mfa: { verifyLogin: mocks.verifyMfa },
+  },
 }));
 
 type Authorize = (
@@ -38,6 +43,7 @@ beforeAll(async () => {
 });
 beforeEach(() => {
   mocks.authenticate.mockReset();
+  mocks.verifyMfa.mockReset().mockResolvedValue(0);
 });
 
 describe('credentials authorize', () => {
@@ -81,26 +87,33 @@ describe('credentials authorize', () => {
 
   it('fails closed when authentication throws and logs the request id, not the credentials', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    mocks.authenticate.mockRejectedValue(new Error('database unavailable'));
-    expect(await authorize({ email: 'ana@example.com', password: 'secret' }, request)).toBeNull();
-    expect(log).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ requestId: expect.any(String), error: expect.any(Error) })
-    );
-    expect(JSON.stringify(log.mock.calls)).not.toContain('secret');
+    mocks.authenticate.mockRejectedValue(new Error('database unavailable secret=abc'));
+    expect(
+      await authorize({ email: 'ana@example.com', password: 'secret', totp: '123456' }, request)
+    ).toBeNull();
+    expect(log).toHaveBeenCalledWith(expect.any(String), { requestId: expect.any(String) });
+    const logged = JSON.stringify(log.mock.calls);
+    expect(logged).not.toContain('secret');
+    expect(logged).not.toContain('123456');
     log.mockRestore();
   });
 
-  it('authenticates inside a request context so audit events carry the client IP', async () => {
-    let seen: ReturnType<typeof currentRequestContext>;
+  it('runs both factors inside one request context so audit events carry the client IP', async () => {
+    const seen: Array<ReturnType<typeof currentRequestContext>> = [];
     mocks.authenticate.mockImplementation(async () => {
-      seen = currentRequestContext();
-      return null;
+      seen.push(currentRequestContext());
+      return { id: 'user-1', passwordHash: 'hash' };
+    });
+    mocks.verifyMfa.mockImplementation(async () => {
+      seen.push(currentRequestContext());
+      return 0;
     });
 
     await authorize({ email: 'ana@example.com', password: 'secret' }, request);
 
-    expect(seen!).toEqual({ requestId: expect.any(String), ipAddress: '203.0.113.12' });
+    expect(seen).toHaveLength(2);
+    expect(seen[0]).toEqual({ requestId: expect.any(String), ipAddress: '203.0.113.12' });
+    expect(seen[1]).toBe(seen[0]);
     expect(currentRequestContext()).toBeUndefined();
   });
 
@@ -118,5 +131,42 @@ describe('credentials authorize', () => {
     await expect(
       authorize({ email: 'ana@example.com', password: 'secret' }, request)
     ).rejects.toMatchObject({ type: 'CredentialsSignin', code: 'turnstile_required' });
+  });
+});
+
+describe('MFA gate before creating a session', () => {
+  it.each([
+    [new MfaRequiredError(), 'mfa_required'],
+    [new MfaInvalidCodeError(), 'mfa_invalid'],
+    [new RateLimitedError(900), 'rate_limited'],
+  ])('rejects the credentials result when the second factor is incomplete', async (error, code) => {
+    mocks.authenticate.mockResolvedValue({ id: 'user-1', passwordHash: 'hash' });
+    mocks.verifyMfa.mockRejectedValue(error);
+    await expect(
+      authorize({ email: 'ana@example.com', password: 'password', totp: '123456' }, request)
+    ).rejects.toMatchObject({ code });
+  });
+  it('binds a successful factor to the session version and omits secrets', async () => {
+    mocks.authenticate.mockResolvedValue({
+      id: 'user-1',
+      passwordHash: 'hash',
+      email: 'ana@example.com',
+    });
+    mocks.verifyMfa.mockResolvedValue(4);
+    const user = await authorize(
+      { email: 'ana@example.com', password: 'password', totp: '123456' },
+      request
+    );
+    expect(mocks.verifyMfa).toHaveBeenCalledWith('user-1', '123456', 'hash');
+    expect(user).toMatchObject({ id: 'user-1', mfaVersion: 4 });
+    expect(user).not.toHaveProperty('totp');
+    expect(user).not.toHaveProperty('passwordHash');
+  });
+  it('does not check a second factor before the password is verified', async () => {
+    mocks.authenticate.mockResolvedValue(null);
+    expect(
+      await authorize({ email: 'ana@example.com', password: 'bad', totp: '123456' }, request)
+    ).toBeNull();
+    expect(mocks.verifyMfa).not.toHaveBeenCalled();
   });
 });

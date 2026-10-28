@@ -181,19 +181,8 @@ export class AuthenticateUser {
     }
 
     await this.rateLimiter.reset(emailKey);
-    const authenticated = this.passwords.needsRehash(user.passwordHash)
-      ? await this.rehash(user, password)
-      : user;
-    this.audit.record({
-      event: 'auth.login.success',
-      outcome: 'success',
-      userId: user.id,
-      email: maskedEmail,
-    });
-    return authenticated;
-  }
+    if (!this.passwords.needsRehash(user.passwordHash)) return user;
 
-  private async rehash(user: User, password: string): Promise<User> {
     const passwordHash = await this.passwords.hash(password);
     await this.users.updatePasswordHash(user.id, passwordHash);
     return { ...user, passwordHash };

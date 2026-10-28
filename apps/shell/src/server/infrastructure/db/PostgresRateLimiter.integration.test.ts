@@ -91,4 +91,22 @@ describe('PostgresRateLimiter', () => {
     await limiter.reset(key);
     await expect(limiter.check(key)).resolves.toEqual({ allowed: true, retryAfterSeconds: 0 });
   });
+  it('locks MFA after exactly five failures with the email window and fixed duration', async () => {
+    const key = `mfa:${keyMarker}-mfa`;
+    const initialTime = clock.now();
+    for (let i = 0; i < 4; i++) {
+      await limiter.registerFailure(key);
+      expect(await limiter.check(key)).toEqual({ allowed: true, retryAfterSeconds: 0 });
+    }
+    await limiter.registerFailure(key);
+    expect(await limiter.check(key)).toEqual({ allowed: false, retryAfterSeconds: 10 });
+    clock.set(new Date(clock.now().getTime() + 10000));
+    await Promise.all(Array.from({ length: 5 }, () => limiter.registerFailure(key)));
+    expect(await limiter.check(key)).toEqual({ allowed: false, retryAfterSeconds: 10 });
+    await limiter.reset(key);
+    await limiter.registerFailure(key);
+    clock.set(new Date(clock.now().getTime() + 60000));
+    expect(await limiter.failureCount(key)).toBe(0);
+    clock.set(initialTime);
+  });
 });

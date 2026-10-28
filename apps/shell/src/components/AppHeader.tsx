@@ -6,6 +6,7 @@ import {
   ClientSessionEndedError,
   createClientSessionGuard,
   logout,
+  navigation,
   selectUser,
   showFeedback,
   useAppDispatch,
@@ -60,6 +61,7 @@ export function AppHeader({ onLinkClick, onLinkIntent }: AppHeaderProps = {}) {
           <UserMenu
             user={{ name: user.name, email: user.email, avatarUrl: user.image }}
             onLogout={handleLogout}
+            onSecurity={() => navigation.navigate('/settings/security')}
             onLogoutAll={handleLogoutAll}
             isLoggingOut={isLoggingOut}
           />

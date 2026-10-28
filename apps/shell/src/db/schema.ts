@@ -1,4 +1,13 @@
-import { pgTable, text, doublePrecision, timestamp, integer, index } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  doublePrecision,
+  timestamp,
+  integer,
+  index,
+  boolean,
+  primaryKey,
+} from 'drizzle-orm/pg-core';
 import { TRANSACTION_TYPE } from '@bytebank/shared';
 import { relations } from 'drizzle-orm/relations';
 
@@ -32,9 +41,26 @@ export const users = pgTable('users', {
   nameEnc: text('name_enc').notNull(),
   passwordHash: text('password_hash').notNull(),
   sessionVersion: integer('session_version').notNull().default(0),
+  mfaEnabled: boolean('mfa_enabled').notNull().default(false),
+  mfaSecretEnc: text('mfa_secret_enc'),
+  mfaPendingSecretEnc: text('mfa_pending_secret_enc'),
+  mfaPendingExpiresAt: timestamp('mfa_pending_expires_at', { withTimezone: true }),
+  mfaLastUsedStep: integer('mfa_last_used_step'),
   image: text('image'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const mfaRecoveryCodes = pgTable(
+  'mfa_recovery_codes',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    id: text('id').notNull(),
+    hash: text('hash').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.id] })]
+);
 
 export const authSessions = pgTable(
   'auth_sessions',

@@ -428,7 +428,7 @@ describe('user use cases audit trail', () => {
     expect(logged).not.toContain('203.0.113.4');
   });
 
-  it('records unknown accounts and successful logins', async () => {
+  it('records unknown accounts and leaves the success to the second-factor step', async () => {
     const deps = setup(ana);
     const authenticate = authenticateWith(deps);
 
@@ -442,7 +442,6 @@ describe('user use cases audit trail', () => {
         reason: 'unknown_user',
         userId: undefined,
       }),
-      { event: 'auth.login.success', outcome: 'success', userId: 'u1', email: 'a***@e***.com' },
     ]);
   });
 

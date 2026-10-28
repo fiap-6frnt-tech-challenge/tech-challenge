@@ -3,6 +3,16 @@ title = "Bytebank Gitleaks configuration"
 [extend]
 useDefault = true
 
+# Public RFC 6238 SHA-1 test vector, never used by a real account. Keep this
+# limited to the exact value and test file, including its published history.
+[[allowlists]]
+description = "Public RFC 6238 TOTP test vector"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^apps/shell/src/server/infrastructure/security/OtpAuthTotpProvider\.test\.ts$''']
+regexTarget = "secret"
+regexes = ['''^GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ$''']
+
 # Exact non-production database fixtures used only by the local Docker Compose setup.
 [[allowlists]]
 description = "Local Docker Compose database fixture"

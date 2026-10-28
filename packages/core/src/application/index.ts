@@ -4,3 +4,5 @@ export * from './parseOrThrow';
 export * from './audit';
 export * from './use-cases';
 export * from './testing';
+
+export * from './use-cases/mfa';
