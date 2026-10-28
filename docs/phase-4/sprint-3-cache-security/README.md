@@ -54,7 +54,7 @@
 | 07  | 🟢     | Máquina de estados do fluxo de transação    | Dev 2         | 1.5 dia  | P1   | ✅          | [07-transaction-flow-fsm.md](./07-transaction-flow-fsm.md)           |
 | 08  | ⏳     | Comunicação entre MFEs: navegação e eventos | Dev 2         | 1.5 dia  | P1   | ✅          | [08-mfe-communication.md](./08-mfe-communication.md)                 |
 | 09  | ⏳     | Pipeline de segurança na CI                 | Dev 1         | 1 dia    | P0   | ✅          | [09-ci-security.md](./09-ci-security.md)                             |
-| 10  | ⏳     | (Plus) MFA com TOTP                         | Dev 2 + Dev 1 | 2 dias   | P2   | ⬅ 01, S2-07 | [10-mfa-totp.md](./10-mfa-totp.md)                                   |
+| 10  | 🟢     | (Plus) MFA com TOTP                         | Dev 2 + Dev 1 | 2 dias   | P2   | ⬅ 01, S2-07 | [10-mfa-totp.md](./10-mfa-totp.md)                                   |
 | 11  | ⏳     | Testes + smoke                              | Todos         | 0.5 dia  | P0   | ⬅ impl      | [11-tests-smoke.md](./11-tests-smoke.md)                             |
 
 **Legenda:** ✅ mergeada · 🟢 implementada · ⏳ pendente

@@ -3,3 +3,5 @@ export * from './ports';
 export * from './parseOrThrow';
 export * from './use-cases';
 export * from './testing';
+
+export * from './use-cases/mfa';

@@ -100,7 +100,12 @@ export interface LegacyUserRepository {
 }
 
 export interface SessionRepository {
-  create(userId: string, sid: string, expiresAt: Date): Promise<number | null>;
+  create(
+    userId: string,
+    sid: string,
+    expiresAt: Date,
+    expectedVersion?: number
+  ): Promise<number | null>;
   find(userId: string, sid: string): Promise<{ version: number; expiresAt: Date } | null>;
   revokeCurrent(userId: string, sid: string): Promise<void>;
   revokeAll(userId: string): Promise<boolean>;
@@ -167,3 +172,5 @@ export interface Clock {
 export interface IdGenerator {
   next(): string;
 }
+
+export * from './mfa';

@@ -33,6 +33,7 @@ vi.mock('@bytebank/stores', () => ({
   clearSession: mocks.clearSession,
 }));
 
+import { beginMfaRecoveryDelivery } from './mfaRecoveryDelivery';
 import { SessionSync } from './SessionSync';
 
 const fullUser = {
@@ -62,6 +63,18 @@ afterEach(() => {
 });
 
 describe('SessionSync', () => {
+  it('keeps one-time recovery delivery visible after an old session poll completes', async () => {
+    mocks.isAuthenticated = true;
+    mocks.pathname.mockReturnValue('/settings/security');
+    mocks.useSession.mockReturnValue({ data: null, status: 'unauthenticated' });
+    serverSession(async () => Response.json(null));
+    const release = beginMfaRecoveryDelivery();
+    SessionSync();
+    await flush();
+    expect(mocks.publish).not.toHaveBeenCalled();
+    release();
+    expect(mocks.publish).toHaveBeenCalledWith({ type: 'session.expired', version: 1 });
+  });
   it('ends an invalid session on an initial private-page load instead of leaving an empty screen', async () => {
     const fetchMock = serverSession(async () => Response.json(null));
     mocks.pathname.mockReturnValue('/transactions');

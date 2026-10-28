@@ -2,6 +2,7 @@ import 'server-only';
 import { createHash } from 'node:crypto';
 import {
   AddAttachment,
+  MfaService,
   AuthenticateUser,
   CachedGetTransactionsSummary,
   CreateTransaction,
@@ -24,6 +25,8 @@ import {
   type FileStorage,
 } from '@bytebank/core/application';
 import { db } from '@/db';
+import { DrizzleMfaRepository } from './infrastructure/db/DrizzleMfaRepository';
+import { OtpAuthTotpProvider } from './infrastructure/security/OtpAuthTotpProvider';
 import { NextCacheInvalidator } from './infrastructure/cache/NextCacheInvalidator';
 import { NextResultCache } from './infrastructure/cache/NextResultCache';
 import { DrizzleAttachmentRepository } from './infrastructure/db/DrizzleAttachmentRepository';
@@ -109,6 +112,15 @@ const summaryCache = new NextResultCache(SUMMARY_CACHE_SECONDS);
 const cacheInvalidator = new NextCacheInvalidator();
 
 export const container = {
+  mfa: new MfaService(
+    new DrizzleMfaRepository(db),
+    passwords,
+    cipher,
+    new OtpAuthTotpProvider(),
+    rateLimiter,
+    clock,
+    ids
+  ),
   sessionLifecycle: new SessionLifecycle(new DrizzleSessionRepository(db), clock, ids),
   revokeSessions: new RevokeSessions(new DrizzleSessionRepository(db)),
   resolveOAuthUser: new ResolveOAuthUser(users, ids),

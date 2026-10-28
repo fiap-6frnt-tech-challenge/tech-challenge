@@ -6,14 +6,19 @@ import type { Database } from '@/db';
 
 export class DrizzleSessionRepository implements SessionRepository {
   constructor(private readonly db: Database) {}
-  async create(userId: string, sid: string, expiresAt: Date): Promise<number | null> {
+  async create(
+    userId: string,
+    sid: string,
+    expiresAt: Date,
+    expectedVersion?: number
+  ): Promise<number | null> {
     return this.db.transaction(async (tx) => {
       const [user] = await tx
         .select({ version: users.sessionVersion })
         .from(users)
         .where(eq(users.id, userId))
         .for('update');
-      if (!user) return null;
+      if (!user || (expectedVersion !== undefined && user.version !== expectedVersion)) return null;
       await tx
         .delete(authSessions)
         .where(and(eq(authSessions.userId, userId), lte(authSessions.expiresAt, new Date())));
