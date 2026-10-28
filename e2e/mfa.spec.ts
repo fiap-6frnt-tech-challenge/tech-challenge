@@ -183,7 +183,8 @@ test('enrolls with a decoded QR, requires TOTP before a session, consumes recove
     const decipher = createDecipheriv(
       'aes-256-gcm',
       keyMap.get(payload[1])!,
-      payload.subarray(2, 14)
+      payload.subarray(2, 14),
+      { authTagLength: 16 }
     );
     decipher.setAuthTag(payload.subarray(14, 30));
     decipher.setAAD(Buffer.from(`user:${user.id}:mfa`));
