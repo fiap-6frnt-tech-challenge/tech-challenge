@@ -9,7 +9,7 @@ const transactionsManifestUrl =
   process.env.E2E_TRANSACTIONS_MFE_URL ?? 'http://localhost:3003/mf-manifest.json';
 const reuseExistingServer = process.env.E2E_REUSE_SERVERS === '1';
 const listenHost = '127.0.0.1';
-const firefoxUserPrefs =
+const firefoxUserPrefs: Record<string, string | number | boolean> =
   process.platform === 'win32' ? { 'browser.tabs.remote.useCrossOriginOpenerPolicy': false } : {};
 
 export default defineConfig({
@@ -57,6 +57,7 @@ export default defineConfig({
         AUTH_LOCK_SECONDS: process.env.AUTH_LOCK_SECONDS ?? '60',
         AUTH_MAX_LOCK_SECONDS: process.env.AUTH_MAX_LOCK_SECONDS ?? '300',
         HIBP_ENABLED: process.env.HIBP_ENABLED ?? 'false',
+        CSP_MODE: 'enforce',
         DATABASE_URL:
           process.env.DATABASE_URL ?? 'postgres://bytebank:bytebank@localhost:5432/bytebank',
         ...E2E_KEYS,

@@ -1,0 +1,220 @@
+{
+  "date": "2026-10-28",
+  "productCommit": "d768f6fca031a13bbc3503f36b800a6d358a5066",
+  "branch": "test/s3-11-smoke",
+  "environment": {
+    "kind": "local-production-builds",
+    "os": "Darwin arm64",
+    "node": "22.23.3",
+    "npm": "10.9.9",
+    "postgres": "16-alpine",
+    "shell": "http://localhost:3400",
+    "remotes": ["http://localhost:3402", "http://localhost:3403"],
+    "databasePort": 55442,
+    "storage": "local encrypted files",
+    "cspMode": "enforce",
+    "hibpEnabled": false
+  },
+  "ciBase": [
+    {
+      "id": 40772336254,
+      "name": "CI",
+      "event": "push",
+      "head_sha": "d768f6fca031a13bbc3503f36b800a6d358a5066",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/fiap-6frnt-tech-challenge/tech-challenge/actions/runs/40772336254"
+    },
+    {
+      "id": 40772335937,
+      "name": "Push on phase-4",
+      "event": "dynamic",
+      "head_sha": "d768f6fca031a13bbc3503f36b800a6d358a5066",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/fiap-6frnt-tech-challenge/tech-challenge/actions/runs/40772335937"
+    },
+    {
+      "id": 40772336245,
+      "name": "Chromatic",
+      "event": "push",
+      "head_sha": "d768f6fca031a13bbc3503f36b800a6d358a5066",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/fiap-6frnt-tech-challenge/tech-challenge/actions/runs/40772336245"
+    },
+    {
+      "id": 40772336393,
+      "name": "Security",
+      "event": "push",
+      "head_sha": "d768f6fca031a13bbc3503f36b800a6d358a5066",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/fiap-6frnt-tech-challenge/tech-challenge/actions/runs/40772336393"
+    }
+  ],
+  "quality": {
+    "turboTestTasks": 13,
+    "unitAndStoryTests": 1225,
+    "integrationTests": 92,
+    "typeCheckTasks": 13,
+    "lintTasks": 13,
+    "lintErrors": 0,
+    "architecture": {
+      "modules": 563,
+      "dependencies": 1674,
+      "violations": 0
+    },
+    "productionBuilds": ["shell", "dashboard-mfe", "transactions-mfe"],
+    "productionAuditVulnerabilities": 0,
+    "newTestAndPlaywrightConfigStrictTypes": "passed",
+    "semgrep": {
+      "version": "1.181.0",
+      "rulesRun": 120,
+      "targetsScanned": 814,
+      "findings": 0
+    }
+  },
+  "e2e": {
+    "combinedRun": {
+      "passed": 72,
+      "skipped": 12,
+      "failed": 0
+    },
+    "focusedFinalRun": {
+      "passed": 6,
+      "failed": 0
+    },
+    "skippedReason": "Optional S2-10 smoke, including live HIBP/slow network, not part of this S3-11 execution."
+  },
+  "smoke": [
+    {
+      "scenario": "encrypted persistence and authenticated round trip",
+      "browsers": ["chromium", "firefox"],
+      "piiSqlEncrypted": true,
+      "piiScope": "globalSetup account created through DrizzleUserRepository",
+      "metadataSqlEncrypted": true,
+      "fileAtRestEncrypted": true,
+      "independentAesGcmRoundTrip": true,
+      "downloadMatchesOriginal": true,
+      "anonymousStatus": 401,
+      "foreignOwnerStatus": 404,
+      "disguisedExecutableStatus": 400
+    },
+    {
+      "scenario": "boundary and MFE navigation",
+      "browsers": ["chromium", "firefox"],
+      "routes": ["/login", "/", "/transactions"],
+      "securityHeaders": true,
+      "enforcedCsp": true,
+      "observedViolations": 0,
+      "cspReports": 0,
+      "documentReloadsOnMfeLink": 0
+    },
+    {
+      "scenario": "CSRF and conditional cache",
+      "browsers": ["chromium", "firefox"],
+      "crossSiteMethods": ["POST", "PATCH", "DELETE"],
+      "rejectedStatus": 403,
+      "dataUnchanged": true,
+      "conditionalStatus": 304,
+      "conditionalBodyBytes": 0
+    }
+  ],
+  "performance": {
+    "lighthouseVersion": "12.8.2",
+    "method": "Three authenticated cold-cache mobile samples per route; production builds, 5000 seeded transactions; no concurrent test suites; current integrated product, no controlled SSR-disabled comparison.",
+    "transactionCount": 5000,
+    "formFactor": "mobile",
+    "throttlingMethod": "simulate",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "ssrEvidence": "Existing ssr-prefetch.spec.ts passed: home and transaction remotes hydrate without duplicate first-page data fetches; two-user isolation and invalidation passed.",
+    "routes": [
+      {
+        "route": "/",
+        "samples": [
+          {
+            "score": 90,
+            "tbt": 39,
+            "lcp": 3705.4508499999997,
+            "jsBytes": 308640
+          },
+          {
+            "score": 90,
+            "tbt": 11,
+            "lcp": 3702.2656,
+            "jsBytes": 308640
+          },
+          {
+            "score": 90,
+            "tbt": 13,
+            "lcp": 3704.22925,
+            "jsBytes": 308640
+          }
+        ],
+        "medianLcpMs": 3704.22925,
+        "medianTbtMs": 13,
+        "scores": [90, 90, 90],
+        "network": {
+          "scriptCount": 16,
+          "rawScriptBytes": 985030,
+          "gzipScriptBytes": 298919,
+          "rechartsScripts": 0,
+          "zodScripts": 0
+        }
+      },
+      {
+        "route": "/transactions",
+        "samples": [
+          {
+            "score": 87,
+            "tbt": 8,
+            "lcp": 4002.9541,
+            "jsBytes": 349001
+          },
+          {
+            "score": 87,
+            "tbt": 11,
+            "lcp": 4008.1602000000003,
+            "jsBytes": 349001
+          },
+          {
+            "score": 87,
+            "tbt": 9,
+            "lcp": 4005.7008,
+            "jsBytes": 349001
+          }
+        ],
+        "medianLcpMs": 4005.7008,
+        "medianTbtMs": 9,
+        "scores": [87, 87, 87],
+        "network": {
+          "scriptCount": 19,
+          "rawScriptBytes": 1120183,
+          "gzipScriptBytes": 337928,
+          "rechartsScripts": 0,
+          "zodScripts": 0
+        }
+      }
+    ]
+  },
+  "externalGate": {
+    "previewMigrationWithNeonBackup": "not-executed",
+    "vercelBlobDirectAccess": "not-executed",
+    "reason": "No access to the deployment team or Neon backup/preview credentials. Local disposable DB migration is not a substitute for this gate."
+  }
+}
