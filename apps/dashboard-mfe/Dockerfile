@@ -18,8 +18,10 @@ COPY . .
 RUN npm run build -w @bytebank/dashboard-mfe
 
 # Stage 2: runtime — nginx servindo dist/
-FROM nginx:alpine AS runtime
+FROM nginxinc/nginx-unprivileged:alpine AS runtime
+USER root
 RUN apk -U upgrade
+USER 101
 COPY --from=build /app/apps/dashboard-mfe/dist /usr/share/nginx/html
 COPY apps/dashboard-mfe/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080
