@@ -8,7 +8,7 @@ import type {
   MfaState,
   TotpProvider,
 } from '../ports';
-import { FakeClock } from '../testing';
+import { FakeClock, MemoryAuditLogger } from '../testing';
 import { MfaService, MfaRequiredError, MfaInvalidCodeError } from './mfa';
 
 function setup(prefixes: string[] = []) {
@@ -132,16 +132,27 @@ function setup(prefixes: string[] = []) {
     },
     failureCount: async () => failures,
   };
-  const service = new MfaService(repo, passwords, cipher, totp, limiter, clock, {
-    next: () =>
-      (prefixes.shift() ?? (++sequence).toString(16).padStart(8, '0')) + 'abcdef1234567890',
-  });
+  const audit = new MemoryAuditLogger();
+  const service = new MfaService(
+    repo,
+    passwords,
+    cipher,
+    totp,
+    limiter,
+    clock,
+    {
+      next: () =>
+        (prefixes.shift() ?? (++sequence).toString(16).padStart(8, '0')) + 'abcdef1234567890',
+    },
+    audit
+  );
   const enroll = async () => {
     await service.setup('u1', 'password');
     return service.enable('u1', '123456');
   };
   return {
     service,
+    audit,
     repo,
     cipher,
     passwords,
@@ -270,6 +281,40 @@ describe('MfaService', () => {
     await expect(d.service.verifyLogin('u1', '123456')).rejects.toBeInstanceOf(RateLimitedError);
     expect(d.failures).toBe(5);
   });
+  it('records the login only after the second factor and never the submitted code', async () => {
+    const d = setup();
+    await d.service.verifyLogin('u1');
+    await d.enroll();
+    d.clock.set(new Date(d.clock.now().getTime() + 30000));
+    d.audit.events.length = 0;
+
+    await expect(d.service.verifyLogin('u1')).rejects.toBeInstanceOf(MfaRequiredError);
+    for (let i = 0; i < 5; i++) await d.service.verifyLogin('u1', '654321').catch(() => undefined);
+    await expect(d.service.verifyLogin('u1', '123456')).rejects.toBeInstanceOf(RateLimitedError);
+
+    expect(d.audit.events.map(({ event, reason }) => `${event}:${reason}`)).toEqual([
+      'auth.login.failure:mfa_required',
+      ...Array(5).fill('auth.login.failure:mfa_invalid_code'),
+      'auth.login.locked:mfa_too_many_failures',
+      'rate_limit.hit:mfa',
+    ]);
+    expect(d.audit.events.every((event) => event.userId === 'u1')).toBe(true);
+    expect(JSON.stringify(d.audit.events)).not.toMatch(/654321|123456/);
+  });
+
+  it('records a successful login with and without a second factor', async () => {
+    const d = setup();
+    await d.service.verifyLogin('u1');
+    await d.enroll();
+    d.clock.set(new Date(d.clock.now().getTime() + 30000));
+    await d.service.verifyLogin('u1', '123456');
+
+    expect(d.audit.events).toEqual([
+      { event: 'auth.login.success', outcome: 'success', userId: 'u1', reason: undefined },
+      { event: 'auth.login.success', outcome: 'success', userId: 'u1', reason: 'mfa' },
+    ]);
+  });
+
   it('checks only selected recovery hash and consumes it before disabling', async () => {
     const d = setup();
     const { recoveryCodes } = await d.enroll();

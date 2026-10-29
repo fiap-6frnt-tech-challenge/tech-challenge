@@ -6,6 +6,7 @@ import { authConfig } from './auth.config';
 import { MfaRequiredError, MfaInvalidCodeError } from '@bytebank/core/application';
 import { container } from '@/server/container';
 import { getClientIp } from '@/server/http/clientIp';
+import { currentRequestId, withRequestContext } from '@/server/http/requestContext';
 
 class RateLimitedSignin extends CredentialsSignin {
   code = 'rate_limited';
@@ -63,45 +64,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         turnstileToken: { label: 'Turnstile token', type: 'text' },
         totp: { label: 'Código de autenticação', type: 'text' },
       },
-      async authorize(credentials, request) {
-        if (!credentials?.email || !credentials?.password) return null;
+      authorize(credentials, request) {
+        return withRequestContext(request.headers, async () => {
+          if (!credentials?.email || !credentials?.password) return null;
 
-        let user: Awaited<ReturnType<typeof container.authenticateUser.execute>> = null;
+          let user: Awaited<ReturnType<typeof container.authenticateUser.execute>> = null;
 
-        let mfaVersion: number | undefined;
-        try {
-          user = await container.authenticateUser.execute(
-            credentials.email as string,
-            credentials.password as string,
-            getClientIp(request.headers),
-            typeof credentials.turnstileToken === 'string' ? credentials.turnstileToken : undefined
-          );
-          if (user)
-            mfaVersion = await container.mfa.verifyLogin(
-              user.id,
-              typeof credentials.totp === 'string' ? credentials.totp : undefined,
-              user.passwordHash
+          let mfaVersion: number | undefined;
+          try {
+            user = await container.authenticateUser.execute(
+              credentials.email as string,
+              credentials.password as string,
+              getClientIp(request.headers),
+              typeof credentials.turnstileToken === 'string'
+                ? credentials.turnstileToken
+                : undefined
             );
-        } catch (error) {
-          if (error instanceof MfaRequiredError) throw new MfaRequiredSignin();
-          if (error instanceof MfaInvalidCodeError) throw new MfaInvalidSignin();
-          if (error instanceof RateLimitedError) throw new RateLimitedSignin();
-          if (error instanceof TurnstileRequiredError) throw new TurnstileRequiredSignin();
-          console.error('[auth] Falha ao verificar credenciais no banco');
+            if (user)
+              mfaVersion = await container.mfa.verifyLogin(
+                user.id,
+                typeof credentials.totp === 'string' ? credentials.totp : undefined,
+                user.passwordHash
+              );
+          } catch (error) {
+            if (error instanceof MfaRequiredError) throw new MfaRequiredSignin();
+            if (error instanceof MfaInvalidCodeError) throw new MfaInvalidSignin();
+            if (error instanceof RateLimitedError) throw new RateLimitedSignin();
+            if (error instanceof TurnstileRequiredError) throw new TurnstileRequiredSignin();
+            console.error('[auth] Falha ao verificar credenciais no banco', {
+              requestId: currentRequestId(),
+            });
+            return null;
+          }
+
+          if (user) {
+            return {
+              id: user.id,
+              mfaVersion,
+              name: user.name,
+              email: user.email,
+              image: user.image ?? undefined,
+            };
+          }
+
           return null;
-        }
-
-        if (user) {
-          return {
-            id: user.id,
-            mfaVersion,
-            name: user.name,
-            email: user.email,
-            image: user.image ?? undefined,
-          };
-        }
-
-        return null;
+        });
       },
     }),
   ],

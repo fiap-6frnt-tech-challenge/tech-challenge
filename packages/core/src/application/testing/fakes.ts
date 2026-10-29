@@ -1,4 +1,14 @@
-import type { CacheEntry, CacheInvalidator, Clock, IdGenerator, ResultCache } from '../ports';
+import type {
+  AuditEvent,
+  AuditLogger,
+  CacheEntry,
+  CacheInvalidator,
+  Clock,
+  IdGenerator,
+  OwnedResource,
+  ResourceOwnership,
+  ResultCache,
+} from '../ports';
 
 export class FakeCacheInvalidator implements CacheInvalidator {
   readonly invalidated: string[] = [];
@@ -51,5 +61,21 @@ export class SequentialIdGenerator implements IdGenerator {
   next(): string {
     this.sequence += 1;
     return `${this.prefix}-${this.sequence}`;
+  }
+}
+
+export class MemoryAuditLogger implements AuditLogger {
+  readonly events: AuditEvent[] = [];
+  record(event: AuditEvent): void {
+    this.events.push(event);
+  }
+}
+
+export class MemoryResourceOwnership implements ResourceOwnership {
+  constructor(
+    private readonly owners: Partial<Record<OwnedResource, Record<string, string>>> = {}
+  ) {}
+  async ownerOf(resource: OwnedResource, id: string): Promise<string | null> {
+    return this.owners[resource]?.[id] ?? null;
   }
 }

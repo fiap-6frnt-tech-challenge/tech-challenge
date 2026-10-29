@@ -162,6 +162,58 @@ describe('Proxy de Autenticação', () => {
     });
     const res = await proxy(req, proxyEvent);
 
-    expect(res).toBeUndefined();
+    expect(res?.headers.get('x-middleware-next')).toBe('1');
+    expect(res?.status).toBe(200);
+  });
+
+  describe('request id', () => {
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+    it('generates a fresh id, forwards it to the handler and echoes it on the response', async () => {
+      const req = createMockRequest('/api/transactions', true, {
+        headers: { 'x-request-id': 'forjado-pelo-cliente' },
+      });
+      const res = await proxy(req, proxyEvent);
+
+      const requestId = res?.headers.get('x-request-id');
+      expect(requestId).toMatch(uuid);
+      expect(res?.headers.get('x-middleware-request-x-request-id')).toBe(requestId);
+    });
+
+    it('forwards the id together with the CSP headers on pages', async () => {
+      const res = await proxy(createMockRequest('/login'), proxyEvent);
+
+      expect(res?.headers.get('x-request-id')).toMatch(uuid);
+      expect(res?.headers.get('x-middleware-request-x-request-id')).toBe(
+        res?.headers.get('x-request-id')
+      );
+      expect(res?.headers.get('x-middleware-request-x-nonce')).toBeTruthy();
+    });
+
+    it('tags rejected and redirected requests too', async () => {
+      const anonymousApi = await proxy(createMockRequest('/api/transactions'), proxyEvent);
+      const anonymousPage = await proxy(createMockRequest('/'), proxyEvent);
+      const crossSite = await proxy(
+        createMockRequest('/api/transactions', true, {
+          method: 'POST',
+          headers: { origin: 'https://attacker.example', 'sec-fetch-site': 'cross-site' },
+        }),
+        proxyEvent
+      );
+
+      expect(anonymousApi?.status).toBe(401);
+      expect(anonymousPage?.status).toBe(307);
+      expect(crossSite?.status).toBe(403);
+      for (const res of [anonymousApi, anonymousPage, crossSite]) {
+        expect(res?.headers.get('x-request-id')).toMatch(uuid);
+      }
+    });
+
+    it('never reuses an id between requests', async () => {
+      const first = await proxy(createMockRequest('/login'), proxyEvent);
+      const second = await proxy(createMockRequest('/login'), proxyEvent);
+
+      expect(first?.headers.get('x-request-id')).not.toBe(second?.headers.get('x-request-id'));
+    });
   });
 });

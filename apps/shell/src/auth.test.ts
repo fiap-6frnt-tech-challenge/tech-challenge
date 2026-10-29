@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RateLimitedError, TurnstileRequiredError } from '@bytebank/core';
 import { MfaRequiredError, MfaInvalidCodeError } from '@bytebank/core/application';
+import { currentRequestContext } from '@/server/http/requestContext';
 
 const mocks = vi.hoisted(() => ({
   nextAuth: vi.fn((config: unknown) => {
@@ -84,12 +85,36 @@ describe('credentials authorize', () => {
     expect(mocks.authenticate).not.toHaveBeenCalled();
   });
 
-  it('fails closed when authentication throws', async () => {
+  it('fails closed when authentication throws and logs the request id, not the credentials', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    mocks.authenticate.mockRejectedValue(new Error('database unavailable'));
-    expect(await authorize({ email: 'ana@example.com', password: 'secret' }, request)).toBeNull();
-    expect(log).toHaveBeenCalled();
+    mocks.authenticate.mockRejectedValue(new Error('database unavailable secret=abc'));
+    expect(
+      await authorize({ email: 'ana@example.com', password: 'secret', totp: '123456' }, request)
+    ).toBeNull();
+    expect(log).toHaveBeenCalledWith(expect.any(String), { requestId: expect.any(String) });
+    const logged = JSON.stringify(log.mock.calls);
+    expect(logged).not.toContain('secret');
+    expect(logged).not.toContain('123456');
     log.mockRestore();
+  });
+
+  it('runs both factors inside one request context so audit events carry the client IP', async () => {
+    const seen: Array<ReturnType<typeof currentRequestContext>> = [];
+    mocks.authenticate.mockImplementation(async () => {
+      seen.push(currentRequestContext());
+      return { id: 'user-1', passwordHash: 'hash' };
+    });
+    mocks.verifyMfa.mockImplementation(async () => {
+      seen.push(currentRequestContext());
+      return 0;
+    });
+
+    await authorize({ email: 'ana@example.com', password: 'secret' }, request);
+
+    expect(seen).toHaveLength(2);
+    expect(seen[0]).toEqual({ requestId: expect.any(String), ipAddress: '203.0.113.12' });
+    expect(seen[1]).toBe(seen[0]);
+    expect(currentRequestContext()).toBeUndefined();
   });
 
   it('translates a rate limit into the safe CredentialsSignin code', async () => {
