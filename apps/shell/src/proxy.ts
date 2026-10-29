@@ -1,8 +1,9 @@
-import NextAuth from 'next-auth';
+import NextAuth, { type NextAuthRequest } from 'next-auth';
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { authConfig } from './auth.config';
+import { REQUEST_ID_HEADER } from './server/http/requestContext';
 
 const { auth } = NextAuth(authConfig);
 
@@ -66,11 +67,21 @@ function cspHeaderName(): 'content-security-policy' | 'content-security-policy-r
     : 'content-security-policy-report-only';
 }
 
-function withCsp(req: NextRequest) {
+function forwardedHeaders(req: NextRequest, requestId: string): Headers {
+  const headers = new Headers(req.headers);
+  headers.set(REQUEST_ID_HEADER, requestId);
+  return headers;
+}
+
+function forward(req: NextRequest, requestId: string) {
+  return NextResponse.next({ request: { headers: forwardedHeaders(req, requestId) } });
+}
+
+function withCsp(req: NextRequest, requestId: string) {
   const nonce = Buffer.from(randomUUID()).toString('base64');
   const policy = buildCsp(nonce);
   const headerName = cspHeaderName();
-  const requestHeaders = new Headers(req.headers);
+  const requestHeaders = forwardedHeaders(req, requestId);
 
   // Next 16 reads the nonce from the forwarded CSP policy header. Keep x-nonce
   // available to application components that need to read the nonce directly.
@@ -102,7 +113,7 @@ function isCsrfRejected(
   return Boolean((origin && !allowedOrigins.has(origin)) || fetchSite === 'cross-site');
 }
 
-export const proxy = auth((req) => {
+function gate(req: NextAuthRequest, requestId: string): NextResponse {
   const isLoggedIn = Boolean(req.auth?.user?.id);
   const { nextUrl } = req;
   const pathname = nextUrl.pathname;
@@ -111,7 +122,7 @@ export const proxy = auth((req) => {
   const publicAuthRoutes = ['/login', '/auth/error', '/register'];
   const isPublicRoute = publicAuthRoutes.includes(pathname);
 
-  if (req.method === 'OPTIONS') return;
+  if (req.method === 'OPTIONS') return forward(req, requestId);
 
   if (
     isApiRoute &&
@@ -123,7 +134,7 @@ export const proxy = auth((req) => {
   }
 
   // CSP reports are browser-generated and must be accepted before login.
-  if (isCspReportRoute || isAuthApi(pathname)) return;
+  if (isCspReportRoute || isAuthApi(pathname)) return forward(req, requestId);
 
   if (!isLoggedIn && !isPublicRoute) {
     if (isApiRoute) {
@@ -136,8 +147,15 @@ export const proxy = auth((req) => {
     return NextResponse.redirect(new URL('/', nextUrl));
   }
 
-  if (isApiRoute) return;
-  return withCsp(req);
+  if (isApiRoute) return forward(req, requestId);
+  return withCsp(req, requestId);
+}
+
+export const proxy = auth((req) => {
+  const requestId = randomUUID();
+  const response = gate(req, requestId);
+  response.headers.set(REQUEST_ID_HEADER, requestId);
+  return response;
 });
 
 export const config = {

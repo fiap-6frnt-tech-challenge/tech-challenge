@@ -1,4 +1,10 @@
+import type { AuditEvent } from '@bytebank/core/application';
+import { container } from '@/server/container';
+import { withRequestContext } from '@/server/http/requestContext';
+
 const MAX_REPORT_BYTES = 16 * 1024;
+const MAX_LOGGED_VIOLATIONS = 10;
+const DIRECTIVE = /^[a-z-]{1,64}$/;
 const REPORT_MEDIA_TYPES = new Set([
   'application/csp-report',
   'application/reports+json',
@@ -6,6 +12,33 @@ const REPORT_MEDIA_TYPES = new Set([
 ]);
 
 class ReportTooLargeError extends Error {}
+
+type ReportFields = Record<string, unknown>;
+
+const isObject = (value: unknown): value is ReportFields =>
+  typeof value === 'object' && value !== null;
+
+function violationsIn(report: unknown): ReportFields[] {
+  if (Array.isArray(report)) {
+    return report.flatMap((entry) =>
+      isObject(entry) && entry.type === 'csp-violation' && isObject(entry.body) ? [entry.body] : []
+    );
+  }
+  return isObject(report) && isObject(report['csp-report']) ? [report['csp-report']] : [];
+}
+
+function toAuditEvent(violation: ReportFields): AuditEvent {
+  const raw =
+    violation.effectiveDirective ??
+    violation['effective-directive'] ??
+    violation['violated-directive'];
+  const directive = typeof raw === 'string' ? raw.trim().split(/\s+/, 1)[0].toLowerCase() : '';
+  return {
+    event: 'csp.violation',
+    outcome: violation.disposition === 'enforce' ? 'denied' : 'failure',
+    reason: DIRECTIVE.test(directive) ? directive : 'unknown',
+  };
+}
 
 async function readReportBody(request: Request): Promise<unknown> {
   const reader = request.body?.getReader();
@@ -34,7 +67,7 @@ async function readReportBody(request: Request): Promise<unknown> {
   return JSON.parse(new TextDecoder().decode(body));
 }
 
-export async function POST(request: Request): Promise<Response> {
+async function receiveReport(request: Request): Promise<Response> {
   const mediaType = request.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase();
   if (!mediaType || !REPORT_MEDIA_TYPES.has(mediaType)) {
     return Response.json({ error: 'Content-Type não suportado' }, { status: 415 });
@@ -45,8 +78,9 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Relatório muito grande' }, { status: 413 });
   }
 
+  let report: unknown;
   try {
-    const report = await readReportBody(request);
+    report = await readReportBody(request);
     if (!report || typeof report !== 'object') {
       return Response.json({ error: 'Relatório inválido' }, { status: 400 });
     }
@@ -57,6 +91,12 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Relatório inválido' }, { status: 400 });
   }
 
-  // Structured audit logging is added by S4-01; this route only accepts reports.
+  for (const violation of violationsIn(report).slice(0, MAX_LOGGED_VIOLATIONS)) {
+    container.auditLogger.record(toAuditEvent(violation));
+  }
   return new Response(null, { status: 204 });
+}
+
+export function POST(request: Request): Promise<Response> {
+  return withRequestContext(request.headers, () => receiveReport(request));
 }

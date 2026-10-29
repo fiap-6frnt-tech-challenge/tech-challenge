@@ -14,7 +14,7 @@ import type {
   RateLimitKeyGenerator,
   UserRepository,
 } from '../ports';
-import { FakeClock, SequentialIdGenerator } from '../testing';
+import { FakeClock, MemoryAuditLogger, SequentialIdGenerator } from '../testing';
 import type { LegacyUser, User } from '../types';
 import {
   AuthenticateUser,
@@ -102,6 +102,7 @@ function setup(existing: User | null = null) {
   return {
     users,
     passwords,
+    audit: new MemoryAuditLogger(),
     breachChecker,
     breachedPasswords,
     breachChecks,
@@ -127,7 +128,8 @@ function registerUser(deps: ReturnType<typeof setup>, ids = new SequentialIdGene
     ids,
     deps.rateLimiter,
     deps.rateLimitKeys,
-    deps.breachChecker
+    deps.breachChecker,
+    deps.audit
   );
 }
 
@@ -143,7 +145,8 @@ describe('user use cases', () => {
       deps.users,
       deps.passwords,
       deps.rateLimiter,
-      deps.rateLimitKeys
+      deps.rateLimitKeys,
+      deps.audit
     );
     expect(await authenticate.execute('ana@example.com', strongPassword, '127.0.0.1')).toBeNull();
     expect(deps.dummyVerifications).toBe(1);
@@ -224,7 +227,8 @@ describe('user use cases', () => {
       deps.users,
       deps.passwords,
       deps.rateLimiter,
-      deps.rateLimitKeys
+      deps.rateLimitKeys,
+      deps.audit
     );
     await expect(
       authenticate.execute('ANA@example.com', strongPassword, '127.0.0.1')
@@ -249,7 +253,8 @@ describe('user use cases', () => {
       deps.users,
       deps.passwords,
       deps.rateLimiter,
-      deps.rateLimitKeys
+      deps.rateLimitKeys,
+      deps.audit
     );
 
     await expect(authenticate.execute('ana@example.com', 'secret', '127.0.0.1')).rejects.toEqual(
@@ -279,6 +284,7 @@ describe('user use cases', () => {
       deps.passwords,
       deps.rateLimiter,
       deps.rateLimitKeys,
+      deps.audit,
       captcha
     );
 
@@ -317,7 +323,8 @@ describe('user use cases', () => {
       deps.users,
       deps.passwords,
       deps.rateLimiter,
-      deps.rateLimitKeys
+      deps.rateLimitKeys,
+      deps.audit
     );
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -363,7 +370,8 @@ describe('user use cases', () => {
       deps.users,
       deps.passwords,
       deps.rateLimiter,
-      deps.rateLimitKeys
+      deps.rateLimitKeys,
+      deps.audit
     );
 
     await expect(
@@ -381,6 +389,138 @@ describe('user use cases', () => {
       authenticate.execute('ana@example.com', 'Senha123!', '127.0.0.1')
     ).resolves.toEqual({ ...legacy, passwordHash: 'hashed:Senha123!' });
     expect(deps.passwordHashUpdates).toHaveLength(1);
+  });
+});
+
+describe('user use cases audit trail', () => {
+  const ana: User = {
+    id: 'u1',
+    name: 'Ana',
+    email: 'ana@example.com',
+    passwordHash: 'hashed:correct-password',
+  };
+  const authenticateWith = (deps: ReturnType<typeof setup>) =>
+    new AuthenticateUser(
+      deps.users,
+      deps.passwords,
+      deps.rateLimiter,
+      deps.rateLimitKeys,
+      deps.audit
+    );
+
+  it('records a wrong password as auth.login.failure without the password or the raw e-mail', async () => {
+    const deps = setup(ana);
+
+    await authenticateWith(deps).execute('ANA@example.com', 'senha-errada-123', '203.0.113.4');
+
+    expect(deps.audit.events).toEqual([
+      {
+        event: 'auth.login.failure',
+        outcome: 'failure',
+        userId: 'u1',
+        email: 'a***@e***.com',
+        reason: 'invalid_password',
+      },
+    ]);
+    const logged = JSON.stringify(deps.audit.events);
+    expect(logged).not.toContain('senha-errada-123');
+    expect(logged).not.toContain('ana@example.com');
+    expect(logged).not.toContain('203.0.113.4');
+  });
+
+  it('records unknown accounts and leaves the success to the second-factor step', async () => {
+    const deps = setup(ana);
+    const authenticate = authenticateWith(deps);
+
+    await authenticate.execute('bia@example.com', 'correct-password', '203.0.113.4');
+    await authenticate.execute('ana@example.com', 'correct-password', '203.0.113.4');
+
+    expect(deps.audit.events).toEqual([
+      expect.objectContaining({
+        event: 'auth.login.failure',
+        email: 'b***@e***.com',
+        reason: 'unknown_user',
+        userId: undefined,
+      }),
+    ]);
+  });
+
+  it('records the lockout once and every attempt rejected while locked', async () => {
+    const deps = setup(ana);
+    const authenticate = authenticateWith(deps);
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await authenticate.execute('ana@example.com', 'wrong-password', '203.0.113.4');
+    }
+    await expect(
+      authenticate.execute('ana@example.com', 'correct-password', '203.0.113.4')
+    ).rejects.toBeInstanceOf(RateLimitedError);
+
+    expect(deps.audit.events.map(({ event }) => event)).toEqual([
+      ...Array(5).fill('auth.login.failure'),
+      'auth.login.locked',
+      'rate_limit.hit',
+    ]);
+    expect(deps.audit.events[5]).toMatchObject({ userId: 'u1', reason: 'too_many_failures' });
+    expect(deps.audit.events[6]).toEqual({
+      event: 'rate_limit.hit',
+      outcome: 'denied',
+      email: 'a***@e***.com',
+      reason: 'login_email',
+    });
+  });
+
+  it('records a missing Turnstile challenge as a login failure', async () => {
+    const deps = setup(ana);
+    deps.attempts.set('login:email:ana@example.com', 3);
+    const captcha: CaptchaVerifier = { isEnabled: () => true, verify: async () => false };
+    const authenticate = new AuthenticateUser(
+      deps.users,
+      deps.passwords,
+      deps.rateLimiter,
+      deps.rateLimitKeys,
+      deps.audit,
+      captcha
+    );
+
+    await expect(
+      authenticate.execute('ana@example.com', 'correct-password', '203.0.113.4', 'token-secreto')
+    ).rejects.toBeInstanceOf(TurnstileRequiredError);
+
+    expect(deps.audit.events).toEqual([
+      expect.objectContaining({ event: 'auth.login.failure', reason: 'captcha_required' }),
+    ]);
+    expect(JSON.stringify(deps.audit.events)).not.toContain('token-secreto');
+  });
+
+  it('records registrations, taken e-mails and blocked registration IPs', async () => {
+    const deps = setup(ana);
+    const register = registerUser(deps, new SequentialIdGenerator('user'));
+
+    await expect(
+      register.execute(
+        { name: 'Ana', email: 'ana@example.com', password: strongPassword },
+        '203.0.113.4'
+      )
+    ).rejects.toBeInstanceOf(ConflictError);
+    await register.execute(
+      { name: 'Bia', email: 'bia@example.com', password: strongPassword },
+      '203.0.113.4'
+    );
+    deps.lockedKeys.add('register:ip:203.0.113.4');
+    await expect(
+      register.execute(
+        { name: 'Caio', email: 'caio@example.com', password: strongPassword },
+        '203.0.113.4'
+      )
+    ).rejects.toBeInstanceOf(RateLimitedError);
+
+    expect(deps.audit.events).toEqual([
+      { event: 'auth.register', outcome: 'failure', email: 'a***@e***.com', reason: 'email_taken' },
+      { event: 'auth.register', outcome: 'success', userId: 'user-1', email: 'b***@e***.com' },
+      { event: 'rate_limit.hit', outcome: 'denied', reason: 'register_ip' },
+    ]);
+    expect(JSON.stringify(deps.audit.events)).not.toContain(strongPassword);
   });
 });
 

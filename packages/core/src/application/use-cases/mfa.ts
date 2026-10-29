@@ -1,5 +1,6 @@
 import { AuthenticationError, RateLimitedError } from '../../domain';
 import type {
+  AuditLogger,
   Cipher,
   Clock,
   IdGenerator,
@@ -21,7 +22,8 @@ export class MfaService {
     private readonly totp: TotpProvider,
     private readonly limiter: RateLimiter,
     private readonly clock: Clock,
-    private readonly ids: IdGenerator
+    private readonly ids: IdGenerator,
+    private readonly audit: AuditLogger
   ) {}
 
   private async state(userId: string): Promise<MfaState> {
@@ -179,12 +181,39 @@ export class MfaService {
     const state = await this.state(userId);
     if (expectedPasswordHash !== undefined && state.passwordHash !== expectedPasswordHash)
       throw new AuthenticationError();
-    if (!state.enabled) return state.sessionVersion;
-    await this.check(userId);
-    if (!token) throw new MfaRequiredError();
-    if (!(await this.consume(state, token))) return this.fail(userId);
+    if (!state.enabled) return this.loggedIn(userId, state.sessionVersion);
+    await this.check(userId).catch((error: unknown): never => {
+      if (error instanceof RateLimitedError)
+        this.audit.record({ event: 'rate_limit.hit', outcome: 'denied', userId, reason: 'mfa' });
+      throw error;
+    });
+    if (!token) {
+      this.loginFailure(userId, 'mfa_required');
+      throw new MfaRequiredError();
+    }
+    if (!(await this.consume(state, token))) {
+      this.loginFailure(userId, 'mfa_invalid_code');
+      return this.fail(userId).catch((error: unknown): never => {
+        if (error instanceof RateLimitedError) {
+          this.audit.record({
+            event: 'auth.login.locked',
+            outcome: 'denied',
+            userId,
+            reason: 'mfa_too_many_failures',
+          });
+        }
+        throw error;
+      });
+    }
     await this.limiter.reset(`mfa:${userId}`);
-    return state.sessionVersion;
+    return this.loggedIn(userId, state.sessionVersion, 'mfa');
+  }
+  private loggedIn(userId: string, sessionVersion: number, reason?: string): number {
+    this.audit.record({ event: 'auth.login.success', outcome: 'success', userId, reason });
+    return sessionVersion;
+  }
+  private loginFailure(userId: string, reason: string) {
+    this.audit.record({ event: 'auth.login.failure', outcome: 'failure', userId, reason });
   }
   async disable(userId: string, password: string, token: string): Promise<void> {
     await this.check(userId);

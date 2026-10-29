@@ -14,6 +14,7 @@ import { auth } from '@/auth';
 import { JsonRequestError } from '@/app/api/read-json';
 import { UploadRequestError } from './UploadRequestError';
 import { dataVersion, withETag } from './etag';
+import { currentRequestId, withRequestContext } from './requestContext';
 
 type Context<P> = { actor: Actor; req: NextRequest; params: P };
 type Handler<P> = (context: Context<P>) => Promise<unknown>;
@@ -35,35 +36,37 @@ function responseFor(result: unknown, req: NextRequest, options: RouteOptions): 
 }
 
 export function route<P>(handler: Handler<P>, options: ActorRouteOptions<P> = {}) {
-  return async (req: NextRequest, context?: RouteContext<P>): Promise<NextResponse> => {
-    try {
-      const session = await auth();
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  return (req: NextRequest, context?: RouteContext<P>): Promise<NextResponse> =>
+    withRequestContext(req.headers, async () => {
+      try {
+        const session = await auth();
+        if (!session?.user?.id) {
+          return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+        }
+        const params = await (context?.params ?? Promise.resolve({} as P));
+        const handlerContext = { actor: { userId: session.user.id }, req, params };
+        if (options.version) {
+          const stamp = await options.version(handlerContext);
+          const version = dataVersion(req, session.user.id, stamp);
+          return await withETag(req, version, () => handler(handlerContext));
+        }
+        return responseFor(await handler(handlerContext), req, options);
+      } catch (error) {
+        return toHttpError(error);
       }
-      const params = await (context?.params ?? Promise.resolve({} as P));
-      const handlerContext = { actor: { userId: session.user.id }, req, params };
-      if (options.version) {
-        const stamp = await options.version(handlerContext);
-        const version = dataVersion(req, session.user.id, stamp);
-        return await withETag(req, version, () => handler(handlerContext));
-      }
-      return responseFor(await handler(handlerContext), req, options);
-    } catch (error) {
-      return toHttpError(error);
-    }
-  };
+    });
 }
 
 export function publicRoute<P>(handler: PublicHandler<P>, options: RouteOptions = {}) {
-  return async (req: NextRequest, context?: RouteContext<P>): Promise<NextResponse> => {
-    try {
-      const params = await (context?.params ?? Promise.resolve({} as P));
-      return responseFor(await handler({ req, params }), req, options);
-    } catch (error) {
-      return toHttpError(error);
-    }
-  };
+  return (req: NextRequest, context?: RouteContext<P>): Promise<NextResponse> =>
+    withRequestContext(req.headers, async () => {
+      try {
+        const params = await (context?.params ?? Promise.resolve({} as P));
+        return responseFor(await handler({ req, params }), req, options);
+      } catch (error) {
+        return toHttpError(error);
+      }
+    });
 }
 
 export function toHttpError(error: unknown): NextResponse {
@@ -96,7 +99,7 @@ export function toHttpError(error: unknown): NextResponse {
   if (error instanceof InvalidFileError) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
-  const requestId = crypto.randomUUID();
+  const requestId = currentRequestId();
   console.error('[http] Erro inesperado', { requestId, error });
   return NextResponse.json({ error: 'Erro interno', requestId }, { status: 500 });
 }
