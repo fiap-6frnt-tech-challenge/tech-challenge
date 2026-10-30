@@ -14,12 +14,14 @@ import {
 import type {
   Actor,
   AttachmentRepository,
+  AuditLogger,
   Cipher,
   FileStorage,
   IdGenerator,
   LegacyAttachmentRepository,
   TransactionRepository,
 } from '../ports';
+import type { AccessAudit } from '../audit';
 
 const ENCRYPTED_CONTENT_TYPE = 'application/octet-stream';
 const fileContext = (attachmentId: string) => `attachment:${attachmentId}`;
@@ -30,7 +32,8 @@ export class AddAttachment {
     private readonly attachments: AttachmentRepository,
     private readonly storage: FileStorage,
     private readonly cipher: Cipher,
-    private readonly ids: IdGenerator
+    private readonly ids: IdGenerator,
+    private readonly access: AccessAudit
   ) {}
   async execute(
     actor: Actor,
@@ -38,7 +41,7 @@ export class AddAttachment {
     file: AttachmentUpload
   ): Promise<AttachmentRecord> {
     if (!(await this.transactions.findById(transactionId, actor.userId)))
-      throw new NotFoundError('Transação');
+      throw await this.access.notFound(actor, 'transaction', transactionId);
     if (file.bytes.byteLength > ATTACHMENT_MAX_SIZE_BYTES)
       throw new InvalidFileError('Arquivo excede o limite de 4MB');
     const mimeType = detectAttachmentType(file.bytes);
@@ -63,10 +66,13 @@ export class AddAttachment {
 }
 
 export class ListAttachments {
-  constructor(private readonly attachments: AttachmentRepository) {}
+  constructor(
+    private readonly attachments: AttachmentRepository,
+    private readonly access: AccessAudit
+  ) {}
   async execute(actor: Actor, transactionId: string): Promise<AttachmentRecord[]> {
     const attachments = await this.attachments.list(transactionId, actor.userId);
-    if (attachments === null) throw new NotFoundError('Transação');
+    if (attachments === null) throw await this.access.notFound(actor, 'transaction', transactionId);
     return attachments;
   }
 }
@@ -75,16 +81,25 @@ export class DownloadAttachment {
   constructor(
     private readonly attachments: AttachmentRepository,
     private readonly storage: FileStorage,
-    private readonly cipher: Cipher
+    private readonly cipher: Cipher,
+    private readonly access: AccessAudit,
+    private readonly audit: AuditLogger
   ) {}
   async execute(actor: Actor, transactionId: string, id: string): Promise<AttachmentFile> {
     const attachment = await this.attachments.findById(id, actor.userId);
-    if (!attachment || attachment.transactionId !== transactionId) throw new NotFoundError('Anexo');
+    if (!attachment) throw await this.access.notFound(actor, 'attachment', id);
+    if (attachment.transactionId !== transactionId) throw new NotFoundError('Anexo');
     const stored = await this.storage.get(attachment.ref);
     const bytes =
       attachment.encVersion === ATTACHMENT_ENCRYPTION.legacy
         ? stored
         : this.cipher.decrypt(stored, fileContext(attachment.id));
+    this.audit.record({
+      event: 'attachment.download',
+      outcome: 'success',
+      userId: actor.userId,
+      resource: `attachment:${attachment.id}`,
+    });
     return { name: attachment.name, mimeType: attachment.mimeType, bytes };
   }
 }
@@ -92,11 +107,12 @@ export class DownloadAttachment {
 export class RemoveAttachment {
   constructor(
     private readonly attachments: AttachmentRepository,
-    private readonly storage: FileStorage
+    private readonly storage: FileStorage,
+    private readonly access: AccessAudit
   ) {}
   async execute(actor: Actor, id: string): Promise<void> {
     const attachment = await this.attachments.findById(id, actor.userId);
-    if (!attachment) throw new NotFoundError('Anexo');
+    if (!attachment) throw await this.access.notFound(actor, 'attachment', id);
     await this.storage.delete(attachment.ref);
     if (!(await this.attachments.delete(id, actor.userId))) throw new NotFoundError('Anexo');
   }

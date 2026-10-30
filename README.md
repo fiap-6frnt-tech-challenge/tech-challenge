@@ -83,8 +83,11 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ### 4. Subir o banco de dados
 
 ```bash
+cp .env.example .env
 docker compose up -d db
 ```
+
+O compose lê as senhas do Postgres do `.env` da raiz (`POSTGRES_PASSWORD`, `POSTGRES_APP_PASSWORD`). Com os valores de dev do `.env.example`, o `DATABASE_URL` do `.env.local` funciona sem ajuste. O Postgres só aceita conexões de `127.0.0.1:5432`.
 
 ### 5. Executar as migrations
 
@@ -128,6 +131,34 @@ docker compose up --build
 > `db:migrate` e `db:seed` rodam no host e leem `DATABASE_URL` de `apps/shell/.env.local` — por isso o segundo `cp`. O `.env` da raiz é consumido apenas pelos containers do Docker Compose.
 
 Acesse `http://localhost:3000`, crie uma conta em `/register` e faça login. `BLOB_READ_WRITE_TOKEN` é opcional — sem ele o upload de anexos usa um storage mock local.
+
+### Hardening dos containers
+
+| Serviço            | Porta (host → container) | Usuário                        | Restrições                                                          |
+| ------------------ | ------------------------ | ------------------------------ | ------------------------------------------------------------------- |
+| `db`               | `127.0.0.1:5432 → 5432`  | `postgres`                     | Fora da rede local; senhas só no `.env`                             |
+| `shell`            | `3000 → 3000`            | `node`                         | `read_only` (+ `tmpfs` em `/tmp` e `.next/cache`), sem capabilities |
+| `dashboard-mfe`    | `3002 → 8080`            | `nginx` (`nginx-unprivileged`) | `read_only` (+ `tmpfs` em `/tmp`), sem capabilities                 |
+| `transactions-mfe` | `3003 → 8080`            | `nginx` (`nginx-unprivileged`) | `read_only` (+ `tmpfs` em `/tmp`), sem capabilities                 |
+
+Todos os serviços da aplicação rodam com `no-new-privileges`. O banco tem dois roles:
+
+- **`bytebank`** (dono do schema): usado por `db:migrate` e `db:seed`, que rodam no host.
+- **`bytebank_app`**: usado pelo shell no compose. Só tem `SELECT`, `INSERT`, `UPDATE` e `DELETE`, então não consegue `DROP` nem `ALTER`. É criado por [`docker/postgres/init/01-app-role.sql`](docker/postgres/init/01-app-role.sql), que também concede acesso às tabelas de migrações futuras.
+
+> Os scripts de `docker/postgres/init` só rodam quando o volume do Postgres está vazio. Num volume criado antes desse script, o shell não consegue conectar como `bytebank_app`. Para aplicar o script sem perder dados, rode `docker compose exec db psql -U bytebank -d bytebank -f /docker-entrypoint-initdb.d/01-app-role.sql`. Para recriar o banco do zero, use `docker compose down -v` (apaga os dados) e repita o passo a passo.
+
+No Neon, crie o role equivalente pelo **SQL Editor**. Um role criado pela aba Roles do console entra no `neon_superuser` e ganha privilégios demais. Troque `<owner>` pelo dono do banco (ex.: `neondb_owner`):
+
+```sql
+CREATE ROLE bytebank_app LOGIN PASSWORD '<senha forte>';
+GRANT USAGE ON SCHEMA public TO bytebank_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO bytebank_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE <owner> IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO bytebank_app;
+```
+
+Depois, o `DATABASE_URL` da Vercel passa a usar o `bytebank_app`, e as migrações continuam rodando com a connection string do dono.
 
 ---
 

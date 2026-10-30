@@ -1,12 +1,7 @@
-import {
-  NotFoundError,
-  type NewTransaction,
-  type Transaction,
-  type TransactionFilter,
-  type PageRequest,
-} from '../../domain';
+import type { NewTransaction, Transaction, TransactionFilter, PageRequest } from '../../domain';
 import { createTransactionSchemaForDate, updateTransactionSchema } from '../../schemas';
 import type { Actor, CacheInvalidator, Clock, IdGenerator, TransactionRepository } from '../ports';
+import type { AccessAudit } from '../audit';
 import { parseOrThrow } from '../parseOrThrow';
 import type { TransactionPatch } from '../types';
 
@@ -31,12 +26,13 @@ export class CreateTransaction {
 export class UpdateTransaction {
   constructor(
     private readonly transactions: TransactionRepository,
-    private readonly cache: CacheInvalidator
+    private readonly cache: CacheInvalidator,
+    private readonly access: AccessAudit
   ) {}
   async execute(actor: Actor, id: string, input: unknown): Promise<Transaction> {
     const patch = parseOrThrow<TransactionPatch>(updateTransactionSchema, input);
     const updated = await this.transactions.update(id, actor.userId, patch);
-    if (!updated) throw new NotFoundError('Transação');
+    if (!updated) throw await this.access.notFound(actor, 'transaction', id);
     await this.cache.invalidateUser(actor.userId);
     return updated;
   }
@@ -45,19 +41,24 @@ export class UpdateTransaction {
 export class DeleteTransaction {
   constructor(
     private readonly transactions: TransactionRepository,
-    private readonly cache: CacheInvalidator
+    private readonly cache: CacheInvalidator,
+    private readonly access: AccessAudit
   ) {}
   async execute(actor: Actor, id: string): Promise<void> {
-    if (!(await this.transactions.delete(id, actor.userId))) throw new NotFoundError('Transação');
+    if (!(await this.transactions.delete(id, actor.userId)))
+      throw await this.access.notFound(actor, 'transaction', id);
     await this.cache.invalidateUser(actor.userId);
   }
 }
 
 export class GetTransaction {
-  constructor(private readonly transactions: TransactionRepository) {}
+  constructor(
+    private readonly transactions: TransactionRepository,
+    private readonly access: AccessAudit
+  ) {}
   async execute(actor: Actor, id: string): Promise<Transaction> {
     const transaction = await this.transactions.findById(id, actor.userId);
-    if (!transaction) throw new NotFoundError('Transação');
+    if (!transaction) throw await this.access.notFound(actor, 'transaction', id);
     return transaction;
   }
 }

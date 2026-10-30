@@ -1,5 +1,5 @@
 import { AuthenticationError } from '../../domain';
-import type { Actor, Clock, IdGenerator, SessionRepository } from '../ports';
+import type { Actor, AuditLogger, Clock, IdGenerator, SessionRepository } from '../ports';
 
 export const SESSION_ABSOLUTE_MS = 12 * 60 * 60 * 1000;
 export const SESSION_CHECK_MS = 5 * 60 * 1000;
@@ -66,9 +66,18 @@ export class SessionLifecycle {
 }
 
 export class RevokeSessions {
-  constructor(private readonly sessions: SessionRepository) {}
+  constructor(
+    private readonly sessions: SessionRepository,
+    private readonly audit: AuditLogger
+  ) {}
   async execute(actor: Actor): Promise<void> {
     if (!actor.userId || !(await this.sessions.revokeAll(actor.userId)))
       throw new AuthenticationError();
+    this.audit.record({
+      event: 'auth.session.revoked',
+      outcome: 'success',
+      userId: actor.userId,
+      reason: 'all_devices',
+    });
   }
 }
