@@ -12,6 +12,14 @@ vi.mock('@bytebank/api-client', async (importOriginal) => ({
   queryClient: { prefetchQuery: mocks.prefetchQuery },
 }));
 
+vi.mock('@bytebank/shared', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@bytebank/shared')>()),
+  whenIdle: (callback: () => void) => {
+    callback();
+    return () => undefined;
+  },
+}));
+
 vi.mock('./federation', () => ({
   preloadAccountOverview: mocks.preloadAccountOverview,
   preloadDashboard: mocks.preloadDashboard,
@@ -19,7 +27,12 @@ vi.mock('./federation', () => ({
 }));
 
 import { overviewKeys, summaryKeys, transactionKeys } from '@bytebank/api-client';
-import { preloadLikelyNextRoute, preloadRoute } from './routePreload';
+import {
+  preloadCurrentRoute,
+  preloadLikelyNextRoute,
+  preloadLikelyNextRouteWhenReady,
+  preloadRoute,
+} from './routePreload';
 
 const prefetchedKeys = () => mocks.prefetchQuery.mock.calls.map(([options]) => options.queryKey);
 
@@ -31,6 +44,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  performance.clearMarks();
 });
 
 describe('preloadRoute', () => {
@@ -107,5 +121,44 @@ describe('preloadLikelyNextRoute', () => {
     expect(mocks.preloadDashboard).toHaveBeenCalledTimes(1);
     expect(mocks.preloadAccountOverview).toHaveBeenCalledTimes(1);
     expect(mocks.prefetchQuery).not.toHaveBeenCalled();
+  });
+});
+
+describe('preloadCurrentRoute', () => {
+  it('pré-carrega só o remote acima da dobra da rota atual, sem buscar dados', async () => {
+    preloadCurrentRoute('/');
+    await vi.dynamicImportSettled();
+    expect(mocks.preloadAccountOverview).toHaveBeenCalledTimes(1);
+    expect(mocks.preloadDashboard).not.toHaveBeenCalled();
+
+    preloadCurrentRoute('/transactions');
+    await vi.dynamicImportSettled();
+    expect(mocks.preloadTransactionsPage).toHaveBeenCalledTimes(1);
+    expect(mocks.prefetchQuery).not.toHaveBeenCalled();
+  });
+});
+
+describe('preloadLikelyNextRouteWhenReady', () => {
+  it('só baixa o remote da próxima rota depois da marca *:ready da rota atual', async () => {
+    preloadLikelyNextRouteWhenReady('/transactions');
+    performance.mark('overview:ready');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await vi.dynamicImportSettled();
+    expect(mocks.preloadAccountOverview).not.toHaveBeenCalled();
+
+    performance.mark('transactions:ready');
+    await vi.waitFor(() => expect(mocks.preloadAccountOverview).toHaveBeenCalledTimes(1));
+    expect(mocks.preloadDashboard).toHaveBeenCalledTimes(1);
+    expect(mocks.preloadTransactionsPage).not.toHaveBeenCalled();
+  });
+
+  it('não baixa nada quando a rota sai antes de ficar pronta', async () => {
+    const cancel = preloadLikelyNextRouteWhenReady('/');
+    cancel();
+    performance.mark('overview:ready');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await vi.dynamicImportSettled();
+
+    expect(mocks.preloadTransactionsPage).not.toHaveBeenCalled();
   });
 });

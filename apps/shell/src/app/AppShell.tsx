@@ -3,19 +3,25 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from '@bytebank/design-system';
-import { markNavigationStart, whenIdle } from '@bytebank/shared';
-import { selectIsAuthenticated, useAppSelector } from '@bytebank/stores';
+import { markNavigationStart } from '@bytebank/shared';
+import { selectIsAuthenticated, selectSessionEnded, useAppSelector } from '@bytebank/stores';
 import { AppHeader } from '../components/AppHeader';
-import { preloadLikelyNextRoute, preloadRoute } from '../lib/routePreload';
+import {
+  preloadCurrentRoute,
+  preloadLikelyNextRouteWhenReady,
+  preloadRoute,
+} from '../lib/routePreload';
 import { isPublicAuthRoute } from './AppShell.routes';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const sessionEnded = useAppSelector(selectSessionEnded);
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    return whenIdle(() => preloadLikelyNextRoute(pathname));
+    preloadCurrentRoute(pathname);
+    return preloadLikelyNextRouteWhenReady(pathname);
   }, [isAuthenticated, pathname]);
 
   if (isPublicAuthRoute(pathname)) {
@@ -47,7 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <main id="main" tabIndex={-1} className="w-full py-lg h-full overflow-y-auto">
-            {isAuthenticated ? children : null}
+            {sessionEnded ? null : children}
           </main>
         </div>
       </div>

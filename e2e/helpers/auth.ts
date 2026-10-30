@@ -13,6 +13,10 @@ export async function login(page: Page, user: E2EUser = E2E_USER) {
   await expect(page).toHaveURL(/\/$/);
   // The profile is hidden by the responsive header on mobile.
   await expect(page.getByText(user.name)).toBeAttached();
+  // The header arrives in the server HTML; the remote only mounts after hydration.
+  await expect(page.getByRole('button', { name: 'Exibir saldo' })).toBeVisible({
+    timeout: 30_000,
+  });
 }
 
 export async function logout(page: Page) {

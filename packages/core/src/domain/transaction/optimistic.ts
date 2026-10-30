@@ -114,17 +114,21 @@ function shift(points: BalancePoint[], delta: Money): BalancePoint[] {
 }
 
 function withPoint(points: BalancePoint[], transaction: Transaction): BalancePoint[] {
-  const index = points.filter((point) => point.date <= transaction.date).length;
+  const index = points.filter((point) => point.date < transaction.date).length;
   const delta = signedAmount(transaction);
+  const later = shift(points.slice(index), delta);
+  if (points[index]?.date === transaction.date) return [...points.slice(0, index), ...later];
   const point = { date: transaction.date, balance: plus(points[index - 1]?.balance ?? 0, delta) };
-  return [...points.slice(0, index), point, ...shift(points.slice(index), delta)];
+  return [...points.slice(0, index), point, ...later];
 }
 
 function withoutPoint(points: BalancePoint[], transaction: Transaction): BalancePoint[] {
   const index = points.findIndex((point) => point.date === transaction.date);
   if (index === -1) return points;
   const delta = Money.zero().subtract(signedAmount(transaction));
-  return [...points.slice(0, index), ...shift(points.slice(index + 1), delta)];
+  const later = shift(points.slice(index), delta);
+  const unchanged = later[0].balance === (points[index - 1]?.balance ?? 0);
+  return [...points.slice(0, index), ...(unchanged ? later.slice(1) : later)];
 }
 
 function contribute(series: SummarySeries, transaction: Transaction, sign: Sign): SummarySeries {

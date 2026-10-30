@@ -20,7 +20,7 @@ import {
 } from './uploadsSlice';
 import { createAppStore, resetClientState } from './store';
 import { showFeedback, hideFeedback, selectFeedback, setFilterPanelOpen } from './uiSlice';
-import { setSession } from './authSlice';
+import { clearSession, selectSessionEnded, setSession } from './authSlice';
 
 const queued = (id: string, total = 100) => ({
   id,
@@ -131,4 +131,15 @@ it('resets every client slice and keeps independent store instances isolated', (
   store.dispatch(uploadQueued(queued('one')));
   store.dispatch(resetClientState());
   expect(store.getState()).toEqual(clean);
+});
+
+it('keeps an ended session ended across the client reset', () => {
+  const { store } = createAppStore();
+  const clean = createAppStore().store.getState();
+  store.dispatch(setSession({ id: 'u1', name: 'Test', email: 'test@example.com' }));
+  store.dispatch(showFeedback({ type: 'success', title: 'Saved' }));
+  store.dispatch(clearSession());
+  store.dispatch(resetClientState());
+  expect(store.getState()).toEqual({ ...clean, auth: { ...clean.auth, sessionEnded: true } });
+  expect(selectSessionEnded(store.getState())).toBe(true);
 });

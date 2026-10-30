@@ -29,7 +29,7 @@
 | 07  | ⏳     | README final                                | Dev 3                  | 1 dia   | P0   | [07-readme.md](./07-readme.md)                         |
 | 08  | ⏳     | Vídeo demo (≤ 5 min)                        | Todos (roteiro: Dev 2) | 1 dia   | P0   | [08-demo-video.md](./08-demo-video.md)                 |
 | 09  | ⏳     | Smoke final + merge + tag `v4.0.0`          | Todos                  | 0.5 dia | P0   | [09-release.md](./09-release.md)                       |
-| 10  | ⏳     | LCP mobile: elemento de LCP fora da cascata | Dev 3 (+ Dev 2)        | 2 dias  | P1   | [10-mobile-lcp.md](./10-mobile-lcp.md)                 |
+| 10  | 🟢     | LCP mobile: elemento de LCP fora da cascata | Dev 3 (+ Dev 2)        | 2 dias  | P1   | [10-mobile-lcp.md](./10-mobile-lcp.md)                 |
 
 A Task 10 roda antes da 04, para o relatório medir o estado final.
 

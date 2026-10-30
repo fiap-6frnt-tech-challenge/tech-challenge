@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
-import { auth } from '../../auth';
 import { isGoogleAuthEnabled } from '../../auth.config';
 import { container } from '@/server/container';
+import { currentSession } from '@/server/session';
 import { loginWithGoogleAction } from './actions';
 import { LoginPageClient } from './LoginPageClient';
 
@@ -10,7 +10,7 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ reason?: string }>;
 }) {
-  const session = await auth();
+  const session = await currentSession();
 
   if (session?.user?.id) {
     redirect('/');

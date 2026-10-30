@@ -2,7 +2,13 @@
 
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Funnel, ReceiptText, SearchX } from 'lucide-react';
-import { EmptyState, ErrorState, IconButton, Pagination } from '@bytebank/design-system';
+import {
+  EmptyState,
+  ErrorState,
+  IconButton,
+  PageHeading,
+  Pagination,
+} from '@bytebank/design-system';
 import {
   usePaginatedTransactions,
   usePrefetchNextTransactionsPage,
@@ -154,17 +160,17 @@ export default function TransactionsPage() {
         className="flex flex-col gap-lg overflow-hidden h-full px-1"
       >
         <div className="flex flex-col">
-          <h1
+          <PageHeading
             id="transactions-heading"
-            className="py-lg w-full heading text-content-primary bg-background text-xl flex justify-between items-center"
-          >
-            Transações
-            <IconButton
-              icon={<Funnel />}
-              aria-label="Adicionar filtros"
-              onClick={() => setIsFilterVisible(!isFilterVisible)}
-            />
-          </h1>
+            title="Transações"
+            action={
+              <IconButton
+                icon={<Funnel />}
+                aria-label="Adicionar filtros"
+                onClick={() => setIsFilterVisible(!isFilterVisible)}
+              />
+            }
+          />
           <TransactionFilters
             value={filters}
             onChange={setFilters}

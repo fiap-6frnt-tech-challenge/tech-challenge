@@ -13,6 +13,24 @@ export function markNavigationStart(href: string): void {
   performance.mark(NAV_CLICK, { detail: { href } });
 }
 
+export function onContentReady(name: string, callback: () => void): () => void {
+  if (typeof performance === 'undefined' || typeof PerformanceObserver === 'undefined') {
+    return () => {};
+  }
+  const ready = `${name}:ready`;
+  if (performance.getEntriesByName(ready, 'mark').length > 0) {
+    callback();
+    return () => {};
+  }
+  const observer = new PerformanceObserver((list) => {
+    if (list.getEntriesByName(ready, 'mark').length === 0) return;
+    observer.disconnect();
+    callback();
+  });
+  observer.observe({ type: 'mark' });
+  return () => observer.disconnect();
+}
+
 export function markContentReady(name: string): void {
   if (typeof performance === 'undefined' || typeof location === 'undefined') return;
   const ready = `${name}:ready`;

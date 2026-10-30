@@ -113,6 +113,13 @@ describe('GetTransactionsSummary', () => {
       );
     });
 
+    it('matches the recomputed summary after a create on a day that already has a point', async () => {
+      const created = transaction('same-day', 'owner', { amount: 30, date: '2026-01-10' });
+      expect(applyOptimisticSummaryCreate(await summarize(rows), range, created)).toEqual(
+        await summarize([...rows, created])
+      );
+    });
+
     it('matches the recomputed summary after an edit that changes month and type', async () => {
       const previous = rows[1];
       const next = { ...previous, type: 'deposit' as const, amount: 80, date: '2026-03-02' };

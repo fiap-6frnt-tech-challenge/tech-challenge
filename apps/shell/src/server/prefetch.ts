@@ -9,16 +9,16 @@ import {
 } from '@bytebank/api-client/keys';
 import { fromBrowserSearchParams, fromSearchParams, toSearchParams } from '@bytebank/core';
 import type { Actor } from '@bytebank/core/application';
-import { auth } from '@/auth';
 import { container } from './container';
 import { publicTransactionsPage } from './http/transactionsPage';
+import { currentSession } from './session';
 
 export type PageSearchParams = Record<string, string | string[] | undefined>;
 
 type Prefetch = (queryClient: QueryClient, actor: Actor) => Promise<void>[];
 
 async function prefetchForSession(prefetch: Prefetch): Promise<DehydratedState | undefined> {
-  const session = await auth();
+  const session = await currentSession();
   const userId = session?.user?.id;
   if (!userId) return undefined;
   const queryClient = new QueryClient();

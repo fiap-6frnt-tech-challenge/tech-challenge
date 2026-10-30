@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@bytebank/design-system';
+import { BalanceIllustration, Button } from '@bytebank/design-system';
 import { Card } from '@bytebank/design-system';
 import { Skeleton } from '@bytebank/design-system';
 import { formatCurrencyExact, formatTodayDate } from '@bytebank/shared';
@@ -54,16 +54,7 @@ export function BalanceCard({
 
           <p className="text-sm mb-0 md:mb-lg">{formatTodayDate()}</p>
 
-          <img
-            src="/piggy-bank.png"
-            aria-hidden="true"
-            width={283}
-            height={229}
-            loading="eager"
-            fetchPriority="high"
-            className="pointer-events-none select-none hidden md:block"
-            alt=""
-          />
+          <BalanceIllustration className="hidden md:block" />
         </div>
 
         <div
@@ -106,16 +97,7 @@ export function BalanceCard({
           )}
         </div>
 
-        <img
-          src="/piggy-bank.png"
-          aria-hidden="true"
-          width={283}
-          height={229}
-          loading="eager"
-          fetchPriority="high"
-          className="pointer-events-none select-none md:hidden"
-          alt=""
-        />
+        <BalanceIllustration className="md:hidden" />
       </div>
     </Card>
   );

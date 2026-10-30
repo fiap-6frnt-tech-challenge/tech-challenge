@@ -18,8 +18,13 @@ const combinedReducer = combineReducers({
 });
 export type RootState = ReturnType<typeof combinedReducer>;
 export const resetClientState = createAction('client/resetClientState');
-const rootReducer = (state: RootState | undefined, action: UnknownAction) =>
-  combinedReducer(resetClientState.match(action) ? undefined : state, action);
+const rootReducer = (state: RootState | undefined, action: UnknownAction): RootState => {
+  if (!resetClientState.match(action)) return combinedReducer(state, action);
+  const reset = combinedReducer(undefined, action);
+  return state?.auth.sessionEnded
+    ? { ...reset, auth: { ...reset.auth, sessionEnded: true } }
+    : reset;
+};
 
 export function createAppStore() {
   const listeners = createListenerMiddleware<RootState>();

@@ -55,7 +55,8 @@ Zero respostas não-2xx. JSON cru em `perf/api-bench-2026-10-06T23-07-01-360Z.js
   centavos (`round(sum(amount::numeric), 2)`), sem as caudas de ponto flutuante
   (`4633.599999999999`). Os 210 kB restantes são quase todos `balanceOverTime`, que tem um ponto
   **por transação** (5.000 pontos). Agrupar por dia (≈ 700 pontos) é o próximo ganho de payload,
-  mas muda o contrato do gráfico — fica como sugestão para o S3-04.
+  mas muda o contrato do gráfico — fica como sugestão para o S3-04. Feito no
+  [S4-10](../sprint-4-audit-delivery/10-mobile-lcp.md#notas-de-implementação): um ponto por dia.
 - **Lista paginada de 10 itens: 122 ms, acima dos 100 ms sugeridos.** No mesmo bench, a página de
   **100** itens deu p95 de 83 ms, o que indica que o p95 do primeiro endpoint da rodada é ruído de
   aquecimento/memória da máquina, não custo da consulta — no banco ela executa em **0,2 ms** (seção
@@ -105,7 +106,8 @@ Testes de integração (`npm run test:integration -w @bytebank/shell`, Postgres 
 Uma diferença intencional: dentro do **mesmo dia**, `balanceSeries` agora acumula na ordem de
 criação (`date, created_at, id`); a implementação antiga herdava a ordem inversa da consulta. O
 saldo de fim de dia é o mesmo; só os pontos intermediários do dia mudam de ordem. O seed não tem
-duas transações no mesmo dia, por isso a equivalência é exata.
+duas transações no mesmo dia, por isso a equivalência é exata. Desde o S4-10 a série tem um ponto
+por dia (o saldo de fim de dia), e essa diferença deixou de existir.
 
 ## 4. Remedição na `phase-4` integrada (S1-10)
 

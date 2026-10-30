@@ -132,7 +132,8 @@ describe('client listener composition', () => {
     expect(cancelled).toBe(true);
     expect(queryClient.getQueryCache().getAll()).toEqual([]);
     expect(queryClient.getMutationCache().getAll()).toEqual([]);
-    expect(store.getState()).toEqual(createAppStore().store.getState());
+    const clean = createAppStore().store.getState();
+    expect(store.getState()).toEqual({ ...clean, auth: { ...clean.auth, sessionEnded: true } });
     stop();
   });
 
