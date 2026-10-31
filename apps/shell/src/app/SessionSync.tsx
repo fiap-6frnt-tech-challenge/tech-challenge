@@ -14,6 +14,7 @@ import {
 } from '@bytebank/stores';
 import { afterMfaRecoveryDelivery } from './mfaRecoveryDelivery';
 import { isPublicAuthRoute } from './AppShell.routes';
+import { isSameUser, toUserSession } from './sessionStore';
 
 async function isSignedOutOnServer(): Promise<boolean> {
   try {
@@ -40,15 +41,10 @@ export function SessionSync() {
     if (status === 'loading') return;
 
     if (session?.user) {
-      if (isClientLogoutInProgress() || store.getState().auth.logoutError) return;
-      dispatch(
-        setSession({
-          id: session.user.id ?? '',
-          name: session.user.name ?? '',
-          email: session.user.email ?? '',
-          image: session.user.image ?? undefined,
-        })
-      );
+      const { auth } = store.getState();
+      if (isClientLogoutInProgress() || auth.logoutError) return;
+      const user = toUserSession(session.user);
+      if (auth.sessionEnded || !isSameUser(auth.user, user)) dispatch(setSession(user));
       return;
     }
 

@@ -47,12 +47,14 @@ export function aggregateByMonth(transactions: Transaction[]): MonthlyAggregate[
 
 export function cumulativeBalance(transactions: Transaction[]): BalancePoint[] {
   const ordered = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+  const endOfDay = new Map<string, number>();
   let running = 0;
-  return ordered.map((t) => {
+  for (const t of ordered) {
     if (t.type === TRANSACTION_TYPE.DEPOSIT) running += t.amount;
     else if (t.type === TRANSACTION_TYPE.WITHDRAWAL) running -= t.amount;
-    return { date: t.date, balance: running };
-  });
+    endOfDay.set(t.date, running);
+  }
+  return [...endOfDay].map(([date, balance]) => ({ date, balance }));
 }
 
 export function groupByCategory(transactions: Transaction[]): CategoryAggregate[] {

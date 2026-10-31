@@ -179,6 +179,18 @@ describe('applyOptimisticSummaryCreate', () => {
     expect(result.balanceOverTime.at(-1)).toEqual({ date: '2026-10-02', balance: 369.5 });
   });
 
+  it('adds to the point of an existing day instead of creating another', () => {
+    const result = applyOptimisticSummaryCreate(
+      summary,
+      range,
+      transaction('same-day', { amount: 30, date: '2026-09-05' })
+    );
+    expect(result.balanceOverTime).toEqual([
+      { date: '2026-09-05', balance: 470 },
+      { date: '2026-09-20', balance: 420 },
+    ]);
+  });
+
   it('records a transfer as a neutral point', () => {
     const result = applyOptimisticSummaryCreate(
       summary,
@@ -223,6 +235,19 @@ describe('applyOptimisticSummaryUpdate', () => {
       balanceOverTime: [{ date: '2026-09-05', balance: 500 }],
       byCategory: [],
     });
+  });
+
+  it('keeps the old day while it still moves the balance', () => {
+    const shared = { ...summary, balanceOverTime: [{ date: '2026-09-20', balance: -50 }] };
+    const partial = transaction('w', { amount: 20, date: '2026-09-20' });
+    const result = applyOptimisticSummaryUpdate(shared, range, partial, {
+      ...partial,
+      date: '2026-09-25',
+    });
+    expect(result.balanceOverTime).toEqual([
+      { date: '2026-09-20', balance: -30 },
+      { date: '2026-09-25', balance: -50 },
+    ]);
   });
 
   it('adds the contribution when the old date was outside the range', () => {

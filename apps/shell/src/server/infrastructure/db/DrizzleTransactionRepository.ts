@@ -23,7 +23,6 @@ import { transactions } from '@/db/schema';
 import { toTransaction } from './mappers';
 
 const newestFirst = [desc(transactions.date), desc(transactions.createdAt), desc(transactions.id)];
-const chronological = [asc(transactions.date), asc(transactions.createdAt), asc(transactions.id)];
 
 const deposit = sql.raw(`'${TRANSACTION_TYPE.DEPOSIT}'`);
 const withdrawal = sql.raw(`'${TRANSACTION_TYPE.WITHDRAWAL}'`);
@@ -197,12 +196,11 @@ export class DrizzleTransactionRepository implements TransactionRepository {
     return this.db
       .select({
         date: transactions.date,
-        balance: money(
-          sql`sum(${signedAmount}) over (order by ${transactions.date}, ${transactions.createdAt}, ${transactions.id} rows unbounded preceding)`
-        ),
+        balance: money(sql`sum(sum(${signedAmount})) over (order by ${transactions.date})`),
       })
       .from(transactions)
       .where(inRange(ownerId, range))
-      .orderBy(...chronological);
+      .groupBy(transactions.date)
+      .orderBy(asc(transactions.date));
   }
 }

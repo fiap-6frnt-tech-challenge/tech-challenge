@@ -139,6 +139,18 @@ describe('cumulativeBalance', () => {
     ]);
   });
 
+  it('keeps one point per day with the end-of-day balance', () => {
+    const sameDay = [
+      { ...aggregated[0], date: '2026-03-01' },
+      { ...aggregated[1], date: '2026-03-01' },
+      { ...aggregated[2], date: '2026-03-02' },
+    ];
+    expect(cumulativeBalance(sameDay)).toEqual([
+      { date: '2026-03-01', balance: 4880 },
+      { date: '2026-03-02', balance: 4800 },
+    ]);
+  });
+
   it('orders unsorted input chronologically without mutating the source list', () => {
     const reversed = [...aggregated].reverse();
     const points = cumulativeBalance(reversed);

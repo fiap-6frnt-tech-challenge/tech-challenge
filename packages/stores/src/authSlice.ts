@@ -12,6 +12,7 @@ export interface AuthState {
   user: UserSession | null;
   isAuthenticated: boolean;
   logoutError?: boolean;
+  sessionEnded?: boolean;
 }
 
 const initialState: AuthState = {
@@ -65,13 +66,19 @@ export const authSlice = createSlice({
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
       delete state.logoutError;
+      if (action.payload) delete state.sessionEnded;
+      else state.sessionEnded = true;
     },
     clearSession: (state) => {
       state.user = null;
       state.isAuthenticated = false;
+      state.sessionEnded = true;
     },
   },
   extraReducers: (builder) => {
+    builder.addCase(logout.pending, (state) => {
+      state.sessionEnded = true;
+    });
     builder.addCase(logout.rejected, (state) => {
       state.logoutError = true;
     });
@@ -87,5 +94,6 @@ export const { setSession, clearSession } = authSlice.actions;
 
 export const selectUser = (state: { auth: AuthState }) => state.auth.user;
 export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
+export const selectSessionEnded = (state: { auth: AuthState }) => state.auth.sessionEnded === true;
 
 export default authSlice.reducer;

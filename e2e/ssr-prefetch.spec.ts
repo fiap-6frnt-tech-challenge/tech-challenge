@@ -38,6 +38,43 @@ test('home and transactions mount the remotes with SSR data, without fetching it
   expect(requests.filter((url) => url.pathname !== '/api/transactions').map(String)).toEqual([]);
 });
 
+test('the server HTML paints the LCP element and preloads the route remote, with no session fetch', async ({
+  page,
+}) => {
+  await login(page);
+  const main = (html: string) => html.slice(html.indexOf('<main'), html.indexOf('</main>'));
+  const headPreloads = (html: string) =>
+    [...html.slice(0, html.indexOf('</head>')).matchAll(/<link [^>]*rel="preload"[^>]*>/g)].map(
+      ([tag]) => tag
+    );
+  const preloadsExpose = (html: string, expose: string) =>
+    headPreloads(html).some(
+      (tag) =>
+        tag.includes(`__federation_expose_${expose}`) &&
+        tag.includes('as="script"') &&
+        /nonce="[^"]+"/.test(tag)
+    );
+
+  const home = await (await page.request.get('/')).text();
+  expect(main(home)).toMatch(/<img[^>]+src="\/piggy-bank\.png"/);
+  expect(preloadsExpose(home, 'AccountOverview')).toBe(true);
+  const transactions = await (await page.request.get('/transactions')).text();
+  expect(main(transactions)).toMatch(/<h1[^>]*>Transações/);
+  expect(preloadsExpose(transactions, 'TransactionsPage')).toBe(true);
+
+  const sessionRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/auth/session')
+      sessionRequests.push(request.url());
+  });
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Exibir saldo' })).toBeVisible();
+  await page.goto('/transactions');
+  await expect(page.locator('#transactions-heading')).toBeVisible();
+  await expect(page.locator('main h1')).toHaveCount(1);
+  expect(sessionRequests).toEqual([]);
+});
+
 test('two accounts never receive each other data, from the SSR or from the server cache', async ({
   browser,
   page,

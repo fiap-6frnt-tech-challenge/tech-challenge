@@ -227,7 +227,7 @@ describe('DrizzleTransactionRepository — leitura', () => {
     });
   });
 
-  it('acumula o saldo do dia na ordem de criação e arredonda em centavos', async () => {
+  it('fecha cada dia num ponto só, com o saldo arredondado em centavos', async () => {
     const day = scope.id('same-day');
     await db.insert(transactions).values([
       {
@@ -260,8 +260,6 @@ describe('DrizzleTransactionRepository — leitura', () => {
     ]);
 
     expect(await repository.balanceSeries(day, {})).toEqual([
-      { date: '2026-04-01', balance: 0.1 },
-      { date: '2026-04-01', balance: 0.3 },
       { date: '2026-04-01', balance: 0.25 },
     ]);
     expect((await repository.overview(day, 0)).balance).toBe(0.25);

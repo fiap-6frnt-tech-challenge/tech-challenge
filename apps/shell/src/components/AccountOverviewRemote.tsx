@@ -1,7 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Card, Skeleton, SkeletonList } from '@bytebank/design-system';
+import { BalanceIllustration, Card, Skeleton, SkeletonList } from '@bytebank/design-system';
+import { cn } from '@bytebank/shared';
 import { Component, type ReactNode } from 'react';
 
 const AccountOverview = dynamic(
@@ -16,26 +17,36 @@ const AccountOverview = dynamic(
   }
 );
 
+function TextSkeleton({ className, bar }: { className: string; bar: string }) {
+  return (
+    <p className={className} aria-hidden="true">
+      <span
+        className={cn('inline-block h-[1em] animate-pulse rounded-default align-middle', bar)}
+      />
+    </p>
+  );
+}
+
 function BalanceCardSkeleton() {
   return (
-    <Card padding="lg" className="relative overflow-hidden mb-sm">
+    <Card padding="lg" className="relative overflow-hidden mb-sm bg-brand-dark! text-text-on-bg">
       <div className="relative flex gap-lg flex-1 max-md:grid max-md:grid-cols-1 max-md:justify-items-center">
         <div className="flex flex-col max-md:items-center">
-          <Skeleton className="h-7 w-40 mb-sm" />
-          <Skeleton className="h-5 w-32 mb-0 md:mb-lg" />
-          <Skeleton className="h-[229px] w-[283px] rounded-default hidden md:block" />
+          <TextSkeleton className="text-xl font-semibold mb-sm" bar="w-40 bg-content-inverse/20" />
+          <TextSkeleton className="text-sm mb-0 md:mb-lg" bar="w-32 bg-content-inverse/10" />
+          <BalanceIllustration className="hidden md:block" />
         </div>
 
         <div className="flex flex-col items-start p-2xl mt-0 md:mt-sm gap-sm min-w-50 self-start mx-auto max-md:items-center max-md:pt-0">
           <div className="w-fit min-w-40">
-            <Skeleton className="h-8 w-24" />
-            <span className="block h-px w-full bg-border my-xs" />
-            <Skeleton className="h-5 w-28" />
+            <Skeleton className="h-10 sm:h-8 w-24 bg-content-inverse/20" />
+            <span className="block h-px w-full bg-icon-accent my-xs" />
+            <Skeleton className="h-6 w-28 bg-content-inverse/10" />
           </div>
-          <Skeleton className="h-7 w-32" />
+          <TextSkeleton className="text-xl font-bold" bar="w-32 bg-content-inverse/20" />
         </div>
 
-        <Skeleton className="h-[229px] w-[283px] rounded-default md:hidden" />
+        <BalanceIllustration className="md:hidden" />
       </div>
     </Card>
   );
@@ -46,7 +57,10 @@ export function AccountOverviewSkeleton() {
     <section className="flex flex-col gap-lg" aria-busy="true" aria-label="Carregando visão geral">
       <BalanceCardSkeleton />
       <div className="@container">
-        <Skeleton className="h-7 w-48 mb-4" />
+        <TextSkeleton
+          className="heading text-content-primary sm:truncate sm:tracking-tight mb-4"
+          bar="w-48 bg-border"
+        />
         <SkeletonList lines={5} showActions={false} />
       </div>
       <div className="flex flex-col gap-sm sm:flex-row sm:items-center">

@@ -4,7 +4,13 @@ import { configureStore } from '@reduxjs/toolkit';
 vi.mock('next-auth/react', () => ({ signOut: vi.fn() }));
 
 import { signOut } from 'next-auth/react';
-import authReducer, { setSession, clearSession, logout, type UserSession } from './authSlice';
+import authReducer, {
+  setSession,
+  clearSession,
+  logout,
+  selectSessionEnded,
+  type UserSession,
+} from './authSlice';
 
 const initialState = { user: null, isAuthenticated: false };
 const assign = vi.fn();
@@ -121,6 +127,23 @@ describe('authSlice', () => {
     const state = authReducer(logged, { type: logout.fulfilled.type });
     expect(state.user).toBeNull();
     expect(state.isAuthenticated).toBe(false);
+  });
+
+  it('só marca a sessão como encerrada quando o cliente sabe que ela acabou', () => {
+    const ended = (state: ReturnType<typeof authReducer>) => selectSessionEnded({ auth: state });
+    const unknown = authReducer(undefined, { type: '@@INIT' });
+    expect(ended(unknown)).toBe(false);
+    expect(ended(authReducer(unknown, setSession(fakeUser)))).toBe(false);
+    expect(ended(authReducer(unknown, setSession(null)))).toBe(true);
+    expect(ended(authReducer(unknown, clearSession()))).toBe(true);
+    expect(ended(authReducer(unknown, { type: logout.pending.type }))).toBe(true);
+    const failed = authReducer(authReducer(unknown, { type: logout.pending.type }), {
+      type: logout.rejected.type,
+    });
+    expect(ended(failed)).toBe(true);
+    expect(ended(authReducer(authReducer(unknown, clearSession()), setSession(fakeUser)))).toBe(
+      false
+    );
   });
 
   it('logout limpa o cookie, confere a sessão, navega para o login e limpa o estado', async () => {

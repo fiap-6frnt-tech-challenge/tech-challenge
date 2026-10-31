@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
-import { auth } from '@/auth';
 import { container } from '@/server/container';
+import { currentSession } from '@/server/session';
 import { SecuritySettings } from './SecuritySettings';
 export default async function SecurityPage() {
-  const session = await auth();
+  const session = await currentSession();
   if (!session?.user?.id) redirect('/login');
   const status = await container.mfa.status(session.user.id);
   return (

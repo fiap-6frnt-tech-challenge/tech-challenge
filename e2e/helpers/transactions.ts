@@ -7,7 +7,7 @@ export async function selectOptionByLabel(trigger: Locator, optionName: RegExp |
 
 export async function openTransactionsPage(page: Page) {
   await page.goto('/transactions');
-  await expect(page.getByRole('heading', { name: 'Transações' })).toBeVisible();
+  await expect(page.locator('#transactions-heading')).toBeVisible();
 }
 
 export async function fillWithdrawal(

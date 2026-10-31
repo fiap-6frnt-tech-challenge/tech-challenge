@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { markContentReady, markNavigationStart } from './navigationTiming';
+import { markContentReady, markNavigationStart, onContentReady } from './navigationTiming';
 
 const measures = () => performance.getEntriesByType('measure').map((entry) => entry.name);
 
@@ -32,6 +32,33 @@ describe('navigation timing', () => {
     markContentReady('overview');
 
     expect(measures()).toEqual(['nav:click → overview:ready', 'nav:click → dashboard:ready']);
+  });
+
+  it('avisa uma vez quando o conteúdo pedido fica pronto', async () => {
+    const callback = vi.fn();
+    onContentReady('transactions', callback);
+    markContentReady('overview');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(callback).not.toHaveBeenCalled();
+
+    markContentReady('transactions');
+    markContentReady('transactions');
+    await vi.waitFor(() => expect(callback).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
+  it('avisa na hora quando o conteúdo já estava pronto e não avisa depois de cancelar', async () => {
+    markContentReady('overview');
+    const ready = vi.fn();
+    onContentReady('overview', ready);
+    expect(ready).toHaveBeenCalledTimes(1);
+
+    const cancelled = vi.fn();
+    onContentReady('transactions', cancelled)();
+    markContentReady('transactions');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(cancelled).not.toHaveBeenCalled();
   });
 
   it('só marca o conteúdo pronto quando não houve clique no menu', () => {
