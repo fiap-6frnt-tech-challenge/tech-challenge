@@ -25,7 +25,7 @@
 | 03  | ⏳     | Auditoria OWASP + varredura com OWASP ZAP   | Dev 1                  | 1.5 dia | P0   | [03-owasp-audit-zap.md](./03-owasp-audit-zap.md)       |
 | 04  | ⏳     | Relatório de performance antes/depois       | Dev 3                  | 1 dia   | P0   | [04-performance-report.md](./04-performance-report.md) |
 | 05  | 🟢     | E2E de regressão (fluxos novos)             | Dev 3                  | 1.5 dia | P0   | [05-e2e-regression.md](./05-e2e-regression.md)         |
-| 06  | ⏳     | Documentação de arquitetura                 | Dev 2                  | 1.5 dia | P0   | [06-architecture-docs.md](./06-architecture-docs.md)   |
+| 06  | 🟢     | Documentação de arquitetura                 | Dev 2                  | 1.5 dia | P0   | [06-architecture-docs.md](./06-architecture-docs.md)   |
 | 07  | ⏳     | README final                                | Dev 3                  | 1 dia   | P0   | [07-readme.md](./07-readme.md)                         |
 | 08  | ⏳     | Vídeo demo (≤ 5 min)                        | Todos (roteiro: Dev 2) | 1 dia   | P0   | [08-demo-video.md](./08-demo-video.md)                 |
 | 09  | ⏳     | Smoke final + merge + tag `v4.0.0`          | Todos                  | 0.5 dia | P0   | [09-release.md](./09-release.md)                       |

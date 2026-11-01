@@ -33,12 +33,20 @@ A banca avalia arquitetura olhando o código e a documentação. Um documento ú
 
 ## Validação
 
-- [ ] Todos os diagramas renderizam no GitHub
+- [x] Todos os diagramas renderizam com Mermaid 10.9 e 11.4 (os 11 blocos); conferir no GitHub depois do push
 - [ ] Revisado pelo Dev 1 e pelo Dev 3
-- [ ] Linkado a partir do README e do `docs/phase-4/README.md`
+- [x] Linkado a partir do README e do `docs/phase-4/README.md`
 
 ## Gotchas
 
 1. Mermaid renderiza no GitHub sem ferramenta extra; evite imagens exportadas que ficam desatualizadas.
 2. Gere o grafo de dependências de novo (`npm run arch:graph`) logo antes de fechar o documento.
 3. Escreva para quem não participou do projeto: a banca lê sem contexto.
+
+## Implementação e evidências — 2026-11-01
+
+- **Documento:** [`docs/phase-4/architecture.md`](../architecture.md), com as 10 seções pedidas, um glossário curto para a banca, um mapa de padrões de projeto e os comandos de verificação. Cada afirmação aponta para o arquivo de código correspondente.
+- **Grafo regenerado** (`npm run arch:graph`) logo antes de fechar o documento. Desde o S1-08 surgiram `stores → core`, `api-client → stores` e `dashboard-mfe → stores/shared`; a direção continua para dentro e o grafo não tem ciclos. `npm run arch:check`: 585 módulos, 1761 dependências, 0 violações.
+- **Diagramas:** 11 blocos Mermaid, sem imagens exportadas. Cada bloco foi parseado e renderizado num Chromium (Playwright) com Mermaid 10.9.1 e 11.4.1, que cobrem a faixa de versões do GitHub: 0 falhas. Os diagramas de camadas e da fila de uploads foram redesenhados depois de conferir a legibilidade nas imagens renderizadas.
+- **Links:** todos os links relativos resolvem, exceto `security/owasp-top10.md`, que é a entrega da S4-03 e passa a resolver quando ela for mergeada.
+- **Pendente:** revisão do Dev 1 (seção 8) e do Dev 3 (seções 1 e 7).

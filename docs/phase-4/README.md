@@ -9,6 +9,7 @@ Planejamento da **Fase 4 do POSTECH Tech Challenge**: evolução do **monorepo w
 
 - 📋 **[PLAN.md](./PLAN.md)** — plano geral: requisitos, ponto de partida (auditoria do código), decisões, arquitetura alvo, metas, riscos e verificação final
 - 👥 **[team-allocation.md](./team-allocation.md)** — alocação das tarefas pelos 3 devs em cada sprint
+- 🏛️ **[architecture.md](./architecture.md)** — arquitetura entregue: camadas, grafo de dependências, estado, reatividade, cache, segurança, contratos entre MFEs e índice dos ADRs
 
 ### Sprints
 
