@@ -126,3 +126,23 @@ No CI, se precisar investigar uma falha, abra a execucao do workflow no GitHub
 Actions e baixe os artifacts `playwright-report` e `playwright-test-results`.
 O relatorio HTML mostra o spec que falhou, e os test results guardam traces,
 screenshots e videos quando gerados pelo Playwright.
+
+## Regressão da Fase 4 — S4-05
+
+Os cenários abaixo fazem parte de `npm run e2e`, nos dois browsers, sem opt-in:
+
+| Spec                         | Cobertura                                                                                                       |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `security.spec.ts`           | IDOR em GET/PATCH/DELETE, mass assignment, bloqueio por tentativas e recusa da senha correta durante o bloqueio |
+| `attachment.spec.ts`         | Upload/download de PNG com hash idêntico, DTO sem URL do storage, conteúdo cifrado e tipo disfarçado recusado   |
+| `session-hardening.spec.ts`  | Aviso e logout por inatividade, APIs privadas 401, histórico sem dados e revogação de sessões                   |
+| `navigation-preload.spec.ts` | Preload por hover sem repetição no clique e navegação entre MFEs sem recriar o documento                        |
+
+O setup já limpa `auth_attempts` e gera senhas aleatórias com mais de 12 caracteres.
+`HIBP_ENABLED=false` é o padrão; o bloqueio usa `AUTH_MAX_FAILURES=3` por padrão,
+com o mesmo override de ambiente no servidor e no spec.
+
+Os cenários de hover e bloqueio saíram de `sprint2-smoke.spec.ts` para rodarem sempre.
+Esse smoke continua opt-in (`SPRINT2_SMOKE=1`, `HIBP_ENABLED=true`,
+`AUTH_MAX_FAILURES=5`) para as verificações externas/complementares restantes.
+Os skips desse arquivo não desativam os cenários obrigatórios da S4-05.

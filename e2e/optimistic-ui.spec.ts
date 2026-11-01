@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import type { QueryObserverOptions } from '@tanstack/react-query';
 import { defaultSummaryRange } from '../packages/core/src/domain/dashboard/summaryRange';
 import { formatCurrencyExact } from '../packages/shared/src/lib/format';
 import { login } from './helpers/auth';
@@ -22,14 +23,19 @@ function cachePolicies(page: Page) {
       queryClient
         .getQueryCache()
         .getAll()
-        .map(({ queryKey, options }) => [
-          String(queryKey[0]),
-          {
-            staleTime: options.staleTime,
-            gcTime: options.gcTime,
-            refetchOnWindowFocus: options.refetchOnWindowFocus,
-          },
-        ])
+        .map(({ queryKey, options }) => {
+          // Observer policies are present at runtime; Query.options exposes only
+          // the narrower QueryOptions type in TanStack Query's public API.
+          const policy = options as QueryObserverOptions;
+          return [
+            String(queryKey[0]),
+            {
+              staleTime: policy.staleTime,
+              gcTime: policy.gcTime,
+              refetchOnWindowFocus: policy.refetchOnWindowFocus,
+            },
+          ];
+        })
     );
   });
 }

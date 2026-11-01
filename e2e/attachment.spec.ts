@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { expect, test, type APIRequestContext } from '@playwright/test';
@@ -94,7 +94,17 @@ test('uploads, persists, and removes an attachment from an existing transaction'
   });
   expect(photoResponse.status()).toBe(201);
   const photo = await photoResponse.json();
+  expect(Object.keys(photo).sort()).toEqual(['downloadUrl', 'id', 'mimeType', 'name', 'size']);
+  expect(photo.downloadUrl).toBe(`${attachmentsUrl}/${photo.id}/download`);
   expect(photo.mimeType).toBe('image/png');
+  const photoDownload = await page.request.get(photo.downloadUrl);
+  expect(photoDownload.status()).toBe(200);
+  expect(photoDownload.headers()['content-type']).toBe('image/png');
+  expect(
+    createHash('sha256')
+      .update(await photoDownload.body())
+      .digest('hex')
+  ).toBe(createHash('sha256').update(png).digest('hex'));
 
   await openTransactionsPage(page);
   await editTransaction(page, 'E2E Attachment Target');
