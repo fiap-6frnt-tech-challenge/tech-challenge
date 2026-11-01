@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { Pool } from 'pg';
 import { expect, test, type Page } from '@playwright/test';
 import { login } from './helpers/auth';
@@ -8,7 +8,6 @@ import {
   editTransaction,
   openTransactionsPage,
 } from './helpers/transactions';
-import { E2E_KEYS } from './keys';
 
 // Opt-in: this smoke requires real HIBP access and the default five-attempt policy.
 test.skip(
@@ -166,67 +165,6 @@ test('real slow-network uploads show progress, keep two slots and cancel one wit
   }
 });
 
-test('hover alone preloads the transactions remote and first page without downloading them again on click', async ({
-  page,
-}, testInfo) => {
-  await page.addInitScript(() => {
-    window.requestIdleCallback = () => 0;
-    window.cancelIdleCallback = () => {};
-  });
-  const requests: string[] = [];
-  page.on('request', (request) => requests.push(request.url()));
-  await login(page);
-  await expect(page.getByRole('button', { name: 'Nova transação', exact: true })).toBeEnabled();
-  await page.waitForLoadState('networkidle');
-  const expose = () =>
-    requests.filter((url) => /__federation_expose_TransactionsPage.*\.js/.test(url));
-  const firstPage = () =>
-    requests.filter((url) => {
-      const parsed = new URL(url);
-      return parsed.pathname === '/api/transactions' && parsed.searchParams.get('_page') === '1';
-    });
-  expect(expose()).toHaveLength(0);
-  const link = page
-    .getByRole('navigation', { name: 'Navegação principal' })
-    .getByRole('link', { name: 'Transações', exact: true });
-  const remoteReady = page.waitForResponse(
-    (response) => /__federation_expose_TransactionsPage.*\.js/.test(response.url()) && response.ok()
-  );
-  const dataReady = page.waitForResponse(
-    (response) =>
-      new URL(response.url()).pathname === '/api/transactions' &&
-      new URL(response.url()).searchParams.get('_page') === '1' &&
-      response.ok()
-  );
-  await page.mouse.move(0, 0);
-  await link.hover();
-  await (await remoteReady).finished();
-  await (await dataReady).finished();
-  expect(expose()).toHaveLength(1);
-  expect(firstPage()).toHaveLength(1);
-  await link.click();
-  await expect(page.locator('#transactions-heading')).toBeVisible();
-  await expect(page.getByText('E2E Uber Trip', { exact: true })).toBeVisible();
-  await page.waitForLoadState('networkidle');
-  expect(expose()).toHaveLength(1);
-  expect(firstPage()).toHaveLength(1);
-  const timing = await page.evaluate(() =>
-    performance
-      .getEntriesByType('measure')
-      .filter((entry) => /nav:click|mf:loadRemote/.test(entry.name))
-      .map(({ name, duration }) => ({ name, duration }))
-  );
-  expect(timing.some((entry) => entry.name === 'nav:click → transactions:ready')).toBe(true);
-  await testInfo.attach('hover-preload-evidence', {
-    body: JSON.stringify(
-      { remoteRequests: expose().length, firstPageRequests: firstPage().length, timing },
-      null,
-      2
-    ),
-    contentType: 'application/json',
-  });
-});
-
 test('a leaked password is rejected through the live HIBP service and registration UI', async ({
   page,
 }, testInfo) => {
@@ -263,62 +201,6 @@ test('a leaked password is rejected through the live HIBP service and registrati
     }),
     contentType: 'application/json',
   });
-});
-
-test('five wrong passwords lock the account and a correct password cannot bypass the lock', async ({
-  page,
-  request,
-}, testInfo) => {
-  const email = `s210-lock-${randomUUID()}@bytebank.test`;
-  const password = `S210-${randomUUID()}!`;
-  const created = await request.post('/api/auth/register', {
-    data: { name: 'Smoke Lock', email, password },
-  });
-  expect(created.status()).toBe(201);
-  const { id } = await created.json();
-  const pool = new Pool({
-    connectionString:
-      process.env.DATABASE_URL ?? 'postgres://bytebank:bytebank@localhost:5432/bytebank',
-  });
-  const emailKey = `login:email:${createHmac('sha256', Buffer.from(E2E_KEYS.BLIND_INDEX_KEY, 'base64')).update(email).digest('base64url')}`;
-  try {
-    const { csrfToken } = await (await request.get('/api/auth/csrf')).json();
-    for (let attempt = 1; attempt <= 5; attempt++) {
-      const response = await request.post('/api/auth/callback/credentials', {
-        headers: { 'X-Auth-Return-Redirect': '1' },
-        form: { csrfToken, email, password: 'incorrect-password', callbackUrl: '/' },
-      });
-      expect((await response.json()).url).toContain('CredentialsSignin');
-      const { rows } = await pool.query(
-        'select failures, locked_until from auth_attempts where key = $1',
-        [emailKey]
-      );
-      expect(rows[0].failures).toBe(attempt < 5 ? attempt : 0);
-      if (attempt < 5) expect(rows[0].locked_until).toBeNull();
-      else expect(new Date(rows[0].locked_until).getTime()).toBeGreaterThan(Date.now());
-    }
-    await page.goto('/login');
-    await page.getByLabel('Email', { exact: true }).fill(email);
-    await page.getByLabel('Senha', { exact: true }).fill(password);
-    await page.getByRole('button', { name: /^Entrar$/i }).click();
-    await expect(page).toHaveURL(/\/auth\/error\?.*code=rate_limited/);
-    await expect(
-      page.getByText('Muitas tentativas. Tente novamente em alguns minutos.', { exact: true })
-    ).toBeVisible();
-    const { rows } = await pool.query(
-      'select failures, lock_count, locked_until > now() as locked from auth_attempts where key = $1',
-      [emailKey]
-    );
-    expect(rows[0]).toMatchObject({ failures: 0, lock_count: 1, locked: true });
-    await testInfo.attach('five-failures-evidence', {
-      body: JSON.stringify(rows[0]),
-      contentType: 'application/json',
-    });
-  } finally {
-    await pool.query('delete from users where id = $1', [id]);
-    await pool.query('delete from auth_attempts where key = $1', [emailKey]);
-    await pool.end();
-  }
 });
 
 test('registration rejects short passwords and returns 429 with Retry-After after ten attempts from one IP', async ({

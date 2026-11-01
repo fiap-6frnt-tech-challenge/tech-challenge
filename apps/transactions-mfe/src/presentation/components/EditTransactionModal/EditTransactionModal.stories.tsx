@@ -88,6 +88,10 @@ function EditStory({ initial, ...args }: EditTransactionModalProps & { initial: 
 async function submitEdit(canvasElement: HTMLElement) {
   const body = within(canvasElement.ownerDocument.body);
   await userEvent.click(body.getByRole('button', { name: /Abrir modal/i }));
+  // Wait for the modal's initial animation-frame focus before typing: otherwise
+  // the leading space may activate the close button when the focus trap runs.
+  const editor = within(await body.findByRole('dialog', { name: 'Editar Transação' }));
+  await waitFor(() => expect(editor.getByRole('button', { name: 'Fechar modal' })).toHaveFocus());
   await userEvent.type(await body.findByLabelText('Descrição'), ' editado');
   await userEvent.click(body.getByRole('button', { name: /Atualizar transação/i }));
   return within(await body.findByRole('dialog', { name: /Confirmar alteração/i }));

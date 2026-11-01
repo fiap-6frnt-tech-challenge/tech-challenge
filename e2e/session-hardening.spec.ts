@@ -29,6 +29,14 @@ test('warns before idle expiry, focuses continue, renews activity and logs out w
   await page.clock.install();
   await login(page);
   await expect(page.getByRole('button', { name: 'Nova transação', exact: true })).toBeVisible();
+  const privatePaths = [
+    '/api/transactions',
+    '/api/transactions/overview',
+    '/api/transactions/e2e-attachment-target/attachments',
+  ];
+  for (const path of privatePaths) {
+    expect((await page.request.get(path)).status(), path).toBe(200);
+  }
   await page.clock.fastForward(14 * 60_000 + 1000);
   const warning = page.getByRole('alertdialog', { name: 'Sua sessão será encerrada' });
   await expect(warning).toBeVisible();
@@ -41,6 +49,9 @@ test('warns before idle expiry, focuses continue, renews activity and logs out w
   await page.clock.fastForward(60_000);
   await expect(page).toHaveURL(/\/login\?reason=inactive/);
   await expect(page.getByRole('status')).toHaveText('Sua sessão foi encerrada por inatividade.');
+  for (const path of privatePaths) {
+    expect((await page.request.get(path)).status(), path).toBe(401);
+  }
   await page.goBack();
   await expect(page).toHaveURL(/\/login/);
   await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toHaveCount(0);
