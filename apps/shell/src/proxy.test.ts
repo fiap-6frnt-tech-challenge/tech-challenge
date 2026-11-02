@@ -82,7 +82,9 @@ describe('Proxy de Autenticação', () => {
     expect(requestNonce).toBeTruthy();
     expect(requestPolicy).toContain(`'nonce-${requestNonce}'`);
     expect(requestPolicy).toContain("'strict-dynamic'");
-    expect(requestPolicy).toContain("style-src 'self' 'unsafe-inline'");
+    expect(requestPolicy).toContain(`style-src 'self' 'nonce-${requestNonce}'`);
+    expect(requestPolicy).toContain("style-src-attr 'unsafe-inline'");
+    expect(requestPolicy).not.toContain("style-src 'self' 'unsafe-inline'");
     expect(requestPolicy).toContain('connect-src');
     expect(requestPolicy).toContain('ws:');
     expect(requestPolicy).toContain("'unsafe-eval'");
