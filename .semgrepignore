@@ -1,0 +1,3 @@
+# Generated ZAP HTML reports are DAST evidence, not application source.
+# Their localhost HTTP links are expected for the local-only scans.
+docs/phase-4/security/zap-*.html
