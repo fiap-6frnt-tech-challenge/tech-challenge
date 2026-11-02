@@ -33,7 +33,11 @@ export function LoginForm({ onSubmit, isLoading = false, className }: LoginFormP
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className={cn('flex flex-col gap-md', className)}>
+    <form
+      method="post"
+      onSubmit={handleSubmit(submit)}
+      className={cn('flex flex-col gap-md', className)}
+    >
       <Controller
         name="email"
         control={control}

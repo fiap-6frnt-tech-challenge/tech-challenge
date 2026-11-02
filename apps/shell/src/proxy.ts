@@ -48,7 +48,8 @@ function buildCsp(nonce: string): string {
   return [
     `default-src 'self'`,
     `script-src ${scriptSources.join(' ')}`,
-    `style-src 'self' 'unsafe-inline' ${toolbarOrigins.join(' ')}`.trim(),
+    `style-src 'self' 'nonce-${nonce}' ${toolbarOrigins.join(' ')}`.trim(),
+    `style-src-attr 'unsafe-inline'`,
     `img-src 'self' data: blob: https://lh3.googleusercontent.com ${toolbarOrigins.join(' ')}`.trim(),
     `connect-src ${connectSources.join(' ')}`,
     `font-src 'self' ${toolbarOrigins.join(' ')}`.trim(),
