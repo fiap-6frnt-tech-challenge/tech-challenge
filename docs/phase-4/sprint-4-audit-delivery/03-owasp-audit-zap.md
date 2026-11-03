@@ -26,21 +26,21 @@ A banca precisa ver que a segurança foi verificada, não só implementada. A au
 
    Linhas já conhecidas:
 
-   | Categoria                         | Controle                                                                                 | Evidência                         |
-   | --------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------- |
-   | Broken Access Control / API1 BOLA | Autorização por dono nos casos de uso; 404 para recurso alheio                           | S0-02, testes de autorização, E2E |
-   | API3 BOPLA (mass assignment)      | `z.strictObject`; `userId` só da sessão                                                  | S0-03                             |
-   | Falhas criptográficas             | AES-256-GCM (anexos, dados pessoais), HSTS, bcrypt 12                                    | S3-01, S3-02, S2-06               |
-   | Injeção                           | Drizzle parametrizado (inclusive o `ilike` da busca)                                     | revisão + Semgrep                 |
-   | XSS                               | Escape do React + CSP com nonce                                                          | S3-05                             |
-   | Configuração insegura             | Headers, CORS só em dev, containers não-root, Postgres local                             | S3-05, Task 02                    |
-   | Componentes vulneráveis           | `npm audit` como gate, Dependabot, Trivy                                                 | S3-09                             |
-   | Falhas de autenticação            | Rate limit/bloqueio, HIBP, expiração/revogação, MFA (se feito)                           | S2-05 → S2-07, S3-10              |
-   | Integridade de software e dados   | Lockfile, actions fixadas por SHA, tag do GCM                                            | S3-09, S3-01                      |
-   | Falhas de log e monitoramento     | Logs de segurança com redação                                                            | Task 01                           |
-   | SSRF                              | A rota de download só busca referências do próprio storage, nunca URLs vindas do usuário | S3-01                             |
-   | CSRF                              | Checagem de `Origin`/`Sec-Fetch-Site`, `SameSite=Lax`, token do NextAuth                 | S3-05                             |
-   | API4 consumo de recursos          | `perPage ≤ 100`, limite de corpo, upload ≤ 5 MB, rate limit                              | S0-03, S2-05                      |
+   | Categoria                         | Controle                                                                                           | Evidência                         |
+   | --------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------- |
+   | Broken Access Control / API1 BOLA | Autorização por dono nos casos de uso; 404 para recurso alheio                                     | S0-02, testes de autorização, E2E |
+   | API3 BOPLA (mass assignment)      | `z.strictObject`; `userId` só da sessão                                                            | S0-03                             |
+   | Falhas criptográficas             | AES-256-GCM (anexos, dados pessoais), HSTS, bcrypt 12                                              | S3-01, S3-02, S2-06               |
+   | Injeção                           | Drizzle parametrizado (inclusive o `ilike` da busca)                                               | revisão + Semgrep                 |
+   | XSS                               | Escape do React + CSP com nonce                                                                    | S3-05                             |
+   | Configuração insegura             | Headers, CORS só em dev, containers não-root, Postgres local                                       | S3-05, Task 02                    |
+   | Componentes vulneráveis           | `npm audit` como gate, Dependabot, Trivy                                                           | S3-09                             |
+   | Falhas de autenticação            | Rate limit/bloqueio, HIBP, expiração/revogação, MFA (se feito)                                     | S2-05 → S2-07, S3-10              |
+   | Integridade de software e dados   | Lockfile, actions fixadas por SHA, tag do GCM                                                      | S3-09, S3-01                      |
+   | Falhas de log e monitoramento     | Logs de segurança com redação                                                                      | Task 01                           |
+   | SSRF                              | A rota de download só busca referências do próprio storage, nunca URLs vindas do usuário           | S3-01                             |
+   | CSRF                              | Checagem de `Origin`/`Sec-Fetch-Site`, `SameSite=Lax`, token do NextAuth                           | S3-05                             |
+   | API4 consumo de recursos          | `perPage ≤ 100`, limite de corpo, upload ≤ 4 MB (abaixo do limite de 4,5 MB da Vercel), rate limit | S0-03, S2-05                      |
 
 2. **ZAP baseline** (passivo) contra o build local de produção (compose):
    ```bash
@@ -54,10 +54,12 @@ A banca precisa ver que a segurança foi verificada, não só implementada. A au
 
 ## Validação
 
-- [ ] `owasp-top10.md` completo, com evidência em cada linha
-- [ ] Relatório do ZAP salvo em `docs/phase-4/security/`, sem achados High
-- [ ] Checklist ASVS preenchido
+- [x] `owasp-top10.md` completo, com evidência em cada linha
+- [x] Relatório do ZAP salvo em `docs/phase-4/security/`, sem achados High
+- [x] Checklist ASVS preenchido
 - [ ] Correções dos achados mergeadas
+
+> As correções e os relatórios estão na branch local `dev1-sec/owasp-audit`. O merge permanece pendente; esta execução não publicou nem integrou a branch.
 
 ## Gotchas
 

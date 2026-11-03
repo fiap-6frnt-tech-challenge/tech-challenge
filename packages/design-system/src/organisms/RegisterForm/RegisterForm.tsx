@@ -40,7 +40,11 @@ export function RegisterForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className={cn('flex flex-col gap-md', className)}>
+    <form
+      method="post"
+      onSubmit={handleSubmit(submit)}
+      className={cn('flex flex-col gap-md', className)}
+    >
       {errorMessage ? (
         <div
           role="alert"

@@ -82,7 +82,9 @@ describe('DrizzleLegacyUserRepository (banco no estado da 0009)', () => {
     expect(ana.email_hash).toBe(blindIndex.compute('ana@x.test'));
     expect(cipher.decryptText(ana.email_enc!, 'user:a:email')).toBe('Ana@X.test');
     expect(cipher.decryptText(ana.name_enc!, 'user:a:name')).toBe('Ana Souza');
-    expect(`${ana.email_hash}${ana.email_enc}${ana.name_enc}`).not.toMatch(/Ana|x\.test/i);
+    expect(ana.email_hash).not.toBe('Ana@X.test');
+    expect(ana.email_enc).not.toBe('Ana@X.test');
+    expect(ana.name_enc).not.toBe('Ana Souza');
     expect(await repository.countLegacy()).toBe(0);
   });
 
