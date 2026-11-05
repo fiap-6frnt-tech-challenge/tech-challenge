@@ -23,7 +23,7 @@
 | 01  | ✅     | Logs de segurança e auditoria (A09)         | Dev 1                  | 0.5 dia | P1   | [01-security-logging.md](./01-security-logging.md)     |
 | 02  | ✅     | Hardening de Docker e infraestrutura        | Dev 1                  | 0.5 dia | P1   | [02-docker-hardening.md](./02-docker-hardening.md)     |
 | 03  | ⏳     | Auditoria OWASP + varredura com OWASP ZAP   | Dev 1                  | 1.5 dia | P0   | [03-owasp-audit-zap.md](./03-owasp-audit-zap.md)       |
-| 04  | ⏳     | Relatório de performance antes/depois       | Dev 3                  | 1 dia   | P0   | [04-performance-report.md](./04-performance-report.md) |
+| 04  | 🟢     | Relatório de performance antes/depois       | Dev 3                  | 1 dia   | P0   | [04-performance-report.md](./04-performance-report.md) |
 | 05  | 🟢     | E2E de regressão (fluxos novos)             | Dev 3                  | 1.5 dia | P0   | [05-e2e-regression.md](./05-e2e-regression.md)         |
 | 06  | 🟢     | Documentação de arquitetura                 | Dev 2                  | 1.5 dia | P0   | [06-architecture-docs.md](./06-architecture-docs.md)   |
 | 07  | ⏳     | README final                                | Dev 3                  | 1 dia   | P0   | [07-readme.md](./07-readme.md)                         |

@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { chromium } from '@playwright/test';
 
 const env = process.argv[2] ?? 'local';
 const baseUrl = (process.argv[3] ?? 'http://localhost:3000').replace(/\/$/, '');
@@ -40,10 +41,19 @@ function runLighthouse(url, presetFlags, auth, outputPath) {
   ];
   if (auth) args.push(`--extra-headers=${headersPath}`);
 
-  try {
-    execFileSync('npx', args, { stdio: ['ignore', 'ignore', 'ignore'], shell: true });
-  } catch (error) {
-    if (!existsSync(outputPath)) throw error;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      execFileSync('npx', args, {
+        stdio: ['ignore', 'ignore', 'ignore'],
+        shell: true,
+        env: { ...process.env, CHROME_PATH: process.env.CHROME_PATH ?? chromium.executablePath() },
+      });
+    } catch (error) {
+      if (!existsSync(outputPath)) throw error;
+    }
+    const { runtimeError } = JSON.parse(readFileSync(outputPath, 'utf-8'));
+    if (!runtimeError) return;
+    if (attempt === 3) throw new Error(runtimeError.code);
   }
 }
 
