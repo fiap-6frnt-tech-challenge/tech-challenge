@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@bytebank/design-system';
 import { Component, type ReactNode } from 'react';
+import { DeferUntilVisible } from '@/components/DeferUntilVisible';
+import { preloadedRemotes } from '@/lib/preloadedRemotes';
 
 const Dashboard = dynamic(
   async () => {
@@ -71,10 +73,14 @@ class MFErrorBoundary extends Component<{ children: ReactNode }, MFErrorBoundary
   }
 }
 
+const isDashboardPreloaded = () => preloadedRemotes.has('dashboard/Dashboard');
+
 export function DashboardRemote() {
   return (
-    <MFErrorBoundary>
-      <Dashboard />
-    </MFErrorBoundary>
+    <DeferUntilVisible minHeight={640} eager={isDashboardPreloaded}>
+      <MFErrorBoundary>
+        <Dashboard />
+      </MFErrorBoundary>
+    </DeferUntilVisible>
   );
 }

@@ -30,9 +30,12 @@
   serve a Fase 2 (o deploy da `phase-4` é a Task 09). No build local, o TBT desta máquina segura a
   nota: 83 em `/` e 74 em `/transactions` hoje, contra medianas de 86,5 e 85 no A/B controlado do
   [S4-10](../sprint-4-audit-delivery/10-mobile-lcp.md#evidências--2026-10-29). Ver § 1.3.
-- **Uma regressão encontrada e corrigida:** o prefetch da página seguinte (S2-08) disparava para
-  cada termo intermediário da busca, e a digitação lenta passou de 12 para 22 requisições. Agora o
-  prefetch espera a página ficar estável por 1 s, e voltaram a ser 12. Ver § 5.
+- **Duas regressões encontradas e corrigidas.** O prefetch da página seguinte (S2-08) disparava
+  para cada termo intermediário da busca, e a digitação lenta passou de 12 para 22 requisições.
+  Agora o prefetch espera a página ficar estável por 1 s, e voltaram a ser 12 (§ 5). Desde o
+  `loading.tsx` do S3-04, o dashboard aparecia ~330 ms depois da visão geral, numa 2ª rodada de
+  revelação do Suspense. Agora, quando o remote já foi pré-carregado, ele monta com a página e
+  aparece junto: 664 → 331 ms (§ 6).
 
 ---
 
@@ -328,25 +331,81 @@ conta com 25 transações, 3 pares intercalados por rota. "Sem preload" emula `s
 desliga todos os gatilhos do S2-08 na mesma build. Clique → conteúdo vem dos marks do app
 (`nav:click` → `<conteúdo>:ready`). Medianas, com a faixa entre colchetes.
 
-| Navegação             | Medida                    | S2-08: sem → com |                          **Final: sem → com** |
-| --------------------- | ------------------------- | ---------------: | --------------------------------------------: |
-| `/` → `/transactions` | clique → lista            |     522 → 333 ms |   634 [634–635] → **331** [321–333] ms (−48%) |
-|                       | `loadRemote` do remote    |       193 → 2 ms |                                204 → **3** ms |
-| `/transactions` → `/` | clique → visão geral      |     520 → 341 ms | 663 [648–1.298] → **332** [327–377] ms (−50%) |
-|                       | clique → dashboard        |     835 → 341 ms | 977 [957–1.862] → **664** [641–725] ms (−32%) |
-|                       | `loadRemote` do dashboard |       357 → 5 ms |                                397 → **8** ms |
+| Navegação             | Medida                    | S2-08: sem → com |                        **Final: sem → com** |
+| --------------------- | ------------------------- | ---------------: | ------------------------------------------: |
+| `/` → `/transactions` | clique → lista            |     522 → 333 ms | 642 [631–642] → **328** [325–331] ms (−49%) |
+|                       | `loadRemote` do remote    |       193 → 2 ms |                              199 → **2** ms |
+| `/transactions` → `/` | clique → visão geral      |     520 → 341 ms | 661 [631–667] → **331** [326–331] ms (−50%) |
+|                       | clique → dashboard        |     835 → 341 ms | 965 [943–973] → **331** [326–331] ms (−66%) |
+|                       | `loadRemote` do dashboard |       357 → 5 ms |                              374 → **4** ms |
 
-- **Com preload, o clique → lista segue em ~330 ms**, o piso do S2-08 (roundtrip do RSC + janela do
-  Suspense). Depois do clique, nenhuma requisição aos MFEs nem da página 1.
-- **Sem preload ficou mais lento que no S2-08** (522 → 634 ms): desde o S3-04, as rotas são
-  dinâmicas, e o clique espera o roundtrip do RSC com os dados do SSR. O Spike B já tinha previsto
-  esse custo. O preload esconde esse custo.
-- **O dashboard aparece ~330 ms depois da visão geral**, com ou sem preload, em todas as execuções.
-  No S2-08 os dois apareciam juntos. Depois do clique não há nenhuma requisição (tudo foi
-  pré-carregado), então a diferença não é rede. A hipótese é uma segunda revelação em sequência: o
-  `DeferUntilVisible` só monta o dashboard depois do primeiro commit, e o React segura a revelação do
-  novo Suspense por até 300 ms. **Não confirmado.** Próximo passo: um trace de Performance da
-  navegação para localizar o intervalo.
+- **Com preload, o clique → conteúdo segue em ~330 ms**, o piso do S2-08. Depois do clique, nenhuma
+  requisição aos MFEs nem da página 1.
+- **O dashboard voltou a aparecer junto com a visão geral.** Antes da correção do § 6.2, ele chegava
+  ~330 ms depois: 977 [957–1.862] → 664 [641–725] ms com a mesma medição.
+
+### 6.1 Rodadas de revelação do Suspense
+
+No React 19.2, um commit que só revela conteúdo suspenso espera 300 ms desde a última troca entre
+fallback e conteúdo, em qualquer boundary, e cada troca reinicia esse relógio
+(`globalMostRecentFallbackTime + 300` em `react-dom-client.production.js`). Por isso o conteúdo
+aparece em rodadas. `node scripts/perf/preload-nav.mjs suspense` registra, em relação ao clique,
+quando cada skeleton entra e sai do DOM e quando cada remote resolve. São 3 execuções por caso, e a
+tabela mostra a faixa. A coluna "`/` com, depois" é da build com a correção do § 6.2. As outras são
+da build anterior, e a correção não muda esses casos.
+
+| Marco (ms depois do clique)       | `/` sem preload | `/` com, antes | `/` com, depois | `/transactions` sem | `/transactions` com |
+| --------------------------------- | --------------: | -------------: | --------------: | ------------------: | ------------------: |
+| skeleton do `loading.tsx` aparece |           25–30 |          26–31 |           26–31 |               23–30 |               21–28 |
+| RSC da rota respondeu             |         215–241 |        189–222 |         211–225 |             190–194 |             187–207 |
+| remote acima da dobra resolvido   |         371–401 |        193–226 |         215–231 |             397–415 |             191–223 |
+| página revelada                   |         325–327 |        329–331 |         322–329 |                   — |                   — |
+| skeleton do dashboard aparece     |         333–346 |        351–356 |     não aparece |                   — |                   — |
+| remote do dashboard resolvido     |         695–705 |        357–361 |         221–254 |                   — |                   — |
+| visão geral ou lista revelada     |     **637–647** |    **329–331** |     **322–329** |         **628–634** |         **328–348** |
+| dashboard revelado                |     **943–957** |    **656–658** |     **322–330** |                   — |                   — |
+
+Na lista, o skeleton do `loading.tsx` e o do `next/dynamic` têm o mesmo rótulo, e a revelação da
+página não aparece no DOM.
+
+- **1ª rodada: o `loading.tsx`.** Desde o S3-04, as rotas são dinâmicas, e o `loading.tsx` mostra o
+  skeleton ~25 ms depois do clique. A página só pode ser revelada 300 ms depois disso, em ~330 ms,
+  mesmo com o RSC de volta em ~190–240 ms. Com preload, o remote resolve antes, e a visão geral e a
+  lista aparecem nessa rodada.
+- **Sem preload, o remote perde a 1ª rodada.** Ele resolve em ~370–415 ms, depois da revelação da
+  página, que reiniciou o relógio. A visão geral e a lista esperam a 2ª rodada (~630–650 ms),
+  ~230–270 ms depois de prontas. A diferença para o S2-08 (522 → ~640 ms) vem dessa rodada a mais, e
+  não da espera pelo RSC, que volta antes de a página poder ser revelada.
+- **Antes da correção, o dashboard sempre caía na 2ª rodada.** O `DeferUntilVisible` só entrava na
+  árvore com a página. O `IntersectionObserver` disparava ~20 ms depois, o `next/dynamic` suspendia e
+  o skeleton do dashboard reiniciava o relógio. Com preload, o remote resolvia 5 ms depois, mas o
+  dashboard só aparecia 300 ms depois do skeleton. O `preloadRemote` baixa o chunk sem avaliar o
+  módulo, então o primeiro render sempre suspende. No S2-08, a rota era estática e não tinha
+  `loading.tsx`: o `DeferUntilVisible` montava antes da revelação, e o dashboard suspendia na mesma
+  rodada da visão geral. Sem preload, o skeleton do dashboard ainda empurra a visão geral de ~626
+  para ~640 ms, o que a correção não muda.
+
+### 6.2 Correção: dashboard na rodada da página
+
+Quando o remote do dashboard já foi pré-carregado, o `DashboardRemote` monta o dashboard no
+primeiro render da página, sem esperar o `IntersectionObserver` (`eager` do `DeferUntilVisible`). O
+`next/dynamic` suspende durante o render da página, o remote resolve antes de a 1ª rodada fechar, e
+o dashboard aparece no mesmo commit da visão geral. O conjunto de remotes pré-carregados saiu do
+`lib/federation.ts` para o `lib/preloadedRemotes.ts`, porque o `federation.ts` só entra por
+`import()` e o `DashboardRemote` precisa consultar o conjunto de forma síncrona.
+
+- **Com preload:** clique → dashboard 664 → **331 ms**. O clique → visão geral ficou igual (332 →
+  331 ms).
+- **Sem preload, 2G e carregamento direto: mesmo caminho de antes.** Sem preload, o conjunto está
+  vazio. No 2G, nada baixou na ociosidade nem no hover, e o dashboard levou 943 ms (962 ms antes). No
+  carregamento direto de `/`, o conjunto está vazio na hidratação. O HTML do SSR mantém o espaço de
+  640 px, o console fica sem erros de hidratação, e o dashboard só é pedido depois da rolagem, em
+  375 × 667 e em 1366 × 900. Como o HTML e a hidratação seguem iguais, o LCP não deve mudar (não
+  remedido).
+- **Custo residual:** com preload, o dashboard monta mesmo abaixo da dobra (no mobile, por exemplo).
+  O custo é avaliar o módulo já baixado e renderizar os KPIs. Sem rolar, a navegação não pediu
+  nenhum chunk de gráfico, nenhuma rota da API e nenhum asset dos MFEs. Os gráficos continuam no
+  `DeferUntilVisible` do próprio dashboard, e os dados do resumo vêm no RSC.
 
 ---
 
@@ -359,10 +418,11 @@ Para cada otimização, a métrica que ela moveu, medida antes e depois na task 
 | ------------------------------------------ | ----- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
 | Índices + agregação em SQL                 | S1-05 | p95 do resumo                         | 1.622 → 333 ms ([S1-05](./s1-05-db-response-time.md#1-api-com-5000-transações))                                                                                                            | 62 ms, somando o cache do servidor e a série por dia                       |
 | Overview na home                           | S1-05 | payload da home                       | 848,5 → 0,9 kB; p95 980 → 93 ms ([S1-05](./s1-05-db-response-time.md#1-api-com-5000-transações))                                                                                           | 0 requisições: os dados vêm no HTML (S3-04)                                |
-| Preload de remotes e dados                 | S2-08 | clique → conteúdo                     | 522 → 333 ms (lista), 835 → 341 ms (dashboard) ([S2-08](./s2-08-preload.md#1-clique--conteúdo))                                                                                            | 634 → 331 ms (lista), 663 → 332 ms (visão geral), 977 → 664 ms (dashboard) |
+| Preload de remotes e dados                 | S2-08 | clique → conteúdo                     | 522 → 333 ms (lista), 835 → 341 ms (dashboard) ([S2-08](./s2-08-preload.md#1-clique--conteúdo))                                                                                            | 642 → 328 ms (lista), 661 → 331 ms (visão geral), 965 → 331 ms (dashboard) |
 | Gráficos fora do shell                     | S2-09 | JS de `/transactions`, TBT            | 502,6 → 310,3 KiB, TBT 46 → 6 ms; chunk da federação 152,2 → 48,1 KiB gzip ([S2-09](./s2-09-lazy-loading.md))                                                                              | 0 scripts com recharts; chunk da federação 45,7 KiB gzip                   |
 | Busca reativa + cancelamento               | S2-02 | requisições obsoletas                 | 0 canceladas → obsoletas abortadas ([S2-02](../sprint-2-state-reactive/02-reactive-search.md#validação))                                                                                   | 10 de 10 canceladas com 600 ms de latência (§ 5)                           |
 | Prefetch da página n + 1 com 1 s de espera | S4-04 | requisições ao digitar (400 ms/tecla) | 22 → 12 requisições, 72,2 → 39,4 kB (§ 5)                                                                                                                                                  | a página 2 ainda chega pré-carregada no clique                             |
+| Dashboard na rodada da página              | S4-04 | clique → dashboard, com preload       | 664 → 331 ms; visão geral 332 → 331 ms (§ 6.2)                                                                                                                                             | o dashboard aparece junto com a visão geral                                |
 | ETag/304                                   | S3-03 | bytes transferidos na revalidação     | JSON inteiro → 304 sem corpo ([S3-03](../sprint-3-cache-security/03-http-cache.md#evidências--2026-10-20))                                                                                 | 31,7 → 1,7 kB (resumo), 3,5 → 1,7 kB (lista), 2,6 → 1,7 kB (overview)      |
 | Cache do resumo no servidor                | S3-04 | tempo do resumo                       | 224 ms na 1ª leitura, 18–33 ms nas seguintes ([S3-04](../sprint-3-cache-security/04-server-cache-ssr-prefetch.md#evidências--2026-10-20))                                                  | p50 23 → 9 ms, p95 32 → 14 ms, 42 → 101 req/s (§ 3.2)                      |
 | Prefetch no SSR                            | S3-04 | remote carregado → conteúdo pronto    | 278 → 126 ms (`/`), 294 → 144 ms (`/transactions`); LCP mobile sem mudança ([S3-04](../sprint-3-cache-security/04-server-cache-ssr-prefetch.md#evidências--2026-10-20))                    | não remedido                                                               |
@@ -439,12 +499,11 @@ página (porta de depuração remota) e fotografa o painel Network. Ficam em
 
 ## Pendências e próximos passos
 
-| Item                                                              | Onde                      |
-| ----------------------------------------------------------------- | ------------------------- |
-| Lighthouse best-of-3 em produção (meta 16) e CLS em produção      | Task 09, comando da § 1.4 |
-| Conta de medição em produção: `perf.user` recusou a senha padrão  | Task 09                   |
-| Investigar o atraso de ~330 ms do dashboard depois da visão geral | § 6                       |
-| Runtime do Module Federation duplicado em cada remote entry       | S4-10 Parte D, § 2.3      |
+| Item                                                             | Onde                      |
+| ---------------------------------------------------------------- | ------------------------- |
+| Lighthouse best-of-3 em produção (meta 16) e CLS em produção     | Task 09, comando da § 1.4 |
+| Conta de medição em produção: `perf.user` recusou a senha padrão | Task 09                   |
+| Runtime do Module Federation duplicado em cada remote entry      | S4-10 Parte D, § 2.3      |
 
 ---
 
@@ -495,6 +554,7 @@ for d in 120 250 400; do PERF_KEY_DELAY=$d node scripts/perf/search-requests.mjs
 PERF_KEY_DELAY=400 PERF_LATENCY_MS=600 PERF_SETTLE_MS=4000 node scripts/perf/search-requests.mjs
 
 node scripts/perf/preload-nav.mjs timing
+node scripts/perf/preload-nav.mjs suspense
 
 node scripts/perf/lighthouse-batch.mjs s404-local http://localhost:3000
 node scripts/perf/lh-summary.mjs s404-local

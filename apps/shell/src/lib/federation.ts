@@ -9,6 +9,7 @@ import * as Core from '@bytebank/core';
 import * as Stores from '@bytebank/stores';
 import * as ApiClient from '@bytebank/api-client';
 import { createInstance, getInstance } from '@module-federation/enhanced/runtime';
+import { preloadedRemotes, type ExposeId } from './preloadedRemotes';
 
 type MFInstance = ReturnType<typeof createInstance>;
 
@@ -101,19 +102,14 @@ function ensureInstance(): MFInstance {
   return mfInstance;
 }
 
-type RemoteName = 'dashboard' | 'transactions';
-type ExposeId = `${RemoteName}/${string}`;
-
-const preloaded = new Set<ExposeId>();
-
 function preloadExpose(id: ExposeId) {
-  if (preloaded.has(id) || !Shared.shouldPrefetch()) return;
-  preloaded.add(id);
+  if (preloadedRemotes.has(id) || !Shared.shouldPrefetch()) return;
+  preloadedRemotes.add(id);
   const [nameOrAlias, expose] = id.split('/');
   ensureInstance()
     .preloadRemote([{ nameOrAlias, exposes: [expose], resourceCategory: 'sync' }])
     .catch((error: unknown) => {
-      preloaded.delete(id);
+      preloadedRemotes.delete(id);
       console.warn(`[federation] preload de ${id} falhou`, error);
     });
 }
@@ -123,7 +119,7 @@ async function loadExpose(id: ExposeId) {
   const mod = await ensureInstance().loadRemote<{ default: React.ComponentType }>(id);
   performance.measure(`mf:loadRemote ${id}`, { start });
   if (!mod) throw new Error(`Failed to load remote ${id}`);
-  preloaded.add(id);
+  preloadedRemotes.add(id);
   return mod.default;
 }
 
