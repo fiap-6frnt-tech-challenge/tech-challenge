@@ -6,6 +6,7 @@ const baseUrl = (process.env.PERF_BASE_URL ?? 'http://localhost:3000').replace(/
 const term = process.env.PERF_TERM ?? 'supermercado';
 const keyDelay = Number(process.env.PERF_KEY_DELAY ?? 120);
 const settleMs = Number(process.env.PERF_SETTLE_MS ?? 2500);
+const latencyMs = Number(process.env.PERF_LATENCY_MS ?? 0);
 
 const cookiePath = resolve(process.cwd(), '.secrets/cookie.txt');
 if (!existsSync(cookiePath)) {
@@ -30,6 +31,16 @@ await context.addCookies([
 ]);
 
 const page = await context.newPage();
+if (latencyMs > 0) {
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Network.enable');
+  await cdp.send('Network.emulateNetworkConditions', {
+    offline: false,
+    latency: latencyMs,
+    downloadThroughput: -1,
+    uploadThroughput: -1,
+  });
+}
 const calls = new Map();
 
 const isApi = (url) => url.includes('/api/transactions');
@@ -74,7 +85,8 @@ const cancelled = duringTyping.filter((call) => call.state.startsWith('cancelada
 const typed = await search.inputValue();
 
 console.log(
-  `\nTermo "${term}" (${term.length} caracteres) · ${keyDelay} ms entre teclas · debounce do SearchInput: 300 ms`
+  `\nTermo "${term}" (${term.length} caracteres) · ${keyDelay} ms entre teclas · debounce da busca: 300 ms` +
+    (latencyMs > 0 ? ` · latência emulada: ${latencyMs} ms` : '')
 );
 console.log(`Requisições a /api/transactions no carregamento da página: ${onLoad}`);
 console.log(

@@ -4,7 +4,6 @@ import { HydrationBoundary } from '@tanstack/react-query';
 import { BALANCE_ILLUSTRATION_SRC } from '@bytebank/design-system';
 import { DashboardRemote } from '@/components/DashboardRemote';
 import { AccountOverviewRemote } from '@/components/AccountOverviewRemote';
-import { DeferUntilVisible } from '@/components/DeferUntilVisible';
 import { prefetchHome } from '@/server/prefetch';
 import { preloadRemoteExpose } from '@/server/remotePreload';
 
@@ -24,9 +23,7 @@ export default async function Home() {
     <HydrationBoundary state={state}>
       <div className="flex flex-col gap-xl">
         <AccountOverviewRemote />
-        <DeferUntilVisible minHeight={640}>
-          <DashboardRemote />
-        </DeferUntilVisible>
+        <DashboardRemote />
       </div>
     </HydrationBoundary>
   );

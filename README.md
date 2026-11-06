@@ -38,6 +38,8 @@ Pontos-chave:
 - **Auth centralizada no shell** — os remotes consomem a sessão via `SessionProvider` do shell e falam apenas com `/api/*`; nunca tocam o JWT.
 - **SSR + SEO** — o shell faz SSR de layout, skeleton e metadata; os remotes hidratam client-side com `preload` do manifest.
 
+A arquitetura da Fase 4 (Clean Architecture, grafo de dependências, estado, reatividade, cache em camadas, segurança e contratos entre MFEs) está documentada em [docs/phase-4/architecture.md](./docs/phase-4/architecture.md).
+
 ---
 
 ## Pré-requisitos

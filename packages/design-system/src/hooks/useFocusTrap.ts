@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -13,11 +13,18 @@ interface UseFocusTrapOptions {
 export function useFocusTrap({ isActive, onEscape }: UseFocusTrapOptions) {
   const elementRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  const onEscapeRef = useRef(onEscape);
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+  useEffect(() => {
+    onEscapeRef.current = onEscape;
+  });
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onEscape?.();
+        onEscapeRef.current?.();
         return;
       }
 
@@ -43,12 +50,7 @@ export function useFocusTrap({ isActive, onEscape }: UseFocusTrapOptions) {
           first.focus();
         }
       }
-    },
-    [onEscape]
-  );
-
-  useEffect(() => {
-    if (!isActive) return;
+    };
 
     previouslyFocused.current = document.activeElement as HTMLElement;
 
@@ -68,7 +70,7 @@ export function useFocusTrap({ isActive, onEscape }: UseFocusTrapOptions) {
       document.body.style.overflow = '';
       previouslyFocused.current?.focus();
     };
-  }, [isActive, handleKeyDown]);
+  }, [isActive]);
 
   return elementRef;
 }

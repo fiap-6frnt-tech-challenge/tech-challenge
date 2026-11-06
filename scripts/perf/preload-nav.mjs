@@ -87,8 +87,46 @@ async function setup(browser) {
   return state;
 }
 
-async function open(browser, storageState, profile) {
+function installSuspenseTimeline() {
+  const watch = {
+    'skeleton da visão geral': '[aria-label="Carregando visão geral"]',
+    'skeleton do dashboard': '[aria-label="Carregando dashboard"]',
+    'skeleton da lista': '[aria-label="Carregando transações"]',
+    'espaço do DeferUntilVisible': 'div[style*="min-height: 640px"]',
+  };
+  const present = {};
+  const events = (window.__suspenseTimeline = []);
+  const push = (t, event) => events.push({ t, event });
+  const scan = () => {
+    for (const [name, selector] of Object.entries(watch)) {
+      const now = document.querySelector(selector) !== null;
+      if (now === Boolean(present[name])) continue;
+      present[name] = now;
+      push(performance.now(), `${name} ${now ? 'aparece' : 'some'}`);
+    }
+  };
+  new MutationObserver(scan).observe(document, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['style', 'aria-label'],
+  });
+  new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+      if (entry.entryType === 'mark' && entry.name.endsWith(':ready')) {
+        push(entry.startTime, entry.name);
+      } else if (entry.entryType === 'measure' && entry.name.startsWith('mf:loadRemote ')) {
+        push(entry.startTime + entry.duration, `${entry.name.slice(3)} resolvido`);
+      } else if (entry.entryType === 'resource' && entry.name.includes('_rsc=')) {
+        push(entry.responseEnd, `RSC ${new URL(entry.name).pathname} respondeu`);
+      }
+    }
+  }).observe({ entryTypes: ['mark', 'measure', 'resource'] });
+}
+
+async function open(browser, storageState, profile, { timeline = false } = {}) {
   const context = await browser.newContext({ storageState, viewport: VIEWPORT });
+  if (timeline) await context.addInitScript(installSuspenseTimeline);
   const hints = PROFILES[profile];
   if (hints) {
     await context.addInitScript((value) => {
@@ -266,6 +304,19 @@ async function homeToTransactions(browser, storageState, profile, hover) {
   }
 }
 
+async function scrollUntilDashboardReady(page) {
+  await page.evaluate(() => {
+    const started = performance.now();
+    const scrollToCharts = () => {
+      const main = document.querySelector('main');
+      main?.scrollTo(0, main.scrollHeight);
+      const done = performance.getEntriesByName('dashboard:ready').length > 0;
+      if (!done && performance.now() - started < 60_000) requestAnimationFrame(scrollToCharts);
+    };
+    scrollToCharts();
+  });
+}
+
 async function transactionsToHome(browser, storageState, profile, hover) {
   const { context, page, requests, describe } = await open(browser, storageState, profile);
   try {
@@ -286,16 +337,7 @@ async function transactionsToHome(browser, storageState, profile, hover) {
             : [],
       }
     );
-    await page.evaluate(() => {
-      const started = performance.now();
-      const scrollToCharts = () => {
-        const main = document.querySelector('main');
-        main?.scrollTo(0, main.scrollHeight);
-        const done = performance.getEntriesByName('dashboard:ready').length > 0;
-        if (!done && performance.now() - started < 60_000) requestAnimationFrame(scrollToCharts);
-      };
-      scrollToCharts();
-    });
+    await scrollUntilDashboardReady(page);
     await waitForEntry(page, 'nav:click → overview:ready');
     await waitForEntry(page, 'nav:click → dashboard:ready');
     const afterClick = requests.slice(beforeClick);
@@ -324,6 +366,55 @@ async function transactionsToHome(browser, storageState, profile, hover) {
       loadRemoteDashboardMs: timing['mf:loadRemote dashboard/Dashboard'],
       loadRemoteOverviewMs: timing['mf:loadRemote transactions/AccountOverview'],
     };
+  } finally {
+    await context.close();
+  }
+}
+
+const SUSPENSE_ROUTES = [
+  {
+    from: '/transactions',
+    fromReady: 'transactions',
+    to: '/',
+    link: 'Início',
+    ready: 'dashboard',
+    intent: [(url) => url.includes('/overview'), (url) => url.includes('/summary')],
+  },
+  {
+    from: '/',
+    fromReady: 'overview',
+    to: '/transactions',
+    link: 'Transações',
+    ready: 'transactions',
+    intent: [isListApi],
+  },
+];
+
+async function suspenseTimeline(browser, storageState, profile, route) {
+  const { context, page, requests } = await open(browser, storageState, profile, {
+    timeline: true,
+  });
+  try {
+    await page.goto(`${BASE}${route.from}`, { waitUntil: 'networkidle', timeout: TIMEOUT });
+    await waitForEntry(page, `${route.fromReady}:ready`);
+    await page.waitForTimeout(1500);
+    await intentAndClick(page, requests, route.link, {
+      hover: true,
+      waitIntent: profile === 'com-preload' ? route.intent : [],
+    });
+    if (route.to === '/') await scrollUntilDashboardReady(page);
+    await waitForEntry(page, `nav:click → ${route.ready}:ready`);
+    await page.waitForTimeout(500);
+    const events = await page.evaluate((path) => {
+      const click = performance.getEntriesByName('nav:click', 'mark').at(-1).startTime;
+      return window.__suspenseTimeline
+        .filter(
+          ({ t, event }) => t >= click && (!event.startsWith('RSC ') || event.includes(` ${path} `))
+        )
+        .sort((a, b) => a.t - b.t)
+        .map(({ t, event }) => ({ ms: Math.round(t - click), event }));
+    }, route.to);
+    return { route: `${route.from} → ${route.to}`, profile, events };
   } finally {
     await context.close();
   }
@@ -381,6 +472,16 @@ try {
     }
     summarize();
   }
+  if (phase === 'suspense') {
+    out.suspense = [];
+    for (let i = 0; i < PAIRS; i++) {
+      for (const route of SUSPENSE_ROUTES) {
+        for (const profile of ['sem-preload', 'com-preload']) {
+          out.suspense.push(await suspenseTimeline(browser, storageState, profile, route));
+        }
+      }
+    }
+  }
 } finally {
   await browser.close();
   mkdirSync(outDir, { recursive: true });
@@ -389,6 +490,13 @@ try {
     `preload-nav-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
   );
   writeFileSync(file, JSON.stringify(out, null, 2));
-  console.log(JSON.stringify(out.summary ?? out.runs, null, 2));
+  if (out.suspense) {
+    for (const run of out.suspense) {
+      console.log(`\n${run.route} · ${run.profile}`);
+      for (const { ms, event } of run.events) console.log(`${String(ms).padStart(6)} ms  ${event}`);
+    }
+  } else {
+    console.log(JSON.stringify(out.summary ?? out.runs, null, 2));
+  }
   console.log(`\nJSON completo em ${file}`);
 }

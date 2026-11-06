@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { Button } from '../../atoms/Button';
+import { Input } from '../../atoms/Input';
 import { Modal } from './Modal';
 
 const meta: Meta<typeof Modal> = {
@@ -151,5 +152,43 @@ export const AccessibilityKeyboardFocus: Story = {
     expect(canvas.getByRole('dialog')).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     expect(args.onClose).toHaveBeenCalled();
+  },
+};
+
+export const FocusKeptOnParentRerender: Story = {
+  name: 'State: Focus kept on parent re-render',
+  render: () => {
+    const [open, setOpen] = useState(false);
+    const [description, setDescription] = useState('');
+    return (
+      <>
+        {openButton(() => setOpen(true))}
+        <Modal isOpen={open} onClose={() => setOpen(false)} title="Editar descrição">
+          <Input
+            label="Descrição"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
+        </Modal>
+      </>
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A parent re-render that passes a new onClose must not restart the focus trap: focus stays in the field being typed into.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(body.getByRole('button', { name: /Abrir modal/i }));
+    await waitFor(() => expect(body.getByRole('button', { name: 'Fechar modal' })).toHaveFocus());
+    const input = body.getByLabelText('Descrição');
+    await userEvent.type(input, 'editado');
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await expect(input).toHaveValue('editado');
+    await expect(input).toHaveFocus();
   },
 };

@@ -111,7 +111,9 @@ A captura de tela da aba Network fica para o vídeo, como no S2-02.
    mais de uma página. Ele só dispara depois que a página atual sai do placeholder e não dispara
    quando o resultado cabe numa página. Por isso a digitação na busca não gera prefetch de termos
    intermediários com uma página só, e o E2E de digitação lenta do S2-02 seguiu com 11
-   requisições.
+   requisições. Com 5 mil transações, porém, quase todo termo tem mais de uma página, e a digitação
+   lenta dobrava as requisições (12 → 22). Desde o S4-04, o prefetch espera a página atual ficar
+   estável por 1 s ([relatório § 5](./report.md#5-busca)).
 6. **No mobile** o `Header` repassa o `onLinkIntent` ao menu do drawer, mas no toque o
    `pointerenter` dispara junto com o clique: lá o ganho vem da ociosidade, não do hover. Não
    medido nesta rodada.

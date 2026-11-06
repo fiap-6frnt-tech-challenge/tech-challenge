@@ -37,6 +37,7 @@ import {
 
 const transactions = new TransactionHttpGateway();
 const attachments = new AttachmentHttpGateway();
+const NEXT_PAGE_PREFETCH_DELAY_MS = 1000;
 
 type ListCache = PaginatedResponse | undefined;
 type MutationSession = { assertSession: () => void };
@@ -91,7 +92,11 @@ export function usePrefetchNextTransactionsPage(
 
   useEffect(() => {
     if (!next || !shouldPrefetch()) return;
-    void queryClient.prefetchQuery(next);
+    const timer = setTimeout(
+      () => void queryClient.prefetchQuery(next),
+      NEXT_PAGE_PREFETCH_DELAY_MS
+    );
+    return () => clearTimeout(timer);
   }, [queryClient, nextKey]);
 }
 
