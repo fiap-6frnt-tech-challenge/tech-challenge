@@ -72,3 +72,6 @@ storybook-static
 
 # Capturas locais de performance
 /perf/
+
+# Relatórios locais do OWASP ZAP (ver README)
+zap-report/
