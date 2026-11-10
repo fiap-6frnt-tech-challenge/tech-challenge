@@ -36,8 +36,26 @@ O README da raiz descreve a Fase 2. A spec da Fase 4 exige explicitamente **tecn
 ## Validação
 
 - [ ] Outro membro do time, numa máquina (ou clone) limpa, sobe tudo seguindo **só** o README
-- [ ] `.env.example` completo, com instrução de geração para cada chave
-- [ ] Links (aplicação, vídeo, documentos) funcionando
+- [x] `.env.example` completo, com instrução de geração para cada chave
+- [ ] Links (aplicação, vídeo, documentos) funcionando: todos conferidos, menos o vídeo da Fase 4, que está como placeholder até a [Task 08](./08-demo-video.md)
+
+## Evidências — 2026-11-08
+
+Teste feito em clone limpo, macOS, Node 22, seguindo o README:
+
+| Etapa                                                   | Resultado                                                                                |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `npm install`, Postgres, migrações, seed, `npm run dev` | Sobe shell + MFEs; cadastro, login, home e `/transactions` sem erro no console           |
+| `npm run test`                                          | 13 tarefas do Turbo verdes                                                               |
+| `npm run test:integration -w @bytebank/shell`           | 94 testes passaram                                                                       |
+| `npm run e2e`                                           | 84 passaram, 8 pulados                                                                   |
+| `npm run arch:check`, `npm audit`, gitleaks, Semgrep    | Sem violações, vulnerabilidades, vazamentos ou achados                                   |
+| ZAP baseline na stack do Compose                        | `FAIL-NEW` 0, `WARN-NEW` 9                                                               |
+| `docker compose up --build` com banco vazio             | Sobe; login, listagem e criação de transação funcionam. **O cadastro falha**, ver abaixo |
+
+**Pendência no Compose.** O cadastro responde `403 Origem não permitida`. O Dockerfile define `HOSTNAME=0.0.0.0`, e por isso `req.url` chega como `http://0.0.0.0:3000` nas rotas que comparam o `Origin` com ele: `register`, as duas de `sessions/.../revoke` e `server/http/mfa.ts`. O `proxy.ts` não sofre com isso, porque o Auth.js reescreve a URL com o `AUTH_URL`.
+
+As imagens de `docs/screenshots` foram removidas em `8eda523`, então as referências a elas saíram do README.
 
 ## Gotchas
 
