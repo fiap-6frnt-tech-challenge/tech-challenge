@@ -5,14 +5,14 @@
 | **Status**      | aceito                                                                 |
 | **Data**        | 2026-09-28                                                             |
 | **Autor**       | Dev 2 (Arquitetura Front & Estado)                                     |
-| **Task**        | [S0-05](../sprint-0-foundation/05-architecture-adrs.md)                |
+| **Task**        | S0-05                                                                  |
 | **Embasamento** | Desenvolvimento Seguro — Aulas 1 e 5 · Arquiteturas Avançadas — Aula 2 |
 
 ---
 
 ## Status
 
-Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme confirmação em 2026-10-04. A cifra de PII é P1 em [S3-02](../sprint-3-cache-security/02-pii-encryption.md) e pode ser adiada pelo gate de escopo sem alterar a prioridade P0 dos anexos.
+Aceito pelo time no gate S0-07, conforme confirmação em 2026-10-04. A cifra de PII é P1 em S3-02 e pode ser adiada pelo gate de escopo sem alterar a prioridade P0 dos anexos.
 
 ## Contexto
 
@@ -29,7 +29,7 @@ Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme co
 | Nome e e-mail do usuário       | Cifrar no banco; busca exata de e-mail por blind index HMAC-SHA256 do valor normalizado.           |
 | Descrição e valor da transação | Permanecem em claro para `ilike`, filtros e ordenação SQL; acesso continua restrito por usuário.   |
 
-Cada operação GCM usa IV aleatório de 12 bytes, tag de 16 bytes e AAD que vincula o ciphertext ao tipo e ID do registro. O payload guarda versão e `keyId`; chaves de cifra de 32 bytes ficam em variáveis de ambiente, com antiga e nova disponíveis durante a rotação. A chave do blind index é separada da chave de cifra; sua rotação exige recalcular os índices. [S3-01](../sprint-3-cache-security/01-encrypted-attachments.md) trata anexos e migração do legado; S3-02 faz expansão, escrita dupla, backfill verificado e retirada posterior das colunas de PII em claro.
+Cada operação GCM usa IV aleatório de 12 bytes, tag de 16 bytes e AAD que vincula o ciphertext ao tipo e ID do registro. O payload guarda versão e `keyId`; chaves de cifra de 32 bytes ficam em variáveis de ambiente, com antiga e nova disponíveis durante a rotação. A chave do blind index é separada da chave de cifra; sua rotação exige recalcular os índices. S3-01 trata anexos e migração do legado; S3-02 faz expansão, escrita dupla, backfill verificado e retirada posterior das colunas de PII em claro.
 
 ## Alternativas consideradas
 

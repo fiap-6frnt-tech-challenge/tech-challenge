@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { container } from '@/server/container';
 import { publicRoute } from '@/server/http/route';
 import { getClientIp } from '@/server/http/clientIp';
+import { isCrossOrigin } from '@/server/http/sameOrigin';
 import { readJson } from '../../read-json';
 
 export const runtime = 'nodejs';
@@ -10,9 +11,7 @@ export const POST = publicRoute(
   async ({ req }) => {
     // This application endpoint shares /api/auth with Auth.js, so the proxy
     // matcher does not apply its usual CSRF origin check here.
-    const origin = req.headers.get('origin');
-    const fetchSite = req.headers.get('sec-fetch-site');
-    if ((origin && origin !== req.nextUrl.origin) || fetchSite === 'cross-site') {
+    if (isCrossOrigin(req)) {
       return NextResponse.json({ error: 'Origem não permitida' }, { status: 403 });
     }
 

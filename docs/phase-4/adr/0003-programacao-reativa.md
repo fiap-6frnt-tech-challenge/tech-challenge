@@ -5,14 +5,14 @@
 | **Status**      | aceito                                                          |
 | **Data**        | 2026-09-28                                                      |
 | **Autor**       | Dev 2 (Arquitetura Front & Estado)                              |
-| **Task**        | [S0-05](../sprint-0-foundation/05-architecture-adrs.md)         |
+| **Task**        | S0-05                                                           |
 | **Embasamento** | Arquiteturas Avançadas — Aula 3 · Princípios e Padrões — Aula 2 |
 
 ---
 
 ## Status
 
-Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme confirmação em 2026-10-04.
+Aceito pelo time no gate S0-07, conforme confirmação em 2026-10-04.
 
 ## Contexto
 
@@ -25,7 +25,7 @@ Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme co
 - Busca: `debounceTime` e `distinctUntilChanged` na entrada, com cancelamento da busca anterior; o resultado entra no TanStack.
 - Upload: stream de progresso, concorrência, retry e cancelamento; Redux guarda apenas metadados atuais.
 - Inatividade e comunicação entre MFEs: streams de eventos de domínio versionados, sem armazenar o último estado financeiro. Inscrições são encerradas no cleanup do React.
-- O barramento será compartilhado como singleton na federação. O [Spike A](../sprint-0-foundation/06-risk-spikes.md) deve provar uma única instância em produção; se falhar, o transporte será `CustomEvent` no `window`, exposto via `fromEvent`, preservando o contrato Observable.
+- O barramento será compartilhado como singleton na federação. O Spike A deve provar uma única instância em produção; se falhar, o transporte será `CustomEvent` no `window`, exposto via `fromEvent`, preservando o contrato Observable.
 
 ## Alternativas consideradas
 
@@ -41,7 +41,7 @@ Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme co
 
 **Negativas / trade-offs:** RxJS adiciona dependência e curva de aprendizado; singleton federado precisa de prova em build de produção; subscriptions sem teardown vazam trabalho e memória.
 
-**Follow-ups:** [S2-01](../sprint-2-state-reactive/01-reactive-foundation.md) cria o barramento e hooks; S2-02/S2-03 aplicam streams à busca e uploads; S2-07 cobre inatividade; S3-08 cobre eventos entre MFEs.
+**Follow-ups:** S2-01 cria o barramento e hooks; S2-02/S2-03 aplicam streams à busca e uploads; S2-07 cobre inatividade; S3-08 cobre eventos entre MFEs.
 
 ## Referências
 

@@ -2,7 +2,7 @@
 
 ## Task
 
-docs/phase-4/sprint-X/NN-....md
+Código da task (ex.: S4-09) ou issue relacionada
 
 ## Checklist
 

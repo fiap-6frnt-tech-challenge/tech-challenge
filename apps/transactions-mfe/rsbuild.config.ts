@@ -42,6 +42,9 @@ export default defineConfig({
       },
     }),
   ],
+  dev: {
+    lazyCompilation: false,
+  },
   server: {
     port: 3003,
     strictPort: true,

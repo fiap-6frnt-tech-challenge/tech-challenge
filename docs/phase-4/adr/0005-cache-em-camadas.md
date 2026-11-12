@@ -5,14 +5,14 @@
 | **Status**      | aceito                                                               |
 | **Data**        | 2026-09-28                                                           |
 | **Autor**       | Dev 2 (Arquitetura Front & Estado)                                   |
-| **Task**        | [S0-05](../sprint-0-foundation/05-architecture-adrs.md)              |
+| **Task**        | S0-05                                                                |
 | **Embasamento** | Arquiteturas Avançadas — Aulas 4 e 5 · Princípios e Padrões — Aula 2 |
 
 ---
 
 ## Status
 
-Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme confirmação em 2026-10-04.
+Aceito pelo time no gate S0-07, conforme confirmação em 2026-10-04.
 
 ## Contexto
 
@@ -29,7 +29,7 @@ Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme co
 | Cliente         | TanStack Query com `staleTime` e `gcTime` por tipo de dado; mutações invalidam chaves afetadas e fazem rollback de atualizações otimistas. Logout limpa QueryClient e Redux.                                                                                       |
 | Assets públicos | Chunks com URL de conteúdo versionado/hash recebem `public, max-age=31536000, immutable`; manifest e `remoteEntry.js` recebem `no-cache`, pois podem mudar sem mudar URL.                                                                                          |
 
-Não usaremos `persistQueryClient`, `localStorage` ou IndexedDB para dados financeiros. `private, no-cache` ainda permite armazenamento no cache HTTP privado do navegador, mas exige revalidação antes de reutilizar; endpoints de autenticação e downloads de anexos usam `no-store`. [S3-03](../sprint-3-cache-security/03-http-cache.md), [S3-04](../sprint-3-cache-security/04-server-cache-ssr-prefetch.md) e [S3-06](../sprint-3-cache-security/06-query-cache-strategy.md) implementam as camadas.
+Não usaremos `persistQueryClient`, `localStorage` ou IndexedDB para dados financeiros. `private, no-cache` ainda permite armazenamento no cache HTTP privado do navegador, mas exige revalidação antes de reutilizar; endpoints de autenticação e downloads de anexos usam `no-store`. S3-03, S3-04 e S3-06 implementam as camadas.
 
 ## Alternativas consideradas
 

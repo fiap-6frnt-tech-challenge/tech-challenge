@@ -109,7 +109,7 @@ O ESLint e o `npm run arch:check` barram imports que violem essa direção. Deta
 ### 1. Clonar o repositório
 
 ```bash
-git clone git@github.com:fiap-6frnt-tech-challenge/tech-challenge.git
+git clone https://github.com/fiap-6frnt-tech-challenge/tech-challenge.git
 cd tech-challenge
 ```
 
@@ -351,7 +351,7 @@ Em dev, todas ficam em `apps/shell/.env.local` (criado no passo 3). O `.env` da 
 | Infraestrutura | Containers não-root e somente leitura; Postgres só em `127.0.0.1`; role da aplicação sem `DROP`/`ALTER` |
 | Pipeline       | `npm audit`, Dependabot, gitleaks, Semgrep e Trivy na CI                                                |
 
-O baseline do OWASP ZAP não encontrou achados High. A auditoria completa, com as evidências e os avisos residuais justificados, está em [docs/phase-4/security/owasp-top10.md](./docs/phase-4/security/owasp-top10.md), e o checklist ASVS em [asvs-level1.md](./docs/phase-4/security/asvs-level1.md).
+A auditoria contra o OWASP Top 10 e o API Security Top 10, com varredura do OWASP ZAP (baseline e autenticada), não encontrou achados High.
 
 ---
 
@@ -368,7 +368,7 @@ O baseline do OWASP ZAP não encontrou achados High. A auditoria completa, com a
 | Vazão da lista paginada (10 conexões)       |                 80 req/s |               156 req/s | acima da baseline  |
 | Dados da home no carregamento               |                 848,5 kB | 0 requisições (no HTML) | saldo + 5 recentes |
 
-A meta de Lighthouse mobile vale para produção, medida depois do deploy da Fase 4. Metodologia, comandos para reproduzir e o efeito de cada otimização estão no [relatório de performance](./docs/phase-4/perf/report.md).
+A meta de Lighthouse mobile vale para produção, medida depois do deploy da Fase 4. Os números locais são best-of-3 na mesma máquina da baseline, com 5 mil transações na conta de medição.
 
 ---
 
@@ -388,9 +388,8 @@ tech-challenge/
 │   ├── stores/            # Redux Toolkit — slices de UI e auth
 │   └── api-client/        # TanStack Query — hooks de dados + cliente HTTP
 │
-├── docs/phase-4/          # Plano, arquitetura, ADRs, auditoria OWASP e relatório de performance
+├── docs/phase-4/          # Arquitetura, ADRs e grafo de dependências
 ├── docker/                # Inicialização do Postgres (role da aplicação)
-├── scripts/perf/          # Scripts de medição usados no relatório de performance
 ├── e2e/                   # Suíte Playwright (specs + setup)
 ├── docker-compose.yml     # Postgres 16 + shell + MFEs
 └── turbo.json             # Configuração do Turborepo
