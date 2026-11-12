@@ -1,12 +1,12 @@
 # Arquitetura do Bytebank — Fase 4
 
-|                    |                                                                                              |
-| ------------------ | -------------------------------------------------------------------------------------------- |
-| **Task**           | [S4-06 — Documentação de arquitetura](./sprint-4-audit-delivery/06-architecture-docs.md)     |
-| **Autor**          | Dev 2 (Arquitetura Front & Estado)                                                           |
-| **Revisão**        | Dev 1 (Backend & Segurança) e Dev 3 (Performance & Plataforma)                               |
-| **Base do código** | branch `phase-4` em `055ebda` (2026-11-01)                                                   |
-| **Decisões**       | [ADRs 001–006](#10-adrs) · [PLAN.md](./PLAN.md) (requisitos, metas e alternativas avaliadas) |
+|                    |                                                                |
+| ------------------ | -------------------------------------------------------------- |
+| **Task**           | S4-06 — Documentação de arquitetura                            |
+| **Autor**          | Dev 2 (Arquitetura Front & Estado)                             |
+| **Revisão**        | Dev 1 (Backend & Segurança) e Dev 3 (Performance & Plataforma) |
+| **Base do código** | branch `phase-4` em `055ebda` (2026-11-01)                     |
+| **Decisões**       | [ADRs 001–006 e alternativas avaliadas](#10-adrs)              |
 
 O Bytebank é um gerenciador financeiro web: o usuário cadastra depósitos, saques e transferências, anexa recibos e acompanha saldo, gráficos e KPIs. A Fase 2 entregou o app em produção como **shell Next.js + dois microfrontends** (Module Federation). A Fase 4 não reescreveu o produto: refatorou e endureceu esse sistema em passos pequenos (padrão _Strangler Fig_), com testes de contrato e E2E protegendo o comportamento existente.
 
@@ -326,7 +326,7 @@ O store Redux e o `queryClient` são singletons federados: shell e MFEs leem e e
 
 ### Máquina de estados do fluxo de transação
 
-Antes, o modal combinava `pendingData`, `isSubmitting` e o estado dos anexos, e permitia combinações inválidas (confirmar duas vezes, fechar no meio do upload). O reducer [`transactionFlow.ts`](../../apps/transactions-mfe/src/application/transactionFlow.ts) usa uma união discriminada, e o hook [`useTransactionFlow.ts`](../../apps/transactions-mfe/src/application/useTransactionFlow.ts) executa os efeitos ao entrar em cada estado. O mesmo fluxo serve à criação e à edição. Diagrama da [S3-07](./sprint-3-cache-security/07-transaction-flow-fsm.md):
+Antes, o modal combinava `pendingData`, `isSubmitting` e o estado dos anexos, e permitia combinações inválidas (confirmar duas vezes, fechar no meio do upload). O reducer [`transactionFlow.ts`](../../apps/transactions-mfe/src/application/transactionFlow.ts) usa uma união discriminada, e o hook [`useTransactionFlow.ts`](../../apps/transactions-mfe/src/application/useTransactionFlow.ts) executa os efeitos ao entrar em cada estado. O mesmo fluxo serve à criação e à edição. Diagrama da S3-07:
 
 ```mermaid
 stateDiagram-v2
@@ -430,7 +430,7 @@ Código: [`idle.ts`](../../packages/stores/src/reactive/idle.ts) · [`SessionAct
 
 ### Eventos entre MFEs
 
-`domainEvents$` é um `Subject` do RxJS exposto como `Observable` pelo `@bytebank/stores`. Como o pacote é singleton na federação, um evento publicado pelo transactions-mfe chega ao dashboard-mfe e ao shell (provado em build de produção no [Spike A](./sprint-0-foundation/06-risk-spikes.md)). O fluxo de cada assinante:
+`domainEvents$` é um `Subject` do RxJS exposto como `Observable` pelo `@bytebank/stores`. Como o pacote é singleton na federação, um evento publicado pelo transactions-mfe chega ao dashboard-mfe e ao shell (provado em build de produção no Spike A do Sprint 0). O fluxo de cada assinante:
 
 | Assinante                                                                                  | Pipeline                                                                                       | Efeito                                                                     |
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -491,7 +491,7 @@ Um `GET` repetido sem mudança volta como `304` sem corpo. Depois de criar uma t
 
 ## 8. Segurança
 
-Defesa em profundidade: cada camada tem controles próprios, e nenhuma depende de a anterior ter barrado o ataque. A auditoria item a item contra o OWASP Top 10 e o API Security Top 10, com evidências e a varredura do OWASP ZAP, está em [`security/owasp-top10.md`](./security/owasp-top10.md) (S4-03).
+Defesa em profundidade: cada camada tem controles próprios, e nenhuma depende de a anterior ter barrado o ataque. A auditoria item a item contra o OWASP Top 10 e o API Security Top 10, com a varredura do OWASP ZAP, foi feita no S4-03 e não encontrou achados High.
 
 | Camada                 | Controles                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Código                                                                                                                                                                                                                                             |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -598,7 +598,7 @@ O store Redux e o `queryClient` são os mesmos objetos no shell e nos remotes. O
 
 ## 10. ADRs
 
-As decisões de arquitetura ficam em [`docs/phase-4/adr/`](./adr), no formato do [template](./adr/0000-template.md): contexto, decisão, alternativas e consequências.
+As decisões de arquitetura ficam em [`docs/phase-4/adr/`](./adr), cada uma com contexto, decisão, alternativas e consequências.
 
 | ADR                                                  | Título                                              | Decisão                                                                                                                                              | Status              |
 | ---------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
@@ -609,7 +609,18 @@ As decisões de arquitetura ficam em [`docs/phase-4/adr/`](./adr), no formato do
 | [005](./adr/0005-cache-em-camadas.md)                | Cache em camadas sem compartilhar dados financeiros | ETag privado, cache de servidor por usuário com tags, TanStack por tipo de dado, assets `immutable`; nada persistido no dispositivo                  | aceito · 2026-09-28 |
 | [006](./adr/0006-sessao-e-autenticacao.md)           | Sessão e autenticação                               | Limite de tentativas em Postgres (e-mail com HMAC + IP), JWT com `sid` e `session_version` revogáveis, teto de 12 h, inatividade de 15 min, MFA TOTP | aceito · 2026-10-18 |
 
-Alternativas descartadas no nível do plano (XState, GraphQL, Redis para rate limit, SSR real dos MFEs, `pgcrypto`, persistência do cache) estão em [PLAN.md — Alternativas avaliadas](./PLAN.md#alternativas-avaliadas).
+Alternativas descartadas no nível do plano:
+
+| Alternativa                                            | Motivo de não escolha                                                                                              |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Evoluir o app mobile (Fase 3)                          | Decisão do time: a web tem mais superfície para os requisitos desta fase                                           |
+| GraphQL                                                | Não é requisito; REST + TanStack já resolvem; aumentaria o escopo e a superfície de ataque                         |
+| XState                                                 | Resolve, mas adiciona dependência e curva de aprendizado; o fluxo é pequeno para um reducer tipado                 |
+| Upstash/Redis para rate limit                          | Serviço externo a mais; o Postgres já existe e funciona igual em Docker, CI e Vercel                               |
+| Persistir o cache do TanStack (localStorage/IndexedDB) | Deixaria dados financeiros em claro no dispositivo, o que conflita com o requisito de segurança                    |
+| SSR real dos MFEs                                      | Mudança arquitetural grande (MF + RSC); prefetch no SSR + preload entregam boa parte do ganho                      |
+| `pgcrypto` no banco                                    | A chave teria de trafegar nas queries; cifrar na aplicação mantém a chave fora do banco                            |
+| Cifrar `description`/`amount`                          | Quebraria a busca `ilike` e os filtros/ordenação por valor em SQL; ficam em claro por decisão registrada (ADR-004) |
 
 ---
 

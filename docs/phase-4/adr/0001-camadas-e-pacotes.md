@@ -5,14 +5,14 @@
 | **Status**      | aceito                                                                    |
 | **Data**        | 2026-09-28                                                                |
 | **Autor**       | Dev 2 (Arquitetura Front & Estado)                                        |
-| **Task**        | [S0-05](../sprint-0-foundation/05-architecture-adrs.md)                   |
+| **Task**        | S0-05                                                                     |
 | **Embasamento** | Princípios e Padrões — Aulas 1 e 6 · Arquiteturas Avançadas — Aulas 1 e 2 |
 
 ---
 
 ## Status
 
-Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme confirmação em 2026-10-04.
+Aceito pelo time no gate S0-07, conforme confirmação em 2026-10-04.
 
 ## Contexto
 
@@ -24,7 +24,7 @@ O domínio está misturado a utilitários de UI em `packages/shared/src/`, enqua
 
 - `packages/core/src/domain/` contém entidades, value objects, regras, erros e eventos; `application/` contém casos de uso e portas. Validação pura com Zod é permitida em `schemas/`; o core não importa React, Next.js, Drizzle, `node:*`, IO nem outros pacotes `@bytebank/*`.
 - `apps/shell/src/server/infrastructure/` implementa persistência, storage e criptografia; `packages/api-client/` implementa gateways HTTP do cliente. Rotas `/api` autenticam, validam e traduzem HTTP para casos de uso. Páginas, componentes e view-models compõem a apresentação.
-- `apps/shell/src/server/container.ts` liga portas e adaptadores no servidor; os `bootstrap.tsx` dos MFEs ligam dependências do cliente. `@bytebank/shared` reexporta símbolos migrados do core temporariamente e retém apenas utilitários de apresentação. [S1-01](../sprint-1-clean-architecture/01-core-domain.md) inicia a migração; [S1-08](../sprint-1-clean-architecture/08-module-boundaries.md) torna a regra verificável no lint e no CI.
+- `apps/shell/src/server/container.ts` liga portas e adaptadores no servidor; os `bootstrap.tsx` dos MFEs ligam dependências do cliente. `@bytebank/shared` reexporta símbolos migrados do core temporariamente e retém apenas utilitários de apresentação. S1-01 inicia a migração; S1-08 torna a regra verificável no lint e no CI.
 
 ```mermaid
 flowchart LR
@@ -68,5 +68,4 @@ As setas sólidas representam chamadas; a seta pontilhada representa implementa�
 ## Referências
 
 - Aulas da fase: Princípios e Padrões — Aulas 1 e 6; Arquiteturas Avançadas — Aulas 1 e 2.
-- Plano: [arquitetura alvo](../PLAN.md#arquitetura-alvo).
 - Código atual: `packages/shared/src/index.ts`, `apps/shell/src/app/api/transactions/route.ts`, `apps/shell/src/app/api/transactions/store.ts`.

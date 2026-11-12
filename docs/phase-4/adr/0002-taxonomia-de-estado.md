@@ -5,14 +5,14 @@
 | **Status**      | aceito                                                               |
 | **Data**        | 2026-09-28                                                           |
 | **Autor**       | Dev 2 (Arquitetura Front & Estado)                                   |
-| **Task**        | [S0-05](../sprint-0-foundation/05-architecture-adrs.md)              |
+| **Task**        | S0-05                                                                |
 | **Embasamento** | Princípios e Padrões — Aula 4 · Arquiteturas Avançadas — Aulas 2 e 3 |
 
 ---
 
 ## Status
 
-Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme confirmação em 2026-10-04.
+Aceito pelo time no gate S0-07, conforme confirmação em 2026-10-04.
 
 ## Contexto
 
@@ -32,7 +32,7 @@ Aceito pelo time no [gate S0-07](../sprint-0-foundation/07-gate.md), conforme co
 | Eventos assíncronos                                                       | RxJS para streams; evento não substitui estado atual nem cache.                                                                                     |
 | Estado efêmero de um componente                                           | `useState`, quando não precisa ser compartilhado ou persistido na URL.                                                                              |
 
-O shell registra listeners que precisam acessar Redux e TanStack. No logout, limpa o QueryClient, reseta Redux e cancela uploads antes de exibir outra conta. [S2-04](../sprint-2-state-reactive/04-redux-patterns.md), [S3-06](../sprint-3-cache-security/06-query-cache-strategy.md) e [S3-07](../sprint-3-cache-security/07-transaction-flow-fsm.md) executam os padrões.
+O shell registra listeners que precisam acessar Redux e TanStack. No logout, limpa o QueryClient, reseta Redux e cancela uploads antes de exibir outra conta. S2-04, S3-06 e S3-07 executam os padrões.
 
 ## Alternativas consideradas
 

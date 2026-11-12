@@ -1,12 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { revokeCurrentRequestSession } from '@/auth';
 import { toHttpError } from '@/server/http/route';
+import { isCrossOrigin } from '@/server/http/sameOrigin';
 
 export async function POST(req: NextRequest) {
-  if (
-    req.headers.get('origin') !== new URL(req.url).origin ||
-    req.headers.get('sec-fetch-site') === 'cross-site'
-  ) {
+  if (isCrossOrigin(req, { requireOrigin: true })) {
     return NextResponse.json({ error: 'Origem não permitida' }, { status: 403 });
   }
   try {

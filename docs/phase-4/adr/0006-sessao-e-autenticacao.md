@@ -1,12 +1,12 @@
 # ADR-0006 — Sessão e autenticação
 
-|                 |                                                                                                                                                                |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Status**      | aceito e integrado na phase-4 pelo PR #187 (S2-07)                                                                                                             |
-| **Data**        | 2026-10-18                                                                                                                                                     |
-| **Autor**       | Dev 1 (Backend & Segurança)                                                                                                                                    |
-| **Task**        | [S2-05 — Login: limite de tentativas](../sprint-2-state-reactive/05-login-rate-limit.md), [S2-07 — Sessão](../sprint-2-state-reactive/07-session-hardening.md) |
-| **Embasamento** | Desenvolvimento Seguro — Aula 3 (força bruta)                                                                                                                  |
+|                 |                                                     |
+| --------------- | --------------------------------------------------- |
+| **Status**      | aceito e integrado na phase-4 pelo PR #187 (S2-07)  |
+| **Data**        | 2026-10-18                                          |
+| **Autor**       | Dev 1 (Backend & Segurança)                         |
+| **Task**        | S2-05 — Login: limite de tentativas, S2-07 — Sessão |
+| **Embasamento** | Desenvolvimento Seguro — Aula 3 (força bruta)       |
 
 ## Contexto
 
@@ -107,7 +107,7 @@ Referências: [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238.html), [OTPAuth]
 
 ## Referências
 
-- [Task S2-05 — Login: limite de tentativas](../sprint-2-state-reactive/05-login-rate-limit.md)
+- Task S2-05 — Login: limite de tentativas
 - [Auth.js — callbacks e configuração de sessão](https://authjs.dev/reference/core)
-- [Task S2-07 — Sessão](../sprint-2-state-reactive/07-session-hardening.md)
+- Task S2-07 — Sessão
 - Código: `apps/shell/src/server/infrastructure/db/PostgresRateLimiter.ts`
