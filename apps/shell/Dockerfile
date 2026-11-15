@@ -1,5 +1,5 @@
 # Stage 1: deps — instala o workspace inteiro (precisa dos packages @bytebank/*)
-FROM node:22-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/shell/package.json apps/shell/
@@ -13,7 +13,7 @@ COPY packages/stores/package.json packages/stores/
 RUN npm ci
 
 # Stage 2: build — gera o output standalone do shell
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV LOCAL_UPLOADS_DIR=/app/.uploads
@@ -22,7 +22,7 @@ COPY . .
 RUN npm run build -w @bytebank/shell
 
 # Stage 3: runtime — imagem mínima, só o standalone server
-FROM node:22-alpine AS runtime
+FROM node:25-alpine AS runtime
 # O npm só é usado no build; removemos seus pacotes da imagem de runtime.
 RUN apk -U upgrade && \
     rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
