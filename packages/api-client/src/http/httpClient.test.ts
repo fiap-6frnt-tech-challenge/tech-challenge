@@ -5,10 +5,31 @@ import {
   RateLimitedError,
   ValidationError,
 } from '@bytebank/core';
-import { HttpError, httpRequest } from './httpClient';
+import { HttpError, apiUrl, configureApiBaseUrl, httpRequest } from './httpClient';
 import { domainEvents$, invalidateClientSession } from '@bytebank/stores';
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  configureApiBaseUrl('/api');
+});
+
+describe('configureApiBaseUrl', () => {
+  it('removes trailing slashes and falls back to /api', () => {
+    configureApiBaseUrl('https://api.example.com/v1///');
+    expect(apiUrl('/transactions')).toBe('https://api.example.com/v1/transactions');
+    configureApiBaseUrl('');
+    expect(apiUrl('transactions')).toBe('/api/transactions');
+    configureApiBaseUrl('/');
+    expect(apiUrl('/transactions')).toBe('/transactions');
+  });
+
+  it('handles a long run of slashes in linear time', () => {
+    const started = performance.now();
+    configureApiBaseUrl(`/api${'/'.repeat(100_000)}x${'/'.repeat(100_000)}`);
+    expect(performance.now() - started).toBeLessThan(100);
+    expect(apiUrl('/t')).toBe(`/api${'/'.repeat(100_000)}x/t`);
+  });
+});
 
 function response(status: number, body: unknown, headers?: HeadersInit) {
   return { ok: false, status, headers: new Headers(headers), json: async () => body };
