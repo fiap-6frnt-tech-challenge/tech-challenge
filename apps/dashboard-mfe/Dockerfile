@@ -1,5 +1,5 @@
 # Stage 1: build — Rsbuild gera dist/ estático
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 # MFE_ORIGIN entra como build arg → vira assetPrefix dos chunks federados
 ARG MFE_ORIGIN=http://localhost:3002
