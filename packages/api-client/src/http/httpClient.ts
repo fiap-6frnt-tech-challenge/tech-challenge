@@ -9,7 +9,14 @@ import { createSessionExpiryReporter } from './sessionExpiry';
 let baseUrl = '/api';
 
 export function configureApiBaseUrl(url: string): void {
-  baseUrl = (url || '/api').replace(/\/+$/, '');
+  baseUrl = withoutTrailingSlashes(url || '/api');
+}
+
+// Laço em vez de /\/+$/: a regex é quadrática numa sequência longa de barras (CodeQL js/polynomial-redos).
+function withoutTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === '/') end -= 1;
+  return url.slice(0, end);
 }
 
 export function apiUrl(path: string): string {
