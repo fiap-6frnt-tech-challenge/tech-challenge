@@ -6,7 +6,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://tech-challenge-phase2.vercel.app"
+          "value": "https://tech-challenge-phase4.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",
