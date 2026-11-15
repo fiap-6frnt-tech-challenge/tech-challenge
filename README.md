@@ -2,7 +2,7 @@
 
 Aplicação de gestão financeira pessoal construída como monorepo (Turborepo) com **arquitetura de microfrontends**: shell Next.js 16 + remotes React federados em runtime via Module Federation, Design System próprio, autenticação NextAuth e persistência em PostgreSQL via Drizzle ORM. Desenvolvida como Tech Challenge (Fases 2 e 4) da pós-graduação FIAP Frontend Engineering. A Fase 4 acrescentou Clean Architecture, programação reativa, cache em camadas, otimização de carregamento e segurança da aplicação.
 
-🚀 **[Acessar aplicação →](https://tech-challenge-phase2.vercel.app/)** · 🎥 **Vídeo da Fase 4:** _em breve_ <!-- TODO S4-08: trocar "em breve" pelo link do vídeo da Fase 4 --> · 🎞️ [Vídeo da Fase 2](https://youtu.be/4URo48RXs_8)
+🚀 **[Acessar aplicação →](https://tech-challenge-phase4.vercel.app/)** · 🎥 **Vídeo da Fase 4:** _em breve_ <!-- TODO S4-08: trocar "em breve" pelo link do vídeo da Fase 4 --> · 🎞️ [Vídeo da Fase 2](https://youtu.be/4URo48RXs_8)
 
 ---
 
@@ -401,7 +401,7 @@ tech-challenge/
 
 Deploy na **Vercel** em três projetos independentes:
 
-- **Shell** — [tech-challenge-phase2.vercel.app](https://tech-challenge-phase2.vercel.app/)
+- **Shell** — [tech-challenge-phase4.vercel.app](https://tech-challenge-phase4.vercel.app/)
 - **Dashboard MFE** — [tech-challenge-dashboard-mfe.vercel.app](https://tech-challenge-dashboard-mfe.vercel.app/)
 - **Transactions MFE** — [tech-challenge-transactions-mfe.vercel.app](https://tech-challenge-transactions-mfe.vercel.app/)
 
