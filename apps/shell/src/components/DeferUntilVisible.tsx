@@ -6,15 +6,17 @@ interface DeferUntilVisibleProps {
   children: ReactNode;
   minHeight?: number | string;
   rootMargin?: string;
+  eager?: () => boolean;
 }
 
 export function DeferUntilVisible({
   children,
   minHeight,
   rootMargin = '300px',
+  eager,
 }: DeferUntilVisibleProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => eager?.() ?? false);
 
   useEffect(() => {
     if (visible) return;

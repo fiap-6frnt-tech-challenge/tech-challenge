@@ -29,6 +29,69 @@
       "when": 1790601182874,
       "tag": "0003_known_morlocks",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791326933446,
+      "tag": "0004_response_time_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791841807563,
+      "tag": "0005_mighty_paper_doll",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791842106327,
+      "tag": "0006_amusing_overlord",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792360686584,
+      "tag": "0007_session_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792368744885,
+      "tag": "0008_encrypted_attachments",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792457885332,
+      "tag": "0009_pii_encryption",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792457900293,
+      "tag": "0010_pii_contract",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792513846230,
+      "tag": "0011_http_cache_version_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793147342107,
+      "tag": "0012_mfa_totp",
+      "breakpoints": true
     }
   ]
 }

@@ -22,18 +22,23 @@ export default defineConfig({
       manifest: { filePath: '', fileName: 'mf-manifest.json' },
       dts: false,
       exposes: {
-        './Dashboard': './src/Dashboard.tsx',
+        './Dashboard': './src/presentation/Dashboard.tsx',
       },
       shared: {
         react: { singleton: true, requiredVersion: false },
         'react-dom': { singleton: true, requiredVersion: false },
+        rxjs: { singleton: true, requiredVersion: '^7.8.0' },
         '@bytebank/design-system': { singleton: true, requiredVersion: false },
+        '@bytebank/core': { singleton: true, requiredVersion: false },
         '@bytebank/shared': { singleton: true, requiredVersion: false },
         '@bytebank/stores': { singleton: true, requiredVersion: false },
         '@bytebank/api-client': { singleton: true, requiredVersion: false },
       },
     }),
   ],
+  dev: {
+    lazyCompilation: false,
+  },
   server: {
     port: 3002,
     strictPort: true,

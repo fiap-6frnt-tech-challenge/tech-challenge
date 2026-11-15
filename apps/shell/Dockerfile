@@ -6,6 +6,7 @@ COPY apps/shell/package.json apps/shell/
 COPY apps/dashboard-mfe/package.json apps/dashboard-mfe/
 COPY apps/transactions-mfe/package.json apps/transactions-mfe/
 COPY packages/shared/package.json packages/shared/
+COPY packages/core/package.json packages/core/
 COPY packages/design-system/package.json packages/design-system/
 COPY packages/api-client/package.json packages/api-client/
 COPY packages/stores/package.json packages/stores/
@@ -14,21 +15,35 @@ RUN npm ci
 # Stage 2: build — gera o output standalone do shell
 FROM node:22-alpine AS build
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV LOCAL_UPLOADS_DIR=/app/.uploads
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build -w @bytebank/shell
 
 # Stage 3: runtime — imagem mínima, só o standalone server
 FROM node:22-alpine AS runtime
+# O npm só é usado no build; removemos seus pacotes da imagem de runtime.
+RUN apk -U upgrade && \
+    rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 WORKDIR /app
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
+# Sem isto o standalone escuta no HOSTNAME do container e o healthcheck em 127.0.0.1 falha.
+ENV HOSTNAME=0.0.0.0
 # NextAuth v5 bloqueia o host em produção sem isto (na Vercel é automático);
 # como esta imagem é self-hosted atrás de um proxy conhecido, confiamos no Host.
 ENV AUTH_TRUST_HOST=true
+ENV LOCAL_UPLOADS_DIR=/app/.uploads
 # O standalone já inclui um node_modules tracado; copiamos a árvore inteira.
 COPY --from=build /app/apps/shell/.next/standalone ./
 COPY --from=build /app/apps/shell/.next/static ./apps/shell/.next/static
 COPY --from=build /app/apps/shell/public ./apps/shell/public
+RUN mkdir -p /app/.uploads /app/apps/shell/.next/cache && \
+    chown -R node:node /app/.uploads /app/apps/shell/.next/cache
+USER node
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/login > /dev/null || exit 1
 CMD ["node", "apps/shell/server.js"]

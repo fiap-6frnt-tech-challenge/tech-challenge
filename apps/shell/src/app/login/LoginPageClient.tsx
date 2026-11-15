@@ -1,33 +1,78 @@
 'use client';
 
 import Link from 'next/link';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import type { LoginFormFields } from '@bytebank/design-system';
-import { GoogleAuthButton, LoginForm } from '@bytebank/design-system';
+import { GoogleAuthButton } from '@bytebank/design-system';
+import { LoginForm } from '@bytebank/design-system/forms';
 import { loginWithCredentials } from './loginFlow';
+import { TurnstileWidget } from './TurnstileWidget';
+import { MfaLoginForm } from './MfaLoginForm';
 
 interface LoginPageClientProps {
+  sessionNotice?: string;
   isGoogleAuthEnabled: boolean;
+  turnstileSiteKey?: string;
   loginWithGoogleAction: () => void | Promise<void>;
 }
 
 export function LoginPageClient({
+  sessionNotice,
   isGoogleAuthEnabled,
+  turnstileSiteKey,
   loginWithGoogleAction,
 }: LoginPageClientProps) {
   const [isCredentialsPending, startCredentialsTransition] = useTransition();
   const [isGooglePending, startGoogleTransition] = useTransition();
+  const [isTurnstileRequired, setIsTurnstileRequired] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileWidgetVersion, setTurnstileWidgetVersion] = useState(0);
+  const [turnstileMessage, setTurnstileMessage] = useState('');
+  const [mfaCredentials, setMfaCredentials] = useState<LoginFormFields | null>(null);
+  const [mfaError, setMfaError] = useState<string>();
   const isPending = isCredentialsPending || isGooglePending;
 
-  function handleCredentialsSubmit(data: LoginFormFields) {
+  function handleCredentialsSubmit(data: LoginFormFields, totp?: string) {
     startCredentialsTransition(async () => {
-      const result = await loginWithCredentials(data);
+      const result = await loginWithCredentials(data, turnstileToken || undefined, totp);
 
-      if (!result.ok) {
-        window.location.assign('/auth/error?error=CredentialsSignin');
+      if (!result.ok && ['mfa_required', 'mfa_invalid'].includes(result.code ?? '')) {
+        setMfaCredentials(data);
+        setMfaError(
+          result.code === 'mfa_invalid'
+            ? 'Código inválido ou já utilizado. Tente novamente.'
+            : undefined
+        );
         return;
       }
 
+      if (!result.ok) {
+        if (result.code === 'turnstile_required') {
+          setIsTurnstileRequired(true);
+          setTurnstileToken('');
+          setTurnstileWidgetVersion((version) => version + 1);
+          setTurnstileMessage('Confirme o desafio de segurança para continuar.');
+          return;
+        }
+
+        if (isTurnstileRequired) {
+          setTurnstileToken('');
+          setTurnstileWidgetVersion((version) => version + 1);
+          setTurnstileMessage('Credenciais inválidas. Confirme novamente o desafio.');
+          if (result.code === 'rate_limited') {
+            const params = new URLSearchParams({ error: 'CredentialsSignin', code: result.code });
+            window.location.assign(`/auth/error?${params.toString()}`);
+          }
+          return;
+        }
+
+        const params = new URLSearchParams({ error: 'CredentialsSignin' });
+        if (result.code === 'rate_limited') params.set('code', result.code);
+        window.location.assign(`/auth/error?${params.toString()}`);
+        return;
+      }
+
+      setMfaCredentials(null);
       window.location.assign('/');
     });
   }
@@ -72,9 +117,40 @@ export function LoginPageClient({
             Login
           </h1>
 
-          <LoginForm onSubmit={handleCredentialsSubmit} isLoading={isPending} />
+          {sessionNotice && (
+            <p role="status" className="mb-md text-center text-content-secondary">
+              {sessionNotice}
+            </p>
+          )}
+          {mfaCredentials ? (
+            <MfaLoginForm
+              pending={isPending}
+              error={mfaError}
+              onSubmit={(code) => handleCredentialsSubmit(mfaCredentials, code)}
+              onBack={() => {
+                setMfaCredentials(null);
+                setMfaError(undefined);
+                setTurnstileToken('');
+              }}
+            />
+          ) : (
+            <LoginForm onSubmit={handleCredentialsSubmit} isLoading={isPending} />
+          )}
 
-          {isGoogleAuthEnabled ? (
+          {isTurnstileRequired && turnstileSiteKey ? (
+            <div className="mt-md flex flex-col gap-sm" aria-live="polite">
+              <p className="text-center text-sm text-content-secondary">
+                {turnstileMessage || 'Confirme o desafio para continuar.'}
+              </p>
+              <TurnstileWidget
+                key={turnstileWidgetVersion}
+                siteKey={turnstileSiteKey}
+                onToken={setTurnstileToken}
+              />
+            </div>
+          ) : null}
+
+          {isGoogleAuthEnabled && !mfaCredentials ? (
             <>
               <div className="my-lg flex items-center gap-md">
                 <div className="h-px flex-1 bg-border" />

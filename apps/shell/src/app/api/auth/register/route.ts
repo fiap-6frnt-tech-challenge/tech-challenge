@@ -1,37 +1,25 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { registerSchema } from '@bytebank/shared';
-import { createUser, findUserByEmail } from '@/db/users';
-import { JsonRequestError, readJson } from '../../read-json';
+import { container } from '@/server/container';
+import { publicRoute } from '@/server/http/route';
+import { getClientIp } from '@/server/http/clientIp';
+import { isCrossOrigin } from '@/server/http/sameOrigin';
+import { readJson } from '../../read-json';
 
 export const runtime = 'nodejs';
 
-export async function POST(request: Request) {
-  let body: unknown;
-  try {
-    body = await readJson(request);
-  } catch (error) {
-    if (error instanceof JsonRequestError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+export const POST = publicRoute(
+  async ({ req }) => {
+    // This application endpoint shares /api/auth with Auth.js, so the proxy
+    // matcher does not apply its usual CSRF origin check here.
+    if (isCrossOrigin(req)) {
+      return NextResponse.json({ error: 'Origem não permitida' }, { status: 403 });
     }
-    throw error;
-  }
-  const parsed = registerSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Dados inválidos', issues: z.flattenError(parsed.error) },
-      { status: 422 }
+
+    const user = await container.registerUser.execute(
+      await readJson(req),
+      getClientIp(req.headers)
     );
-  }
-
-  const existing = await findUserByEmail(parsed.data.email);
-  if (existing) {
-    return NextResponse.json({ error: 'E-mail já cadastrado' }, { status: 409 });
-  }
-
-  const user = await createUser(parsed.data);
-  if (!user) {
-    return NextResponse.json({ error: 'E-mail já cadastrado' }, { status: 409 });
-  }
-  return NextResponse.json({ id: user.id, name: user.name, email: user.email }, { status: 201 });
-}
+    return { id: user.id, name: user.name, email: user.email };
+  },
+  { status: 201 }
+);

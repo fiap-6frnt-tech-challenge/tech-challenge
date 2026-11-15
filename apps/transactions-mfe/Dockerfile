@@ -9,6 +9,7 @@ COPY apps/shell/package.json apps/shell/
 COPY apps/dashboard-mfe/package.json apps/dashboard-mfe/
 COPY apps/transactions-mfe/package.json apps/transactions-mfe/
 COPY packages/shared/package.json packages/shared/
+COPY packages/core/package.json packages/core/
 COPY packages/design-system/package.json packages/design-system/
 COPY packages/api-client/package.json packages/api-client/
 COPY packages/stores/package.json packages/stores/
@@ -17,7 +18,10 @@ COPY . .
 RUN npm run build -w @bytebank/transactions-mfe
 
 # Stage 2: runtime — nginx servindo dist/
-FROM nginx:alpine AS runtime
+FROM nginxinc/nginx-unprivileged:alpine AS runtime
+USER root
+RUN apk -U upgrade
+USER 101
 COPY --from=build /app/apps/transactions-mfe/dist /usr/share/nginx/html
 COPY apps/transactions-mfe/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080

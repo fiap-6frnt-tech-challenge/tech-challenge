@@ -1,0 +1,186 @@
+import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { eq } from 'drizzle-orm';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { db } from '@/db';
+import { users } from '@/db/schema';
+import { encryptUserFields } from './infrastructure/db/DrizzleUserRepository';
+import { integrationScope } from './testing/integrationScope';
+
+const nextCache = vi.hoisted(() => {
+  const entries = new Map<string, unknown>();
+  return {
+    entries,
+    revalidateTag: vi.fn(),
+    unstable_cache:
+      (load: () => Promise<unknown>, [key]: string[]) =>
+      async () => {
+        if (!entries.has(key)) entries.set(key, await load());
+        return entries.get(key);
+      },
+  };
+});
+
+vi.mock('next/cache', () => nextCache);
+
+const scope = integrationScope();
+const actor = { userId: scope.id('owner') };
+let uploadsDir: string;
+let container: typeof import('./container').container;
+let resolvers: Pick<typeof import('./container'), 'resolveBlindIndex' | 'resolveCipher'>;
+
+beforeAll(async () => {
+  uploadsDir = await mkdtemp(join(tmpdir(), 'bytebank-uploads-'));
+  vi.stubEnv('BLOB_READ_WRITE_TOKEN', '');
+  vi.stubEnv('LOCAL_UPLOADS_DIR', uploadsDir);
+  vi.stubEnv('HIBP_ENABLED', 'false');
+  ({ container, ...resolvers } = await import('./container'));
+});
+
+afterAll(async () => {
+  vi.unstubAllEnvs();
+  await scope.cleanup();
+  await rm(uploadsDir, { recursive: true, force: true });
+});
+
+describe('container (Postgres + disco local, sem BLOB_READ_WRITE_TOKEN)', () => {
+  it('anexa cifrado em disco, baixa decifrado, lista e remove', async () => {
+    const transaction = await container.createTransaction.execute(actor, {
+      type: 'withdrawal',
+      category: 'food',
+      amount: 42.5,
+      date: '2026-01-15',
+      description: 'Mercado',
+    });
+    const bytes = new TextEncoder().encode('%PDF-1.4 recibo de teste');
+
+    const attachment = await container.addAttachment.execute(actor, transaction.id, {
+      name: 'recibo.pdf',
+      bytes,
+    });
+
+    expect(attachment).toMatchObject({
+      name: 'recibo.pdf',
+      size: bytes.byteLength,
+      mimeType: 'application/pdf',
+      transactionId: transaction.id,
+      ownerId: actor.userId,
+      encVersion: 1,
+    });
+    expect(attachment.ref).not.toContain('recibo');
+    expect(attachment.ref).not.toContain(actor.userId);
+    const onDisk = await readFile(join(uploadsDir, attachment.ref));
+    expect(onDisk.byteLength).toBe(bytes.byteLength + 30);
+    expect(onDisk.includes(Buffer.from('recibo de teste'))).toBe(false);
+    const downloaded = await container.downloadAttachment.execute(
+      actor,
+      transaction.id,
+      attachment.id
+    );
+    expect(downloaded).toMatchObject({ name: 'recibo.pdf', mimeType: 'application/pdf' });
+    expect(new Uint8Array(downloaded.bytes)).toEqual(bytes);
+    await expect(
+      container.downloadAttachment.execute(
+        { userId: scope.id('intruso') },
+        transaction.id,
+        attachment.id
+      )
+    ).rejects.toThrow('Anexo não encontrado');
+    expect(await container.listAttachments.execute(actor, transaction.id)).toEqual([attachment]);
+
+    await container.removeAttachment.execute(actor, attachment.id);
+
+    expect(await container.listAttachments.execute(actor, transaction.id)).toEqual([]);
+    await expect(stat(join(uploadsDir, attachment.ref))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+  });
+
+  it('guarda o resumo por usuário e versão, e invalida a tag do usuário nas mutações', async () => {
+    const range = { from: '2026-02-01', to: '2026-02-28' };
+    const other = { userId: scope.id('outro') };
+    nextCache.revalidateTag.mockClear();
+
+    const empty = await container.getTransactionsSummary.execute(actor, range);
+    const created = await container.createTransaction.execute(actor, {
+      type: 'deposit',
+      category: 'salary',
+      amount: 300,
+      date: '2026-02-10',
+      description: 'Bônus',
+    });
+    const afterCreate = await container.getTransactionsSummary.execute(actor, range);
+    expect(afterCreate.byMonth).not.toEqual(empty.byMonth);
+    expect(await container.getTransactionsSummary.execute(other, range)).toEqual(empty);
+
+    await container.updateTransaction.execute(actor, created.id, { amount: 500 });
+    await container.deleteTransaction.execute(actor, created.id);
+
+    expect(nextCache.revalidateTag.mock.calls).toEqual([
+      [`summary:${actor.userId}`, { expire: 0 }],
+      [`summary:${actor.userId}`, { expire: 0 }],
+      [`summary:${actor.userId}`, { expire: 0 }],
+    ]);
+    expect(await container.getTransactionsSummary.execute(actor, range)).toEqual(empty);
+    const keys = [...nextCache.entries.keys()].map((key) => JSON.parse(key) as string[]);
+    expect(keys.every((key) => key[0] === 'summary' && key.length === 5)).toBe(true);
+    expect(new Set(keys.map((key) => key[1]))).toEqual(new Set([actor.userId, other.userId]));
+  });
+
+  it('registra e autentica um usuário com a senha em bcrypt custo 12', async () => {
+    const email = `${scope.id('ana')}@bytebank.test`;
+    const password = 'Bytebank-Teste-2026';
+
+    const user = await container.registerUser.execute(
+      {
+        name: 'Ana Souza',
+        email,
+        password,
+      },
+      '127.0.0.1'
+    );
+
+    scope.adoptUser(user.id);
+    expect(user.passwordHash).toMatch(/^\$2[aby]\$12\$/);
+    const [row] = await db.select().from(users).where(eq(users.id, user.id));
+    expect(`${row.emailHash}${row.emailEnc}${row.nameEnc}`).not.toMatch(/Ana|bytebank\.test/);
+    expect(
+      await container.authenticateUser.execute(email.toUpperCase(), password, '127.0.0.1')
+    ).toEqual(user);
+    await expect(
+      container.registerUser.execute(
+        { name: 'Outra Ana', email: email.toUpperCase(), password },
+        scope.id('ip')
+      )
+    ).rejects.toThrow('E-mail já existe');
+    expect(await container.authenticateUser.execute(email, 'senha-errada', '127.0.0.1')).toBeNull();
+  });
+
+  it('migra para custo 12 o hash antigo no primeiro login com a senha antiga', async () => {
+    const legacy = {
+      id: scope.id('legado'),
+      name: 'Conta Antiga',
+      email: `${scope.id('legado')}@bytebank.test`,
+      passwordHash: '$2b$10$WOxndslfeNrIgvZqXM9V.OiXmBY1Lch/Eg9QrMqrAz36Xn29dJdzK',
+    };
+    await db.insert(users).values({
+      id: legacy.id,
+      passwordHash: legacy.passwordHash,
+      ...encryptUserFields(resolvers.resolveCipher(), resolvers.resolveBlindIndex(), legacy),
+    });
+
+    const authenticated = await container.authenticateUser.execute(
+      legacy.email,
+      'Senha123!',
+      '127.0.0.1'
+    );
+
+    const [row] = await db.select().from(users).where(eq(users.id, legacy.id));
+    expect(row.passwordHash).toMatch(/^\$2[aby]\$12\$/);
+    expect(authenticated).toMatchObject({ id: legacy.id, passwordHash: row.passwordHash });
+    expect(
+      await container.authenticateUser.execute(legacy.email, 'Senha123!', '127.0.0.1')
+    ).toMatchObject({ id: legacy.id, passwordHash: row.passwordHash });
+  });
+});

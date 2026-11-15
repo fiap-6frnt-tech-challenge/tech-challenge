@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "sideEffects": [
-    "**/*.css"
+    "**/*.css",
+    "./src/organisms/chartRuntime.ts",
+    "./src/organisms/configureZod.ts"
   ],
   "description": "Bytebank Design System — componentes, tokens e estilos compartilhados",
   "main": "./src/index.ts",
@@ -11,7 +13,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./styles/tokens.css": "./src/styles/tokens.css",
-    "./styles/globals.css": "./src/styles/globals.css"
+    "./styles/globals.css": "./src/styles/globals.css",
+    "./charts": "./src/charts.ts",
+    "./forms": "./src/forms.ts"
   },
   "files": [
     "src"
@@ -23,7 +27,7 @@
     "test": "vitest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "chromatic": "chromatic --project-token=chpt_330cd685ba026e8"
+    "chromatic": "chromatic"
   },
   "peerDependencies": {
     "next": "^16.0.0",

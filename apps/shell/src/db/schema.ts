@@ -1,41 +1,103 @@
-import { pgTable, text, doublePrecision, timestamp, integer } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  doublePrecision,
+  timestamp,
+  integer,
+  index,
+  boolean,
+  primaryKey,
+} from 'drizzle-orm/pg-core';
 import { TRANSACTION_TYPE } from '@bytebank/shared';
 import { relations } from 'drizzle-orm/relations';
 
 const transactionTypeValues = Object.values(TRANSACTION_TYPE) as [string, ...string[]];
 
-export const transactions = pgTable('transactions', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  category: text('category').notNull().default('default'),
-  type: text('type', { enum: transactionTypeValues }).notNull(),
-  amount: doublePrecision('amount').notNull(),
-  date: text('date').notNull(),
-  description: text('description').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const transactions = pgTable(
+  'transactions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    category: text('category').notNull().default('default'),
+    type: text('type', { enum: transactionTypeValues }).notNull(),
+    amount: doublePrecision('amount').notNull(),
+    date: text('date').notNull(),
+    description: text('description').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => [
+    index('transactions_user_date_idx').on(t.userId, t.date),
+    index('transactions_user_category_idx').on(t.userId, t.category),
+    index('transactions_user_updated_idx').on(t.userId, t.updatedAt),
+    index('transactions_description_trgm_idx').using('gin', t.description.op('gin_trgm_ops')),
+  ]
+);
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
+  emailHash: text('email_hash').notNull().unique(),
+  emailEnc: text('email_enc').notNull(),
+  nameEnc: text('name_enc').notNull(),
   passwordHash: text('password_hash').notNull(),
+  sessionVersion: integer('session_version').notNull().default(0),
+  mfaEnabled: boolean('mfa_enabled').notNull().default(false),
+  mfaSecretEnc: text('mfa_secret_enc'),
+  mfaPendingSecretEnc: text('mfa_pending_secret_enc'),
+  mfaPendingExpiresAt: timestamp('mfa_pending_expires_at', { withTimezone: true }),
+  mfaLastUsedStep: integer('mfa_last_used_step'),
   image: text('image'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const attachments = pgTable('attachments', {
-  id: text('id').primaryKey(),
-  transactionId: text('transaction_id')
-    .notNull()
-    .references(() => transactions.id, { onDelete: 'cascade' }),
-  url: text('url').notNull(),
-  name: text('name').notNull(),
-  size: integer('size').notNull(),
-  mimeType: text('mime_type').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+export const mfaRecoveryCodes = pgTable(
+  'mfa_recovery_codes',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    id: text('id').notNull(),
+    hash: text('hash').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.id] })]
+);
+
+export const authSessions = pgTable(
+  'auth_sessions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (t) => [index('auth_sessions_user_idx').on(t.userId)]
+);
+
+export const authAttempts = pgTable('auth_attempts', {
+  key: text('key').primaryKey(),
+  failures: integer('failures').notNull().default(0),
+  windowStart: timestamp('window_start', { withTimezone: true }).notNull().defaultNow(),
+  lockedUntil: timestamp('locked_until', { withTimezone: true }),
+  lockCount: integer('lock_count').notNull().default(0),
 });
+
+export const attachments = pgTable(
+  'attachments',
+  {
+    id: text('id').primaryKey(),
+    transactionId: text('transaction_id')
+      .notNull()
+      .references(() => transactions.id, { onDelete: 'cascade' }),
+    ref: text('url').notNull(),
+    name: text('name').notNull(),
+    size: integer('size').notNull(),
+    mimeType: text('mime_type').notNull(),
+    encVersion: integer('enc_version').notNull().default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => [index('attachments_transaction_idx').on(t.transactionId)]
+);
 
 export const transactionsRelations = relations(transactions, ({ many }) => ({
   attachments: many(attachments),
@@ -54,3 +116,4 @@ export type AttachmentRow = typeof attachments.$inferSelect;
 export type NewAttachmentRow = typeof attachments.$inferInsert;
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;
+export type AuthAttemptRow = typeof authAttempts.$inferSelect;

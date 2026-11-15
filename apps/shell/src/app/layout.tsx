@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { ViewportFix } from '@bytebank/design-system';
+import { currentSession } from '@/server/session';
 import { Providers } from './providers';
 import { AppShell } from './AppShell';
 import './globals.css';
@@ -26,7 +28,10 @@ const mfeOrigins = [
   ...new Set([originOf(dashboardManifestUrl), originOf(transactionsManifestUrl)]),
 ].filter((o): o is string => Boolean(o));
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  await connection();
+  const session = await currentSession();
+
   return (
     <html lang="pt-BR">
       <head>
@@ -40,7 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="skip-link">
           Pular para o conteúdo principal
         </a>
-        <Providers>
+        <Providers session={session}>
           <ViewportFix />
           <AppShell>{children}</AppShell>
         </Providers>

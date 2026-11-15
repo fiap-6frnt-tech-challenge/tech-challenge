@@ -2,23 +2,12 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, ErrorState } from '@bytebank/design-system';
-
-function getAuthErrorMessage(error: string | null) {
-  if (error === 'CredentialsSignin') {
-    return 'Usuário ou senha inválidos. Por favor, verifique suas credenciais.';
-  }
-
-  if (error === 'OAuthSignin' || error === 'OAuthCallback') {
-    return 'Não foi possível completar o login com sua conta do Google.';
-  }
-
-  return 'Ocorreu um erro desconhecido durante a autenticação.';
-}
+import { getAuthErrorMessage } from './authErrorMessage';
 
 export function AuthErrorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const errorMessage = getAuthErrorMessage(searchParams.get('error'));
+  const errorMessage = getAuthErrorMessage(searchParams.get('error'), searchParams.get('code'));
 
   return (
     <main

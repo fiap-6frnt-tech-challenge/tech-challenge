@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Skeleton, SkeletonList } from '@bytebank/design-system';
+import { PageHeading, Skeleton, SkeletonList } from '@bytebank/design-system';
 import { Component, type ReactNode } from 'react';
 
 const TransactionsPage = dynamic(
@@ -16,7 +16,7 @@ const TransactionsPage = dynamic(
   }
 );
 
-function TransactionsSkeleton() {
+export function TransactionsSkeleton() {
   return (
     <section
       className="flex flex-col gap-lg overflow-hidden h-full px-1"
@@ -24,10 +24,10 @@ function TransactionsSkeleton() {
       aria-label="Carregando transações"
     >
       <div className="flex flex-col">
-        <div className="flex items-center justify-between py-lg">
-          <Skeleton className="h-7 w-40" />
-          <Skeleton className="h-11 w-11 rounded-md" />
-        </div>
+        <PageHeading
+          title="Transações"
+          action={<Skeleton className="h-[44px] w-[44px] rounded-md" />}
+        />
         <Skeleton className="h-12 w-full rounded-default" />
       </div>
       <div className="w-full overflow-y-auto flex-1 min-h-0 @container">

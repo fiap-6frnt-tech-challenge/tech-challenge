@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import { validSessionClaims } from '@bytebank/core/application';
 
 type GoogleAuthEnv = Record<string, string | undefined>;
 
@@ -26,14 +27,12 @@ export const authConfig = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 8 * 60 * 60,
+    updateAge: 15 * 60,
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.userId = user.id;
-      }
-      return token;
+    async jwt({ token }) {
+      return validSessionClaims(token, Date.now()) ? token : null;
     },
     async session({ session, token }) {
       if (session.user) {

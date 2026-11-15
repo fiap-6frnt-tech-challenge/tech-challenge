@@ -2,11 +2,14 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import * as Rx from 'rxjs';
 import * as DS from '@bytebank/design-system';
 import * as Shared from '@bytebank/shared';
+import * as Core from '@bytebank/core';
 import * as Stores from '@bytebank/stores';
 import * as ApiClient from '@bytebank/api-client';
 import { createInstance, getInstance } from '@module-federation/enhanced/runtime';
+import { preloadedRemotes, type ExposeId } from './preloadedRemotes';
 
 type MFInstance = ReturnType<typeof createInstance>;
 
@@ -57,10 +60,22 @@ function ensureInstance(): MFInstance {
           lib: () => ReactDOM,
           shareConfig: { singleton: true, requiredVersion: '^19.0.0' },
         },
+        rxjs: {
+          version: '7.8.2',
+          scope: 'default',
+          lib: () => Rx,
+          shareConfig: { singleton: true, requiredVersion: '^7.8.0' },
+        },
         '@bytebank/design-system': {
           version: '0.1.0',
           scope: 'default',
           lib: () => DS,
+          shareConfig: { singleton: true, requiredVersion: '*' },
+        },
+        '@bytebank/core': {
+          version: '0.1.0',
+          scope: 'default',
+          lib: () => Core,
           shareConfig: { singleton: true, requiredVersion: '*' },
         },
         '@bytebank/shared': {
@@ -87,25 +102,31 @@ function ensureInstance(): MFInstance {
   return mfInstance;
 }
 
-export async function loadDashboard() {
-  const mf = ensureInstance();
-  const mod = await mf.loadRemote<{ default: React.ComponentType }>('dashboard/Dashboard');
-  if (!mod) throw new Error('Failed to load remote dashboard/Dashboard');
+function preloadExpose(id: ExposeId) {
+  if (preloadedRemotes.has(id) || !Shared.shouldPrefetch()) return;
+  preloadedRemotes.add(id);
+  const [nameOrAlias, expose] = id.split('/');
+  ensureInstance()
+    .preloadRemote([{ nameOrAlias, exposes: [expose], resourceCategory: 'sync' }])
+    .catch((error: unknown) => {
+      preloadedRemotes.delete(id);
+      console.warn(`[federation] preload de ${id} falhou`, error);
+    });
+}
+
+async function loadExpose(id: ExposeId) {
+  const start = performance.now();
+  const mod = await ensureInstance().loadRemote<{ default: React.ComponentType }>(id);
+  performance.measure(`mf:loadRemote ${id}`, { start });
+  if (!mod) throw new Error(`Failed to load remote ${id}`);
+  preloadedRemotes.add(id);
   return mod.default;
 }
 
-export async function loadTransactionsPage() {
-  const mf = ensureInstance();
-  const mod = await mf.loadRemote<{ default: React.ComponentType }>(
-    'transactions/TransactionsPage'
-  );
-  if (!mod) throw new Error('Failed to load remote transactions/TransactionsPage');
-  return mod.default;
-}
+export const preloadDashboard = () => preloadExpose('dashboard/Dashboard');
+export const preloadTransactionsPage = () => preloadExpose('transactions/TransactionsPage');
+export const preloadAccountOverview = () => preloadExpose('transactions/AccountOverview');
 
-export async function loadAccountOverview() {
-  const mf = ensureInstance();
-  const mod = await mf.loadRemote<{ default: React.ComponentType }>('transactions/AccountOverview');
-  if (!mod) throw new Error('Failed to load remote transactions/AccountOverview');
-  return mod.default;
-}
+export const loadDashboard = () => loadExpose('dashboard/Dashboard');
+export const loadTransactionsPage = () => loadExpose('transactions/TransactionsPage');
+export const loadAccountOverview = () => loadExpose('transactions/AccountOverview');

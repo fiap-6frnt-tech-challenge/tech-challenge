@@ -1,0 +1,45 @@
+import { describe, expect, it } from 'vitest';
+import { BcryptPasswordHasher } from './BcryptPasswordHasher';
+
+const storedCost10Hash = '$2b$10$WOxndslfeNrIgvZqXM9V.OiXmBY1Lch/Eg9QrMqrAz36Xn29dJdzK';
+
+describe('BcryptPasswordHasher', () => {
+  const hasher = new BcryptPasswordHasher(4);
+
+  it('gera um hash bcrypt com o custo configurado, sem expor a senha', async () => {
+    const digest = await hasher.hash('Senha123!');
+
+    expect(digest).toMatch(/^\$2[aby]\$04\$/);
+    expect(digest).not.toContain('Senha123!');
+  });
+
+  it('confere a senha certa e recusa a errada', async () => {
+    const digest = await hasher.hash('Senha123!');
+
+    await expect(hasher.verify('Senha123!', digest)).resolves.toBe(true);
+    await expect(hasher.verify('senha-errada', digest)).resolves.toBe(false);
+  });
+
+  it('confere hashes já gravados com outro custo', async () => {
+    await expect(hasher.verify('Senha123!', storedCost10Hash)).resolves.toBe(true);
+  });
+
+  it('pede rehash só quando o hash gravado tem custo menor que o configurado', async () => {
+    const hasher12 = new BcryptPasswordHasher(12);
+
+    expect(hasher12.needsRehash(storedCost10Hash)).toBe(true);
+    expect(
+      hasher12.needsRehash('$2b$12$IplSxM7DRgUxQc6VRjJk/u8W5MtEpyoWALM2GdoOLREyWZE.SQjwS')
+    ).toBe(false);
+    expect(new BcryptPasswordHasher(10).needsRehash(storedCost10Hash)).toBe(false);
+  });
+
+  it('compara contra hash fictício para e-mails inexistentes', async () => {
+    await expect(
+      new BcryptPasswordHasher(10).verifyDummy('senha-qualquer')
+    ).resolves.toBeUndefined();
+    await expect(
+      new BcryptPasswordHasher(12).verifyDummy('senha-qualquer')
+    ).resolves.toBeUndefined();
+  });
+});

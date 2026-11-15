@@ -1,0 +1,167 @@
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, fn, userEvent, within } from 'storybook/test';
+import { TransactionItem } from './TransactionItem';
+
+const meta: Meta<typeof TransactionItem> = {
+  title: 'Features/TransactionItem',
+  component: TransactionItem,
+  tags: ['autodocs'],
+  args: {
+    onEdit: fn(),
+    onDelete: fn(),
+  },
+  decorators: [
+    (Story) => (
+      <ul className="list-none p-0 m-0">
+        <Story />
+      </ul>
+    ),
+  ],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Card-style transaction item with badge, description, date, amount, and action buttons.',
+      },
+    },
+  },
+  argTypes: {
+    onEdit: { control: false },
+    onDelete: { control: false },
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof TransactionItem>;
+
+export const Deposit: Story = {
+  name: 'Variant: Deposit',
+  args: {
+    transaction: {
+      id: '1',
+      userId: 'user-1',
+      type: 'deposit',
+      category: 'salary',
+      description: 'Salário mensal',
+      amount: 5000,
+      date: '2025-03-01',
+    },
+  },
+  parameters: {
+    docs: { description: { story: 'Deposit transaction with green amount.' } },
+  },
+};
+
+export const Withdrawal: Story = {
+  name: 'Variant: Withdrawal',
+  args: {
+    transaction: {
+      id: '2',
+      userId: 'user-1',
+      type: 'withdrawal',
+      category: 'housing',
+      description: 'Aluguel',
+      amount: 1500,
+      date: '2025-03-05',
+    },
+  },
+  parameters: {
+    docs: { description: { story: 'Withdrawal transaction with red amount.' } },
+  },
+};
+
+export const Transfer: Story = {
+  name: 'Variant: Transfer',
+  args: {
+    transaction: {
+      id: '3',
+      userId: 'user-1',
+      type: 'transfer',
+      category: 'transfer',
+      description: 'Transferência para conta poupança',
+      amount: 800,
+      date: '2025-03-10',
+    },
+  },
+  parameters: {
+    docs: { description: { story: 'Transfer transaction with amber amount.' } },
+  },
+};
+
+export const LongDescription: Story = {
+  name: 'Composition: Long Description',
+  args: {
+    transaction: {
+      id: '4',
+      userId: 'user-1',
+      type: 'deposit',
+      category: 'other',
+      description:
+        'Pagamento referente ao projeto de desenvolvimento de software para cliente externo',
+      amount: 12000,
+      date: '2025-03-15',
+    },
+  },
+  parameters: {
+    docs: { description: { story: 'Long description truncates with ellipsis.' } },
+  },
+};
+
+export const WithoutActions: Story = {
+  name: 'State: Without Actions',
+  args: {
+    transaction: {
+      id: '5',
+      userId: 'user-1',
+      type: 'deposit',
+      category: 'salary',
+      description: 'Salário mensal',
+      amount: 5000,
+      date: '2025-03-01',
+    },
+    showActions: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Read-only transaction item variant used in compact contexts without edit/delete actions.',
+      },
+    },
+  },
+};
+
+export const PendingSync: Story = {
+  name: 'State: Pending Sync',
+  args: {
+    transaction: {
+      id: 'optimistic-6f1c2b9e',
+      userId: '',
+      type: 'withdrawal',
+      category: 'food',
+      description: 'Almoço',
+      amount: 24.5,
+      date: '2025-03-20',
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Optimistic item still waiting for the server: edit and delete stay disabled until it has a real id.',
+      },
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const edit = canvas.getByRole('button', { name: /Edit transaction: Almoço/ });
+    const remove = canvas.getByRole('button', { name: /Delete transaction: Almoço/ });
+    expect(edit).toBeDisabled();
+    expect(remove).toBeDisabled();
+    expect(canvas.getByRole('listitem')).toHaveAttribute('aria-busy', 'true');
+    await userEvent.click(edit, { pointerEventsCheck: 0 });
+    await userEvent.click(remove, { pointerEventsCheck: 0 });
+    expect(args.onEdit).not.toHaveBeenCalled();
+    expect(args.onDelete).not.toHaveBeenCalled();
+  },
+};

@@ -9,12 +9,14 @@
     ".": "./src/index.ts",
     "./types": "./src/types/index.ts",
     "./lib/*": "./src/lib/*.ts",
-    "./constants/*": "./src/constants/*.ts"
+    "./constants/*": "./src/constants/*.ts",
+    "./schemas": "./src/schemas/transaction.ts"
   },
   "files": [
     "src"
   ],
   "dependencies": {
+    "@bytebank/core": "*",
     "zod": "^4.3.6"
   },
   "scripts": {

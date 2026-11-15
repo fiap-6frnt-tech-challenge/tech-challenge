@@ -1,0 +1,9 @@
+\getenv app_password POSTGRES_APP_PASSWORD
+
+CREATE ROLE bytebank_app LOGIN PASSWORD :'app_password';
+
+GRANT USAGE ON SCHEMA public TO bytebank_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO bytebank_app;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE bytebank IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO bytebank_app;

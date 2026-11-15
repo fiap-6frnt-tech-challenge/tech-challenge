@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import './tokens.css';
-@source "../components/**/*.{ts,tsx}";
+@source "../atoms/**/*.{ts,tsx}";
+@source "../molecules/**/*.{ts,tsx}";
+@source "../organisms/**/*.{ts,tsx}";
 
 @layer components {
   /* ============================================

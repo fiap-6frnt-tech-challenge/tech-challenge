@@ -1,10 +1,59 @@
-import NextAuth from 'next-auth';
+import NextAuth, { CredentialsSignin } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { getToken } from 'next-auth/jwt';
+import { RateLimitedError, TurnstileRequiredError } from '@bytebank/core';
 import { authConfig } from './auth.config';
-import { verifyCredentials } from '@/db/users';
+import { MfaRequiredError, MfaInvalidCodeError } from '@bytebank/core/application';
+import { container } from '@/server/container';
+import { getClientIp } from '@/server/http/clientIp';
+import { currentRequestId, withRequestContext } from '@/server/http/requestContext';
+
+class RateLimitedSignin extends CredentialsSignin {
+  code = 'rate_limited';
+}
+
+class TurnstileRequiredSignin extends CredentialsSignin {
+  code = 'turnstile_required';
+}
+
+class MfaRequiredSignin extends CredentialsSignin {
+  code = 'mfa_required';
+}
+class MfaInvalidSignin extends CredentialsSignin {
+  code = 'mfa_invalid';
+}
+
+export async function revokeCurrentRequestSession(req: Request): Promise<void> {
+  const secureCookie = new URL(process.env.AUTH_URL ?? req.url).protocol === 'https:';
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET, secureCookie });
+  // A missing/expired cookie is already unusable; the sign-out flow still clears it.
+  if (token) await container.sessionLifecycle.revokeCurrent(token);
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user, account, profile }) {
+      if (account?.provider !== 'google') return true;
+      if (profile?.email_verified !== true || !user.email) return false;
+      const local = await container.resolveOAuthUser.execute(user);
+      user.mfaVersion = await container.mfa.verifyLogin(local.id);
+      user.id = local.id;
+      return true;
+    },
+    async jwt({ token, user }) {
+      const claims = user?.id
+        ? await container.sessionLifecycle.start(user.id, user.mfaVersion)
+        : await container.sessionLifecycle.validate(token);
+      return claims ? { ...token, ...claims } : null;
+    },
+  },
+  events: {
+    async signOut(message) {
+      if ('token' in message) await container.sessionLifecycle.revokeCurrent(message.token);
+    },
+  },
   providers: [
     ...authConfig.providers,
     CredentialsProvider({
@@ -12,31 +61,54 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Senha', type: 'password' },
+        turnstileToken: { label: 'Turnstile token', type: 'text' },
+        totp: { label: 'Código de autenticação', type: 'text' },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+      authorize(credentials, request) {
+        return withRequestContext(request.headers, async () => {
+          if (!credentials?.email || !credentials?.password) return null;
 
-        let user: Awaited<ReturnType<typeof verifyCredentials>> = null;
+          let user: Awaited<ReturnType<typeof container.authenticateUser.execute>> = null;
 
-        try {
-          user = await verifyCredentials(
-            credentials.email as string,
-            credentials.password as string
-          );
-        } catch (error) {
-          console.error('[auth] Falha ao verificar credenciais no banco:', error);
-        }
+          let mfaVersion: number | undefined;
+          try {
+            user = await container.authenticateUser.execute(
+              credentials.email as string,
+              credentials.password as string,
+              getClientIp(request.headers),
+              typeof credentials.turnstileToken === 'string'
+                ? credentials.turnstileToken
+                : undefined
+            );
+            if (user)
+              mfaVersion = await container.mfa.verifyLogin(
+                user.id,
+                typeof credentials.totp === 'string' ? credentials.totp : undefined,
+                user.passwordHash
+              );
+          } catch (error) {
+            if (error instanceof MfaRequiredError) throw new MfaRequiredSignin();
+            if (error instanceof MfaInvalidCodeError) throw new MfaInvalidSignin();
+            if (error instanceof RateLimitedError) throw new RateLimitedSignin();
+            if (error instanceof TurnstileRequiredError) throw new TurnstileRequiredSignin();
+            console.error('[auth] Falha ao verificar credenciais no banco', {
+              requestId: currentRequestId(),
+            });
+            return null;
+          }
 
-        if (user) {
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            image: user.image ?? undefined,
-          };
-        }
+          if (user) {
+            return {
+              id: user.id,
+              mfaVersion,
+              name: user.name,
+              email: user.email,
+              image: user.image ?? undefined,
+            };
+          }
 
-        return null;
+          return null;
+        });
       },
     }),
   ],

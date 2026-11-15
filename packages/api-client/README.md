@@ -5,16 +5,18 @@ TanStack Query hooks and HTTP fetchers for the shell API (`/api/*`).
 ## Usage
 
 ```ts
-import { useCreateTransaction, useTransactions } from '@bytebank/api-client';
+import { useAccountOverview, useCreateTransaction } from '@bytebank/api-client';
 
-const { data, isLoading } = useTransactions({ type: 'deposit' });
+const { data, isLoading } = useAccountOverview(); // { balance, recent }
 const { mutate } = useCreateTransaction();
 ```
 
 ## Exports
 
-- `useTransactions`, `usePaginatedTransactions`, `useTransaction` — transaction queries.
-- `useCreateTransaction`, `useUpdateTransaction`, `useDeleteTransaction` — mutations that invalidate the transaction lists on success.
+- `useAccountOverview` — balance + 5 most recent transactions for the home (`GET /api/transactions/overview`).
+- `usePaginatedTransactions`, `useTransaction` — transaction queries. The list endpoint is always paginated (max 100 items per page).
+- `useDashboardSummary` — chart aggregates (`GET /api/transactions/summary`).
+- `useCreateTransaction`, `useUpdateTransaction`, `useDeleteTransaction` — mutations that invalidate the transaction lists, the overview and the summary on success.
 - `queryClient` — shared TanStack Query client (`client.ts`).
-- `transactionKeys` — query key factory (`keys.ts`).
+- `transactionKeys`, `overviewKeys`, `summaryKeys` — query key factories (`keys.ts`).
 - `TransactionService` — HTTP layer over `/api/transactions` (`http.ts`).

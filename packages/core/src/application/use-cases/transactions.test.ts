@@ -1,0 +1,247 @@
+import { describe, expect, it } from 'vitest';
+import { NotFoundError, ValidationError } from '../../domain';
+import { AccessAudit } from '../audit';
+import {
+  FakeCacheInvalidator,
+  FakeClock,
+  InMemoryTransactionRepository,
+  MemoryAuditLogger,
+  MemoryResourceOwnership,
+  SequentialIdGenerator,
+} from '../testing';
+import {
+  CreateTransaction,
+  DeleteTransaction,
+  GetTransaction,
+  GetTransactionsVersion,
+  ListTransactions,
+  UpdateTransaction,
+} from './transactions';
+
+const ownedByA = {
+  id: 'tx-a',
+  userId: 'user-a',
+  type: 'deposit' as const,
+  category: 'salary',
+  amount: 100,
+  date: '2025-01-10',
+  description: 'Salário',
+};
+
+const access = (audit = new MemoryAuditLogger()) =>
+  new AccessAudit(new MemoryResourceOwnership({ transaction: { 'tx-a': 'user-a' } }), audit);
+
+const denied = {
+  event: 'authz.denied',
+  outcome: 'denied',
+  userId: 'user-b',
+  reason: 'not_owner',
+  resource: 'transaction:tx-a',
+};
+
+describe('transaction use cases enforce ownership', () => {
+  it('hides another actor transaction on get and records the IDOR attempt', async () => {
+    const audit = new MemoryAuditLogger();
+    const useCase = new GetTransaction(
+      new InMemoryTransactionRepository([ownedByA]),
+      access(audit)
+    );
+    await expect(useCase.execute({ userId: 'user-b' }, 'tx-a')).rejects.toBeInstanceOf(
+      NotFoundError
+    );
+    expect(audit.events).toEqual([denied]);
+  });
+
+  it('hides another actor transaction on update', async () => {
+    const audit = new MemoryAuditLogger();
+    const useCase = new UpdateTransaction(
+      new InMemoryTransactionRepository([ownedByA]),
+      new FakeCacheInvalidator(),
+      access(audit)
+    );
+    await expect(
+      useCase.execute({ userId: 'user-b' }, 'tx-a', { description: 'Mudança' })
+    ).rejects.toBeInstanceOf(NotFoundError);
+    expect(audit.events).toEqual([denied]);
+  });
+
+  it('hides another actor transaction on delete', async () => {
+    const audit = new MemoryAuditLogger();
+    const useCase = new DeleteTransaction(
+      new InMemoryTransactionRepository([ownedByA]),
+      new FakeCacheInvalidator(),
+      access(audit)
+    );
+    await expect(useCase.execute({ userId: 'user-b' }, 'tx-a')).rejects.toBeInstanceOf(
+      NotFoundError
+    );
+    expect(audit.events).toEqual([denied]);
+  });
+
+  it('does not record a denial for an id that does not exist', async () => {
+    const audit = new MemoryAuditLogger();
+    const useCase = new GetTransaction(new InMemoryTransactionRepository([]), access(audit));
+    await expect(useCase.execute({ userId: 'user-b' }, 'tx-missing')).rejects.toBeInstanceOf(
+      NotFoundError
+    );
+    expect(audit.events).toEqual([]);
+  });
+});
+
+describe('transaction use cases happy paths and validation', () => {
+  it('creates a transaction for the actor with a generated id', async () => {
+    const repository = new InMemoryTransactionRepository();
+    const clock = new FakeClock(new Date());
+    const useCase = new CreateTransaction(
+      repository,
+      clock,
+      new SequentialIdGenerator('tx'),
+      new FakeCacheInvalidator()
+    );
+    const result = await useCase.execute(
+      { userId: 'user-a' },
+      {
+        type: 'deposit',
+        category: 'salary',
+        amount: 100,
+        date: clock.todayISO(),
+        description: 'Salário',
+      }
+    );
+    expect(result).toMatchObject({ id: 'tx-1', userId: 'user-a', amount: 100 });
+  });
+
+  it('converts invalid input into a domain ValidationError', async () => {
+    const useCase = new CreateTransaction(
+      new InMemoryTransactionRepository(),
+      new FakeClock(new Date()),
+      new SequentialIdGenerator(),
+      new FakeCacheInvalidator()
+    );
+    try {
+      await useCase.execute({ userId: 'user-a' }, {});
+      throw new Error('Expected invalid input to be rejected');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error).toHaveProperty('issues', expect.any(Array));
+    }
+  });
+
+  it('updates, gets and deletes an owned transaction', async () => {
+    const repository = new InMemoryTransactionRepository([ownedByA]);
+    const cache = new FakeCacheInvalidator();
+    const actor = { userId: 'user-a' };
+    expect(
+      (
+        await new UpdateTransaction(repository, cache, access()).execute(actor, 'tx-a', {
+          description: 'Atualizada',
+        })
+      ).description
+    ).toBe('Atualizada');
+    expect(
+      (await new GetTransaction(repository, access()).execute(actor, 'tx-a')).description
+    ).toBe('Atualizada');
+    await expect(
+      new DeleteTransaction(repository, cache, access()).execute(actor, 'tx-a')
+    ).resolves.toBeUndefined();
+    await expect(
+      new GetTransaction(repository, access()).execute(actor, 'tx-a')
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it('lists only the actor transactions and caps page size at 100', async () => {
+    const repository = new InMemoryTransactionRepository([
+      ownedByA,
+      { ...ownedByA, id: 'tx-b', userId: 'user-b' },
+    ]);
+    const filter = {
+      type: 'all' as const,
+      dateFrom: '',
+      dateTo: '',
+      sortBy: 'date' as const,
+      sortOrder: 'desc' as const,
+      q: '',
+      amount_gte: undefined,
+      amount_lte: undefined,
+      category: [],
+    };
+    const result = await new ListTransactions(repository).execute({ userId: 'user-a' }, filter, {
+      page: 1,
+      perPage: 500,
+    });
+    expect(result.items.map(({ id }) => id)).toEqual(['tx-a']);
+    expect(result.perPage).toBe(100);
+  });
+
+  it('changes the actor data version after each mutation', async () => {
+    const repository = new InMemoryTransactionRepository([ownedByA]);
+    const cache = new FakeCacheInvalidator();
+    const actor = { userId: 'user-a' };
+    const version = new GetTransactionsVersion(repository);
+    const seen = [await version.execute(actor)];
+
+    await new UpdateTransaction(repository, cache, access()).execute(actor, 'tx-a', {
+      description: 'Nova',
+    });
+    seen.push(await version.execute(actor));
+    await new DeleteTransaction(repository, cache, access()).execute(actor, 'tx-a');
+    seen.push(await version.execute(actor));
+
+    expect(new Set(seen).size).toBe(3);
+    expect(await version.execute(actor)).toBe(seen[2]);
+  });
+});
+
+describe('transaction mutations invalidate the actor server cache', () => {
+  const actor = { userId: 'user-a' };
+
+  it('invalidates the actor after create, update and delete', async () => {
+    const repository = new InMemoryTransactionRepository();
+    const clock = new FakeClock(new Date());
+    const cache = new FakeCacheInvalidator();
+
+    const created = await new CreateTransaction(
+      repository,
+      clock,
+      new SequentialIdGenerator('tx'),
+      cache
+    ).execute(actor, {
+      type: 'deposit',
+      category: 'salary',
+      amount: 100,
+      date: clock.todayISO(),
+      description: 'Salário',
+    });
+    await new UpdateTransaction(repository, cache, access()).execute(actor, created.id, {
+      description: 'Nova',
+    });
+    await new DeleteTransaction(repository, cache, access()).execute(actor, created.id);
+
+    expect(cache.invalidated).toEqual(['user-a', 'user-a', 'user-a']);
+  });
+
+  it('leaves the cache alone when nothing changed', async () => {
+    const repository = new InMemoryTransactionRepository([ownedByA]);
+    const cache = new FakeCacheInvalidator();
+    const intruder = { userId: 'user-b' };
+
+    await expect(
+      new CreateTransaction(
+        repository,
+        new FakeClock(new Date()),
+        new SequentialIdGenerator(),
+        cache
+      ).execute(actor, {})
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(
+      new UpdateTransaction(repository, cache, access()).execute(intruder, 'tx-a', {
+        description: 'Mudança',
+      })
+    ).rejects.toBeInstanceOf(NotFoundError);
+    await expect(
+      new DeleteTransaction(repository, cache, access()).execute(intruder, 'tx-a')
+    ).rejects.toBeInstanceOf(NotFoundError);
+
+    expect(cache.invalidated).toEqual([]);
+  });
+});

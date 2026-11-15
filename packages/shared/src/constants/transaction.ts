@@ -1,12 +1,8 @@
-import type { TransactionType } from '../types';
+import { TRANSACTION_TYPE, type TransactionType } from '@bytebank/core';
+
+export { TRANSACTION_TYPE } from '@bytebank/core';
 
 type SelectOption = { label: string; value: string };
-
-export const TRANSACTION_TYPE = {
-  DEPOSIT: 'deposit',
-  WITHDRAWAL: 'withdrawal',
-  TRANSFER: 'transfer',
-} as const;
 
 export const TRANSACTION_TYPE_OPTIONS = [
   { label: 'Depósito', value: TRANSACTION_TYPE.DEPOSIT },

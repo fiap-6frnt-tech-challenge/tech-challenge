@@ -8,15 +8,18 @@
     "build": "rsbuild build",
     "preview": "rsbuild preview",
     "lint": "eslint src",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@bytebank/api-client": "*",
+    "@bytebank/core": "*",
     "@bytebank/design-system": "*",
     "@bytebank/shared": "*",
     "@bytebank/stores": "*",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "rxjs": "7.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^9",
@@ -31,8 +34,10 @@
     "eslint-config-prettier": "^10",
     "eslint-plugin-react": "^7",
     "eslint-plugin-react-hooks": "^5",
+    "jsdom": "^27.4.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "typescript-eslint": "^8"
+    "typescript-eslint": "^8",
+    "vitest": "^4.0.18"
   }
 }

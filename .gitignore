@@ -27,6 +27,7 @@ test-results/
 .DS_Store
 .claude/
 *.pem
+.uploads/
 
 # debug
 npm-debug.log*
@@ -53,6 +54,7 @@ storybook-static
 
 # Build outputs
 **/dist
+**/dist-types
 **/storybook-static
 **/.next
 **/coverage
@@ -64,3 +66,12 @@ storybook-static
 
 # Backup .package.json.fase1.bak
 .package.json.fase1.bak
+
+# Cookie de sessão das medições de performance (Fase 4, S0-04)
+.secrets/
+
+# Capturas locais de performance
+/perf/
+
+# Relatórios locais do OWASP ZAP (ver README)
+zap-report/
