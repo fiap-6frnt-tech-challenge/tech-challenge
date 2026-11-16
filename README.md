@@ -2,7 +2,7 @@
 
 Aplicação de gestão financeira pessoal construída como monorepo (Turborepo) com **arquitetura de microfrontends**: shell Next.js 16 + remotes React federados em runtime via Module Federation, Design System próprio, autenticação NextAuth e persistência em PostgreSQL via Drizzle ORM. Desenvolvida como Tech Challenge (Fases 2 e 4) da pós-graduação FIAP Frontend Engineering. A Fase 4 acrescentou Clean Architecture, programação reativa, cache em camadas, otimização de carregamento e segurança da aplicação.
 
-🚀 **[Acessar aplicação →](https://tech-challenge-phase4.vercel.app/)** · 🎥 **Vídeo da Fase 4:** _em breve_ <!-- TODO S4-08: trocar "em breve" pelo link do vídeo da Fase 4 --> · 🎞️ [Vídeo da Fase 2](https://youtu.be/4URo48RXs_8)
+🚀 **[Acessar aplicação →](https://tech-challenge-phase4.vercel.app/)** · 🎥 [Vídeo da Fase 4](https://www.youtube.com/watch?v=FjYWr5JSrhM) · 🎞️ [Vídeo da Fase 2](https://youtu.be/4URo48RXs_8)
 
 ---
 
@@ -357,18 +357,18 @@ A auditoria contra o OWASP Top 10 e o API Security Top 10, com varredura do OWAS
 
 ## Performance
 
-| Métrica                                     |         Baseline (S0-04) |    Fase 4 (build local) | Meta               |
-| ------------------------------------------- | -----------------------: | ----------------------: | ------------------ |
-| LCP mobile `/`                              |        4,62 s (produção) |                  2,08 s | —                  |
-| LCP mobile `/transactions`                  |        4,53 s (produção) |                  2,79 s | —                  |
-| Lighthouse mobile `/` · `/transactions`     |       68 · 71 (produção) |                 83 · 74 | ≥ 85 em produção   |
-| Lighthouse desktop (3 páginas)              | 100 · 99 · 98 (produção) |         100 · 100 · 100 | ≥ 95, CLS = 0      |
-| recharts no carregamento de `/transactions` |              138 kB gzip |                       0 | não carregar       |
-| p95 do resumo (5 mil transações)            |                 1.622 ms |                   62 ms | ≤ 811 ms           |
-| Vazão da lista paginada (10 conexões)       |                 80 req/s |               156 req/s | acima da baseline  |
-| Dados da home no carregamento               |                 848,5 kB | 0 requisições (no HTML) | saldo + 5 recentes |
+| Métrica                                     |         Baseline (S0-04) |    Fase 4 (build local) | Fase 4 (produção) | Meta               |
+| ------------------------------------------- | -----------------------: | ----------------------: | ----------------: | ------------------ |
+| LCP mobile `/`                              |        4,62 s (produção) |                  2,08 s |             1,1 s | —                  |
+| LCP mobile `/transactions`                  |        4,53 s (produção) |                  2,79 s |             1,8 s | —                  |
+| Lighthouse mobile `/` · `/transactions`     |       68 · 71 (produção) |                 83 · 74 |         100 · 100 | ≥ 85 em produção   |
+| Lighthouse desktop (3 páginas)              | 100 · 99 · 98 (produção) |         100 · 100 · 100 |                 — | ≥ 95, CLS = 0      |
+| recharts no carregamento de `/transactions` |              138 kB gzip |                       0 |                 — | não carregar       |
+| p95 do resumo (5 mil transações)            |                 1.622 ms |                   62 ms |                 — | ≤ 811 ms           |
+| Vazão da lista paginada (10 conexões)       |                 80 req/s |               156 req/s |                 — | acima da baseline  |
+| Dados da home no carregamento               |                 848,5 kB | 0 requisições (no HTML) |                 — | saldo + 5 recentes |
 
-A meta de Lighthouse mobile vale para produção, medida depois do deploy da Fase 4. Os números locais são best-of-3 na mesma máquina da baseline, com 5 mil transações na conta de medição.
+Os números locais são best-of-3 na mesma máquina da baseline, com 5 mil transações na conta de medição. Os de produção são best-of-3 do Lighthouse 12 (mobile, só performance) em 16/11/2026, logado numa conta com 8 transações; as outras medições deram 87 e 100 em `/` e 100 e 100 em `/transactions`.
 
 ---
 
