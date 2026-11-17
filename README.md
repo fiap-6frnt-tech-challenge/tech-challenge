@@ -349,7 +349,7 @@ Em dev, todas ficam em `apps/shell/.env.local` (criado no passo 3). O `.env` da 
 | Navegador      | CSP com nonce, HSTS, `nosniff`, `frame-ancestors 'none'`; mutações de outra origem respondem `403`      |
 | Logs           | Eventos de segurança em JSON, com e-mail mascarado e IP como HMAC                                       |
 | Infraestrutura | Containers não-root e somente leitura; Postgres só em `127.0.0.1`; role da aplicação sem `DROP`/`ALTER` |
-| Pipeline       | `npm audit`, Dependabot, gitleaks, Semgrep e Trivy na CI                                                |
+| Pipeline       | `npm audit`, gitleaks, Semgrep e Trivy na CI; alertas do Dependabot                                     |
 
 A auditoria contra o OWASP Top 10 e o API Security Top 10, com varredura do OWASP ZAP (baseline e autenticada), não encontrou achados High.
 
